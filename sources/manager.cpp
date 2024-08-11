@@ -63,6 +63,10 @@ void Manager::InitializeVulkan()
 	graphics.CreateInstance();
 
     vulkanInitialized = true;
+
+    graphics.CreateSurface();
+    graphics.PickPhysicalDevice();
+    graphics.CreateLogicalDevice();
 }
 
 void Manager::Frame()

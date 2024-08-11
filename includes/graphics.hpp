@@ -7,24 +7,44 @@
 class Graphics
 {
     private:
-        
 
     public:
         Graphics();
         ~Graphics();
 
+        struct QueueFamilies
+        {
+            uint32_t graphicsFamily = 0;
+            bool graphicsFamilyFound = false;
+
+            uint32_t presentationFamily = 0;
+            bool presentationFamilyFound = false;
+
+            bool Complete()
+            {
+                return (graphicsFamilyFound && presentationFamilyFound);
+            }
+        };
+
         VkInstance instance = nullptr;
         VkPhysicalDevice physicalDevice = nullptr;
         VkDevice device = nullptr;
+        VkQueue graphicsQueue = nullptr;
+        VkQueue presentationQueue = nullptr;
+        VkSurfaceKHR surface = nullptr;
 
         void CreateInstance();
         void PickPhysicalDevice();
         void CreateLogicalDevice();
-        //void CreateVulkanSurface();
+        void CreateSurface();
 
         void DestroyInstance();
         void DestroyDevice();
+        void DestroySurface();
         void Destroy();
+
+        QueueFamilies FindQueueFamilies(VkPhysicalDevice device);
+        bool IsDeviceSuitable(VkPhysicalDevice device);
 };
 
 #endif

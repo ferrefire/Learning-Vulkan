@@ -2,6 +2,9 @@
 
 #include <stdexcept>
 #include <vector>
+#include <set>
+
+#include "manager.hpp"
 
 Graphics::Graphics()
 {
@@ -42,8 +45,10 @@ void Graphics::CreateInstance()
     }
 }
 
-uint32_t FindQueueFamilies(VkPhysicalDevice device)
+Graphics::QueueFamilies Graphics::FindQueueFamilies(VkPhysicalDevice device)
 {
+    QueueFamilies result;
+
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
@@ -53,20 +58,38 @@ uint32_t FindQueueFamilies(VkPhysicalDevice device)
     int i = 0;
     for (const auto &queueFamily : queueFamilies)
     {
-        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+        if (!result.graphicsFamilyFound && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
         {
-            return (i);
+            result.graphicsFamily = i;
+            result.graphicsFamilyFound = true;
         }
+
+        if (!result.presentationFamilyFound)
+        {
+            VkBool32 presentationSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentationSupport);
+
+            if (presentationSupport)
+            {
+                result.presentationFamily = i;
+                result.presentationFamilyFound = true;
+            }
+        }
+
+        if (result.Complete()) return (result);
 
         i++;
     }
 
-    throw std::runtime_error("failed to find a suitable queue family");
+    //throw std::runtime_error("failed to find a suitable queue family");
+    return (result);
 }
 
-bool IsDeviceSuitable(VkPhysicalDevice device)
+bool Graphics::IsDeviceSuitable(VkPhysicalDevice device)
 {
-    return (true);
+    QueueFamilies queueFamilies = FindQueueFamilies(device);
+
+    return (queueFamilies.Complete());
 }
 
 void Graphics::PickPhysicalDevice()
@@ -99,22 +122,28 @@ void Graphics::PickPhysicalDevice()
 
 void Graphics::CreateLogicalDevice()
 {
-    uint32_t queueFamily = FindQueueFamilies(physicalDevice);
+    QueueFamilies queueFamilies = FindQueueFamilies(physicalDevice);
 
-    VkDeviceQueueCreateInfo queueCreateInfo{};
-    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueCreateInfo.queueFamilyIndex = queueFamily;
-    queueCreateInfo.queueCount = 1;
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    std::set<uint32_t> uniqueQueueFamilies = {queueFamilies.graphicsFamily, queueFamilies.presentationFamily};
 
-    float queuePriority = 1;
-    queueCreateInfo.pQueuePriorities = &queuePriority;
+    float queuePriority = 1.0f;
+    for (uint32_t queueFamily : uniqueQueueFamilies)
+    {
+        VkDeviceQueueCreateInfo queueCreateInfo{};
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = queueFamily;
+        queueCreateInfo.queueCount = 1;
+        queueCreateInfo.pQueuePriorities = &queuePriority;
+        queueCreateInfos.push_back(queueCreateInfo);
+    }
 
     VkPhysicalDeviceFeatures deviceFeatures{};
 
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    createInfo.pQueueCreateInfos = &queueCreateInfo;
-    createInfo.queueCreateInfoCount = 1;
+    createInfo.pQueueCreateInfos = queueCreateInfos.data();
+    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 
     createInfo.pEnabledFeatures = &deviceFeatures;
     createInfo.enabledExtensionCount = 0;
@@ -122,6 +151,17 @@ void Graphics::CreateLogicalDevice()
     if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create logical device");
+    }
+
+    vkGetDeviceQueue(device, queueFamilies.graphicsFamily, 0, &graphicsQueue);
+    vkGetDeviceQueue(device, queueFamilies.presentationFamily, 0, &presentationQueue);
+}
+
+void Graphics::CreateSurface()
+{
+    if (glfwCreateWindowSurface(instance, Manager::GetWindow().data, nullptr, &surface) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to create window surface");
     }
 }
 
@@ -141,8 +181,17 @@ void Graphics::DestroyDevice()
     device = nullptr;
 }
 
+void Graphics::DestroySurface()
+{
+    if (!surface) return;
+
+    vkDestroySurfaceKHR(instance, surface, nullptr);
+    surface = nullptr;
+}
+
 void Graphics::Destroy()
 {
     DestroyDevice();
+    DestroySurface();
     DestroyInstance();
 }
