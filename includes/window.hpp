@@ -1,8 +1,8 @@
 #ifndef WINDOW_HPP
 #define WINDOW_HPP
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include "vulkan/vulkan.h"
+#include "GLFW/glfw3.h"
 
 class Window
 {
@@ -11,12 +11,12 @@ class Window
 		unsigned int height = 600;
 
 	public:
-		GLFWwindow *data = nullptr;
-
 		Window();
 		~Window();
 
-		void Create();
+        GLFWwindow *data = nullptr;
+
+        void Create();
 		void Destroy();
 		void Close();
 

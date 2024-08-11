@@ -1,5 +1,7 @@
 #include "window.hpp"
 
+#include <stdexcept>
+
 Window::Window()
 {
 
@@ -15,6 +17,11 @@ void Window::Create()
 	if (data) return ;
 
 	data = glfwCreateWindow(width, height, "Vulkan window", nullptr, nullptr);
+    
+    if (!data)
+    {
+        throw std::runtime_error("failed to create window");
+    }
 }
 
 void Window::Destroy()

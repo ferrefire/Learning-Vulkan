@@ -1,8 +1,7 @@
 #ifndef INPUT_HPP
 #define INPUT_HPP
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include "GLFW/glfw3.h"
 
 #include <map>
 //#include "camera.hpp"

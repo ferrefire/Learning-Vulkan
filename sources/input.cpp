@@ -1,6 +1,6 @@
 #include "input.hpp"
 
-#include <glm/glm.hpp>
+#include "glm/glm.hpp"
 
 #include "manager.hpp"
 #include "time.hpp"
