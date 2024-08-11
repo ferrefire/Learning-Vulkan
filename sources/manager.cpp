@@ -31,7 +31,7 @@ void Manager::Quit(int exitCode)
 
 	if (vulkanInitialized) 
     {
-        graphics.DestroyVulkanInstance();
+        graphics.Destroy();
     }
 
 	if (glfwInitialized)
@@ -60,7 +60,7 @@ void Manager::InitializeGLFW()
 
 void Manager::InitializeVulkan()
 {
-	graphics.CreateVulkanInstance();
+	graphics.CreateInstance();
 
     vulkanInitialized = true;
 }
