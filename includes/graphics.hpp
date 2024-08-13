@@ -41,6 +41,7 @@ class Graphics
         VkQueue graphicsQueue = nullptr;
         VkQueue presentationQueue = nullptr;
         VkSurfaceKHR surface = nullptr;
+        VkPhysicalDeviceProperties properties;
 
 		const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 

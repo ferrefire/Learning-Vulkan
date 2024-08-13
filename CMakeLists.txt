@@ -11,6 +11,16 @@ target_include_directories(${PROJECT_NAME} PUBLIC "includes")
 include(FetchContent)
 
 FetchContent_Declare(
+	glm
+	GIT_REPOSITORY https://github.com/g-truc/glm.git
+	GIT_TAG bf71a834948186f4097caa076cd2663c69a10e1e
+)
+
+FetchContent_MakeAvailable(glm)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC glm)
+
+FetchContent_Declare(
 	glfw
 	GIT_REPOSITORY https://github.com/glfw/glfw.git
 	GIT_TAG 3.4

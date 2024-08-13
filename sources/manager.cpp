@@ -67,6 +67,8 @@ void Manager::InitializeVulkan()
     graphics.CreateSurface();
     graphics.PickPhysicalDevice();
     graphics.CreateLogicalDevice();
+
+	std::cout << graphics.properties.deviceName << std::endl;
 }
 
 void Manager::Frame()
