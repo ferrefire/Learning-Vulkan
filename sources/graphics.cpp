@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <vector>
 #include <set>
+#include <iostream>
 
 #include "manager.hpp"
 
@@ -97,6 +98,8 @@ void Graphics::PickPhysicalDevice()
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
+	//std::cout << deviceCount << std::endl;
+
     if (deviceCount == 0)
     {
         throw std::runtime_error("failed to find a GPU with Vulkan support");
@@ -109,7 +112,7 @@ void Graphics::PickPhysicalDevice()
     {
         if (IsDeviceSuitable(device))
         {
-            physicalDevice = device;
+            physicalDevice = device; 
             break;
         }
     }

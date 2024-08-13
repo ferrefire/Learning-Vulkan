@@ -1,8 +1,8 @@
 #ifndef MANAGER_HPP
 #define MANAGER_HPP
 
-#include "vulkan/vulkan.h"
-#include "GLFW/glfw3.h"
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 
 #include "window.hpp"
 #include "graphics.hpp"
