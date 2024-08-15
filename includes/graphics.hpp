@@ -41,6 +41,7 @@ class Graphics
         VkQueue graphicsQueue = nullptr;
         VkQueue presentationQueue = nullptr;
         VkSurfaceKHR surface = nullptr;
+        VkSwapchainKHR swapChain = nullptr;
         VkPhysicalDeviceProperties properties;
 
 		const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
@@ -49,16 +50,21 @@ class Graphics
         void PickPhysicalDevice();
         void CreateLogicalDevice();
         void CreateSurface();
+        void CreateSwapChain();
 
         void DestroyInstance();
         void DestroyDevice();
         void DestroySurface();
+        void DestroySwapChain();
         void Destroy();
 
         QueueFamilies FindQueueFamilies(VkPhysicalDevice device);
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
         bool IsDeviceSuitable(VkPhysicalDevice device);
 		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
+        VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
+        VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
+        VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 };
 
 #endif
