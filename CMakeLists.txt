@@ -9,7 +9,7 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC "includes")
 
 set(GLFW_BUILD_WAYLAND False)
-#set(BUILD_WSI_WAYLAND_SUPPORT False)
+set(BUILD_WSI_WAYLAND_SUPPORT False)
 
 include(FetchContent)
 
@@ -29,21 +29,21 @@ FetchContent_Declare(
 #FetchContent_MakeAvailable(glfw)
 #target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
 
-#FetchContent_Declare(
-#    Vulkan-Headers
-#    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
-#    GIT_TAG 595c8d4794410a4e64b98dc58d27c0310d7ea2fd
-#)
+FetchContent_Declare(
+    Vulkan-Headers
+    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
+    GIT_TAG 595c8d4794410a4e64b98dc58d27c0310d7ea2fd
+)
 #FetchContent_MakeAvailable(Vulkan-Headers)
 #target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan-Headers)
 
-#FetchContent_Declare(
-#    Vulkan-Loader
-#    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Loader.git
-#    GIT_TAG faeb5882c7faf3e683ebb1d9d7dbf9bc337b8fa6
-#)
+FetchContent_Declare(
+    Vulkan-Loader
+    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Loader.git
+    GIT_TAG faeb5882c7faf3e683ebb1d9d7dbf9bc337b8fa6
+)
 #FetchContent_MakeAvailable(Vulkan-Loader)
 
-FetchContent_MakeAvailable(glm glfw)
+FetchContent_MakeAvailable(glm glfw Vulkan-Headers Vulkan-Loader)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC glm glfw vulkan)
+target_link_libraries(${PROJECT_NAME} PUBLIC glm glfw Vulkan-Headers vulkan)
