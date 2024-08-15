@@ -8,44 +8,42 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC "includes")
 
+set(GLFW_BUILD_WAYLAND False)
+#set(BUILD_WSI_WAYLAND_SUPPORT False)
+
 include(FetchContent)
 
 FetchContent_Declare(
-	glm
-	GIT_REPOSITORY https://github.com/g-truc/glm.git
-	GIT_TAG bf71a834948186f4097caa076cd2663c69a10e1e
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG 0af55ccecd98d4e5a8d1fad7de25ba429d60e863
 )
-
-FetchContent_MakeAvailable(glm)
-
-target_link_libraries(${PROJECT_NAME} PUBLIC glm)
+#FetchContent_MakeAvailable(glm)
+#target_link_libraries(${PROJECT_NAME} PUBLIC glm)
 
 FetchContent_Declare(
-	glfw
-	GIT_REPOSITORY https://github.com/glfw/glfw.git
-	GIT_TAG 3.4
+    glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG 7b6aead9fb88b3623e3b3725ebb42670cbe4c579
 )
+#FetchContent_MakeAvailable(glfw)
+#target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
 
-FetchContent_MakeAvailable(glfw)
+#FetchContent_Declare(
+#    Vulkan-Headers
+#    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
+#    GIT_TAG 595c8d4794410a4e64b98dc58d27c0310d7ea2fd
+#)
+#FetchContent_MakeAvailable(Vulkan-Headers)
+#target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan-Headers)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
+#FetchContent_Declare(
+#    Vulkan-Loader
+#    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Loader.git
+#    GIT_TAG faeb5882c7faf3e683ebb1d9d7dbf9bc337b8fa6
+#)
+#FetchContent_MakeAvailable(Vulkan-Loader)
 
-FetchContent_Declare(
-	Vulkan-Headers
-	GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
-	GIT_TAG v1.3.292
-)
+FetchContent_MakeAvailable(glm glfw)
 
-FetchContent_MakeAvailable(Vulkan-Headers)
-
-target_link_libraries(${PROJECT_NAME} PUBLIC Vulkan-Headers)
-
-FetchContent_Declare(
-	Vulkan-Loader
-	GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Loader.git
-	GIT_TAG v1.3.292
-)
-
-FetchContent_MakeAvailable(Vulkan-Loader)
-
-target_link_libraries(${PROJECT_NAME} PUBLIC vulkan)
+target_link_libraries(${PROJECT_NAME} PUBLIC glm glfw vulkan)
