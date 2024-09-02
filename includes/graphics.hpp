@@ -46,16 +46,23 @@ class Graphics
 
 		const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
+		std::vector<VkImage> swapChainImages;
+		std::vector<VkImageView> swapChainImageViews;
+		VkFormat swapChainImageFormat;
+		VkExtent2D swapChainExtent;
+
 		void CreateInstance();
         void PickPhysicalDevice();
         void CreateLogicalDevice();
         void CreateSurface();
         void CreateSwapChain();
+		void CreateImageViews();
 
         void DestroyInstance();
         void DestroyDevice();
         void DestroySurface();
         void DestroySwapChain();
+		void DestroyImageViews();
         void Destroy();
 
         QueueFamilies FindQueueFamilies(VkPhysicalDevice device);

@@ -68,6 +68,9 @@ void Manager::InitializeVulkan()
     graphics.PickPhysicalDevice();
     graphics.CreateLogicalDevice();
     graphics.CreateSwapChain();
+	graphics.CreateImageViews();
+
+	//pipeline.Create();
 
 	std::cout << graphics.properties.deviceName << std::endl;
 }

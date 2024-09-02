@@ -6,6 +6,7 @@
 
 #include "window.hpp"
 #include "graphics.hpp"
+#include "pipeline.hpp"
 
 class Manager
 {
@@ -15,6 +16,7 @@ class Manager
 
 		static Window window;
         static Graphics graphics;
+		static Pipeline pipeline;
 
 	public:
 		static void Start();

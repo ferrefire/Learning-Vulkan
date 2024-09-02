@@ -10,6 +10,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC "includes")
 
 set(GLFW_BUILD_WAYLAND False)
 set(BUILD_WSI_WAYLAND_SUPPORT False)
+set(ENABLE_OPT False)
 
 include(FetchContent)
 
@@ -44,6 +45,12 @@ FetchContent_Declare(
 )
 #FetchContent_MakeAvailable(Vulkan-Loader)
 
-FetchContent_MakeAvailable(glm glfw Vulkan-Headers Vulkan-Loader)
+FetchContent_Declare(
+    glslang
+    GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
+    GIT_TAG fa9c3deb49e035a8abcabe366f26aac010f6cbfb
+)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC glm glfw Vulkan-Headers vulkan)
+FetchContent_MakeAvailable(glm glfw Vulkan-Headers Vulkan-Loader glslang)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC glm glfw Vulkan-Headers vulkan glslang)
