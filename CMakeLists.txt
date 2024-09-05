@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.24)
 project(limitless VERSION 1.0)
+
+option(DEV "DEV" OFF)
+set(ACTIVE_FETCH_LIBRARIES "glm" "glfw" "Vulkan-Headers" "Vulkan-Loader")
+set(ACTIVE_LINK_LIBRARIES "glm::glm" "glfw" "Vulkan-Headers" "vulkan")
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
@@ -9,7 +14,7 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC "includes")
 
 #set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE ALWAYS)
-set(GLFW_BUILD_WAYLAND False)
+set(GLFW_BUILD_WAYLAND False)#check false replace by off
 set(BUILD_WSI_WAYLAND_SUPPORT False)
 set(ENABLE_OPT False)
 
@@ -43,12 +48,21 @@ FetchContent_Declare(
     #FIND_PACKAGE_ARGS NAMES vulkan Vulkan-Loader
 )
 
+if(DEV)
+	FetchContent_Declare(
+	    glslang
+	    GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
+	    GIT_TAG fa9c3deb49e035a8abcabe366f26aac010f6cbfb
+	)
+	list(APPEND ACTIVE_FETCH_LIBRARIES "glslang")
+	list(APPEND ACTIVE_LINK_LIBRARIES "glslang")
+endif()
+
 #FetchContent_Declare(
-#    glslang
-#    GIT_REPOSITORY https://github.com/KhronosGroup/glslang.git
-#    GIT_TAG fa9c3deb49e035a8abcabe366f26aac010f6cbfb
+#    shaderc
+#    GIT_REPOSITORY https://github.com/google/shaderc.git
+#    GIT_TAG 47a9387ef5b3600d30d84c71ec77a59dc7db46fa
 #)
 
-FetchContent_MakeAvailable(glm glfw Vulkan-Headers Vulkan-Loader)
-
-target_link_libraries(${PROJECT_NAME} PUBLIC glm::glm glfw Vulkan-Headers vulkan)
+FetchContent_MakeAvailable(${ACTIVE_FETCH_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${ACTIVE_LINK_LIBRARIES})

@@ -29,6 +29,7 @@ class Manager
 		static void Frame();
 
 		static Window &GetWindow();
+		static Graphics &GetGraphics();
 };
 
 #endif
