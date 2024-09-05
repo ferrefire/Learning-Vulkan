@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.22)
 project(limitless VERSION 1.0)
 
 option(DEV "DEV" OFF)
@@ -20,6 +20,7 @@ set(ENABLE_OPT False)
 
 include(FetchContent)
 
+if(CMAKE_VERSION GREATER_EQUAL 3.24)
 FetchContent_Declare(
     glm
     GIT_REPOSITORY https://github.com/g-truc/glm.git
@@ -33,6 +34,21 @@ FetchContent_Declare(
     GIT_TAG 7b6aead9fb88b3623e3b3725ebb42670cbe4c579
     FIND_PACKAGE_ARGS NAMES glfw3
 )
+else()
+FetchContent_Declare(
+    glm
+    GIT_REPOSITORY https://github.com/g-truc/glm.git
+    GIT_TAG 0af55ccecd98d4e5a8d1fad7de25ba429d60e863
+    #FIND_PACKAGE_ARGS NAMES glm
+)
+
+FetchContent_Declare(
+    glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG 7b6aead9fb88b3623e3b3725ebb42670cbe4c579
+    #FIND_PACKAGE_ARGS NAMES glfw3
+)
+endif()
 
 FetchContent_Declare(
     Vulkan-Headers

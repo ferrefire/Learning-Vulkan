@@ -1,4 +1,4 @@
-# /usr/bin/bash
+#! /usr/bin/bash
 
 path=$(pwd)
 
@@ -52,6 +52,8 @@ run_command () {
 	cd $path/build/_deps
 	rm -rf vulkan-headers-src
 	rm -rf vulkan-loader-src
+	rm -rf glfw-src
+	rm -rf glm-src
 	else
 	echo "ERROR: '"$path"/build/_deps' could not be found."
 	exit 1
