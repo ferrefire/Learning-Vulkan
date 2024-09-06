@@ -18,7 +18,11 @@ int main()
 		Manager::Frame();
 
 		glfwPollEvents();
+
+		Manager::GetGraphics().DrawFrame();
 	}
+
+	vkDeviceWaitIdle(Manager::GetGraphics().device);
 
 	Manager::Quit(EXIT_SUCCESS);
 }

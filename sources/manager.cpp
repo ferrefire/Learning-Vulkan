@@ -29,10 +29,7 @@ void Manager::Quit(int exitCode)
 {
 	Clean();
 
-	if (vulkanInitialized) 
-    {
-        graphics.Destroy();
-    }
+	graphics.Destroy();
 
 	if (glfwInitialized)
     {
@@ -60,16 +57,9 @@ void Manager::InitializeGLFW()
 
 void Manager::InitializeVulkan()
 {
-	graphics.CreateInstance();
+	graphics.Create();
 
-    vulkanInitialized = true;
-
-    graphics.CreateSurface();
-    graphics.PickPhysicalDevice();
-    graphics.CreateLogicalDevice();
-    graphics.CreateSwapChain();
-	graphics.CreateImageViews();
-	graphics.CreatePipeline();
+	vulkanInitialized = true;
 
 	std::cout << graphics.properties.deviceName << std::endl;
 }

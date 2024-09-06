@@ -43,31 +43,51 @@ class Graphics
         VkSurfaceKHR surface = nullptr;
         VkSwapchainKHR swapChain = nullptr;
         VkPhysicalDeviceProperties properties;
-		VkPipelineLayout pipelineLayout = nullptr;
+		VkRenderPass renderPass = nullptr;
+		VkPipelineLayout graphicsPipelineLayout = nullptr;
+		VkPipeline graphicsPipeline = nullptr;
+		VkCommandPool commandPool = nullptr;
+		VkCommandBuffer commandBuffer = nullptr;
+		VkSemaphore imageAvailableSemaphore = nullptr;
+		VkSemaphore renderFinishedSemaphore = nullptr;
+		VkFence inFlightFence = nullptr;
 
 		const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
 		std::vector<VkImage> swapChainImages;
 		std::vector<VkImageView> swapChainImageViews;
+		std::vector<VkFramebuffer> swapChainFramebuffers;
 		VkFormat swapChainImageFormat;
 		VkExtent2D swapChainExtent;
 
 		void CreateInstance();
-        void PickPhysicalDevice();
         void CreateLogicalDevice();
         void CreateSurface();
         void CreateSwapChain();
 		void CreateImageViews();
-		void CreatePipeline();
+		void CreateGraphicsPipeline();
 		void CreateRenderPass();
+		void CreateFramebuffers();
+		void CreateCommandPool();
+		void CreateCommandBuffer();
+		void CreateSyncObjects();
+		void Create();
 
 		void DestroyInstance();
         void DestroyDevice();
         void DestroySurface();
         void DestroySwapChain();
 		void DestroyImageViews();
-		void DestroyPipeline();
+		void DestroyGraphicsPipeline();
+		void DestroyRenderPass();
+		void DestroyFramebuffers();
+		void DestroyCommandPool();
+		void DestroySyncObjects();
 		void Destroy();
+
+		void PickPhysicalDevice();
+		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		void DrawFrame();
 
         QueueFamilies FindQueueFamilies(VkPhysicalDevice device);
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
