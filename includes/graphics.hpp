@@ -43,6 +43,7 @@ class Graphics
         VkSurfaceKHR surface = nullptr;
         VkSwapchainKHR swapChain = nullptr;
         VkPhysicalDeviceProperties properties;
+		VkPipelineLayout pipelineLayout = nullptr;
 
 		const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
@@ -57,13 +58,16 @@ class Graphics
         void CreateSurface();
         void CreateSwapChain();
 		void CreateImageViews();
+		void CreatePipeline();
+		void CreateRenderPass();
 
-        void DestroyInstance();
+		void DestroyInstance();
         void DestroyDevice();
         void DestroySurface();
         void DestroySwapChain();
 		void DestroyImageViews();
-        void Destroy();
+		void DestroyPipeline();
+		void Destroy();
 
         QueueFamilies FindQueueFamilies(VkPhysicalDevice device);
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
@@ -72,6 +76,7 @@ class Graphics
         VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
         VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
         VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
+		VkShaderModule CreateShaderModule(const std::vector<char> &code);
 };
 
 #endif

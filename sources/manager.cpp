@@ -69,8 +69,7 @@ void Manager::InitializeVulkan()
     graphics.CreateLogicalDevice();
     graphics.CreateSwapChain();
 	graphics.CreateImageViews();
-
-	pipeline.Create();
+	graphics.CreatePipeline();
 
 	std::cout << graphics.properties.deviceName << std::endl;
 }
@@ -98,4 +97,3 @@ bool Manager::vulkanInitialized = false;
 
 Window Manager::window;
 Graphics Manager::graphics;
-Pipeline Manager::pipeline;
