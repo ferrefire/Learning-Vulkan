@@ -22,6 +22,7 @@ class Window
 		void Close();
 
 		bool IsOpen();
+		static void framebufferResizeCallback(GLFWwindow *window, int width, int height);
 };
 
 #endif

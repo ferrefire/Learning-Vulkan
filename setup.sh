@@ -5,12 +5,15 @@ path=$(pwd)
 fresh=""
 dev="-DDEV=ON"
 check_found="-DCHECK_FOUND=OFF"
+release=0
 
 run_command () {
 
 	if [[ $1 == "fresh" ]] || [[ $1 == "fr" ]]; then
 		return
 	elif [[ $1 == "check" ]] || [[ $1 == "chk" ]]; then
+		return
+	elif [[ $1 == "release" ]] || [[ $1 == "rel" ]]; then
 		return
 	fi
 
@@ -51,18 +54,30 @@ run_command () {
 			echo "ERROR: '"$path"/build/Makefile' could not be found."
 			exit 1
 		fi
-
-	elif [[ $1 == "release" ]] || [[ $1 == "rel" ]]; then
-		if test -d $path/build/_deps; then
-			cd $path/build/_deps
-			rm -rf vulkan-headers-src
-			rm -rf vulkan-loader-src
-			rm -rf glfw-src
-			rm -rf glm-src
-		else
-			echo "ERROR: '"$path"/build/_deps' could not be found."
-			exit 1
+		if [[ $release == 1 ]]; then
+			if test -d $path/build/_deps; then
+				cd $path/build/_deps
+				rm -rf vulkan-headers-src
+				rm -rf vulkan-loader-src
+				rm -rf glfw-src
+				rm -rf glm-src
+			else
+				echo "ERROR: '"$path"/build/_deps' could not be found."
+				exit 1
+			fi
 		fi
+
+	#elif [[ $1 == "release" ]] || [[ $1 == "rel" ]]; then
+	#	if test -d $path/build/_deps; then
+	#		cd $path/build/_deps
+	#		rm -rf vulkan-headers-src
+	#		rm -rf vulkan-loader-src
+	#		rm -rf glfw-src
+	#		rm -rf glm-src
+	#	else
+	#		echo "ERROR: '"$path"/build/_deps' could not be found."
+	#		exit 1
+	#	fi
 
 	else
 		echo "ERROR: '"$1"' is not a valid command."
@@ -77,6 +92,7 @@ if test -f setup.sh; then
 			fresh="--fresh"
 		elif [[ $x == "release" ]] || [[ $x == "rel" ]]; then
 			dev="-DDEV=OFF"
+			release=1
 		elif [[ $x == "check" ]] || [[ $x == "chk" ]]; then
 			check_found="-DCHECK_FOUND=ON"
 		fi

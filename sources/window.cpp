@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include "manager.hpp"
+
 Window::Window()
 {
 
@@ -23,6 +25,8 @@ void Window::Create()
     {
         throw std::runtime_error("failed to create window");
     }
+
+	glfwSetFramebufferSizeCallback(data, Window::framebufferResizeCallback);
 }
 
 void Window::Destroy()
@@ -45,4 +49,9 @@ bool Window::IsOpen()
 	if (!data) return (false);
 
 	return (!glfwWindowShouldClose(data));
+}
+
+void Window::framebufferResizeCallback(GLFWwindow *window, int width, int height)
+{
+	Manager::currentGraphics->framebufferResized = true;
 }
