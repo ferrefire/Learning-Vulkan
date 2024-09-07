@@ -6,12 +6,19 @@
 #include "manager.hpp"
 #include "time.hpp"
 #include "input.hpp"
+#include "mesh.hpp"
+
+void Setup()
+{
+	Mesh::graphics = Manager::currentGraphics;
+}
 
 int main()
 {
+	Setup();
 	Manager::Start();
 
-	while (Manager::GetWindow().IsOpen())
+	while (Manager::currentWindow->IsOpen())
 	{
 		Time::Frame();
 		Input::Frame();
@@ -19,10 +26,10 @@ int main()
 
 		glfwPollEvents();
 
-		Manager::GetGraphics().DrawFrame();
+		Manager::currentGraphics->DrawFrame();
 	}
 
-	vkDeviceWaitIdle(Manager::GetGraphics().device);
+	vkDeviceWaitIdle(Manager::currentGraphics->device);
 
 	Manager::Quit(EXIT_SUCCESS);
 }

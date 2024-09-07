@@ -30,10 +30,12 @@ void Manager::Quit(int exitCode)
 	Clean();
 
 	graphics.Destroy();
+	currentGraphics = nullptr;
 
 	if (glfwInitialized)
     {
         window.Destroy();
+		currentWindow = nullptr;
         glfwTerminate();
     }
 
@@ -50,9 +52,10 @@ void Manager::InitializeGLFW()
     glfwInitialized = true;
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	window.Create();
+
+	currentWindow = &window;
 }
 
 void Manager::InitializeVulkan()
@@ -60,6 +63,8 @@ void Manager::InitializeVulkan()
 	graphics.Create();
 
 	vulkanInitialized = true;
+
+	currentGraphics = &graphics;
 
 	std::cout << graphics.properties.deviceName << std::endl;
 }
@@ -87,3 +92,8 @@ bool Manager::vulkanInitialized = false;
 
 Window Manager::window;
 Graphics Manager::graphics;
+Mesh Manager::mesh;
+
+Window *Manager::currentWindow = &Manager::window;
+Graphics *Manager::currentGraphics = &Manager::graphics;
+Mesh *Manager::currentMesh = &Manager::mesh;

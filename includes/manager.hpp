@@ -6,6 +6,7 @@
 
 #include "window.hpp"
 #include "graphics.hpp"
+#include "mesh.hpp"
 
 class Manager
 {
@@ -15,8 +16,13 @@ class Manager
 
 		static Window window;
         static Graphics graphics;
+		static Mesh mesh;
 
 	public:
+		static Window *currentWindow;
+		static Graphics *currentGraphics;
+		static Mesh *currentMesh;
+
 		static void Start();
 		static void Clean();
 		static void Quit(int exitCode);

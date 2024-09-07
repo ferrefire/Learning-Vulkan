@@ -15,6 +15,7 @@ class Window
 		~Window();
 
         GLFWwindow *data = nullptr;
+		bool isResizeable = true;
 
         void Create();
 		void Destroy();

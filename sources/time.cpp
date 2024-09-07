@@ -5,12 +5,18 @@
 
 #include <chrono>
 #include <ctime>
+#include <string>
+
+#include "manager.hpp"
 
 void Time::Frame()
 {
     currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
+
+	frameCountThisTick++;
+	frameTimeThisTick += deltaTime;
 
 	if (newSecond) newSecond = false;
 	if (currentFrame - timeLastSecond > 1.0)
@@ -24,6 +30,11 @@ void Time::Frame()
 	{
 		newTick = true;
 		timeLastTick = currentFrame;
+
+		frameCountLastTick = frameCountThisTick;
+		frameTimeLastTick = frameTimeThisTick;
+		frameCountThisTick = 0;
+		frameTimeThisTick = 0;
 	}
 
 	if (newSubTick) newSubTick = false;
@@ -33,14 +44,14 @@ void Time::Frame()
 		timeLastSubTick = currentFrame;
 	}
 
-	framesSinceLastFrameTick++;
 	if (newFrameTick) newFrameTick = false;
 	if (currentFrame - timeLastFrameTick > 0.01666666)
 	{
 		newFrameTick = true;
 		timeLastFrameTick = currentFrame;
-		framesSinceLastFrameTick = 0;
 	}
+
+	Time::CalculateFPS();
 }
 
 unsigned int Time::GetTime()
@@ -49,14 +60,27 @@ unsigned int Time::GetTime()
 	return result;
 }
 
+void Time::CalculateFPS()
+{
+	if (Time::newSubTick)
+	{
+		glfwSetWindowTitle(Manager::currentWindow->data, std::to_string(int(frameCountLastTick / frameTimeLastTick)).c_str());
+	}
+}
+
 float Time::deltaTime = 0;
 float Time::currentFrame = 0;
 float Time::lastFrame = 0;
+
 double Time::timeLastSecond = 0;
 double Time::timeLastTick = 0;
 double Time::timeLastSubTick = 0;
 double Time::timeLastFrameTick = 0;
-int Time::framesSinceLastFrameTick = 0;
+
+int Time::frameCountThisTick = 0;
+float Time::frameTimeThisTick = 0;
+int Time::frameCountLastTick = 0;
+float Time::frameTimeLastTick = 0;
 
 bool Time::newSecond = false;
 bool Time::newTick = false;

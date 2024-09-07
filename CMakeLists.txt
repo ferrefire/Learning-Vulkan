@@ -18,7 +18,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC "includes")
 set(GLFW_BUILD_WAYLAND False)#check false replace by off
 set(BUILD_WSI_WAYLAND_SUPPORT False)
 set(ENABLE_OPT False)
-if(CMAKE_VERSION LESS 3.24)
+if(CMAKE_VERSION VERSION_LESS 3.24)
 set(CHECK_FOUND OFF)
 endif()
 
@@ -84,12 +84,6 @@ if(DEV)
 	list(APPEND ACTIVE_FETCH_LIBRARIES "glslang")
 	list(APPEND ACTIVE_LINK_LIBRARIES "glslang")
 endif()
-
-#FetchContent_Declare(
-#    shaderc
-#    GIT_REPOSITORY https://github.com/google/shaderc.git
-#    GIT_TAG 47a9387ef5b3600d30d84c71ec77a59dc7db46fa
-#)
 
 FetchContent_MakeAvailable(${ACTIVE_FETCH_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${ACTIVE_LINK_LIBRARIES})

@@ -16,6 +16,7 @@ void Window::Create()
 {
 	if (data) return ;
 
+	glfwWindowHint(GLFW_RESIZABLE, isResizeable);
 	data = glfwCreateWindow(width, height, "Vulkan window", nullptr, nullptr);
     
     if (!data)

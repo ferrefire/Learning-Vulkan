@@ -90,6 +90,7 @@ class Graphics
 
 		void PickPhysicalDevice();
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		void RecreateSwapChain();
 		void DrawFrame();
 
         QueueFamilies FindQueueFamilies(VkPhysicalDevice device);
@@ -100,6 +101,7 @@ class Graphics
         VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
         VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 		VkShaderModule CreateShaderModule(const std::vector<char> &code);
+		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 };
 
 #endif

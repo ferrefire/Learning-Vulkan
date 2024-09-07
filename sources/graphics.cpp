@@ -22,7 +22,7 @@ Graphics::~Graphics()
 
 void Graphics::CreateInstance()
 {
-    if (instance) return ;
+    if (instance) throw std::runtime_error("cannot create instance because it already exists");
 
     VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -133,7 +133,7 @@ bool Graphics::IsDeviceSuitable(VkPhysicalDevice device)
 	vkGetPhysicalDeviceProperties(device, &deviceProperties);
 	bool isDiscrete = deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
 
-	return (queueFamilies.Complete() && extensionsSupported && swapChainAdequate);
+	return (queueFamilies.Complete() && extensionsSupported && swapChainAdequate && isDiscrete);
 }
 
 bool Graphics::CheckDeviceExtensionSupport(VkPhysicalDevice device)
@@ -186,7 +186,7 @@ void Graphics::PickPhysicalDevice()
 
 void Graphics::CreateLogicalDevice()
 {
-    if (device) return;
+    if (device) throw std::runtime_error("cannot create logical device because it already exists");
 
     QueueFamilies queueFamilies = FindQueueFamilies(physicalDevice);
 
@@ -259,7 +259,7 @@ VkExtent2D Graphics::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabiliti
     else
     {
         int width, height;
-        glfwGetFramebufferSize(Manager::GetWindow().data, &width, &height);
+        glfwGetFramebufferSize(Manager::currentWindow->data, &width, &height);
 
         VkExtent2D actualExtent = {static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
 
@@ -272,9 +272,9 @@ VkExtent2D Graphics::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabiliti
 
 void Graphics::CreateSurface()
 {
-    if (surface) return;
+    if (surface) throw std::runtime_error("cannot create surface because it already exists");
 
-    if (glfwCreateWindowSurface(instance, Manager::GetWindow().data, nullptr, &surface) != VK_SUCCESS)
+    if (glfwCreateWindowSurface(instance, Manager::currentWindow->data, nullptr, &surface) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create window surface");
     }
@@ -282,7 +282,7 @@ void Graphics::CreateSurface()
 
 void Graphics::CreateSwapChain()
 {
-    if (swapChain) return;
+    if (swapChain) throw std::runtime_error("cannot create swap chain because it already exists");
 
     SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(physicalDevice);
 
@@ -343,6 +343,8 @@ void Graphics::CreateSwapChain()
 
 void Graphics::CreateImageViews()
 {
+	if (swapChainImageViews.size() != 0) throw std::runtime_error("cannot create image views because they already exists");
+
 	swapChainImageViews.resize(swapChainImages.size());
 
 	for (size_t i = 0; i < swapChainImages.size(); i++)
@@ -390,6 +392,8 @@ VkShaderModule Graphics::CreateShaderModule(const std::vector<char> &code)
 
 void Graphics::CreateGraphicsPipeline()
 {
+	if (graphicsPipeline) throw std::runtime_error("cannot create graphics pipeline because it already exists");
+
 	std::string currentPath = Utilities::GetPath();
 
 	// system(std::string(currentPath + "/shader-compiler.sh " + vertexPath + " " + fragmentPath).c_str());
@@ -414,12 +418,15 @@ void Graphics::CreateGraphicsPipeline()
 
 	VkPipelineShaderStageCreateInfo shaderStages[] = {vertexShaderStageInfo, fragmentShaderStageInfo};
 
+	auto bindingDescription = Mesh::Vertex::GetBindingDescription();
+	auto attributeDescriptions = Mesh::Vertex::GetAttributeDescriptions();
+
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount = 0;
-	vertexInputInfo.pVertexAttributeDescriptions = nullptr;
-	vertexInputInfo.vertexAttributeDescriptionCount = 0;
-	vertexInputInfo.pVertexBindingDescriptions = nullptr;
+	vertexInputInfo.vertexBindingDescriptionCount = 1;
+	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -542,6 +549,8 @@ void Graphics::CreateGraphicsPipeline()
 
 void Graphics::CreateRenderPass()
 {
+	if (renderPass) throw std::runtime_error("cannot create render pass because it already exists");
+
 	VkAttachmentDescription colorAttachment{};
 	colorAttachment.format = swapChainImageFormat;
 	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -586,6 +595,8 @@ void Graphics::CreateRenderPass()
 
 void Graphics::CreateFramebuffers()
 {
+	if (swapChainFramebuffers.size() != 0) throw std::runtime_error("cannot create framebuffers because they already exists");
+
 	swapChainFramebuffers.resize(swapChainImageViews.size());
 
 	for (size_t i = 0; i < swapChainImageViews.size(); i++)
@@ -610,6 +621,8 @@ void Graphics::CreateFramebuffers()
 
 void Graphics::CreateCommandPool()
 {
+	if (commandPool) throw std::runtime_error("cannot create command pool because it already exists");
+
 	QueueFamilies queueFamilyIndices = FindQueueFamilies(physicalDevice);
 
 	VkCommandPoolCreateInfo poolInfo{};
@@ -625,6 +638,8 @@ void Graphics::CreateCommandPool()
 
 void Graphics::CreateCommandBuffers()
 {
+	if (commandBuffers.size() != 0) throw std::runtime_error("cannot create command buffers because they already exists");
+
 	commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
 	VkCommandBufferAllocateInfo allocInfo{};
@@ -680,7 +695,11 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	scissor.extent = swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+	VkBuffer vertexBuffers[] = {Manager::currentMesh->vertexBuffer};
+	VkDeviceSize offsets[] = {0};
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+	vkCmdDraw(commandBuffer, static_cast<uint32_t>(Manager::currentMesh->vertices.size()), 1, 0, 0);
 
 	vkCmdEndRenderPass(commandBuffer);
 
@@ -692,6 +711,9 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 void Graphics::CreateSyncObjects()
 {
+	if (imageAvailableSemaphores.size() != 0 || renderFinishedSemaphores.size() != 0 || inFlightFences.size() != 0) 
+		throw std::runtime_error("cannot create sync objects because they already exists");
+
 	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 	inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -718,10 +740,21 @@ void Graphics::CreateSyncObjects()
 void Graphics::DrawFrame()
 {
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-	vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
 	uint32_t imageIndex;
-	vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR)
+	{
+		RecreateSwapChain();
+		return;
+	}
+	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+	{
+		throw std::runtime_error("failed to acquire swap chain image");
+	}
+
+	vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
 	vkResetCommandBuffer(commandBuffers[currentFrame], 0);
 	RecordCommandBuffer(commandBuffers[currentFrame], imageIndex);
@@ -762,6 +795,43 @@ void Graphics::DrawFrame()
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
+void Graphics::RecreateSwapChain()
+{
+	int width = 0, height = 0;
+	glfwGetFramebufferSize(Manager::currentWindow->data, &width, &height);
+	while (width == 0 || height == 0)
+	{
+		glfwGetFramebufferSize(Manager::currentWindow->data, &width, &height);
+		glfwWaitEvents();
+	}
+
+	vkDeviceWaitIdle(device);
+
+	DestroyFramebuffers();
+	DestroyImageViews();
+	DestroySwapChain();
+
+	CreateSwapChain();
+	CreateImageViews();
+	CreateFramebuffers();
+}
+
+uint32_t Graphics::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+{
+	VkPhysicalDeviceMemoryProperties memProperties;
+	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+	{
+		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+		{
+			return i;
+		}
+	}
+
+	throw std::runtime_error("failed to find suitable memory type!");
+}
+
 void Graphics::Create()
 {
 	CreateInstance();
@@ -774,6 +844,7 @@ void Graphics::Create()
 	CreateGraphicsPipeline();
 	CreateFramebuffers();
 	CreateCommandPool();
+	Manager::currentMesh->CreateVertexBuffer();
 	CreateCommandBuffers();
 	CreateSyncObjects();
 }
@@ -891,6 +962,7 @@ void Graphics::Destroy()
 	DestroyRenderPass();
 	DestroyImageViews();
 	DestroySwapChain();
+	Manager::currentMesh->DestroyVertexBuffer();
 	DestroyDevice();
     DestroySurface();
     DestroyInstance();
