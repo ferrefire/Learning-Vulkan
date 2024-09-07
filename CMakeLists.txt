@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 project(limitless VERSION 1.0)
 
 option(DEV "DEV" OFF)
+option(CHECK_FOUND "CHECK_FOUND" OFF)
 set(ACTIVE_FETCH_LIBRARIES "glm" "glfw" "Vulkan-Headers" "Vulkan-Loader")
 set(ACTIVE_LINK_LIBRARIES "glm::glm" "glfw" "Vulkan-Headers" "vulkan")
 
@@ -17,10 +18,13 @@ target_include_directories(${PROJECT_NAME} PUBLIC "includes")
 set(GLFW_BUILD_WAYLAND False)#check false replace by off
 set(BUILD_WSI_WAYLAND_SUPPORT False)
 set(ENABLE_OPT False)
+if(CMAKE_VERSION LESS 3.24)
+set(CHECK_FOUND OFF)
+endif()
 
 include(FetchContent)
 
-if(CMAKE_VERSION GREATER_EQUAL 3.24)
+if(CHECK_FOUND)
 FetchContent_Declare(
     glm
     GIT_REPOSITORY https://github.com/g-truc/glm.git

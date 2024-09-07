@@ -6,11 +6,14 @@
 
 #include <vector>
 
+const int MAX_FRAMES_IN_FLIGHT = 2;
+
 class Graphics
 {
     private:
+		uint32_t currentFrame = 0;
 
-    public:
+	public:
         Graphics();
         ~Graphics();
 
@@ -47,10 +50,10 @@ class Graphics
 		VkPipelineLayout graphicsPipelineLayout = nullptr;
 		VkPipeline graphicsPipeline = nullptr;
 		VkCommandPool commandPool = nullptr;
-		VkCommandBuffer commandBuffer = nullptr;
-		VkSemaphore imageAvailableSemaphore = nullptr;
-		VkSemaphore renderFinishedSemaphore = nullptr;
-		VkFence inFlightFence = nullptr;
+		std::vector<VkCommandBuffer> commandBuffers;
+		std::vector<VkSemaphore> imageAvailableSemaphores;
+		std::vector<VkSemaphore> renderFinishedSemaphores;
+		std::vector<VkFence> inFlightFences;
 
 		const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
@@ -69,7 +72,7 @@ class Graphics
 		void CreateRenderPass();
 		void CreateFramebuffers();
 		void CreateCommandPool();
-		void CreateCommandBuffer();
+		void CreateCommandBuffers();
 		void CreateSyncObjects();
 		void Create();
 

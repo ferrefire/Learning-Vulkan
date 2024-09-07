@@ -16,7 +16,7 @@ compile_shader () {
 	"$path"/build/_deps/glslang-build/StandAlone/glslang -V $1 -o $1.spv
 }
 
-if [[ $@ == "ALL" ]]; then
+if [[ $@ == "ALL" ]] || [[ $@ == "all" ]]; then
 	files="$path/shaders/*"
 	for f in $files; do
 		if ! [[ $f == *".spv" ]]; then
