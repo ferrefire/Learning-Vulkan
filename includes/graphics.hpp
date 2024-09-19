@@ -71,6 +71,9 @@ class Graphics
 		std::vector<VkDeviceMemory> uniformBuffersMemory;
 		std::vector<void *> uniformBuffersMapped;
 
+		VkImage textureImage;
+		VkDeviceMemory textureImageMemory;
+
 		void CreateInstance();
         void CreateLogicalDevice();
         void CreateSurface();
@@ -86,6 +89,7 @@ class Graphics
 		void CreateUniformBuffers();
 		void CreateDescriptorPool();
 		void CreateDescriptorSets();
+		void CreateTextureImage();
 		void Create();
 
 		void DestroyInstance();
@@ -110,6 +114,8 @@ class Graphics
 		void RecreateSwapChain();
 		void DrawFrame();
 		void UpdateUniformBuffer(uint32_t currentImage);
+		void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, 
+			VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory);
 
 		QueueFamilies FindQueueFamilies(VkPhysicalDevice device);
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);

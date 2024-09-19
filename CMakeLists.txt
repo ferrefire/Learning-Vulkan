@@ -3,7 +3,7 @@ project(limitless VERSION 1.0)
 
 option(DEV "DEV" OFF)
 option(CHECK_FOUND "CHECK_FOUND" OFF)
-set(ACTIVE_FETCH_LIBRARIES "glm" "glfw" "Vulkan-Headers" "Vulkan-Loader")
+set(ACTIVE_FETCH_LIBRARIES "glm" "glfw" "Vulkan-Headers" "Vulkan-Loader" "stb_image")
 set(ACTIVE_LINK_LIBRARIES "glm::glm" "glfw" "Vulkan-Headers" "vulkan")
 
 set(CMAKE_CXX_STANDARD 17)
@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 FILE(GLOB SOURCE_FILES sources/*.cpp sources/*.c)
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-target_include_directories(${PROJECT_NAME} PUBLIC "includes")
+target_include_directories(${PROJECT_NAME} PUBLIC "includes" "build/_deps/stb_image-subbuild/stb_image-populate-prefix/src")
 
 #set(FETCHCONTENT_TRY_FIND_PACKAGE_MODE ALWAYS)
 set(GLFW_BUILD_WAYLAND False)#check false replace by off
@@ -84,6 +84,12 @@ if(DEV)
 	list(APPEND ACTIVE_FETCH_LIBRARIES "glslang")
 	list(APPEND ACTIVE_LINK_LIBRARIES "glslang")
 endif()
+
+FetchContent_Declare(
+    stb_image
+    URL https://raw.githubusercontent.com/nothings/stb/master/stb_image.h
+	DOWNLOAD_NO_EXTRACT True
+)
 
 FetchContent_MakeAvailable(${ACTIVE_FETCH_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${ACTIVE_LINK_LIBRARIES})

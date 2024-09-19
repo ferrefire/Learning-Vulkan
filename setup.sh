@@ -61,6 +61,7 @@ run_command () {
 				rm -rf vulkan-loader-src
 				rm -rf glfw-src
 				rm -rf glm-src
+				rm -rf stb_image-src
 			else
 				echo "ERROR: '"$path"/build/_deps' could not be found."
 				exit 1
