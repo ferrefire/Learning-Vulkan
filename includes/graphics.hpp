@@ -47,13 +47,16 @@ class Graphics
         VkSwapchainKHR swapChain = nullptr;
         VkPhysicalDeviceProperties properties;
 		VkRenderPass renderPass = nullptr;
+		VkDescriptorSetLayout descriptorSetLayout = nullptr;
 		VkPipelineLayout graphicsPipelineLayout = nullptr;
 		VkPipeline graphicsPipeline = nullptr;
 		VkCommandPool commandPool = nullptr;
+		VkDescriptorPool descriptorPool = nullptr;
 		std::vector<VkCommandBuffer> commandBuffers;
 		std::vector<VkSemaphore> imageAvailableSemaphores;
 		std::vector<VkSemaphore> renderFinishedSemaphores;
 		std::vector<VkFence> inFlightFences;
+		std::vector<VkDescriptorSet> descriptorSets;
 		bool framebufferResized = false;
 
 		const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
@@ -63,6 +66,10 @@ class Graphics
 		std::vector<VkFramebuffer> swapChainFramebuffers;
 		VkFormat swapChainImageFormat;
 		VkExtent2D swapChainExtent;
+
+		std::vector<VkBuffer> uniformBuffers;
+		std::vector<VkDeviceMemory> uniformBuffersMemory;
+		std::vector<void *> uniformBuffersMapped;
 
 		void CreateInstance();
         void CreateLogicalDevice();
@@ -75,6 +82,10 @@ class Graphics
 		void CreateCommandPool();
 		void CreateCommandBuffers();
 		void CreateSyncObjects();
+		void CreateDescriptorSetLayout();
+		void CreateUniformBuffers();
+		void CreateDescriptorPool();
+		void CreateDescriptorSets();
 		void Create();
 
 		void DestroyInstance();
@@ -87,6 +98,9 @@ class Graphics
 		void DestroyFramebuffers();
 		void DestroyCommandPool();
 		void DestroySyncObjects();
+		void DestroyDescriptorSetLayout();
+		void DestroyUniformBuffers();
+		void DestroyDescriptorPool();
 		void Destroy();
 
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
@@ -95,8 +109,9 @@ class Graphics
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		void RecreateSwapChain();
 		void DrawFrame();
+		void UpdateUniformBuffer(uint32_t currentImage);
 
-        QueueFamilies FindQueueFamilies(VkPhysicalDevice device);
+		QueueFamilies FindQueueFamilies(VkPhysicalDevice device);
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
         bool IsDeviceSuitable(VkPhysicalDevice device);
 		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);

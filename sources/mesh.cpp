@@ -39,6 +39,30 @@ void Mesh::CreateVertexBuffer()
 	vkFreeMemory(graphics->device, stagingBufferMemory, nullptr);
 }
 
+void Mesh::CreateIndexBuffer()
+{
+	if (indexBuffer) throw std::runtime_error("cannot create index buffer because it already exists");
+
+	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+
+	VkBuffer stagingBuffer;
+	VkDeviceMemory stagingBufferMemory;
+	graphics->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+	void *data;
+	vkMapMemory(graphics->device, stagingBufferMemory, 0, bufferSize, 0, &data);
+	memcpy(data, indices.data(), (size_t)bufferSize);
+	vkUnmapMemory(graphics->device, stagingBufferMemory);
+
+	graphics->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
+	graphics->CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
+
+	vkDestroyBuffer(graphics->device, stagingBuffer, nullptr);
+	vkFreeMemory(graphics->device, stagingBufferMemory, nullptr);
+}
+
 VkVertexInputBindingDescription Mesh::Vertex::GetBindingDescription()
 {
 	VkVertexInputBindingDescription bindingDescription{};
@@ -77,9 +101,25 @@ void Mesh::DestroyVertexBuffer()
 	}
 }
 
+void Mesh::DestroyIndexBuffer()
+{
+	if (indexBuffer)
+	{
+		vkDestroyBuffer(graphics->device, indexBuffer, nullptr);
+		indexBuffer = nullptr;
+	}
+
+	if (indexBufferMemory)
+	{
+		vkFreeMemory(graphics->device, indexBufferMemory, nullptr);
+		indexBufferMemory = nullptr;
+	}
+}
+
 void Mesh::Destroy()
 {
 	DestroyVertexBuffer();
+	DestroyIndexBuffer();
 }
 
 Graphics *Mesh::graphics = nullptr;
