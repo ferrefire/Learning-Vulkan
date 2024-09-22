@@ -3,9 +3,14 @@
 #include <stdexcept>
 #include <iostream>
 
-stbi_uc *Textures::LoadTexture(const std::string path, int &texWidth, int &texHeight, int &texChannels)
+#include "utilities.hpp"
+#include <string>
+
+stbi_uc *Textures::LoadTexture(const std::string path, int *texWidth, int *texHeight, int *texChannels)
 {
-	stbi_uc *pixels = stbi_load("textures/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	std::string currentPath = Utilities::GetPath();
+
+	stbi_uc *pixels = stbi_load((currentPath + "/textures/texture.jpg").c_str(), texWidth, texHeight, texChannels, STBI_rgb_alpha);
 
 	if (!pixels)
 	{

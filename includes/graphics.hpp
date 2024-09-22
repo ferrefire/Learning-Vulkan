@@ -71,8 +71,14 @@ class Graphics
 		std::vector<VkDeviceMemory> uniformBuffersMemory;
 		std::vector<void *> uniformBuffersMapped;
 
-		VkImage textureImage;
-		VkDeviceMemory textureImageMemory;
+		VkImage textureImage = nullptr;
+		VkDeviceMemory textureImageMemory = nullptr;
+		VkImageView textureImageView = nullptr;
+		VkSampler textureSampler = nullptr;
+
+		VkImage depthImage = nullptr;
+		VkDeviceMemory depthImageMemory = nullptr;
+		VkImageView depthImageView = nullptr;
 
 		void CreateInstance();
         void CreateLogicalDevice();
@@ -90,6 +96,9 @@ class Graphics
 		void CreateDescriptorPool();
 		void CreateDescriptorSets();
 		void CreateTextureImage();
+		void CreateTextureImageView();
+		void CreateTextureSampler();
+		void CreateDepthResources();
 		void Create();
 
 		void DestroyInstance();
@@ -105,6 +114,10 @@ class Graphics
 		void DestroyDescriptorSetLayout();
 		void DestroyUniformBuffers();
 		void DestroyDescriptorPool();
+		void DestroyTextureImage();
+		void DestroyTextureImageView();
+		void DestroyTextureSampler();
+		void DestroyDepthResources();
 		void Destroy();
 
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
@@ -116,6 +129,14 @@ class Graphics
 		void UpdateUniformBuffer(uint32_t currentImage);
 		void CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, 
 			VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory);
+		VkCommandBuffer BeginSingleTimeCommands();
+		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+		void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+		void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+		VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+		VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+		VkFormat FindDepthFormat();
+		bool HasStencilComponent(VkFormat format);
 
 		QueueFamilies FindQueueFamilies(VkPhysicalDevice device);
 		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
