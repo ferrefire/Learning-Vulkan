@@ -38,21 +38,35 @@ run_command () {
 		rm -rf $path/build
 
 	elif [[ $1 == "run" ]] || [[ $1 == "r" ]]; then
-		if test -f $path/build/limitless; then
-			cd $path/build
-			./limitless
-		else
-			echo "ERROR: '"$path"/build/limitless' could not be found."
-			exit 1
+		if [[ $OSTYPE == "linux-gnu" ]]; then
+			if test -f $path/build/limitless; then
+				cd $path/build
+				./limitless
+			else
+				echo "ERROR: '"$path"/build/limitless' could not be found."
+				exit 1
+			fi
+		elif [[ $OSTYPE == "msys" ]]; then
+			if test -f $path/build/Release/limitless; then
+				cd $path/build
+				./Release/limitless
+			else
+				echo "ERROR: '"$path"/build/Release/limitless' could not be found."
+				exit 1
+			fi
 		fi
-
 	elif [[ $1 == "compile" ]] || [[ $1 == "cmp" ]]; then
-		if test -f $path/build/Makefile; then
+		if [[ $OSTYPE == "linux-gnu" ]]; then
+			if test -f $path/build/Makefile; then
+				cd $path/build
+				make -j
+			else
+				echo "ERROR: '"$path"/build/Makefile' could not be found."
+				exit 1
+			fi
+		elif [[ $OSTYPE == "msys" ]]; then
 			cd $path/build
-			make -j
-		else
-			echo "ERROR: '"$path"/build/Makefile' could not be found."
-			exit 1
+			cmake --build . --config Release
 		fi
 		if [[ $release == 1 ]]; then
 			if test -d $path/build/_deps; then
