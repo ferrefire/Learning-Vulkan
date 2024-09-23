@@ -1,5 +1,4 @@
-#ifndef MESH_HPP
-#define MESH_HPP
+#pragma once
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -85,5 +84,3 @@ class Mesh
 		void DestroyIndexBuffer();
 		void Destroy();
 };
-
-#endif

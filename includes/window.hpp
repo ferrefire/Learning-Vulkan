@@ -1,5 +1,4 @@
-#ifndef WINDOW_HPP
-#define WINDOW_HPP
+#pragma once
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -24,5 +23,3 @@ class Window
 		bool IsOpen();
 		static void framebufferResizeCallback(GLFWwindow *window, int width, int height);
 };
-
-#endif

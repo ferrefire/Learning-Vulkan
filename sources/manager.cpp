@@ -66,7 +66,7 @@ void Manager::InitializeVulkan()
 
 	currentGraphics = &graphics;
 
-	std::cout << graphics.properties.deviceName << std::endl;
+	std::cout << graphics.device.properties.deviceName << std::endl;
 }
 
 void Manager::Frame()

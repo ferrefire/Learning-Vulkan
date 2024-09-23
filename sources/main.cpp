@@ -34,7 +34,7 @@ int main()
 		Manager::currentGraphics->DrawFrame();
 	}
 
-	vkDeviceWaitIdle(Manager::currentGraphics->device);
+	vkDeviceWaitIdle(Manager::currentGraphics->device.logicalDevice);
 
 	Manager::Quit(EXIT_SUCCESS);
 }

@@ -1,5 +1,4 @@
-#ifndef UTILITIES_HPP
-#define UTILITIES_HPP
+#pragma once
 
 #include <string>
 #include <vector>
@@ -15,5 +14,3 @@ class Utilities
 		static bool Contains(const std::string &str, const std::string &find);
 		static std::string GetPath();
 };
-
-#endif

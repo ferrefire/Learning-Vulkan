@@ -1,5 +1,4 @@
-#ifndef MANAGER_HPP
-#define MANAGER_HPP
+#pragma once
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -35,5 +34,3 @@ class Manager
 		static Window &GetWindow();
 		static Graphics &GetGraphics();
 };
-
-#endif

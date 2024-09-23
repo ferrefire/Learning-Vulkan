@@ -27,16 +27,16 @@ void Mesh::CreateVertexBuffer()
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
 	void *data;
-	vkMapMemory(graphics->device, stagingBufferMemory, 0, bufferSize, 0, &data);
+	vkMapMemory(graphics->device.logicalDevice, stagingBufferMemory, 0, bufferSize, 0, &data);
 	memcpy(data, vertices.data(), (size_t)bufferSize);
-	vkUnmapMemory(graphics->device, stagingBufferMemory);
+	vkUnmapMemory(graphics->device.logicalDevice, stagingBufferMemory);
 
 	graphics->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
 	graphics->CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
 
-	vkDestroyBuffer(graphics->device, stagingBuffer, nullptr);
-	vkFreeMemory(graphics->device, stagingBufferMemory, nullptr);
+	vkDestroyBuffer(graphics->device.logicalDevice, stagingBuffer, nullptr);
+	vkFreeMemory(graphics->device.logicalDevice, stagingBufferMemory, nullptr);
 }
 
 void Mesh::CreateIndexBuffer()
@@ -51,16 +51,16 @@ void Mesh::CreateIndexBuffer()
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
 	void *data;
-	vkMapMemory(graphics->device, stagingBufferMemory, 0, bufferSize, 0, &data);
+	vkMapMemory(graphics->device.logicalDevice, stagingBufferMemory, 0, bufferSize, 0, &data);
 	memcpy(data, indices.data(), (size_t)bufferSize);
-	vkUnmapMemory(graphics->device, stagingBufferMemory);
+	vkUnmapMemory(graphics->device.logicalDevice, stagingBufferMemory);
 
 	graphics->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
 	graphics->CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
 
-	vkDestroyBuffer(graphics->device, stagingBuffer, nullptr);
-	vkFreeMemory(graphics->device, stagingBufferMemory, nullptr);
+	vkDestroyBuffer(graphics->device.logicalDevice, stagingBuffer, nullptr);
+	vkFreeMemory(graphics->device.logicalDevice, stagingBufferMemory, nullptr);
 }
 
 VkVertexInputBindingDescription Mesh::Vertex::GetBindingDescription()
@@ -99,13 +99,13 @@ void Mesh::DestroyVertexBuffer()
 {
 	if (vertexBuffer)
 	{
-		vkDestroyBuffer(graphics->device, vertexBuffer, nullptr);
+		vkDestroyBuffer(graphics->device.logicalDevice, vertexBuffer, nullptr);
 		vertexBuffer = nullptr;
 	}
 
 	if (vertexBufferMemory)
 	{
-		vkFreeMemory(graphics->device, vertexBufferMemory, nullptr);
+		vkFreeMemory(graphics->device.logicalDevice, vertexBufferMemory, nullptr);
 		vertexBufferMemory = nullptr;
 	}
 }
@@ -114,13 +114,13 @@ void Mesh::DestroyIndexBuffer()
 {
 	if (indexBuffer)
 	{
-		vkDestroyBuffer(graphics->device, indexBuffer, nullptr);
+		vkDestroyBuffer(graphics->device.logicalDevice, indexBuffer, nullptr);
 		indexBuffer = nullptr;
 	}
 
 	if (indexBufferMemory)
 	{
-		vkFreeMemory(graphics->device, indexBufferMemory, nullptr);
+		vkFreeMemory(graphics->device.logicalDevice, indexBufferMemory, nullptr);
 		indexBufferMemory = nullptr;
 	}
 }

@@ -1,5 +1,4 @@
-#ifndef RENDERING_HPP
-#define RENDERING_HPP
+#pragma once
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -13,5 +12,3 @@ class Rendering
 		
 
 };
-
-#endif

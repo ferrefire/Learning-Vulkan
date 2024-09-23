@@ -1,5 +1,4 @@
-#ifndef TIME_HPP
-#define TIME_HPP
+#pragma once
 
 class Time
 {
@@ -31,5 +30,3 @@ class Time
 
 		static void Frame();
 };
-
-#endif

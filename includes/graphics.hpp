@@ -1,8 +1,9 @@
-#ifndef GRAPHICS_HPP
-#define GRAPHICS_HPP
+#pragma once
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+
+#include "device.hpp"
 
 #include <vector>
 
@@ -17,6 +18,7 @@ class Graphics
         Graphics();
         ~Graphics();
 
+		/*
         struct QueueFamilies
         {
             uint32_t graphicsFamily = 0;
@@ -37,30 +39,33 @@ class Graphics
 			std::vector<VkSurfaceFormatKHR> formats;
 			std::vector<VkPresentModeKHR> presentModes;
 		};
+		*/
 
 		VkInstance instance = nullptr;
-        VkPhysicalDevice physicalDevice = nullptr;
-        VkDevice device = nullptr;
-        VkQueue graphicsQueue = nullptr;
-        VkQueue presentationQueue = nullptr;
+
+		Device device;
+
+        //VkPhysicalDevice physicalDevice = nullptr;
+        //VkDevice device = nullptr;
+        //VkQueue graphicsQueue = nullptr;
+        //VkQueue presentationQueue = nullptr;
+		//VkPhysicalDeviceProperties properties;
+		//const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+		//std::vector<VkSemaphore> imageAvailableSemaphores;
+		//std::vector<VkSemaphore> renderFinishedSemaphores;
+		//std::vector<VkFence> inFlightFences;
+		
         VkSurfaceKHR surface = nullptr;
         VkSwapchainKHR swapChain = nullptr;
-        VkPhysicalDeviceProperties properties;
 		VkRenderPass renderPass = nullptr;
 		VkDescriptorSetLayout descriptorSetLayout = nullptr;
 		VkPipelineLayout graphicsPipelineLayout = nullptr;
 		VkPipeline graphicsPipeline = nullptr;
-		VkCommandPool commandPool = nullptr;
 		VkDescriptorPool descriptorPool = nullptr;
-		std::vector<VkCommandBuffer> commandBuffers;
-		std::vector<VkSemaphore> imageAvailableSemaphores;
-		std::vector<VkSemaphore> renderFinishedSemaphores;
-		std::vector<VkFence> inFlightFences;
 		std::vector<VkDescriptorSet> descriptorSets;
 		bool framebufferResized = false;
-
-		const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-
+		VkCommandPool commandPool = nullptr;
+		std::vector<VkCommandBuffer> commandBuffers;
 		std::vector<VkImage> swapChainImages;
 		std::vector<VkImageView> swapChainImageViews;
 		std::vector<VkFramebuffer> swapChainFramebuffers;
@@ -81,16 +86,18 @@ class Graphics
 		VkImageView depthImageView = nullptr;
 
 		void CreateInstance();
-        void CreateLogicalDevice();
+
+        //void CreateLogicalDevice();
+		//void CreateSyncObjects();
+
+		void CreateCommandPool();
+		void CreateCommandBuffers();
         void CreateSurface();
         void CreateSwapChain();
 		void CreateImageViews();
 		void CreateGraphicsPipeline();
 		void CreateRenderPass();
 		void CreateFramebuffers();
-		void CreateCommandPool();
-		void CreateCommandBuffers();
-		void CreateSyncObjects();
 		void CreateDescriptorSetLayout();
 		void CreateUniformBuffers();
 		void CreateDescriptorPool();
@@ -102,7 +109,10 @@ class Graphics
 		void Create();
 
 		void DestroyInstance();
-        void DestroyDevice();
+
+        //void DestroyDevice();
+		//void DestroySyncObjects();
+
         void DestroySurface();
         void DestroySwapChain();
 		void DestroyImageViews();
@@ -110,7 +120,6 @@ class Graphics
 		void DestroyRenderPass();
 		void DestroyFramebuffers();
 		void DestroyCommandPool();
-		void DestroySyncObjects();
 		void DestroyDescriptorSetLayout();
 		void DestroyUniformBuffers();
 		void DestroyDescriptorPool();
@@ -122,7 +131,13 @@ class Graphics
 
 		void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 		void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-		void PickPhysicalDevice();
+
+		//void PickPhysicalDevice();
+		//bool IsDeviceSuitable(VkPhysicalDevice device);
+		//QueueFamilies FindQueueFamilies(VkPhysicalDevice device);
+		//bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
+		//SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
+		
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		void RecreateSwapChain();
 		void DrawFrame();
@@ -137,16 +152,9 @@ class Graphics
 		VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 		VkFormat FindDepthFormat();
 		bool HasStencilComponent(VkFormat format);
-
-		QueueFamilies FindQueueFamilies(VkPhysicalDevice device);
-		SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
-        bool IsDeviceSuitable(VkPhysicalDevice device);
-		bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
         VkSurfaceFormatKHR ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
         VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
         VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 		VkShaderModule CreateShaderModule(const std::vector<char> &code);
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 };
-
-#endif

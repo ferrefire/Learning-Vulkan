@@ -1,5 +1,4 @@
-#ifndef TEXTURES_HPP
-#define TEXTURES_HPP
+#pragma once
 
 #include <stb_image.h>
 
@@ -15,5 +14,3 @@ class Textures
 		static void FreePixels(stbi_uc *pixels);
 
 };
-
-#endif
