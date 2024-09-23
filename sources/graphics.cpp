@@ -15,7 +15,7 @@
 #include "time.hpp"
 #include "textures.hpp"
 
-Graphics::Graphics()
+Graphics::Graphics(Device &device, Pipeline &pipeline) : device{device}, pipeline{pipeline}
 {
 
 }
@@ -53,187 +53,6 @@ void Graphics::CreateInstance()
         throw std::runtime_error("failed to create vulkan instance");
     }
 }
-
-/*
-Graphics::QueueFamilies Graphics::FindQueueFamilies(VkPhysicalDevice device)
-{
-    QueueFamilies result;
-
-    uint32_t queueFamilyCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-
-    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
-
-    int i = 0;
-    for (const auto &queueFamily : queueFamilies)
-    {
-        if (!result.graphicsFamilyFound && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-        {
-            result.graphicsFamily = i;
-            result.graphicsFamilyFound = true;
-        }
-
-        if (!result.presentationFamilyFound)
-        {
-            VkBool32 presentationSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentationSupport);
-
-            if (presentationSupport)
-            {
-                result.presentationFamily = i;
-                result.presentationFamilyFound = true;
-            }
-        }
-
-        if (result.Complete()) return (result);
-
-        i++;
-    }
-
-    //throw std::runtime_error("failed to find a suitable queue family");
-    return (result);
-}
-
-Graphics::SwapChainSupportDetails Graphics::QuerySwapChainSupport(VkPhysicalDevice device)
-{
-	SwapChainSupportDetails details;
-
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
-
-	uint32_t formatCount;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
-
-	if (formatCount != 0)
-	{
-		details.formats.resize(formatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
-	}
-
-	uint32_t presentModeCount;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
-
-	if (presentModeCount != 0)
-	{
-		details.presentModes.resize(presentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
-	}
-
-	return (details);
-}
-
-bool Graphics::IsDeviceSuitable(VkPhysicalDevice device)
-{
-    QueueFamilies queueFamilies = FindQueueFamilies(device);
-
-	bool extensionsSupported = CheckDeviceExtensionSupport(device);
-
-	bool swapChainAdequate = false;
-	if (extensionsSupported)
-	{
-		SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(device);
-		swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
-	}
-
-	VkPhysicalDeviceProperties deviceProperties;
-	vkGetPhysicalDeviceProperties(device, &deviceProperties);
-	bool isDiscrete = deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
-
-	VkPhysicalDeviceFeatures supportedFeatures;
-	vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
-
-	return (queueFamilies.Complete() && extensionsSupported && swapChainAdequate && isDiscrete && supportedFeatures.samplerAnisotropy);
-}
-
-bool Graphics::CheckDeviceExtensionSupport(VkPhysicalDevice device)
-{
-	uint32_t extensionCount;
-	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
-
-	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
-
-	std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
-
-	for (const auto &extension : availableExtensions)
-	{
-		requiredExtensions.erase(extension.extensionName);
-	}
-
-	return requiredExtensions.empty();
-}
-
-void Graphics::PickPhysicalDevice()
-{
-    uint32_t deviceCount = 0;
-    vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-
-    if (deviceCount == 0)
-    {
-        throw std::runtime_error("failed to find a GPU with Vulkan support");
-    }
-
-    std::vector<VkPhysicalDevice> devices(deviceCount);
-    vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-
-    for (const auto &device : devices)
-    {
-        if (IsDeviceSuitable(device))
-        {
-            physicalDevice = device; 
-            break;
-        }
-    }
-
-    if (!physicalDevice)
-    {
-        throw std::runtime_error("failed to find a suitable GPU");
-    }
-
-    vkGetPhysicalDeviceProperties(physicalDevice, &properties);
-}
-
-void Graphics::CreateLogicalDevice()
-{
-    if (device) throw std::runtime_error("cannot create logical device because it already exists");
-
-    QueueFamilies queueFamilies = FindQueueFamilies(physicalDevice);
-
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies = {queueFamilies.graphicsFamily, queueFamilies.presentationFamily};
-
-    float queuePriority = 1.0f;
-    for (uint32_t queueFamily : uniqueQueueFamilies)
-    {
-        VkDeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = queueFamily;
-        queueCreateInfo.queueCount = 1;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
-        queueCreateInfos.push_back(queueCreateInfo);
-    }
-
-    VkPhysicalDeviceFeatures deviceFeatures{};
-	deviceFeatures.samplerAnisotropy = VK_TRUE;
-
-	VkDeviceCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    createInfo.pQueueCreateInfos = queueCreateInfos.data();
-    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-
-    createInfo.pEnabledFeatures = &deviceFeatures;
-	createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-	createInfo.ppEnabledExtensionNames = deviceExtensions.data();
-
-	if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create logical device");
-    }
-
-    vkGetDeviceQueue(device, queueFamilies.graphicsFamily, 0, &graphicsQueue);
-    vkGetDeviceQueue(device, queueFamilies.presentationFamily, 0, &presentationQueue);
-}
-*/
 
 VkSurfaceFormatKHR Graphics::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats)
 {
@@ -295,7 +114,7 @@ void Graphics::CreateSwapChain()
 {
     if (swapChain) throw std::runtime_error("cannot create swap chain because it already exists");
 
-    //SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(physicalDevice);
+    //SwapChainSupportDetails swapChainSupport = device.QuerySwapChainSupport(device.physicalDevice, surface);
     SwapChainSupportDetails swapChainSupport = device.swapChainSupportDetails;
 
     VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -319,7 +138,7 @@ void Graphics::CreateSwapChain()
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    //QueueFamilies indices = FindQueueFamilies(physicalDevice);
+    //QueueFamilies indices = device.FindQueueFamilies(device.physicalDevice, surface);
     QueueFamilies indices = device.queueFamilies;
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily, indices.presentationFamily};
 
@@ -364,169 +183,6 @@ void Graphics::CreateImageViews()
 	{
 		swapChainImageViews[i] = CreateImageView(swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
 	}
-}
-
-VkShaderModule Graphics::CreateShaderModule(const std::vector<char> &code)
-{
-	VkShaderModuleCreateInfo createInfo{};
-	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	createInfo.codeSize = code.size();
-	createInfo.pCode = reinterpret_cast<const uint32_t *>(code.data());
-
-	VkShaderModule shaderModule;
-	if (vkCreateShaderModule(device.logicalDevice, &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create shader module!");
-	}
-
-	return (shaderModule);
-}
-
-void Graphics::CreateGraphicsPipeline()
-{
-	if (graphicsPipeline) throw std::runtime_error("cannot create graphics pipeline because it already exists");
-
-	std::string currentPath = Utilities::GetPath();
-
-	// system(std::string(currentPath + "/shader-compiler.sh " + vertexPath + " " + fragmentPath).c_str());
-
-	auto vertexCode = Utilities::FileToBinary((currentPath + "/shaders/" + "simple.vert" + ".spv").c_str());
-	auto fragmentCode = Utilities::FileToBinary((currentPath + "/shaders/" + "simple.frag" + ".spv").c_str());
-
-	VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
-	VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode);
-
-	VkPipelineShaderStageCreateInfo vertexShaderStageInfo{};
-	vertexShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	vertexShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-	vertexShaderStageInfo.module = vertexShaderModule;
-	vertexShaderStageInfo.pName = "main";
-
-	VkPipelineShaderStageCreateInfo fragmentShaderStageInfo{};
-	fragmentShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	fragmentShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	fragmentShaderStageInfo.module = fragmentShaderModule;
-	fragmentShaderStageInfo.pName = "main";
-
-	VkPipelineShaderStageCreateInfo shaderStages[] = {vertexShaderStageInfo, fragmentShaderStageInfo};
-
-	auto bindingDescription = Mesh::Vertex::GetBindingDescription();
-	auto attributeDescriptions = Mesh::Vertex::GetAttributeDescriptions();
-
-	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount = 1;
-	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-	vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-	vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
-
-	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-	inputAssembly.primitiveRestartEnable = VK_FALSE;
-
-	VkPipelineViewportStateCreateInfo viewportState{};
-	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-	viewportState.viewportCount = 1;
-	viewportState.scissorCount = 1;
-
-	VkPipelineRasterizationStateCreateInfo rasterizer{};
-	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-	rasterizer.depthClampEnable = VK_FALSE;
-	rasterizer.rasterizerDiscardEnable = VK_FALSE;
-	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
-	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-	rasterizer.depthBiasEnable = VK_FALSE;
-	rasterizer.depthBiasConstantFactor = 0.0f;
-	rasterizer.depthBiasClamp = 0.0f;
-	rasterizer.depthBiasSlopeFactor = 0.0f;
-
-	VkPipelineMultisampleStateCreateInfo multisampling{};
-	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-	multisampling.sampleShadingEnable = VK_FALSE;
-	multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-	multisampling.minSampleShading = 1.0f;
-	multisampling.pSampleMask = nullptr;
-	multisampling.alphaToCoverageEnable = VK_FALSE;
-	multisampling.alphaToOneEnable = VK_FALSE;
-
-	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-	colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-	colorBlendAttachment.blendEnable = VK_FALSE;
-
-	VkPipelineColorBlendStateCreateInfo colorBlending{};
-	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-	colorBlending.logicOpEnable = VK_FALSE;
-	colorBlending.logicOp = VK_LOGIC_OP_COPY;
-	colorBlending.attachmentCount = 1;
-	colorBlending.pAttachments = &colorBlendAttachment;
-	colorBlending.blendConstants[0] = 0.0f;
-	colorBlending.blendConstants[1] = 0.0f;
-	colorBlending.blendConstants[2] = 0.0f;
-	colorBlending.blendConstants[3] = 0.0f;
-
-	std::vector<VkDynamicState> dynamicStates =
-	{
-		VK_DYNAMIC_STATE_VIEWPORT,
-		VK_DYNAMIC_STATE_SCISSOR
-	};
-
-	VkPipelineDynamicStateCreateInfo dynamicState{};
-	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-	dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
-	dynamicState.pDynamicStates = dynamicStates.data();
-
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 1;
-	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
-	pipelineLayoutInfo.pushConstantRangeCount = 0;
-	pipelineLayoutInfo.pPushConstantRanges = nullptr;
-
-	VkPipelineDepthStencilStateCreateInfo depthStencil{};
-	depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-	depthStencil.depthTestEnable = VK_TRUE;
-	depthStencil.depthWriteEnable = VK_TRUE;
-	depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
-	depthStencil.depthBoundsTestEnable = VK_FALSE;
-	depthStencil.minDepthBounds = 0.0f; // Optional
-	depthStencil.maxDepthBounds = 1.0f; // Optional
-	depthStencil.stencilTestEnable = VK_FALSE;
-	depthStencil.front = {}; // Optional
-	depthStencil.back = {};	 // Optional
-
-	if (vkCreatePipelineLayout(device.logicalDevice, &pipelineLayoutInfo, nullptr, &graphicsPipelineLayout) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create pipeline layout");
-	}
-
-	VkGraphicsPipelineCreateInfo graphicsPipelineInfo{};
-	graphicsPipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	graphicsPipelineInfo.stageCount = 2;
-	graphicsPipelineInfo.pStages = shaderStages;
-	graphicsPipelineInfo.pVertexInputState = &vertexInputInfo;
-	graphicsPipelineInfo.pInputAssemblyState = &inputAssembly;
-	graphicsPipelineInfo.pViewportState = &viewportState;
-	graphicsPipelineInfo.pRasterizationState = &rasterizer;
-	graphicsPipelineInfo.pMultisampleState = &multisampling;
-	graphicsPipelineInfo.pDepthStencilState = &depthStencil;
-	graphicsPipelineInfo.pColorBlendState = &colorBlending;
-	graphicsPipelineInfo.pDynamicState = &dynamicState;
-	graphicsPipelineInfo.layout = graphicsPipelineLayout;
-	graphicsPipelineInfo.renderPass = renderPass;
-	graphicsPipelineInfo.subpass = 0;
-	graphicsPipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
-	graphicsPipelineInfo.basePipelineIndex = -1;
-
-	if (vkCreateGraphicsPipelines(device.logicalDevice, VK_NULL_HANDLE, 1, &graphicsPipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create graphics pipeline!");
-	}
-
-	vkDestroyShaderModule(device.logicalDevice, vertexShaderModule, nullptr);
-	vkDestroyShaderModule(device.logicalDevice, fragmentShaderModule, nullptr);
 }
 
 void Graphics::CreateRenderPass()
@@ -681,7 +337,7 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.graphicsPipeline);
 
 	VkViewport viewport{};
 	viewport.x = 0.0f;
@@ -703,7 +359,7 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 	vkCmdBindIndexBuffer(commandBuffer, Manager::currentMesh->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineLayout, 0, 1, &descriptorSets[currentFrame], 0, nullptr);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.graphicsPipelineLayout, 0, 1, &pipeline.descriptorSets[currentFrame], 0, nullptr);
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Manager::currentMesh->indices.size()), 1, 0, 0, 0);
 
 	vkCmdEndRenderPass(commandBuffer);
@@ -712,46 +368,6 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	{
 		throw std::runtime_error("failed to record command buffer");
 	}
-}
-
-/*
-void Graphics::CreateSyncObjects()
-{
-	if (imageAvailableSemaphores.size() != 0 || renderFinishedSemaphores.size() != 0 || inFlightFences.size() != 0) 
-		throw std::runtime_error("cannot create sync objects because they already exists");
-
-	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-	inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-
-	VkSemaphoreCreateInfo semaphoreInfo{};
-	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-	VkFenceCreateInfo fenceInfo{};
-	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-	{
-		if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-			vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-			vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
-		{
-
-			throw std::runtime_error("failed to create synchronization objects for a frame");
-		}
-	}
-}
-*/
-
-void Graphics::UpdateUniformBuffer(uint32_t currentImage)
-{
-	Mesh::UniformBufferObject ubo{};
-	ubo.model = glm::rotate(glm::mat4(1.0f), Time::currentFrame * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo.projection = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
-	ubo.projection[1][1] *= -1;
-	memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
 }
 
 void Graphics::DrawFrame()
@@ -777,7 +393,7 @@ void Graphics::DrawFrame()
 	vkResetCommandBuffer(commandBuffers[currentFrame], 0);
 	RecordCommandBuffer(commandBuffers[currentFrame], imageIndex);
 
-	UpdateUniformBuffer(currentFrame);
+	pipeline.UpdateUniformBuffer(currentFrame, swapChainExtent);
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -825,12 +441,15 @@ void Graphics::RecreateSwapChain()
 		glfwWaitEvents();
 	}
 
-	vkDeviceWaitIdle(device.logicalDevice);
+	device.WaitForIdle();
 
 	DestroyDepthResources();
 	DestroyFramebuffers();
 	DestroyImageViews();
 	DestroySwapChain();
+
+	device.queueFamilies = device.FindQueueFamilies(device.physicalDevice, surface);
+	device.swapChainSupportDetails = device.QuerySwapChainSupport(device.physicalDevice, surface);
 
 	CreateSwapChain();
 	CreateImageViews();
@@ -838,68 +457,8 @@ void Graphics::RecreateSwapChain()
 	CreateFramebuffers();
 }
 
-uint32_t Graphics::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
-{
-	VkPhysicalDeviceMemoryProperties memProperties;
-	vkGetPhysicalDeviceMemoryProperties(device.physicalDevice, &memProperties);
-
-	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
-	{
-		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-		{
-			return i;
-		}
-	}
-
-	throw std::runtime_error("failed to find suitable memory type!");
-}
-
-void Graphics::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
-{
-	VkBufferCreateInfo bufferInfo{};
-	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = size;
-	bufferInfo.usage = usage;
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-	if (vkCreateBuffer(device.logicalDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create buffer");
-	}
-
-	VkMemoryRequirements memRequirements;
-	vkGetBufferMemoryRequirements(device.logicalDevice, buffer, &memRequirements);
-
-	VkMemoryAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
-
-	if (vkAllocateMemory(device.logicalDevice, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to allocate buffer memory");
-	}
-
-	vkBindBufferMemory(device.logicalDevice, buffer, bufferMemory, 0);
-}
-
 void Graphics::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
-	/*VkCommandBufferAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool = commandPool;
-	allocInfo.commandBufferCount = 1;
-
-	VkCommandBuffer commandBuffer;
-	vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
-
-	VkCommandBufferBeginInfo beginInfo{};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-	vkBeginCommandBuffer(commandBuffer, &beginInfo);*/
-
 	VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
 
 	VkBufferCopy copyRegion{};
@@ -909,146 +468,11 @@ void Graphics::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize s
 	vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
 	EndSingleTimeCommands(commandBuffer);
-
-	/*vkEndCommandBuffer(commandBuffer);
-
-	VkSubmitInfo submitInfo{};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commandBuffer;
-
-	vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-	vkQueueWaitIdle(graphicsQueue);
-
-	vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);*/
-}
-
-void Graphics::CreateDescriptorSetLayout()
-{
-	if (descriptorSetLayout) throw std::runtime_error("cannot create descriptor set layout because it already exists");
-
-	VkDescriptorSetLayoutBinding uboLayoutBinding{};
-	uboLayoutBinding.binding = 0;
-	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	uboLayoutBinding.descriptorCount = 1;
-	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-	uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
-
-	VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-	samplerLayoutBinding.binding = 1;
-	samplerLayoutBinding.descriptorCount = 1;
-	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	samplerLayoutBinding.pImmutableSamplers = nullptr;
-	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-	std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
-	VkDescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-	layoutInfo.pBindings = bindings.data();
-
-	if (vkCreateDescriptorSetLayout(device.logicalDevice, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create descriptor set layout");
-	}
-}
-
-void Graphics::CreateUniformBuffers()
-{
-	if (uniformBuffers.size() != 0 || uniformBuffersMemory.size() != 0)
-		throw std::runtime_error("cannot create uniform buffers because they already exists");
-
-	VkDeviceSize bufferSize = sizeof(Mesh::UniformBufferObject);
-
-	uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-	uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-	uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-	{
-		CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
-			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
-
-		vkMapMemory(device.logicalDevice, uniformBuffersMemory[i], 0, bufferSize, 0, &uniformBuffersMapped[i]);
-	}
-}
-
-void Graphics::CreateDescriptorPool()
-{
-	if (descriptorPool) throw std::runtime_error("cannot create descriptor pool because it already exists");
-
-	std::array<VkDescriptorPoolSize, 2> poolSizes{};
-	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-	VkDescriptorPoolCreateInfo poolInfo{};
-	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-
-	if (vkCreateDescriptorPool(device.logicalDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create descriptor pool");
-	}
-}
-
-void Graphics::CreateDescriptorSets()
-{
-	if (descriptorSets.size() != 0) throw std::runtime_error("cannot create descriptor sets because they already exists");
-
-	std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
-	VkDescriptorSetAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = descriptorPool;
-	allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
-	allocInfo.pSetLayouts = layouts.data();
-
-	descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-	if (vkAllocateDescriptorSets(device.logicalDevice, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to allocate descriptor sets");
-	}
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-	{
-		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = uniformBuffers[i];
-		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(Mesh::UniformBufferObject);
-
-		VkDescriptorImageInfo imageInfo{};
-		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo.imageView = textureImageView;
-		imageInfo.sampler = textureSampler;
-
-		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-
-		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[0].dstSet = descriptorSets[i];
-		descriptorWrites[0].dstBinding = 0;
-		descriptorWrites[0].dstArrayElement = 0;
-		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrites[0].descriptorCount = 1;
-		descriptorWrites[0].pBufferInfo = &bufferInfo;
-
-		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[1].dstSet = descriptorSets[i];
-		descriptorWrites[1].dstBinding = 1;
-		descriptorWrites[1].dstArrayElement = 0;
-		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		descriptorWrites[1].descriptorCount = 1;
-		descriptorWrites[1].pImageInfo = &imageInfo;
-
-		vkUpdateDescriptorSets(device.logicalDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-	}
 }
 
 void Graphics::CreateTextureImage()
 {
-	if (textureImage != nullptr || textureImageMemory != nullptr)
+	if (pipeline.textureImage != nullptr || pipeline.textureImageMemory != nullptr)
 		throw std::runtime_error("cannot create texture image because it already exists");
 
 	int texWidth, texHeight, texChannels;
@@ -1058,7 +482,7 @@ void Graphics::CreateTextureImage()
 
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
-	CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
+	device.CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
 		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
 	void *data;
@@ -1069,11 +493,11 @@ void Graphics::CreateTextureImage()
 	Textures::FreePixels(pixels);
 
 	CreateImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | 
-		VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageMemory);
+		VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, pipeline.textureImage, pipeline.textureImageMemory);
 
-	TransitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-	CopyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-	TransitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	TransitionImageLayout(pipeline.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	CopyBufferToImage(stagingBuffer, pipeline.textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+	TransitionImageLayout(pipeline.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 	vkDestroyBuffer(device.logicalDevice, stagingBuffer, nullptr);
 	vkFreeMemory(device.logicalDevice, stagingBufferMemory, nullptr);
@@ -1108,7 +532,7 @@ void Graphics::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkI
 	VkMemoryAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+	allocInfo.memoryTypeIndex = device.FindMemoryType(memRequirements.memoryTypeBits, properties);
 
 	if (vkAllocateMemory(device.logicalDevice, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
 	{
@@ -1225,9 +649,9 @@ void Graphics::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width,
 
 void Graphics::CreateTextureImageView()
 {
-	if (textureImageView != nullptr) throw std::runtime_error("cannot create texture image view because it already exists");
+	if (pipeline.textureImageView != nullptr) throw std::runtime_error("cannot create texture image view because it already exists");
 
-	textureImageView = CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+	pipeline.textureImageView = CreateImageView(pipeline.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
 }
 
 VkImageView Graphics::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
@@ -1254,7 +678,7 @@ VkImageView Graphics::CreateImageView(VkImage image, VkFormat format, VkImageAsp
 
 void Graphics::CreateTextureSampler()
 {
-	if (textureSampler != nullptr) throw std::runtime_error("cannot create texture sampler because it already exists");
+	if (pipeline.textureSampler != nullptr) throw std::runtime_error("cannot create texture sampler because it already exists");
 
 	VkSamplerCreateInfo samplerInfo{};
 	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -1278,7 +702,7 @@ void Graphics::CreateTextureSampler()
 	samplerInfo.minLod = 0.0f;
 	samplerInfo.maxLod = 0.0f;
 
-	if (vkCreateSampler(device.logicalDevice, &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS)
+	if (vkCreateSampler(device.logicalDevice, &samplerInfo, nullptr, &pipeline.textureSampler) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create texture sampler");
 	}
@@ -1336,30 +760,30 @@ void Graphics::Create()
 
 	device.Create(instance, surface);
 
-	//PickPhysicalDevice();
-	//CreateLogicalDevice();
-
 	CreateSwapChain();
 	CreateImageViews();
 	CreateRenderPass();
-	CreateDescriptorSetLayout();
-	CreateGraphicsPipeline();
+
+	pipeline.CreateDescriptorSetLayout();
+	pipeline.CreateGraphicsPipeline(renderPass);
+
 	CreateDepthResources();
 	CreateFramebuffers();
 	CreateCommandPool();
 	CreateTextureImage();
 	CreateTextureImageView();
 	CreateTextureSampler();
+
 	Manager::currentMesh->CreateVertexBuffer();
 	Manager::currentMesh->CreateIndexBuffer();
-	CreateUniformBuffers();
-	CreateDescriptorPool();
-	CreateDescriptorSets();
+
+	pipeline.CreateUniformBuffers();
+	pipeline.CreateDescriptorPool();
+	pipeline.CreateDescriptorSets();
+
 	CreateCommandBuffers();
 
 	device.CreateSyncObjects();
-
-	//CreateSyncObjects();
 }
 
 void Graphics::DestroyInstance()
@@ -1369,16 +793,6 @@ void Graphics::DestroyInstance()
     vkDestroyInstance(instance, nullptr);
     instance = nullptr;
 }
-
-/*
-void Graphics::DestroyDevice()
-{
-    if (!device) return;
-
-    vkDestroyDevice(device, nullptr);
-    device = nullptr;
-}
-*/
 
 void Graphics::DestroySurface()
 {
@@ -1404,21 +818,6 @@ void Graphics::DestroyImageViews()
 	}
 
 	swapChainImageViews.clear();
-}
-
-void Graphics::DestroyGraphicsPipeline()
-{
-	if (graphicsPipeline)
-	{
-		vkDestroyPipeline(device.logicalDevice, graphicsPipeline, nullptr);
-		graphicsPipeline = nullptr;
-	}
-
-	if (graphicsPipelineLayout)
-	{
-		vkDestroyPipelineLayout(device.logicalDevice, graphicsPipelineLayout, nullptr);
-		graphicsPipelineLayout = nullptr;
-	}
 }
 
 void Graphics::DestroyRenderPass()
@@ -1447,88 +846,34 @@ void Graphics::DestroyCommandPool()
 	commandPool = nullptr;
 }
 
-/*
-void Graphics::DestroySyncObjects()
-{
-	for (VkSemaphore &semaphore : imageAvailableSemaphores)
-	{
-		vkDestroySemaphore(device, semaphore, nullptr);
-	}
-	imageAvailableSemaphores.clear();
-
-	for (VkSemaphore &semaphore : renderFinishedSemaphores)
-	{
-		vkDestroySemaphore(device, semaphore, nullptr);
-	}
-	renderFinishedSemaphores.clear();
-
-	for (VkFence &fence : inFlightFences)
-	{
-		vkDestroyFence(device, fence, nullptr);
-	}
-	inFlightFences.clear();
-}
-*/
-
-void Graphics::DestroyDescriptorSetLayout()
-{
-	if (!descriptorSetLayout) return;
-
-	vkDestroyDescriptorSetLayout(device.logicalDevice, descriptorSetLayout, nullptr);
-	descriptorSetLayout = nullptr;
-}
-
-void Graphics::DestroyUniformBuffers()
-{
-	for (VkBuffer &buffer : uniformBuffers)
-	{
-		vkDestroyBuffer(device.logicalDevice, buffer, nullptr);
-	}
-	uniformBuffers.clear();
-
-	for (VkDeviceMemory &memory : uniformBuffersMemory)
-	{
-		vkFreeMemory(device.logicalDevice, memory, nullptr);
-	}
-	uniformBuffersMemory.clear();
-}
-
-void Graphics::DestroyDescriptorPool()
-{
-	if (!descriptorPool) return;
-
-	vkDestroyDescriptorPool(device.logicalDevice, descriptorPool, nullptr);
-	descriptorPool = nullptr;
-}
-
 void Graphics::DestroyTextureImage()
 {
-	if (textureImage != nullptr)
+	if (pipeline.textureImage != nullptr)
 	{
-		vkDestroyImage(device.logicalDevice, textureImage, nullptr);
-		textureImage = nullptr;
+		vkDestroyImage(device.logicalDevice, pipeline.textureImage, nullptr);
+		pipeline.textureImage = nullptr;
 	}
-	if (textureImageMemory != nullptr)
+	if (pipeline.textureImageMemory != nullptr)
 	{
-		vkFreeMemory(device.logicalDevice, textureImageMemory, nullptr);
-		textureImageMemory = nullptr;
+		vkFreeMemory(device.logicalDevice, pipeline.textureImageMemory, nullptr);
+		pipeline.textureImageMemory = nullptr;
 	}
 }
 
 void Graphics::DestroyTextureImageView()
 {
-	if (!textureImageView) return;
+	if (!pipeline.textureImageView) return;
 
-	vkDestroyImageView(device.logicalDevice, textureImageView, nullptr);
-	textureImageView = nullptr;
+	vkDestroyImageView(device.logicalDevice, pipeline.textureImageView, nullptr);
+	pipeline.textureImageView = nullptr;
 }
 
 void Graphics::DestroyTextureSampler()
 {
-	if (!textureSampler) return;
+	if (!pipeline.textureSampler) return;
 
-	vkDestroySampler(device.logicalDevice, textureSampler, nullptr);
-	textureSampler = nullptr;
+	vkDestroySampler(device.logicalDevice, pipeline.textureSampler, nullptr);
+	pipeline.textureSampler = nullptr;
 }
 
 void Graphics::DestroyDepthResources()
@@ -1556,11 +901,11 @@ void Graphics::Destroy()
 {
 	device.DestroySyncObjects();
 
-	//DestroySyncObjects();
-
 	DestroyCommandPool();
 	DestroyFramebuffers();
-	DestroyGraphicsPipeline();
+
+	pipeline.DestroyGraphicsPipeline();
+
 	DestroyRenderPass();
 	DestroyDepthResources();
 	DestroyImageViews();
@@ -1568,14 +913,14 @@ void Graphics::Destroy()
 	DestroyTextureSampler();
 	DestroyTextureImageView();
 	DestroyTextureImage();
-	DestroyUniformBuffers();
-	DestroyDescriptorPool();
-	DestroyDescriptorSetLayout();
+
+	pipeline.DestroyUniformBuffers();
+	pipeline.DestroyDescriptorPool();
+	pipeline.DestroyDescriptorSetLayout();
+
 	Manager::currentMesh->Destroy();
 
 	device.Destroy();
-
-	//DestroyDevice();
 
     DestroySurface();
     DestroyInstance();

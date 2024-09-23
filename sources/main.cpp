@@ -11,16 +11,9 @@
 #include "manager.hpp"
 #include "time.hpp"
 #include "input.hpp"
-#include "mesh.hpp"
-
-void Setup()
-{
-	Mesh::graphics = Manager::currentGraphics;
-}
 
 int main()
 {
-	Setup();
 	Manager::Start();
 
 	while (Manager::currentWindow->IsOpen())
@@ -34,7 +27,7 @@ int main()
 		Manager::currentGraphics->DrawFrame();
 	}
 
-	vkDeviceWaitIdle(Manager::currentGraphics->device.logicalDevice);
+	Manager::currentDevice->WaitForIdle();
 
 	Manager::Quit(EXIT_SUCCESS);
 }

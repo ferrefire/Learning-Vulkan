@@ -8,8 +8,6 @@
 #include <vector>
 #include <array>
 
-#include "graphics.hpp"
-
 class Mesh
 {
 	private:
@@ -69,8 +67,6 @@ class Mesh
 			4, 5, 6, 6, 7, 4};
 
 		//const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
-
-		static Graphics *graphics;
 
 		VkBuffer vertexBuffer = nullptr;
 		VkDeviceMemory vertexBufferMemory = nullptr;

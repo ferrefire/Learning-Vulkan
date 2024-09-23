@@ -5,6 +5,8 @@
 
 #include "window.hpp"
 #include "graphics.hpp"
+#include "device.hpp"
+#include "pipeline.hpp"
 #include "mesh.hpp"
 
 class Manager
@@ -14,11 +16,14 @@ class Manager
         static bool vulkanInitialized;
 
 		static Window window;
+		static Device device;
+		static Pipeline pipeline;
         static Graphics graphics;
 		static Mesh mesh;
 
 	public:
 		static Window *currentWindow;
+		static Device *currentDevice;
 		static Graphics *currentGraphics;
 		static Mesh *currentMesh;
 

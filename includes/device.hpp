@@ -5,8 +5,6 @@
 
 #include <vector>
 
-const int MAX_FRAMES_IN_FLIGHT = 2;
-
 struct QueueFamilies
 {
     uint32_t graphicsFamily = 0;
@@ -31,7 +29,7 @@ struct SwapChainSupportDetails
 class Device
 {
     private:
-        
+        const int MAX_FRAMES_IN_FLIGHT = 2;
 
     public:
         Device();
@@ -63,4 +61,7 @@ class Device
         SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
         void CreateSyncObjects();
         void DestroySyncObjects();
+        void WaitForIdle();
+        void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+        uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 };

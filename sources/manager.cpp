@@ -66,7 +66,7 @@ void Manager::InitializeVulkan()
 
 	currentGraphics = &graphics;
 
-	std::cout << graphics.device.properties.deviceName << std::endl;
+	std::cout << device.properties.deviceName << std::endl;
 }
 
 void Manager::Frame()
@@ -91,9 +91,12 @@ bool Manager::glfwInitialized = false;
 bool Manager::vulkanInitialized = false;
 
 Window Manager::window;
-Graphics Manager::graphics;
+Device Manager::device;
+Pipeline Manager::pipeline{device};
+Graphics Manager::graphics{device, pipeline};
 Mesh Manager::mesh;
 
 Window *Manager::currentWindow = &Manager::window;
+Device *Manager::currentDevice = &Manager::device;
 Graphics *Manager::currentGraphics = &Manager::graphics;
 Mesh *Manager::currentMesh = &Manager::mesh;
