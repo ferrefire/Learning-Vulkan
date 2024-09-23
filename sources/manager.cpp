@@ -94,9 +94,7 @@ Window Manager::window;
 Device Manager::device;
 Pipeline Manager::pipeline{device};
 Graphics Manager::graphics{device, pipeline};
-Mesh Manager::mesh;
 
 Window *Manager::currentWindow = &Manager::window;
 Device *Manager::currentDevice = &Manager::device;
 Graphics *Manager::currentGraphics = &Manager::graphics;
-Mesh *Manager::currentMesh = &Manager::mesh;

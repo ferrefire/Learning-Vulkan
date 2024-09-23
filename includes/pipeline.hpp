@@ -7,6 +7,7 @@
 #include "mesh.hpp"
 
 #include <vector>
+#include <string>
 
 class Pipeline
 {
@@ -19,7 +20,7 @@ class Pipeline
         Pipeline(Device &device);
         ~Pipeline();
 
-        //Mesh mesh;
+        Mesh mesh;
 
 		VkDescriptorSetLayout descriptorSetLayout = nullptr;
 		VkPipelineLayout graphicsPipelineLayout = nullptr;
@@ -35,7 +36,7 @@ class Pipeline
 		VkImageView textureImageView = nullptr;
 		VkSampler textureSampler = nullptr;
 
-        void CreateGraphicsPipeline(VkRenderPass renderPass);
+        void CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VkRenderPass renderPass);
         void CreateDescriptorSetLayout();
         void CreateUniformBuffers();
         void CreateDescriptorPool();

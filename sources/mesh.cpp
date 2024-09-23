@@ -73,9 +73,9 @@ VkVertexInputBindingDescription Mesh::Vertex::GetBindingDescription()
 	return bindingDescription;
 }
 
-std::array<VkVertexInputAttributeDescription, 3> Mesh::Vertex::GetAttributeDescriptions()
+std::array<VkVertexInputAttributeDescription, 2> Mesh::Vertex::GetAttributeDescriptions()
 {
-	std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
+	std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
 
 	attributeDescriptions[0].binding = 0;
 	attributeDescriptions[0].location = 0;
@@ -84,13 +84,8 @@ std::array<VkVertexInputAttributeDescription, 3> Mesh::Vertex::GetAttributeDescr
 
 	attributeDescriptions[1].binding = 0;
 	attributeDescriptions[1].location = 1;
-	attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-	attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-	attributeDescriptions[2].binding = 0;
-	attributeDescriptions[2].location = 2;
-	attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-	attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+	attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
+	attributeDescriptions[1].offset = offsetof(Vertex, texCoord);
 
 	return attributeDescriptions;
 }
@@ -129,4 +124,24 @@ void Mesh::Destroy()
 {
 	DestroyVertexBuffer();
 	DestroyIndexBuffer();
+}
+
+void Mesh::RecalculateVertices()
+{
+	vertices.clear();
+	vertices.resize(glm::max(shape.positions.size(), shape.coordinates.size()));
+
+	for (int i = 0; i < vertices.size(); i++)
+	{
+		if (i < shape.positions.size()) vertices[i].pos = shape.positions[i];
+		if (i < shape.coordinates.size()) vertices[i].texCoord = shape.coordinates[i];
+	}
+
+	indices.clear();
+	indices.resize(shape.indices.size());
+
+	for (int i = 0; i < indices.size(); i++)
+	{
+		indices[i] = shape.indices[i];
+	}
 }

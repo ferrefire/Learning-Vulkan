@@ -1,19 +1,23 @@
 #! /usr/bin/bash
 
 path=$(pwd)
+glslang_path=/build/_deps/glslang-build/StandAlone/glslang
+if [[ $OSTYPE == "msys" ]]; then
+	glslang_path=/build/_deps/glslang-build/StandAlone/Release/glslang
+fi
 
 while ! test -d $path/shaders; do
 	cd ..
 	path=$(pwd)
 done
 
-if ! test -f $path/build/_deps/glslang-build/StandAlone/glslang; then
+if ! test -f $path$glslang_path; then
 	echo "ERROR: glslang not found."
 	exit 1
 fi
 
 compile_shader () {
-	"$path"/build/_deps/glslang-build/StandAlone/glslang -V $1 -o $1.spv
+	"$path""$glslang_path" -V $1 -o $1.spv
 }
 
 if [[ $@ == "ALL" ]] || [[ $@ == "all" ]]; then

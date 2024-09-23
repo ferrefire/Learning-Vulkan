@@ -6,6 +6,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "shape.hpp"
+
 #include <stdexcept>
 #include <string>
 
@@ -19,14 +21,18 @@ Pipeline::~Pipeline()
     
 }
 
-void Pipeline::CreateGraphicsPipeline(VkRenderPass renderPass)
+void Pipeline::CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VkRenderPass renderPass)
 {
     if (graphicsPipeline) throw std::runtime_error("cannot create graphics pipeline because it already exists");
 
+    mesh.shape.SetShape(CUBE);
+    mesh.RecalculateVertices();
+    //mesh.Move(glm::vec3(0.0f, 1.0f, 0.0f));
+
 	std::string currentPath = Utilities::GetPath();
 
-	auto vertexCode = Utilities::FileToBinary((currentPath + "/shaders/" + "simple.vert" + ".spv").c_str());
-	auto fragmentCode = Utilities::FileToBinary((currentPath + "/shaders/" + "simple.frag" + ".spv").c_str());
+	auto vertexCode = Utilities::FileToBinary((currentPath + "/shaders/" + vertexShader + ".vert.spv").c_str());
+	auto fragmentCode = Utilities::FileToBinary((currentPath + "/shaders/" + fragmentShader + ".frag.spv").c_str());
 
 	VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
 	VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode);
@@ -306,10 +312,10 @@ void Pipeline::CreateDescriptorSets()
 void Pipeline::UpdateUniformBuffer(uint32_t currentImage, VkExtent2D swapChainExtent)
 {
     Mesh::UniformBufferObject ubo{};
-	ubo.model = glm::rotate(glm::mat4(1.0f), Time::currentFrame * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	ubo.model = glm::rotate(glm::mat4(1.0f), Time::currentFrame * glm::radians(90.0f), glm::vec3(0.5f, 1.0f, 0.25f));
+	ubo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	ubo.projection = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
-	ubo.projection[1][1] *= -1;
+	//ubo.projection[1][1] *= -1;
 	memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
 }
 

@@ -5,13 +5,16 @@
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 #include <array>
+
+#include "shape.hpp"
 
 class Mesh
 {
 	private:
-
+		
 
 	public:
 		Mesh();
@@ -20,11 +23,10 @@ class Mesh
 		struct Vertex
 		{
 			glm::vec3 pos;
-			glm::vec3 color;
 			glm::vec2 texCoord;
 
 			static VkVertexInputBindingDescription GetBindingDescription();
-			static std::array<VkVertexInputAttributeDescription, 3> GetAttributeDescriptions();
+			static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions();
 		};
 
 		struct UniformBufferObject
@@ -34,23 +36,7 @@ class Mesh
 			alignas(16) glm::mat4 projection;
 		};
 
-		//const std::vector<Vertex> vertices = {
-		//	{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-		//	{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-		//	{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
-
-		//const std::vector<Vertex> vertices = {
-		//	{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-		//	{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-		//	{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-		//	{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
-
-		//const std::vector<Vertex> vertices = {
-		//	{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-		//	{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-		//	{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-		//	{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}};
-
+		/*
 		const std::vector<Vertex> vertices = {
 			{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
 			{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
@@ -65,8 +51,12 @@ class Mesh
 		const std::vector<uint16_t> indices = {
 			0, 1, 2, 2, 3, 0,
 			4, 5, 6, 6, 7, 4};
+		*/
 
-		//const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
+		Shape shape;
+
+		std::vector<Vertex> vertices;
+		std::vector<uint16_t> indices;
 
 		VkBuffer vertexBuffer = nullptr;
 		VkDeviceMemory vertexBufferMemory = nullptr;
@@ -79,4 +69,6 @@ class Mesh
 		void DestroyVertexBuffer();
 		void DestroyIndexBuffer();
 		void Destroy();
+
+		void RecalculateVertices();
 };

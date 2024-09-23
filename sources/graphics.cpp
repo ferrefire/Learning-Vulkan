@@ -353,14 +353,14 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	scissor.extent = swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	VkBuffer vertexBuffers[] = {Manager::currentMesh->vertexBuffer};
+	VkBuffer vertexBuffers[] = {pipeline.mesh.vertexBuffer};
 	VkDeviceSize offsets[] = {0};
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-	vkCmdBindIndexBuffer(commandBuffer, Manager::currentMesh->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+	vkCmdBindIndexBuffer(commandBuffer, pipeline.mesh.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.graphicsPipelineLayout, 0, 1, &pipeline.descriptorSets[currentFrame], 0, nullptr);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Manager::currentMesh->indices.size()), 1, 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(pipeline.mesh.indices.size()), 1, 0, 0, 0);
 
 	vkCmdEndRenderPass(commandBuffer);
 
@@ -765,7 +765,7 @@ void Graphics::Create()
 	CreateRenderPass();
 
 	pipeline.CreateDescriptorSetLayout();
-	pipeline.CreateGraphicsPipeline(renderPass);
+	pipeline.CreateGraphicsPipeline("simple", "simple2", renderPass);
 
 	CreateDepthResources();
 	CreateFramebuffers();
@@ -774,8 +774,11 @@ void Graphics::Create()
 	CreateTextureImageView();
 	CreateTextureSampler();
 
-	Manager::currentMesh->CreateVertexBuffer();
-	Manager::currentMesh->CreateIndexBuffer();
+	pipeline.mesh.CreateVertexBuffer();
+	pipeline.mesh.CreateIndexBuffer();
+
+	//Manager::currentMesh->CreateVertexBuffer();
+	//Manager::currentMesh->CreateIndexBuffer();
 
 	pipeline.CreateUniformBuffers();
 	pipeline.CreateDescriptorPool();
@@ -918,7 +921,9 @@ void Graphics::Destroy()
 	pipeline.DestroyDescriptorPool();
 	pipeline.DestroyDescriptorSetLayout();
 
-	Manager::currentMesh->Destroy();
+	pipeline.mesh.Destroy();
+
+	//Manager::currentMesh->Destroy();
 
 	device.Destroy();
 
