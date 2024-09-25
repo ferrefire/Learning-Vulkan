@@ -432,9 +432,11 @@ void Graphics::Create()
 
 	device.CreateCommandPool();
 
-	Images::CreateTextureImage(pipeline, device);
-	Images::CreateTextureImageView(pipeline, device);
-	Images::CreateTextureSampler(pipeline, device);
+	pipeline.texture.Create("texture.jpg", &device);
+
+	//Images::CreateTextureImage(pipeline, device);
+	//Images::CreateTextureImageView(pipeline, device);
+	//Images::CreateTextureSampler(pipeline, device);
 
 	//CreateCommandPool();
 	//CreateTextureImage();
@@ -520,9 +522,11 @@ void Graphics::Destroy()
 	window.DestroyImageViews();
 	window.DestroySwapChain();
 
-	Images::DestroyTextureSampler(pipeline, device);
-	Images::DestroyTextureImageView(pipeline, device);
-	Images::DestroyTextureImage(pipeline, device);
+	pipeline.texture.Destroy();
+
+	//Images::DestroyTextureSampler(pipeline, device);
+	//Images::DestroyTextureImageView(pipeline, device);
+	//Images::DestroyTextureImage(pipeline, device);
 
 	//DestroyTextureSampler();
 	//DestroyTextureImageView();

@@ -9,7 +9,7 @@ set(ACTIVE_LINK_LIBRARIES "glm::glm" "glfw" "Vulkan-Headers" "vulkan")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-FILE(GLOB SOURCE_FILES sources/*.cpp sources/*.c)
+FILE(GLOB SOURCE_FILES sources/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC "includes" "build/_deps/stb_image-subbuild/stb_image-populate-prefix/src")

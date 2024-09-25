@@ -13,7 +13,7 @@
 
 Pipeline::Pipeline(Device &device) : device{device}
 {
-
+	
 }
 
 Pipeline::~Pipeline()
@@ -27,7 +27,6 @@ void Pipeline::CreateGraphicsPipeline(std::string vertexShader, std::string frag
 
     mesh.shape.SetShape(CUBE);
     mesh.RecalculateVertices();
-    //mesh.Move(glm::vec3(0.0f, 1.0f, 0.0f));
 
 	std::string currentPath = Utilities::GetPath();
 
@@ -284,8 +283,8 @@ void Pipeline::CreateDescriptorSets()
 
 		VkDescriptorImageInfo imageInfo{};
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo.imageView = textureImageView;
-		imageInfo.sampler = textureSampler;
+		imageInfo.imageView = texture.imageView;
+		imageInfo.sampler = texture.sampler;
 
 		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 

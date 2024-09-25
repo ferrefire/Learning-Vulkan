@@ -4,6 +4,7 @@
 
 #include <stdexcept>
 
+/*
 stbi_uc *Images::LoadTexture(const std::string path, int *texWidth, int *texHeight, int *texChannels)
 {
 	std::string currentPath = Utilities::GetPath();
@@ -22,6 +23,7 @@ void Images::FreePixels(stbi_uc *pixels)
 {
 	stbi_image_free(pixels);
 }
+*/
 
 void Images::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, 
 	VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory, Device &device)
@@ -84,6 +86,7 @@ VkImageView Images::CreateImageView(VkImage image, VkFormat format, VkImageAspec
 	return imageView;
 }
 
+/*
 void Images::CreateTextureImage(Pipeline &pipeline, Device &device)
 {
     if (pipeline.textureImage != nullptr || pipeline.textureImageMemory != nullptr)
@@ -185,3 +188,4 @@ void Images::DestroyTextureSampler(Pipeline &pipeline, Device &device)
 	vkDestroySampler(device.logicalDevice, pipeline.textureSampler, nullptr);
 	pipeline.textureSampler = nullptr;
 }
+*/

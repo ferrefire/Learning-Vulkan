@@ -5,6 +5,7 @@
 
 #include "device.hpp"
 #include "mesh.hpp"
+#include "texture.hpp"
 
 #include <vector>
 #include <string>
@@ -21,6 +22,7 @@ class Pipeline
         ~Pipeline();
 
         Mesh mesh;
+        Texture texture;
 
 		VkDescriptorSetLayout descriptorSetLayout = nullptr;
 		VkPipelineLayout graphicsPipelineLayout = nullptr;
@@ -31,10 +33,10 @@ class Pipeline
 		std::vector<VkDeviceMemory> uniformBuffersMemory;
 		std::vector<void *> uniformBuffersMapped;
 
-        VkImage textureImage = nullptr;
-		VkDeviceMemory textureImageMemory = nullptr;
-		VkImageView textureImageView = nullptr;
-		VkSampler textureSampler = nullptr;
+        //VkImage textureImage = nullptr;
+		//VkDeviceMemory textureImageMemory = nullptr;
+		//VkImageView textureImageView = nullptr;
+		//VkSampler textureSampler = nullptr;
 
         void CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VkRenderPass renderPass);
         void CreateDescriptorSetLayout();
