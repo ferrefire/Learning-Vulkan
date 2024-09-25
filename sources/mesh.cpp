@@ -33,7 +33,7 @@ void Mesh::CreateVertexBuffer()
 
 	Manager::currentDevice->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
-	Manager::currentGraphics->CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+	Manager::currentDevice->CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
 
 	vkDestroyBuffer(Manager::currentDevice->logicalDevice, stagingBuffer, nullptr);
 	vkFreeMemory(Manager::currentDevice->logicalDevice, stagingBufferMemory, nullptr);
@@ -57,7 +57,7 @@ void Mesh::CreateIndexBuffer()
 
 	Manager::currentDevice->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
-	Manager::currentGraphics->CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
+	Manager::currentDevice->CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
 
 	vkDestroyBuffer(Manager::currentDevice->logicalDevice, stagingBuffer, nullptr);
 	vkFreeMemory(Manager::currentDevice->logicalDevice, stagingBufferMemory, nullptr);

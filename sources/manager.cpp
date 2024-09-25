@@ -90,11 +90,11 @@ Graphics &Manager::GetGraphics()
 bool Manager::glfwInitialized = false;
 bool Manager::vulkanInitialized = false;
 
-Window Manager::window;
 Device Manager::device;
+Window Manager::window{device};
 Pipeline Manager::pipeline{device};
-Graphics Manager::graphics{device, pipeline};
+Graphics Manager::graphics{device, window, pipeline};
 
-Window *Manager::currentWindow = &Manager::window;
 Device *Manager::currentDevice = &Manager::device;
+Window *Manager::currentWindow = &Manager::window;
 Graphics *Manager::currentGraphics = &Manager::graphics;

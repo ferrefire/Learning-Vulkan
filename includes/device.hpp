@@ -43,6 +43,9 @@ class Device
         VkQueue presentationQueue = nullptr;
         QueueFamilies queueFamilies;
 
+        VkCommandPool commandPool = nullptr;
+		std::vector<VkCommandBuffer> commandBuffers;
+
         std::vector<VkSemaphore> imageAvailableSemaphores;
 		std::vector<VkSemaphore> renderFinishedSemaphores;
 		std::vector<VkFence> inFlightFences;
@@ -51,11 +54,12 @@ class Device
         const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
         void Create(VkInstance instance, VkSurfaceKHR surface);
-        void Destroy();
+        void DestroyLogicalDevice();
 
         void CreateLogicalDevice(VkSurfaceKHR surface);
         void PickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface);
         bool IsDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface);
+
         QueueFamilies FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
         bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
         SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
@@ -64,4 +68,15 @@ class Device
         void WaitForIdle();
         void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
         uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+        VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
+        VkFormat FindDepthFormat();
+        bool HasStencilComponent(VkFormat format);
+        void CreateCommandPool();
+        void CreateCommandBuffers();
+        void DestroyCommandPool();
+        void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+        void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+        VkCommandBuffer BeginSingleTimeCommands();
+        void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+        void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
 };
