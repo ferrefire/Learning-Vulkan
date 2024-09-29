@@ -10,6 +10,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <cstring>
 
 Pipeline::Pipeline(Device &device) : device{device}
 {

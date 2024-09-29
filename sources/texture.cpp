@@ -4,6 +4,7 @@
 #include "images.hpp"
 
 #include <stdexcept>
+#include <cstring>
 
 Texture::Texture()
 {
