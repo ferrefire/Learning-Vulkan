@@ -4,27 +4,6 @@
 
 #include <stdexcept>
 
-/*
-stbi_uc *Images::LoadTexture(const std::string path, int *texWidth, int *texHeight, int *texChannels)
-{
-	std::string currentPath = Utilities::GetPath();
-
-	stbi_uc *pixels = stbi_load((currentPath + "/textures/texture.jpg").c_str(), texWidth, texHeight, texChannels, STBI_rgb_alpha);
-
-	if (!pixels)
-	{
-		throw std::runtime_error("failed to load texture image");
-	}
-
-	return (pixels);
-}
-
-void Images::FreePixels(stbi_uc *pixels)
-{
-	stbi_image_free(pixels);
-}
-*/
-
 void Images::CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, 
 	VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory, Device &device)
 {

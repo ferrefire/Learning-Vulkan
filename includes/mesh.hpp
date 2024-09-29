@@ -29,12 +29,12 @@ class Mesh
 			static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions();
 		};
 
-		struct UniformBufferObject
-		{
-			alignas(16) glm::mat4 model;
-			alignas(16) glm::mat4 view;
-			alignas(16) glm::mat4 projection;
-		};
+		//struct UniformBufferObject
+		//{
+		//	alignas(16) glm::mat4 model;
+		//	alignas(16) glm::mat4 view;
+		//	alignas(16) glm::mat4 projection;
+		//};
 
 		/*
 		const std::vector<Vertex> vertices = {

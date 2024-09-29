@@ -2,17 +2,17 @@
 
 #include "utilities.hpp"
 #include "time.hpp"
+#include "shape.hpp"
 
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-#include "shape.hpp"
 
 #include <stdexcept>
 #include <string>
 #include <cstring>
 
-Pipeline::Pipeline(Device &device) : device{device}
+Pipeline::Pipeline(Device &device, Camera &camera) : device{device} , camera{camera}
 {
 	
 }
@@ -78,7 +78,7 @@ void Pipeline::CreateGraphicsPipeline(std::string vertexShader, std::string frag
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
 	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+	rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
 	rasterizer.depthBiasConstantFactor = 0.0f;
 	rasterizer.depthBiasClamp = 0.0f;
@@ -221,7 +221,7 @@ void Pipeline::CreateUniformBuffers()
     if (uniformBuffers.size() != 0 || uniformBuffersMemory.size() != 0)
 		throw std::runtime_error("cannot create uniform buffers because they already exist");
 
-	VkDeviceSize bufferSize = sizeof(Mesh::UniformBufferObject);
+	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
 	uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 	uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
@@ -280,7 +280,7 @@ void Pipeline::CreateDescriptorSets()
 		VkDescriptorBufferInfo bufferInfo{};
 		bufferInfo.buffer = uniformBuffers[i];
 		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(Mesh::UniformBufferObject);
+		bufferInfo.range = sizeof(UniformBufferObject);
 
 		VkDescriptorImageInfo imageInfo{};
 		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -309,13 +309,14 @@ void Pipeline::CreateDescriptorSets()
 	}
 }
 
-void Pipeline::UpdateUniformBuffer(uint32_t currentImage, VkExtent2D swapChainExtent)
+void Pipeline::UpdateUniformBuffer(uint32_t currentImage)
 {
-    Mesh::UniformBufferObject ubo{};
 	ubo.model = glm::rotate(glm::mat4(1.0f), Time::currentFrame * glm::radians(90.0f), glm::vec3(0.5f, 1.0f, 0.25f));
-	ubo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	ubo.projection = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
-	//ubo.projection[1][1] *= -1;
+	//ubo.model = glm::mat4(1.0f);
+	//ubo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	ubo.view = camera.View();
+	//ubo.projection = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 100.0f);
+	ubo.projection = camera.Projection();
 	memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
 }
 

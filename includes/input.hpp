@@ -25,15 +25,7 @@ class Input
 
         static std::map<int, KeyStatus> keys;
 
-		static bool canMove;
-		static bool canLook;
-
-		static float lastX;
-        static float lastY;
-        static float sensitivity;
-
 		static void ProcessInput();
-		static void CameraMovement();
 		static void mouse_callback(GLFWwindow *window, double xpos, double ypos);
         static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 

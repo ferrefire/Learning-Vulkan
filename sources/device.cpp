@@ -78,7 +78,7 @@ bool Device::IsDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface)
 	VkPhysicalDeviceFeatures supportedFeatures;
 	vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-	return (queueFamilies.Complete() && extensionsSupported && swapChainAdequate && isDiscrete && supportedFeatures.samplerAnisotropy);
+	return (queueFamilies.Complete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy && isDiscrete);
 }
 
 QueueFamilies Device::FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface)

@@ -1,5 +1,6 @@
 #include "input.hpp"
 
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
 #include "manager.hpp"
@@ -33,58 +34,18 @@ void Input::ProcessInput()
 {
     SetKeyStatus();
 
-    //if (Input::canMove) CameraMovement();
+	Manager::currentCamera.UpdateMovement();
 }
-
-/*
-void Input::CameraMovement()
-{
-	if (glfwGetKey(Manager::window, GLFW_KEY_W) == GLFW_PRESS)
-	{
-		Manager::camera.Move(Manager::camera.Front() * Manager::camera.speed * Time::deltaTime);
-	}
-	if (glfwGetKey(Manager::window, GLFW_KEY_S) == GLFW_PRESS)
-	{
-		Manager::camera.Move(-Manager::camera.Front() * Manager::camera.speed * Time::deltaTime);
-	}
-	if (glfwGetKey(Manager::window, GLFW_KEY_D) == GLFW_PRESS)
-	{
-		Manager::camera.Move(Manager::camera.Side() * Manager::camera.speed * Time::deltaTime);
-	}
-	if (glfwGetKey(Manager::window, GLFW_KEY_A) == GLFW_PRESS)
-	{
-		Manager::camera.Move(-Manager::camera.Side() * Manager::camera.speed * Time::deltaTime);
-	}
-	if (glfwGetKey(Manager::window, GLFW_KEY_SPACE) == GLFW_PRESS)
-	{
-		Manager::camera.Move(Manager::camera.Up() * Manager::camera.speed * Time::deltaTime);
-	}
-	if (glfwGetKey(Manager::window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-	{
-		Manager::camera.Move(-Manager::camera.Up() * Manager::camera.speed * Time::deltaTime);
-	}
-}
-*/
 
 void Input::mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
-	if (!canLook) return ;
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;
-    lastX = xpos;
-    lastY = ypos;
-
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    //Manager::camera.Rotate(Manager::camera.Angles() + glm::vec3(yoffset, xoffset, 0.0f));
+	Manager::currentCamera.UpdateRotation(xpos, ypos);
 }
 
 void Input::scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
-    //if ((float)yoffset > 0.0f) Manager::camera.speed *= 1.25f;
-    //else if ((float)yoffset < 0.0f) Manager::camera.speed *= 0.8f;
+    if ((float)yoffset > 0.0f) Manager::currentCamera.speed *= 1.25f;
+    else if ((float)yoffset < 0.0f) Manager::currentCamera.speed *= 0.8f;
 }
 
 Input::KeyStatus Input::GetKey(int keyCode)
@@ -109,11 +70,3 @@ void Input::Frame()
 }
 
 std::map<int, Input::KeyStatus> Input::keys;
-//= std::map<int, Input::KeyStatus>()
-
-bool Input::canMove = false;
-bool Input::canLook = false;
-
-float Input::lastX = 0;
-float Input::lastY = 0;
-float Input::sensitivity = 1;

@@ -12,14 +12,14 @@ class Window
 	private:
 		Device &device;
 
-		unsigned int width = 800;
-		unsigned int height = 600;
-
 	public:
 		Window(Device &device);
 		~Window();
 
-        GLFWwindow *data = nullptr;
+		unsigned int width = 800;
+		unsigned int height = 600;
+
+		GLFWwindow *data = nullptr;
 
 		VkSurfaceKHR surface = nullptr;
 		VkRenderPass renderPass = nullptr;
@@ -37,8 +37,9 @@ class Window
 
 		bool framebufferResized = false;
 		bool isResizeable = true;
+		bool mouseVisible = false;
 
-        void Create();
+		void Create();
 		void Destroy();
 		void Close();
 
@@ -62,4 +63,5 @@ class Window
 		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
 		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 		void RecreateSwapChain();
+		void SetMouseVisibility(bool visible);
 };

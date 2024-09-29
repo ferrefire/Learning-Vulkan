@@ -2,6 +2,7 @@
 
 #include "manager.hpp"
 #include "images.hpp"
+#include "input.hpp"
 
 #include <stdexcept>
 #include <algorithm>
@@ -29,6 +30,9 @@ void Window::Create()
     }
 
 	glfwSetFramebufferSizeCallback(data, Window::framebufferResizeCallback);
+	SetMouseVisibility(mouseVisible);
+	glfwSetCursorPosCallback(data, Input::mouse_callback);
+	glfwSetScrollCallback(data, Input::scroll_callback);
 }
 
 void Window::Destroy()
@@ -289,13 +293,16 @@ void Window::CreateRenderPass()
 
 void Window::RecreateSwapChain()
 {
-	int width = 0, height = 0;
-	glfwGetFramebufferSize(Manager::currentWindow->data, &width, &height);
-	while (width == 0 || height == 0)
+	int tempWidth = 0, tempHeight = 0;
+	glfwGetFramebufferSize(Manager::currentWindow->data, &tempWidth, &tempHeight);
+	while (tempWidth == 0 || tempHeight == 0)
 	{
-		glfwGetFramebufferSize(Manager::currentWindow->data, &width, &height);
+		glfwGetFramebufferSize(Manager::currentWindow->data, &tempWidth, &tempHeight);
 		glfwWaitEvents();
 	}
+
+	width = tempWidth;
+	height = tempHeight;
 
 	device.WaitForIdle();
 
@@ -311,6 +318,8 @@ void Window::RecreateSwapChain()
 	CreateImageViews();
 	CreateDepthResources();
 	CreateFramebuffers();
+
+	Manager::currentCamera.UpdateProjection();
 }
 
 void Window::DestroySurface(VkInstance instance)
@@ -376,4 +385,10 @@ void Window::DestroyDepthResources()
 		vkFreeMemory(device.logicalDevice, depthImageMemory, nullptr);
 		depthImageMemory = nullptr;
 	}
+}
+
+void Window::SetMouseVisibility(bool visible)
+{
+	mouseVisible = visible;
+	glfwSetInputMode(data, GLFW_CURSOR, mouseVisible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }

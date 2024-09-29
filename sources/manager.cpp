@@ -92,9 +92,11 @@ bool Manager::vulkanInitialized = false;
 
 Device Manager::device;
 Window Manager::window{device};
-Pipeline Manager::pipeline{device};
+Camera Manager::camera{window};
+Pipeline Manager::pipeline{device, camera};
 Graphics Manager::graphics{device, window, pipeline};
 
 Device *Manager::currentDevice = &Manager::device;
 Window *Manager::currentWindow = &Manager::window;
+Camera &Manager::currentCamera = Manager::camera;
 Graphics *Manager::currentGraphics = &Manager::graphics;

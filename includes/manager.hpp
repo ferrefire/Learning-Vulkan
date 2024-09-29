@@ -7,6 +7,7 @@
 #include "graphics.hpp"
 #include "device.hpp"
 #include "pipeline.hpp"
+#include "camera.hpp"
 
 class Manager
 {
@@ -15,12 +16,14 @@ class Manager
         static bool vulkanInitialized;
 
 		static Window window;
+		static Camera camera;
 		static Device device;
 		static Pipeline pipeline;
         static Graphics graphics;
 
 	public:
 		static Window *currentWindow;
+		static Camera &currentCamera;
 		static Device *currentDevice;
 		static Graphics *currentGraphics;
 
