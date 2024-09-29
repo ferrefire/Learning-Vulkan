@@ -59,7 +59,7 @@ bool Window::IsOpen()
 
 void Window::framebufferResizeCallback(GLFWwindow *window, int width, int height)
 {
-	Manager::currentWindow->framebufferResized = true;
+	Manager::currentWindow.framebufferResized = true;
 }
 
 void Window::CreateSurface(VkInstance instance)
@@ -131,6 +131,8 @@ void Window::CreateSwapChain()
 	vkGetSwapchainImagesKHR(device.logicalDevice, swapChain, &imageCount, swapChainImages.data());
 	swapChainImageFormat = surfaceFormat.format;
 	swapChainExtent = extent;
+	width = extent.width;
+	height = extent.height;
 }
 
 VkSurfaceFormatKHR Window::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats)
@@ -294,15 +296,12 @@ void Window::CreateRenderPass()
 void Window::RecreateSwapChain()
 {
 	int tempWidth = 0, tempHeight = 0;
-	glfwGetFramebufferSize(Manager::currentWindow->data, &tempWidth, &tempHeight);
+	glfwGetFramebufferSize(data, &tempWidth, &tempHeight);
 	while (tempWidth == 0 || tempHeight == 0)
 	{
-		glfwGetFramebufferSize(Manager::currentWindow->data, &tempWidth, &tempHeight);
+		glfwGetFramebufferSize(data, &tempWidth, &tempHeight);
 		glfwWaitEvents();
 	}
-
-	width = tempWidth;
-	height = tempHeight;
 
 	device.WaitForIdle();
 
@@ -318,8 +317,6 @@ void Window::RecreateSwapChain()
 	CreateImageViews();
 	CreateDepthResources();
 	CreateFramebuffers();
-
-	Manager::currentCamera.UpdateProjection();
 }
 
 void Window::DestroySurface(VkInstance instance)

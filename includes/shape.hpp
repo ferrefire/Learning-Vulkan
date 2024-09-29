@@ -8,6 +8,7 @@
 
 #define QUAD 1
 #define CUBE 2
+#define PLANE 3
 
 class Shape
 {
@@ -22,6 +23,8 @@ class Shape
         std::vector<glm::vec3> positions;
         std::vector<glm::vec2> coordinates;
         std::vector<uint16_t> indices;
+
+		bool positionsOnly = false;
 
         void SetShape(int type);
 

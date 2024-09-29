@@ -20,7 +20,9 @@ Camera::~Camera()
 
 void Camera::UpdateProjection()
 {
-	projection = glm::perspective(glm::radians(FOV), (float)window.width / (float)window.height, near, far);
+	cameraWidth = window.width;
+	cameraHeight = window.height;
+	projection = glm::perspective(glm::radians(FOV), (float)cameraWidth / (float)cameraHeight, near, far);
 	projection[1][1] *= -1;
 }
 
@@ -106,6 +108,7 @@ const glm::mat4 &Camera::View()
 
 const glm::mat4 &Camera::Projection()
 {
+	if (cameraWidth != window.width || cameraHeight != window.height) UpdateProjection();
 	return (projection);
 }
 

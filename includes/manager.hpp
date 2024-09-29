@@ -1,13 +1,15 @@
 #pragma once
 
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
 #include "window.hpp"
 #include "graphics.hpp"
 #include "device.hpp"
 #include "pipeline.hpp"
 #include "camera.hpp"
+
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
+#include <vector>
 
 class Manager
 {
@@ -18,14 +20,15 @@ class Manager
 		static Window window;
 		static Camera camera;
 		static Device device;
-		static Pipeline pipeline;
-        static Graphics graphics;
+		//static Pipeline pipeline;
+		static std::vector<Pipeline> pipelines;
+		static Graphics graphics;
 
 	public:
-		static Window *currentWindow;
+		static Window &currentWindow;
 		static Camera &currentCamera;
-		static Device *currentDevice;
-		static Graphics *currentGraphics;
+		static Device &currentDevice;
+		static Graphics &currentGraphics;
 
 		static void Start();
 		static void Clean();

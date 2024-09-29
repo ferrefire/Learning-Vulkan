@@ -51,8 +51,8 @@ void Pipeline::CreateGraphicsPipeline(std::string vertexShader, std::string frag
 
 	VkPipelineShaderStageCreateInfo shaderStages[] = {vertexShaderStageInfo, fragmentShaderStageInfo};
 
-	auto bindingDescription = Mesh::Vertex::GetBindingDescription();
-	auto attributeDescriptions = Mesh::Vertex::GetAttributeDescriptions();
+	auto bindingDescription = Vertex::GetBindingDescription();
+	auto attributeDescriptions = Vertex::GetAttributeDescriptions();
 
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -311,11 +311,9 @@ void Pipeline::CreateDescriptorSets()
 
 void Pipeline::UpdateUniformBuffer(uint32_t currentImage)
 {
-	ubo.model = glm::rotate(glm::mat4(1.0f), Time::currentFrame * glm::radians(90.0f), glm::vec3(0.5f, 1.0f, 0.25f));
-	//ubo.model = glm::mat4(1.0f);
-	//ubo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	//ubo.model = glm::rotate(glm::mat4(1.0f), Time::currentFrame * glm::radians(90.0f), glm::vec3(0.5f, 1.0f, 0.25f));
+	ubo.model = glm::mat4(1.0f);
 	ubo.view = camera.View();
-	//ubo.projection = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 100.0f);
 	ubo.projection = camera.Projection();
 	memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
 }

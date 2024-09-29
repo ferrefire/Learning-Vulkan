@@ -38,6 +38,9 @@ class Camera
 		float lastY = 0;
 		float sensitivity = 0.1f;
 
+		uint32_t cameraWidth = 800;
+		uint32_t cameraHeight = 600;
+
 		void Move(const glm::vec3 &amount);
 		void SetPosition(const glm::vec3 &newPosition);
 		void Rotate(const glm::vec3 &degrees);

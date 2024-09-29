@@ -17,7 +17,7 @@
 #include <algorithm>
 #include <cstring>
 
-Graphics::Graphics(Device &device, Window &window, Pipeline &pipeline) : device{device}, window{window}, pipeline{pipeline}
+Graphics::Graphics(Device &device, Window &window, std::vector<Pipeline> &pipelines) : device{device}, window{window}, pipelines{pipelines}
 {
 
 }
@@ -84,7 +84,7 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.graphicsPipeline);
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[0].graphicsPipeline);
 
 	VkViewport viewport{};
 	viewport.x = 0.0f;
@@ -100,14 +100,14 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	scissor.extent = window.swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	VkBuffer vertexBuffers[] = {pipeline.mesh.vertexBuffer};
+	VkBuffer vertexBuffers[] = {pipelines[0].mesh.vertexBuffer};
 	VkDeviceSize offsets[] = {0};
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-	vkCmdBindIndexBuffer(commandBuffer, pipeline.mesh.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+	vkCmdBindIndexBuffer(commandBuffer, pipelines[0].mesh.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.graphicsPipelineLayout, 0, 1, &pipeline.descriptorSets[currentFrame], 0, nullptr);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(pipeline.mesh.indices.size()), 1, 0, 0, 0);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[0].graphicsPipelineLayout, 0, 1, &pipelines[0].descriptorSets[currentFrame], 0, nullptr);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(pipelines[0].mesh.indices.size()), 1, 0, 0, 0);
 
 	vkCmdEndRenderPass(commandBuffer);
 
@@ -140,7 +140,7 @@ void Graphics::DrawFrame()
 	vkResetCommandBuffer(device.commandBuffers[currentFrame], 0);
 	RecordCommandBuffer(device.commandBuffers[currentFrame], imageIndex);
 
-	pipeline.UpdateUniformBuffer(currentFrame);
+	pipelines[0].UpdateUniformBuffer(currentFrame);
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -190,22 +190,30 @@ void Graphics::Create()
 	window.CreateImageViews();
 	window.CreateRenderPass();
 
-	pipeline.CreateDescriptorSetLayout();
-	pipeline.CreateGraphicsPipeline("simple", "simple2", window.renderPass);
+	//pipelines.push_back(Pipeline(device, Manager::currentCamera));
+
+	for (Pipeline &pipeline : pipelines)
+	{
+		pipeline.CreateDescriptorSetLayout();
+		pipeline.CreateGraphicsPipeline("simple", "simple", window.renderPass);
+	}
 
 	window.CreateDepthResources();
 	window.CreateFramebuffers();
 
 	device.CreateCommandPool();
 
-	pipeline.texture.Create("texture.jpg", &device);
+	for (Pipeline &pipeline : pipelines)
+	{
+		pipeline.texture.Create("texture.jpg", &device);
 
-	pipeline.mesh.CreateVertexBuffer();
-	pipeline.mesh.CreateIndexBuffer();
+		pipeline.mesh.CreateVertexBuffer();
+		pipeline.mesh.CreateIndexBuffer();
 
-	pipeline.CreateUniformBuffers();
-	pipeline.CreateDescriptorPool();
-	pipeline.CreateDescriptorSets();
+		pipeline.CreateUniformBuffers();
+		pipeline.CreateDescriptorPool();
+		pipeline.CreateDescriptorSets();
+	}
 
 	device.CreateCommandBuffers();
 
@@ -228,20 +236,26 @@ void Graphics::Destroy()
 
 	window.DestroyFramebuffers();
 
-	pipeline.DestroyGraphicsPipeline();
+	for (Pipeline &pipeline : pipelines)
+	{
+		pipeline.DestroyGraphicsPipeline();
+	}
 
 	window.DestroyRenderPass();
 	window.DestroyDepthResources();
 	window.DestroyImageViews();
 	window.DestroySwapChain();
 
-	pipeline.texture.Destroy();
+	for (Pipeline &pipeline : pipelines)
+	{
+		pipeline.texture.Destroy();
 
-	pipeline.DestroyUniformBuffers();
-	pipeline.DestroyDescriptorPool();
-	pipeline.DestroyDescriptorSetLayout();
+		pipeline.DestroyUniformBuffers();
+		pipeline.DestroyDescriptorPool();
+		pipeline.DestroyDescriptorSetLayout();
 
-	pipeline.mesh.Destroy();
+		pipeline.mesh.Destroy();
+	}
 
 	device.DestroyLogicalDevice();
 

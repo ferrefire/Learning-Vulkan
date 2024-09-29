@@ -13,15 +13,17 @@ class Graphics
 {
     private:
 		Device &device;
-		Pipeline &pipeline;
+		//Pipeline &pipeline;
 		Window &window;
+		std::vector<Pipeline> &pipelines;
 
 		const int MAX_FRAMES_IN_FLIGHT = 2;
 		uint32_t currentFrame = 0;
 
 	public:
-        Graphics(Device &device, Window &window, Pipeline &pipeline);
-        ~Graphics();
+		//Graphics(Device &device, Window &window, Pipeline &pipeline);
+		Graphics(Device &device, Window &window, std::vector<Pipeline> &pipelines);
+		~Graphics();
 
 		VkInstance instance = nullptr;
 

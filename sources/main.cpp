@@ -13,7 +13,7 @@ int main()
 {
 	Manager::Start();
 
-	while (Manager::currentWindow->IsOpen())
+	while (Manager::currentWindow.IsOpen())
 	{
 		Time::Frame();
 		Input::Frame();
@@ -21,10 +21,10 @@ int main()
 
 		glfwPollEvents();
 
-		Manager::currentGraphics->DrawFrame();
+		Manager::currentGraphics.DrawFrame();
 	}
 
-	Manager::currentDevice->WaitForIdle();
+	Manager::currentDevice.WaitForIdle();
 
 	Manager::Quit(EXIT_SUCCESS);
 }

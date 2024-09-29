@@ -16,8 +16,8 @@ class Window
 		Window(Device &device);
 		~Window();
 
-		unsigned int width = 800;
-		unsigned int height = 600;
+		uint32_t width = 800;
+		uint32_t height = 600;
 
 		GLFWwindow *data = nullptr;
 

@@ -22,8 +22,8 @@ void Input::SetKeyStatus()
     for (auto &key : keys)
     {
         bool lastFrameDown = key.second.down;
-        if (key.second.mouse) key.second.down = glfwGetMouseButton(Manager::currentWindow->data, key.first) == GLFW_PRESS;
-        else key.second.down = glfwGetKey(Manager::currentWindow->data, key.first) == GLFW_PRESS;
+        if (key.second.mouse) key.second.down = glfwGetMouseButton(Manager::currentWindow.data, key.first) == GLFW_PRESS;
+        else key.second.down = glfwGetKey(Manager::currentWindow.data, key.first) == GLFW_PRESS;
 
         key.second.pressed = (key.second.down && !lastFrameDown);
         key.second.released = (!key.second.down && lastFrameDown);

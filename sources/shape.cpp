@@ -24,11 +24,6 @@ void Shape::SetShape(int type)
 		AddPosition(glm::vec3(0.5f, 0.5f, 0.0f));
 		AddPosition(glm::vec3(-0.5f, 0.5f, 0.0f));
 
-		AddCoordinate(glm::vec2(0.0f, 0.0f));
-		AddCoordinate(glm::vec2(1.0f, 0.0f));
-		AddCoordinate(glm::vec2(1.0f, 1.0f));
-		AddCoordinate(glm::vec2(0.0f, 1.0f));
-
 		AddIndice(0);
 		AddIndice(1);
 		AddIndice(2);
@@ -36,6 +31,13 @@ void Shape::SetShape(int type)
 		AddIndice(2);
 		AddIndice(3);
 		AddIndice(0);
+
+		if (positionsOnly) return;
+
+		AddCoordinate(glm::vec2(0.0f, 0.0f));
+		AddCoordinate(glm::vec2(1.0f, 0.0f));
+		AddCoordinate(glm::vec2(1.0f, 1.0f));
+		AddCoordinate(glm::vec2(0.0f, 1.0f));
 	}
     else if (type == CUBE)
     {
@@ -79,6 +81,8 @@ void Shape::AddPosition(glm::vec3 pos)
 
 void Shape::AddCoordinate(glm::vec2 uv)
 {
+	if (positionsOnly) return;
+
 	coordinates.push_back(uv);
 }
 
@@ -96,14 +100,16 @@ void Shape::Join(Shape &joinShape)
         positions.push_back(pos);
     }
 
-    for (glm::vec2 coord : joinShape.coordinates)
+	for (uint16_t index : joinShape.indices)
+	{
+		indices.push_back(index + count);
+	}
+
+	if (positionsOnly) return;
+
+	for (glm::vec2 coord : joinShape.coordinates)
     {
         coordinates.push_back(coord);
-    }
-
-    for (uint16_t index : joinShape.indices)
-    {
-        indices.push_back(index + count);
     }
 }
 

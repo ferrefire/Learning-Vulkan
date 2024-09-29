@@ -30,12 +30,10 @@ void Manager::Quit(int exitCode)
 	Clean();
 
 	graphics.Destroy();
-	currentGraphics = nullptr;
 
 	if (glfwInitialized)
     {
         window.Destroy();
-		currentWindow = nullptr;
         glfwTerminate();
     }
 
@@ -54,8 +52,6 @@ void Manager::InitializeGLFW()
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
 	window.Create();
-
-	currentWindow = &window;
 }
 
 void Manager::InitializeVulkan()
@@ -63,8 +59,6 @@ void Manager::InitializeVulkan()
 	graphics.Create();
 
 	vulkanInitialized = true;
-
-	currentGraphics = &graphics;
 
 	std::cout << device.properties.deviceName << std::endl;
 }
@@ -93,10 +87,10 @@ bool Manager::vulkanInitialized = false;
 Device Manager::device;
 Window Manager::window{device};
 Camera Manager::camera{window};
-Pipeline Manager::pipeline{device, camera};
-Graphics Manager::graphics{device, window, pipeline};
+std::vector<Pipeline> Manager::pipelines(1, Pipeline{device, camera});
+Graphics Manager::graphics{device, window, pipelines};
 
-Device *Manager::currentDevice = &Manager::device;
-Window *Manager::currentWindow = &Manager::window;
+Device &Manager::currentDevice = Manager::device;
+Window &Manager::currentWindow = Manager::window;
 Camera &Manager::currentCamera = Manager::camera;
-Graphics *Manager::currentGraphics = &Manager::graphics;
+Graphics &Manager::currentGraphics = Manager::graphics;

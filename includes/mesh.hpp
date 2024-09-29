@@ -1,15 +1,17 @@
 #pragma once
 
+#include "shape.hpp"
+#include "vertex.hpp"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
 #include <vector>
 #include <array>
-
-#include "shape.hpp"
 
 class Mesh
 {
@@ -20,7 +22,8 @@ class Mesh
 		Mesh();
 		~Mesh();
 
-		struct Vertex
+		/*
+		struct VertexPositionCoordinate
 		{
 			glm::vec3 pos;
 			glm::vec2 texCoord;
@@ -29,28 +32,13 @@ class Mesh
 			static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions();
 		};
 
-		//struct UniformBufferObject
-		//{
-		//	alignas(16) glm::mat4 model;
-		//	alignas(16) glm::mat4 view;
-		//	alignas(16) glm::mat4 projection;
-		//};
+		struct VertexPosition
+		{
+			glm::vec3 pos;
 
-		/*
-		const std::vector<Vertex> vertices = {
-			{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-			{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-			{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-			{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}},
-
-			{{-0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-			{{0.5f, -0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 0.0f}},
-			{{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-			{{-0.5f, 0.5f, -0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}}};
-
-		const std::vector<uint16_t> indices = {
-			0, 1, 2, 2, 3, 0,
-			4, 5, 6, 6, 7, 4};
+			static VkVertexInputBindingDescription GetBindingDescription();
+			static std::array<VkVertexInputAttributeDescription, 1> GetAttributeDescriptions();
+		};
 		*/
 
 		Shape shape;

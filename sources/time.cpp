@@ -64,7 +64,7 @@ void Time::CalculateFPS()
 {
 	if (Time::newSubTick)
 	{
-		glfwSetWindowTitle(Manager::currentWindow->data, std::to_string(int(frameCountLastTick / frameTimeLastTick)).c_str());
+		glfwSetWindowTitle(Manager::currentWindow.data, std::to_string(int(frameCountLastTick / frameTimeLastTick)).c_str());
 	}
 }
 
