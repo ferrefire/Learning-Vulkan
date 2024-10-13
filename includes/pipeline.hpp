@@ -16,6 +16,21 @@
 #include <vector>
 #include <string>
 
+struct PipelineConfiguration
+{
+    //VkViewport viewport;
+    //VkRect2D scissor;
+    VkPipelineViewportStateCreateInfo viewportState;
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly;
+    VkPipelineRasterizationStateCreateInfo rasterization;
+    VkPipelineMultisampleStateCreateInfo multisampling;
+    VkPipelineColorBlendAttachmentState colorBlendAttachment;
+    VkPipelineColorBlendStateCreateInfo colorBlending;
+    VkPipelineDepthStencilStateCreateInfo depthStencil;
+    VkRenderPass renderPass = nullptr;
+    uint32_t subpass = 0;
+};
+
 struct UniformBufferObject
 {
 	alignas(16) glm::mat4 model = glm::mat4(1);
@@ -26,15 +41,13 @@ struct UniformBufferObject
 class Pipeline
 {
     private:
-        static Pipeline default;
-
         Device &device;
 		Camera &camera;
 
         const int MAX_FRAMES_IN_FLIGHT = 2;
 
     public:
-        static Pipeline *Default();
+        static PipelineConfiguration DefaultConfiguration();
 
         Pipeline(Device &device, Camera &camera);
         ~Pipeline();
@@ -52,7 +65,7 @@ class Pipeline
 		std::vector<void *> uniformBuffersMapped;
 
         void Create();
-        void CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VkRenderPass renderPass);
+        void CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VertexInfo vertexInfo, PipelineConfiguration configuration);
         void CreateDescriptorSetLayout();
         void CreateUniformBuffers();
         void CreateDescriptorPool();

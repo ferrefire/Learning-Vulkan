@@ -22,6 +22,7 @@ class Object
         Mesh *mesh = nullptr;
         Pipeline *pipeline = nullptr;
 
+        Object();
         Object(Mesh *mesh, Pipeline *pipeline);
         ~Object();
 

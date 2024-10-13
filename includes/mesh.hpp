@@ -1,7 +1,6 @@
 #pragma once
 
 #include "shape.hpp"
-#include "vertex.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -14,12 +13,31 @@
 #include <array>
 #include <string>
 
+struct Vertex
+{
+	glm::vec3 position;
+	glm::vec2 coordinate;
+	glm::vec3 normal;
+	glm::vec4 color;
+};
+
+struct VertexInfo
+{
+	uint32_t bindingCount;
+	uint32_t attributeCount;
+	uint32_t floatCount;
+	VkVertexInputBindingDescription bindingDescription;
+	std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+};
+
 class Mesh
 {
 	private:
-		static Mesh cube;
+		static Mesh *cube;
+		static Mesh *bound;
 
 	public:
+		static void CreateDefaults();
 		static Mesh *Cube();
 
 		Mesh();
@@ -28,9 +46,15 @@ class Mesh
 
 		std::string name;
 
+		bool position = true;
+		bool coordinate = false;
+		bool normal = false;
+		bool color = false;
+
 		Shape shape;
 
 		std::vector<Vertex> vertices;
+		std::vector<float> verticesData;
 		std::vector<uint16_t> indices;
 
 		VkBuffer vertexBuffer = nullptr;
@@ -49,4 +73,7 @@ class Mesh
 		void RecalculateVertices();
 
 		void Bind(VkCommandBuffer commandBuffer);
+
+		VertexInfo MeshVertexInfo();
+		static VertexInfo GetVertexInfo(bool position = false, bool coordinate = false, bool normal = false, bool color = false);
 };

@@ -29,5 +29,5 @@ class Terrain
         static void DestroyMesh();
         static void DestroyPipeline();
 
-        static void RecordCommands(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+        static void RecordCommands(VkCommandBuffer commandBuffer);
 };

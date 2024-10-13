@@ -22,6 +22,8 @@ class Shape
 
         std::vector<glm::vec3> positions;
         std::vector<glm::vec2> coordinates;
+        std::vector<glm::vec3> normals;
+        std::vector<glm::vec3> colors;
         std::vector<uint16_t> indices;
 
 		bool positionsOnly = false;

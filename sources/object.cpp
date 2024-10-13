@@ -2,6 +2,11 @@
 
 #include "manager.hpp"
 
+Object::Object() : mesh{nullptr} , pipeline{nullptr}
+{
+
+}
+
 Object::Object(Mesh *mesh, Pipeline *pipeline) : mesh{mesh} , pipeline{pipeline}
 {
 

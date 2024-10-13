@@ -13,6 +13,7 @@ void Terrain::Create()
 
 void Terrain::CreateMesh()
 {
+    mesh.coordinate = true;
     mesh.shape.SetShape(CUBE);
     mesh.RecalculateVertices();
 
@@ -22,7 +23,7 @@ void Terrain::CreateMesh()
 void Terrain::CreatePipeline()
 {
     pipeline.CreateDescriptorSetLayout();
-	pipeline.CreateGraphicsPipeline("simple", "simple", Manager::currentWindow.renderPass);
+	pipeline.CreateGraphicsPipeline("terrain", "terrain", mesh.MeshVertexInfo(), Pipeline::DefaultConfiguration());
 
 	pipeline.texture.Create("texture.jpg", &Manager::currentDevice);
 
@@ -53,12 +54,11 @@ void Terrain::DestroyPipeline()
 	pipeline.DestroyDescriptorSetLayout();
 }
 
-void Terrain::RecordCommands(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+void Terrain::RecordCommands(VkCommandBuffer commandBuffer)
 {
     pipeline.Bind(commandBuffer, Manager::currentWindow);
-    pipeline.UpdateUniformBuffer(object.Translation(), imageIndex);
+    pipeline.UpdateUniformBuffer(object.Translation(), Manager::currentFrame);
     mesh.Bind(commandBuffer);
-
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
 }
 

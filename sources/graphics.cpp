@@ -1,14 +1,14 @@
 #include "graphics.hpp"
 
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 #include "manager.hpp"
 #include "utilities.hpp"
 #include "time.hpp"
 #include "images.hpp"
 #include "terrain.hpp"
+
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <stdexcept>
 #include <set>
@@ -85,14 +85,15 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	Terrain::RecordCommands(commandBuffer, Manager::currentFrame);
-	Object test(Mesh::Cube(), Pipeline::Default());
-	test.Resize(glm::vec3(2));
-	test.Move(glm::vec3(0, 0, -5));
-	test.pipeline->Bind(commandBuffer, Manager::currentWindow);
-	test.pipeline->UpdateUniformBuffer(test.Translation(), Manager::currentFrame);
-	test.mesh->Bind(commandBuffer);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(test.mesh->indices.size()), 1, 0, 0, 0);
+	Terrain::RecordCommands(commandBuffer);
+
+	for (Object *object : Manager::objects)
+	{
+		object->pipeline->Bind(commandBuffer, Manager::currentWindow);
+		object->pipeline->UpdateUniformBuffer(object->Translation(), Manager::currentFrame);
+		object->mesh->Bind(commandBuffer);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(object->mesh->indices.size()), 1, 0, 0, 0);
+	}
 
 	/*vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[0].graphicsPipeline);
 
@@ -208,27 +209,23 @@ void Graphics::Create()
 	device.CreateCommandBuffers();
 	device.CreateSyncObjects();
 
-	Pipeline::Default()->Create();
-	Mesh::Cube()->shape.SetShape(CUBE);
-	Mesh::Cube()->RecalculateVertices();
-	Mesh::Cube()->Create();
+	Mesh::CreateDefaults();
 
 	Terrain::Create();
 
-	/*for (Pipeline &pipeline : pipelines)
-	{
-		pipeline.CreateDescriptorSetLayout();
-		pipeline.CreateGraphicsPipeline("simple", "simple", window.renderPass);
+	Object *obj1 = Manager::NewObject();
+	obj1->mesh = Mesh::Cube();
+	obj1->pipeline = Manager::NewPipeline();
+	obj1->pipeline->Create();
+	obj1->Resize(glm::vec3(2));
+	obj1->Move(glm::vec3(0, 0, -5));
 
-		pipeline.texture.Create("texture.jpg", &device);
-
-		pipeline.mesh.CreateVertexBuffer();
-		pipeline.mesh.CreateIndexBuffer();
-
-		pipeline.CreateUniformBuffers();
-		pipeline.CreateDescriptorPool();
-		pipeline.CreateDescriptorSets();
-	}*/
+	Object *obj2 = Manager::NewObject();
+	obj2->mesh = Mesh::Cube();
+	obj2->pipeline = Manager::NewPipeline();
+	obj2->pipeline->Create();
+	obj2->Resize(glm::vec3(3));
+	obj2->Move(glm::vec3(0, 0, -10));
 }
 
 void Graphics::DestroyInstance()
@@ -253,8 +250,8 @@ void Graphics::Destroy()
 
 	Terrain::Destroy();
 
-	Mesh::Cube()->Destroy();
-	Pipeline::Default()->Destroy();
+	Manager::DestroyPipelines();
+	Manager::DestroyMeshes();
 
 	/*for (Pipeline &pipeline : pipelines)
 	{
