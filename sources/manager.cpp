@@ -75,26 +75,35 @@ void Manager::DestroyPipelines()
 {
 	for (Pipeline *pipeline : pipelines)
 	{
+        if (!pipeline) continue;
+
 		pipeline->Destroy();
 		delete(pipeline);
 	}
+    pipelines.clear();
 }
 
 void Manager::DestroyMeshes()
 {
 	for (Mesh *mesh : meshes)
 	{
-		mesh->Destroy();
+        if (!mesh) continue;
+
+        mesh->Destroy();
 		delete(mesh);
 	}
+	meshes.clear();
 }
 
 void Manager::DestroyObjects()
 {
 	for (Object *object : objects)
 	{
+		if (!object) continue;
+
 		delete(object);
 	}
+	objects.clear();
 }
 
 Window &Manager::GetWindow()
@@ -111,6 +120,7 @@ Pipeline *Manager::NewPipeline()
 {
 	Pipeline *pipeline = new Pipeline(device, camera);
 	pipelines.push_back(pipeline);
+
 	return (pipeline);
 }
 
@@ -118,6 +128,7 @@ Mesh *Manager::NewMesh()
 {
 	Mesh *mesh = new Mesh();
 	meshes.push_back(mesh);
+
 	return (mesh);
 }
 
@@ -125,6 +136,7 @@ Object *Manager::NewObject()
 {
 	Object *object = new Object();
 	objects.push_back(object);
+	
 	return (object);
 }
 
