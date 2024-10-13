@@ -6,6 +6,7 @@ fresh=""
 dev="-DDEV=ON"
 check_found="-DCHECK_FOUND=OFF"
 release=0
+arguments=""
 
 run_command () {
 
@@ -14,6 +15,8 @@ run_command () {
 	elif [[ $1 == "check" ]] || [[ $1 == "chk" ]]; then
 		return
 	elif [[ $1 == "release" ]] || [[ $1 == "rel" ]]; then
+		return
+	elif [[ $1 == "-"* ]]; then
 		return
 	fi
 
@@ -41,7 +44,7 @@ run_command () {
 		if [[ $OSTYPE == "linux-gnu" ]]; then
 			if test -f $path/build/limitless; then
 				cd $path/build
-				./limitless
+				./limitless $args
 			else
 				echo "ERROR: '"$path"/build/limitless' could not be found."
 				exit 1
@@ -49,7 +52,7 @@ run_command () {
 		elif [[ $OSTYPE == "msys" ]]; then
 			if test -f $path/build/Release/limitless; then
 				cd $path/build
-				./Release/limitless
+				./Release/limitless $args
 			else
 				echo "ERROR: '"$path"/build/Release/limitless' could not be found."
 				exit 1
@@ -110,6 +113,9 @@ if test -f setup.sh; then
 			release=1
 		elif [[ $x == "check" ]] || [[ $x == "chk" ]]; then
 			check_found="-DCHECK_FOUND=ON"
+		elif [[ $x == "-"* ]]; then
+			args+=${x/-/}
+			args+=" "
 		fi
 	done
 	for x in $@; do

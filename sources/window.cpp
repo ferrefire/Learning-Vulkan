@@ -22,7 +22,15 @@ void Window::Create()
 	if (data) return ;
 
 	glfwWindowHint(GLFW_RESIZABLE, isResizeable);
-	data = glfwCreateWindow(width, height, "Vulkan window", nullptr, nullptr);
+
+	if (Manager::settings.fullscreen)
+	{
+		const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+		width = mode->width;
+		height = mode->height;
+	}
+
+	data = glfwCreateWindow(width, height, "Vulkan window", Manager::settings.fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
     
     if (!data)
     {

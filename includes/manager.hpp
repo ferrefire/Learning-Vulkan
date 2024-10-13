@@ -13,6 +13,12 @@
 
 #include <vector>
 
+struct Settings
+{
+	bool fullscreen = false;
+	bool wireframe = false;
+};
+
 class Manager
 {
 	private:
@@ -23,11 +29,12 @@ class Manager
 		static Camera camera;
 		static Device device;
 		static Graphics graphics;
-		//static Pipeline pipeline;
 		static std::vector<Pipeline *> pipelines;
 		static std::vector<Mesh *> meshes;
 
 	public:
+		static Settings settings;
+
 		static Window &currentWindow;
 		static Camera &currentCamera;
 		static Device &currentDevice;

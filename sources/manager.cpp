@@ -146,3 +146,4 @@ Graphics &Manager::currentGraphics = Manager::graphics;
 uint32_t Manager::currentFrame = 0;
 
 std::vector<Object *> Manager::objects;
+Settings Manager::settings;

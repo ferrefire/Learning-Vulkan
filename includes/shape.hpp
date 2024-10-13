@@ -28,7 +28,7 @@ class Shape
 
 		bool positionsOnly = false;
 
-        void SetShape(int type);
+        void SetShape(int type, int resolution = 1);
 
         void AddPosition(glm::vec3 pos);
 		void AddCoordinate(glm::vec2 uv);

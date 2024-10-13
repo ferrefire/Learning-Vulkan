@@ -12,9 +12,29 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <string>
 
-int main()
+void Setup(int argc, char **argv)
 {
+	stbi_set_flip_vertically_on_load(true);
+
+	for (int i = 1; i < argc; i++)
+	{
+		if (std::string(argv[i]).compare("wf") == 0)
+		{
+			Manager::settings.wireframe = true;
+		}
+		else if (std::string(argv[i]).compare("fs") == 0)
+		{
+			Manager::settings.fullscreen = true;
+		}
+	}
+}
+
+int main(int argc, char **argv)
+{
+	Setup(argc, argv);
+
 	Manager::Start();
 
 	while (Manager::currentWindow.IsOpen())

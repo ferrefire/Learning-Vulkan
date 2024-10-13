@@ -15,28 +15,28 @@ Shape::~Shape()
 
 }
 
-void Shape::SetShape(int type)
+void Shape::SetShape(int type, int resolution)
 {
 	if (type == QUAD)
 	{
 		AddPosition(glm::vec3(-0.5f, -0.5f, 0.0f));
-		AddPosition(glm::vec3(0.5f, -0.5f, 0.0f));
 		AddPosition(glm::vec3(0.5f, 0.5f, 0.0f));
+		AddPosition(glm::vec3(0.5f, -0.5f, 0.0f));
 		AddPosition(glm::vec3(-0.5f, 0.5f, 0.0f));
 
 		AddIndice(0);
 		AddIndice(1);
 		AddIndice(2);
 
-		AddIndice(2);
 		AddIndice(3);
+		AddIndice(1);
 		AddIndice(0);
 
 		if (positionsOnly) return;
 
 		AddCoordinate(glm::vec2(0.0f, 0.0f));
-		AddCoordinate(glm::vec2(1.0f, 0.0f));
 		AddCoordinate(glm::vec2(1.0f, 1.0f));
+		AddCoordinate(glm::vec2(1.0f, 0.0f));
 		AddCoordinate(glm::vec2(0.0f, 1.0f));
 	}
     else if (type == CUBE)
@@ -71,6 +71,35 @@ void Shape::SetShape(int type)
         Join(top);
         Join(bottom);
     }
+    else if (type == PLANE)
+    {
+        positionsOnly = true;
+
+        int sideVertCount = resolution;
+        float halfLength = 0.5f;
+
+        for (int i = 0, x = 0; x <= sideVertCount; ++x)
+        {
+            for (int z = 0; z <= sideVertCount; ++z, ++i)
+            {
+                positions.push_back(glm::vec3(((float)x / sideVertCount) - halfLength, 0, ((float)z / sideVertCount) - halfLength));
+            }
+        }
+
+        for (int ti = 0, vi = 0, x = 0; x < sideVertCount; ++vi, ++x)
+        {
+            for (int z = 0; z < sideVertCount; ti += 6, ++vi, ++z)
+            {
+                indices.push_back(vi);
+                indices.push_back(vi + 1);
+                indices.push_back(vi + sideVertCount + 2);
+                indices.push_back(vi);
+                indices.push_back(vi + sideVertCount + 2);
+                indices.push_back(vi + sideVertCount + 1);
+            }
+        }
+    }
+    
 }
 
 void Shape::AddPosition(glm::vec3 pos)

@@ -7,14 +7,14 @@ void Terrain::Create()
     CreateMesh();
     CreatePipeline();
 
-    //object.Resize(glm::vec3(3));
+    object.Resize(glm::vec3(25));
     //object.Rotate(glm::vec3(0, 45.0f, 0));
 }
 
 void Terrain::CreateMesh()
 {
-    mesh.coordinate = true;
-    mesh.shape.SetShape(CUBE);
+    //mesh.coordinate = true;
+    mesh.shape.SetShape(PLANE, 10);
     mesh.RecalculateVertices();
 
 	mesh.Create();
