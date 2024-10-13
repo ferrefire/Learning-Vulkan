@@ -1,11 +1,22 @@
 #include "mesh.hpp"
 
-#include <stdexcept>
-#include <cstring>
-
 #include "manager.hpp"
 
-Mesh::Mesh()
+#include <stdexcept>
+#include <cstring>
+#include <iostream>
+
+Mesh *Mesh::Cube()
+{
+	return (&cube);
+}
+
+Mesh::Mesh() : name{"New mesh"}
+{
+
+}
+
+Mesh::Mesh(std::string name) : name{name}
 {
 
 }
@@ -15,9 +26,16 @@ Mesh::~Mesh()
 	Destroy();
 }
 
+void Mesh::Create()
+{
+	CreateVertexBuffer();
+	CreateIndexBuffer();
+}
+
 void Mesh::CreateVertexBuffer()
 {
-	if (vertexBuffer) throw std::runtime_error("cannot create vertex buffer because it already exists");
+	if (vertexBuffer) throw std::runtime_error(name + ": cannot create vertex buffer because it already exists");
+	if (vertices.size() == 0) throw std::runtime_error(name + ": cannot create vertex buffer because there are no vertices");
 
 	VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
@@ -41,7 +59,8 @@ void Mesh::CreateVertexBuffer()
 
 void Mesh::CreateIndexBuffer()
 {
-	if (indexBuffer) throw std::runtime_error("cannot create index buffer because it already exists");
+	if (indexBuffer) throw std::runtime_error(name + ": cannot create index buffer because it already exists");
+	if (indices.size() == 0) throw std::runtime_error(name + ": cannot create index buffer because there are no indices");
 
 	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
@@ -92,6 +111,12 @@ std::array<VkVertexInputAttributeDescription, 2> Mesh::Vertex::GetAttributeDescr
 }
 */
 
+void Mesh::Destroy()
+{
+	DestroyVertexBuffer();
+	DestroyIndexBuffer();
+}
+
 void Mesh::DestroyVertexBuffer()
 {
 	if (vertexBuffer)
@@ -122,12 +147,6 @@ void Mesh::DestroyIndexBuffer()
 	}
 }
 
-void Mesh::Destroy()
-{
-	DestroyVertexBuffer();
-	DestroyIndexBuffer();
-}
-
 void Mesh::RecalculateVertices()
 {
 	vertices.clear();
@@ -147,3 +166,20 @@ void Mesh::RecalculateVertices()
 		indices[i] = shape.indices[i];
 	}
 }
+
+void Mesh::Bind(VkCommandBuffer commandBuffer)
+{
+	if (!vertexBuffer || !indexBuffer)
+	{
+		std::cout << name + ": error: cannot bind mesh because not all buffers exist" << std::endl;
+		return ;
+	}
+
+	VkBuffer vertexBuffers[] = {vertexBuffer};
+	VkDeviceSize offsets[] = {0};
+
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+	vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+}
+
+Mesh Mesh::cube;

@@ -18,7 +18,7 @@
 
 struct UniformBufferObject
 {
-	alignas(16) glm::mat4 model;
+	alignas(16) glm::mat4 model = glm::mat4(1);
 	alignas(16) glm::mat4 view;
 	alignas(16) glm::mat4 projection;
 };
@@ -26,17 +26,20 @@ struct UniformBufferObject
 class Pipeline
 {
     private:
+        static Pipeline default;
+
         Device &device;
 		Camera &camera;
 
         const int MAX_FRAMES_IN_FLIGHT = 2;
 
     public:
+        static Pipeline *Default();
+
         Pipeline(Device &device, Camera &camera);
         ~Pipeline();
 
 		UniformBufferObject ubo;
-        Mesh mesh;
         Texture texture;
 
 		VkDescriptorSetLayout descriptorSetLayout = nullptr;
@@ -48,14 +51,17 @@ class Pipeline
 		std::vector<VkDeviceMemory> uniformBuffersMemory;
 		std::vector<void *> uniformBuffersMapped;
 
+        void Create();
         void CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VkRenderPass renderPass);
         void CreateDescriptorSetLayout();
         void CreateUniformBuffers();
         void CreateDescriptorPool();
         void CreateDescriptorSets();
         VkShaderModule CreateShaderModule(const std::vector<char> &code);
-        void UpdateUniformBuffer(uint32_t currentImage);
+        void UpdateUniformBuffer(glm::mat4 translation, uint32_t currentImage);
+        void Bind(VkCommandBuffer commandBuffer, Window &window);
 
+        void Destroy();
         void DestroyGraphicsPipeline();
         void DestroyDescriptorSetLayout();
         void DestroyUniformBuffers();

@@ -81,16 +81,34 @@ Graphics &Manager::GetGraphics()
 	return (graphics);
 }
 
+/*
+Pipeline &Manager::NewPipeline()
+{
+	pipelines.push_back(Pipeline(device, camera));
+	return (pipelines.back());
+}
+
+Mesh &Manager::NewMesh()
+{
+	meshes.push_back(Mesh());
+	return (meshes.back());
+}
+*/
+
 bool Manager::glfwInitialized = false;
 bool Manager::vulkanInitialized = false;
 
 Device Manager::device;
 Window Manager::window{device};
 Camera Manager::camera{window};
-std::vector<Pipeline> Manager::pipelines(1, Pipeline{device, camera});
-Graphics Manager::graphics{device, window, pipelines};
+//std::vector<Pipeline> Manager::pipelines(1, Pipeline{device, camera});
+//std::vector<Mesh> Manager::meshes;
+//std::vector<Pipeline> Manager::pipelines;
+Graphics Manager::graphics{device, window};
 
 Device &Manager::currentDevice = Manager::device;
 Window &Manager::currentWindow = Manager::window;
 Camera &Manager::currentCamera = Manager::camera;
 Graphics &Manager::currentGraphics = Manager::graphics;
+
+uint32_t Manager::currentFrame = 0;

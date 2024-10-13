@@ -5,6 +5,7 @@
 #include "device.hpp"
 #include "pipeline.hpp"
 #include "camera.hpp"
+#include "mesh.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -20,15 +21,18 @@ class Manager
 		static Window window;
 		static Camera camera;
 		static Device device;
-		//static Pipeline pipeline;
-		static std::vector<Pipeline> pipelines;
 		static Graphics graphics;
+		//static Pipeline pipeline;
+		//static std::vector<Pipeline> pipelines;
+		//static std::vector<Mesh> meshes;
 
 	public:
 		static Window &currentWindow;
 		static Camera &currentCamera;
 		static Device &currentDevice;
 		static Graphics &currentGraphics;
+
+		static uint32_t currentFrame;
 
 		static void Start();
 		static void Clean();
@@ -41,4 +45,7 @@ class Manager
 
 		static Window &GetWindow();
 		static Graphics &GetGraphics();
+
+		//static Pipeline &NewPipeline();
+		//static Mesh &NewMesh();
 };

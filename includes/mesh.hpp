@@ -12,34 +12,21 @@
 
 #include <vector>
 #include <array>
+#include <string>
 
 class Mesh
 {
 	private:
-		
+		static Mesh cube;
 
 	public:
+		static Mesh *Cube();
+
 		Mesh();
+		Mesh(std::string name);
 		~Mesh();
 
-		/*
-		struct VertexPositionCoordinate
-		{
-			glm::vec3 pos;
-			glm::vec2 texCoord;
-
-			static VkVertexInputBindingDescription GetBindingDescription();
-			static std::array<VkVertexInputAttributeDescription, 2> GetAttributeDescriptions();
-		};
-
-		struct VertexPosition
-		{
-			glm::vec3 pos;
-
-			static VkVertexInputBindingDescription GetBindingDescription();
-			static std::array<VkVertexInputAttributeDescription, 1> GetAttributeDescriptions();
-		};
-		*/
+		std::string name;
 
 		Shape shape;
 
@@ -51,12 +38,15 @@ class Mesh
 		VkBuffer indexBuffer = nullptr;
 		VkDeviceMemory indexBufferMemory = nullptr;
 
+		void Create();
 		void CreateVertexBuffer();
 		void CreateIndexBuffer();
 
+		void Destroy();
 		void DestroyVertexBuffer();
 		void DestroyIndexBuffer();
-		void Destroy();
 
 		void RecalculateVertices();
+
+		void Bind(VkCommandBuffer commandBuffer);
 };

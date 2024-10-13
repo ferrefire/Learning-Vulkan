@@ -1,5 +1,6 @@
 #include "pipeline.hpp"
 
+#include "manager.hpp"
 #include "utilities.hpp"
 #include "time.hpp"
 #include "shape.hpp"
@@ -12,6 +13,23 @@
 #include <string>
 #include <cstring>
 
+Pipeline *Pipeline::Default()
+{
+	return (&default);
+}
+
+/*
+Pipeline::Pipeline(Device &device, Camera &camera, Mesh &mesh) : device{device} , camera{camera}, mesh{mesh}
+{
+	
+}
+
+Pipeline::Pipeline(Device &device, Camera &camera) : device{device} , camera{camera}, mesh{Manager::NewMesh()}
+{
+	
+}
+*/
+
 Pipeline::Pipeline(Device &device, Camera &camera) : device{device} , camera{camera}
 {
 	
@@ -19,15 +37,24 @@ Pipeline::Pipeline(Device &device, Camera &camera) : device{device} , camera{cam
 
 Pipeline::~Pipeline()
 {
-    
+    Destroy();
+}
+
+void Pipeline::Create()
+{
+	CreateDescriptorSetLayout();
+	CreateGraphicsPipeline("simple", "simple2", Manager::currentWindow.renderPass);
+
+	texture.Create("texture.jpg", &Manager::currentDevice);
+
+	CreateUniformBuffers();
+	CreateDescriptorPool();
+	CreateDescriptorSets();
 }
 
 void Pipeline::CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VkRenderPass renderPass)
 {
     if (graphicsPipeline) throw std::runtime_error("cannot create graphics pipeline because it already exists");
-
-    mesh.shape.SetShape(CUBE);
-    mesh.RecalculateVertices();
 
 	std::string currentPath = Utilities::GetPath();
 
@@ -309,13 +336,51 @@ void Pipeline::CreateDescriptorSets()
 	}
 }
 
-void Pipeline::UpdateUniformBuffer(uint32_t currentImage)
+void Pipeline::UpdateUniformBuffer(glm::mat4 translation, uint32_t currentImage)
 {
 	//ubo.model = glm::rotate(glm::mat4(1.0f), Time::currentFrame * glm::radians(90.0f), glm::vec3(0.5f, 1.0f, 0.25f));
-	ubo.model = glm::mat4(1.0f);
+	//ubo.model = glm::mat4(1.0f);
+	ubo.model = translation;
 	ubo.view = camera.View();
 	ubo.projection = camera.Projection();
 	memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+}
+
+void Pipeline::Bind(VkCommandBuffer commandBuffer, Window &window)
+{
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = static_cast<float>(window.swapChainExtent.width);
+	viewport.height = static_cast<float>(window.swapChainExtent.height);
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+	VkRect2D scissor{};
+	scissor.offset = {0, 0};
+	scissor.extent = window.swapChainExtent;
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+	//VkBuffer vertexBuffers[] = {mesh.vertexBuffer};
+	//VkDeviceSize offsets[] = {0};
+	//vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+	//vkCmdBindIndexBuffer(commandBuffer, mesh.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineLayout, 0, 1, &descriptorSets[Manager::currentFrame], 0, nullptr);
+	//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
+}
+
+void Pipeline::Destroy()
+{
+	DestroyGraphicsPipeline();
+
+	texture.Destroy();
+
+	DestroyUniformBuffers();
+	DestroyDescriptorPool();
+	DestroyDescriptorSetLayout();
 }
 
 void Pipeline::DestroyGraphicsPipeline()
@@ -363,3 +428,5 @@ void Pipeline::DestroyDescriptorPool()
 	vkDestroyDescriptorPool(device.logicalDevice, descriptorPool, nullptr);
 	descriptorPool = nullptr;
 }
+
+Pipeline Pipeline::default{Manager::currentDevice, Manager::currentCamera};

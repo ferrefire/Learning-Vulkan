@@ -8,6 +8,7 @@
 #include "utilities.hpp"
 #include "time.hpp"
 #include "images.hpp"
+#include "terrain.hpp"
 
 #include <stdexcept>
 #include <set>
@@ -17,7 +18,7 @@
 #include <algorithm>
 #include <cstring>
 
-Graphics::Graphics(Device &device, Window &window, std::vector<Pipeline> &pipelines) : device{device}, window{window}, pipelines{pipelines}
+Graphics::Graphics(Device &device, Window &window) : device{device}, window{window}
 {
 
 }
@@ -84,7 +85,16 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[0].graphicsPipeline);
+	Terrain::RecordCommands(commandBuffer, Manager::currentFrame);
+	Object test(Mesh::Cube(), Pipeline::Default());
+	test.Resize(glm::vec3(2));
+	test.Move(glm::vec3(0, 0, -5));
+	test.pipeline->Bind(commandBuffer, Manager::currentWindow);
+	test.pipeline->UpdateUniformBuffer(test.Translation(), Manager::currentFrame);
+	test.mesh->Bind(commandBuffer);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(test.mesh->indices.size()), 1, 0, 0, 0);
+
+	/*vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[0].graphicsPipeline);
 
 	VkViewport viewport{};
 	viewport.x = 0.0f;
@@ -103,11 +113,9 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	VkBuffer vertexBuffers[] = {pipelines[0].mesh.vertexBuffer};
 	VkDeviceSize offsets[] = {0};
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
 	vkCmdBindIndexBuffer(commandBuffer, pipelines[0].mesh.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[0].graphicsPipelineLayout, 0, 1, &pipelines[0].descriptorSets[currentFrame], 0, nullptr);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(pipelines[0].mesh.indices.size()), 1, 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(pipelines[0].mesh.indices.size()), 1, 0, 0, 0);*/
 
 	vkCmdEndRenderPass(commandBuffer);
 
@@ -119,10 +127,10 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 void Graphics::DrawFrame()
 {
-	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
 
 	uint32_t imageIndex;
-	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, UINT64_MAX, device.imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, UINT64_MAX, device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.framebufferResized)
 	{
@@ -135,29 +143,33 @@ void Graphics::DrawFrame()
 		throw std::runtime_error("failed to acquire swap chain image");
 	}
 
-	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[currentFrame]);
+	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
 
-	vkResetCommandBuffer(device.commandBuffers[currentFrame], 0);
-	RecordCommandBuffer(device.commandBuffers[currentFrame], imageIndex);
+	vkResetCommandBuffer(device.commandBuffers[Manager::currentFrame], 0);
+	RecordCommandBuffer(device.commandBuffers[Manager::currentFrame], imageIndex);
 
-	pipelines[0].UpdateUniformBuffer(currentFrame);
+	//pipelines[0].UpdateUniformBuffer(Manager::currentFrame);
+	//for (Pipeline &pipeline : pipelines)
+	//{
+	//	pipeline.UpdateUniformBuffer(Manager::currentFrame);
+	//}
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-	VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[currentFrame]};
+	VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame]};
 	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &device.commandBuffers[currentFrame];
+	submitInfo.pCommandBuffers = &device.commandBuffers[Manager::currentFrame];
 
-	VkSemaphore signalSemaphores[] = {device.renderFinishedSemaphores[currentFrame]};
+	VkSemaphore signalSemaphores[] = {device.renderFinishedSemaphores[Manager::currentFrame]};
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = signalSemaphores;
 
-	if (vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, device.inFlightFences[currentFrame]) != VK_SUCCESS)
+	if (vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, device.inFlightFences[Manager::currentFrame]) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to submit draw command buffer");
 	}
@@ -175,7 +187,7 @@ void Graphics::DrawFrame()
 
 	vkQueuePresentKHR(device.presentationQueue, &presentInfo);
 
-	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+	Manager::currentFrame = (Manager::currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void Graphics::Create()
@@ -189,22 +201,25 @@ void Graphics::Create()
 	window.CreateSwapChain();
 	window.CreateImageViews();
 	window.CreateRenderPass();
-
-	//pipelines.push_back(Pipeline(device, Manager::currentCamera));
-
-	for (Pipeline &pipeline : pipelines)
-	{
-		pipeline.CreateDescriptorSetLayout();
-		pipeline.CreateGraphicsPipeline("simple", "simple", window.renderPass);
-	}
-
 	window.CreateDepthResources();
 	window.CreateFramebuffers();
 
 	device.CreateCommandPool();
+	device.CreateCommandBuffers();
+	device.CreateSyncObjects();
 
-	for (Pipeline &pipeline : pipelines)
+	Pipeline::Default()->Create();
+	Mesh::Cube()->shape.SetShape(CUBE);
+	Mesh::Cube()->RecalculateVertices();
+	Mesh::Cube()->Create();
+
+	Terrain::Create();
+
+	/*for (Pipeline &pipeline : pipelines)
 	{
+		pipeline.CreateDescriptorSetLayout();
+		pipeline.CreateGraphicsPipeline("simple", "simple", window.renderPass);
+
 		pipeline.texture.Create("texture.jpg", &device);
 
 		pipeline.mesh.CreateVertexBuffer();
@@ -213,11 +228,7 @@ void Graphics::Create()
 		pipeline.CreateUniformBuffers();
 		pipeline.CreateDescriptorPool();
 		pipeline.CreateDescriptorSets();
-	}
-
-	device.CreateCommandBuffers();
-
-	device.CreateSyncObjects();
+	}*/
 }
 
 void Graphics::DestroyInstance()
@@ -231,35 +242,31 @@ void Graphics::DestroyInstance()
 void Graphics::Destroy()
 {
 	device.DestroySyncObjects();
-
 	device.DestroyCommandPool();
 
 	window.DestroyFramebuffers();
-
-	for (Pipeline &pipeline : pipelines)
-	{
-		pipeline.DestroyGraphicsPipeline();
-	}
-
 	window.DestroyRenderPass();
 	window.DestroyDepthResources();
 	window.DestroyImageViews();
 	window.DestroySwapChain();
+	window.DestroySurface(instance);
 
-	for (Pipeline &pipeline : pipelines)
+	Terrain::Destroy();
+
+	Mesh::Cube()->Destroy();
+	Pipeline::Default()->Destroy();
+
+	/*for (Pipeline &pipeline : pipelines)
 	{
+		pipeline.DestroyGraphicsPipeline();
 		pipeline.texture.Destroy();
-
 		pipeline.DestroyUniformBuffers();
 		pipeline.DestroyDescriptorPool();
 		pipeline.DestroyDescriptorSetLayout();
-
 		pipeline.mesh.Destroy();
-	}
+	}*/
 
 	device.DestroyLogicalDevice();
-
 	window.DestroySurface(instance);
-
     DestroyInstance();
 }

@@ -71,7 +71,6 @@ void Shape::SetShape(int type)
         Join(top);
         Join(bottom);
     }
-    
 }
 
 void Shape::AddPosition(glm::vec3 pos)
