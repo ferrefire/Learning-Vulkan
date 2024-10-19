@@ -6,9 +6,9 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-//#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-//#include <glm/glm.hpp>
-//#include <glm/gtc/matrix_transform.hpp>
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <cstdlib>
 #include <iostream>
@@ -46,6 +46,8 @@ int main(int argc, char **argv)
 		glfwPollEvents();
 
 		Manager::currentGraphics.DrawFrame();
+
+		Manager::objects[1]->Rotate(glm::vec3(100.0f * Time::deltaTime, 50.0f * Time::deltaTime, 25.0f * Time::deltaTime));
 	}
 
 	Manager::currentDevice.WaitForIdle();
