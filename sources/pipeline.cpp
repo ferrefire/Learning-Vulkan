@@ -206,8 +206,8 @@ void Pipeline::CreateDescriptorSetLayout()
 
 	VkDescriptorSetLayoutBinding uboLayoutBinding{};
 	uboLayoutBinding.binding = 0;
-	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	uboLayoutBinding.descriptorCount = 1;
+	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 	uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
 
@@ -215,10 +215,39 @@ void Pipeline::CreateDescriptorSetLayout()
 	samplerLayoutBinding.binding = 1;
 	samplerLayoutBinding.descriptorCount = 1;
 	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	samplerLayoutBinding.pImmutableSamplers = nullptr;
 	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+	samplerLayoutBinding.pImmutableSamplers = nullptr;
 
 	std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
+	VkDescriptorSetLayoutCreateInfo layoutInfo{};
+	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+	layoutInfo.pBindings = bindings.data();
+
+	if (vkCreateDescriptorSetLayout(device.logicalDevice, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create descriptor set layout");
+	}
+}
+
+void Pipeline::CreateDescriptorSetLayout(std::vector<DescriptorConfiguration> &configuration)
+{
+    if (descriptorSetLayout) throw std::runtime_error("cannot create descriptor set layout because it already exists");
+
+	std::vector<VkDescriptorSetLayoutBinding> bindings;
+	bindings.resize(configuration.size());
+
+	int index = 0;
+	for (DescriptorConfiguration &config : configuration)
+	{
+		bindings[index].binding = index;
+		bindings[index].descriptorCount = 1;
+		bindings[index].descriptorType = config.type;
+		bindings[index].stageFlags = config.stages;
+		bindings[index].pImmutableSamplers = nullptr;
+		index++;
+	}
+
 	VkDescriptorSetLayoutCreateInfo layoutInfo{};
 	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -259,6 +288,33 @@ void Pipeline::CreateDescriptorPool()
 	poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 	poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+	VkDescriptorPoolCreateInfo poolInfo{};
+	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+	poolInfo.pPoolSizes = poolSizes.data();
+	poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+	if (vkCreateDescriptorPool(device.logicalDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create descriptor pool");
+	}
+}
+
+void Pipeline::CreateDescriptorPool(std::vector<DescriptorConfiguration> &configuration)
+{
+    if (descriptorPool) throw std::runtime_error("cannot create descriptor pool because it already exists");
+
+	std::vector<VkDescriptorPoolSize> poolSizes;
+	poolSizes.resize(configuration.size());
+
+	int index = 0;
+	for (DescriptorConfiguration &config : configuration)
+	{
+		poolSizes[index].type = config.type;
+		poolSizes[index].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+		index++;
+	}
 
 	VkDescriptorPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;

@@ -31,6 +31,11 @@ run_command () {
 		run_command "compile"
 
 	elif [[ $1 == "build" ]] || [[ $1 == "bd" ]]; then
+		echo "_______________________"
+		echo "|                     |"
+		echo "| building project... |"
+		echo "|_____________________|"
+		echo "                       "
 		if ! test -d $path/build; then
 			mkdir build
 		fi
@@ -59,6 +64,11 @@ run_command () {
 			fi
 		fi
 	elif [[ $1 == "compile" ]] || [[ $1 == "cmp" ]]; then
+		echo "________________________"
+		echo "|                      |"
+		echo "| compiling project... |"
+		echo "|______________________|"
+		echo "                        "
 		if [[ $OSTYPE == "linux-gnu" ]]; then
 			if test -f $path/build/Makefile; then
 				cd $path/build

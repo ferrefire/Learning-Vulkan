@@ -3,6 +3,7 @@
 #include "pipeline.hpp"
 #include "mesh.hpp"
 #include "object.hpp"
+#include "texture.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -20,6 +21,7 @@ class Terrain
         static Mesh mesh;
         static Pipeline pipeline;
         static Object object;
+        static Texture noise;
 
         static void Create();
         static void CreateMesh();

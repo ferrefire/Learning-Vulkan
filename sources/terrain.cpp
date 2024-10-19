@@ -14,7 +14,7 @@ void Terrain::Create()
 void Terrain::CreateMesh()
 {
     //mesh.coordinate = true;
-    mesh.shape.SetShape(PLANE, 10);
+    mesh.shape.SetShape(PLANE, 25);
     mesh.RecalculateVertices();
 
 	mesh.Create();
@@ -22,13 +22,25 @@ void Terrain::CreateMesh()
 
 void Terrain::CreatePipeline()
 {
-    pipeline.CreateDescriptorSetLayout();
+    //pipeline.CreateDescriptorSetLayout();
+    std::vector<DescriptorConfiguration> descriptorConfiguration;
+    descriptorConfiguration.resize(2);
+    descriptorConfiguration[0].type = UNIFORM_BUFFER;
+    descriptorConfiguration[0].stages = VERTEX_STAGE;
+    descriptorConfiguration[1].type = IMAGE_SAMPLER;
+    descriptorConfiguration[1].stages = FRAGMENT_STAGE;
+
+    pipeline.CreateDescriptorSetLayout(descriptorConfiguration);
+
 	pipeline.CreateGraphicsPipeline("terrain", "terrain", mesh.MeshVertexInfo(), Pipeline::DefaultConfiguration());
 
-	pipeline.texture.Create("texture.jpg", &Manager::currentDevice);
+	pipeline.texture.Create("perlin_noise_256.jpeg", &Manager::currentDevice);
 
 	pipeline.CreateUniformBuffers();
-	pipeline.CreateDescriptorPool();
+
+	//pipeline.CreateDescriptorPool();
+	pipeline.CreateDescriptorPool(descriptorConfiguration);
+
 	pipeline.CreateDescriptorSets();
 }
 

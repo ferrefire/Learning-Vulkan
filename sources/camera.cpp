@@ -9,8 +9,8 @@
 Camera::Camera(Window &window) : window{window}
 {
 	UpdateProjection();
-	Move(glm::vec3(0.0));
-	Rotate(glm::vec3(25.0, -135.0, 0.0));
+	Move(glm::vec3(0.0, 5.0, 0.0));
+	Rotate(glm::vec3(-25.0, -135.0, 0.0));
 }
 
 Camera::~Camera()

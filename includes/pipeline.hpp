@@ -16,6 +16,12 @@
 #include <vector>
 #include <string>
 
+#define UNIFORM_BUFFER VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+#define IMAGE_SAMPLER VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER
+
+#define VERTEX_STAGE VK_SHADER_STAGE_VERTEX_BIT
+#define FRAGMENT_STAGE VK_SHADER_STAGE_FRAGMENT_BIT
+
 struct PipelineConfiguration
 {
     //VkViewport viewport;
@@ -29,6 +35,12 @@ struct PipelineConfiguration
     VkPipelineDepthStencilStateCreateInfo depthStencil;
     VkRenderPass renderPass = nullptr;
     uint32_t subpass = 0;
+};
+
+struct DescriptorConfiguration
+{
+    VkDescriptorType type;
+    VkShaderStageFlagBits stages;
 };
 
 struct UniformBufferObject
@@ -67,8 +79,10 @@ class Pipeline
         void Create();
         void CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VertexInfo vertexInfo, PipelineConfiguration configuration);
         void CreateDescriptorSetLayout();
+        void CreateDescriptorSetLayout(std::vector<DescriptorConfiguration> &configuration);
         void CreateUniformBuffers();
         void CreateDescriptorPool();
+        void CreateDescriptorPool(std::vector<DescriptorConfiguration> &configuration);
         void CreateDescriptorSets();
         VkShaderModule CreateShaderModule(const std::vector<char> &code);
         void UpdateUniformBuffer(glm::mat4 translation, uint32_t currentImage);
