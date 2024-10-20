@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 
 #include "device.hpp"
+#include "texture.hpp"
 
 #include <vector>
 
@@ -25,15 +26,18 @@ class Window
 		VkRenderPass renderPass = nullptr;
 
         VkSwapchainKHR swapChain = nullptr;
-		std::vector<VkImage> swapChainImages;
-		std::vector<VkImageView> swapChainImageViews;
+		//std::vector<VkImage> swapChainImages;
+		//std::vector<VkImageView> swapChainImageViews;
+		std::vector<Texture> swapChainTextures;
 		std::vector<VkFramebuffer> swapChainFramebuffers;
 		VkFormat swapChainImageFormat;
 		VkExtent2D swapChainExtent;
 
-		VkImage depthImage = nullptr;
-		VkDeviceMemory depthImageMemory = nullptr;
-		VkImageView depthImageView = nullptr;
+		//VkImage depthImage = nullptr;
+		//VkDeviceMemory depthImageMemory = nullptr;
+		//VkImageView depthImageView = nullptr;
+
+		Texture depthTexture;
 
 		bool framebufferResized = false;
 		bool isResizeable = true;

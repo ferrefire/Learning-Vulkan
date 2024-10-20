@@ -1,15 +1,14 @@
 #include "window.hpp"
 
 #include "manager.hpp"
-#include "images.hpp"
 #include "input.hpp"
 
 #include <stdexcept>
 #include <algorithm>
 
-Window::Window(Device &device) : device{device}
+Window::Window(Device &device) : device{device} , depthTexture{device}
 {
-
+	
 }
 
 Window::~Window()
@@ -139,12 +138,19 @@ void Window::CreateSwapChain()
     }
 
 	vkGetSwapchainImagesKHR(device.logicalDevice, swapChain, &imageCount, nullptr);
+	std::vector<VkImage> swapChainImages;
 	swapChainImages.resize(imageCount);
 	vkGetSwapchainImagesKHR(device.logicalDevice, swapChain, &imageCount, swapChainImages.data());
 	swapChainImageFormat = surfaceFormat.format;
 	swapChainExtent = extent;
 	width = extent.width;
 	height = extent.height;
+	swapChainTextures.resize(swapChainImages.size());
+
+	for (int i = 0; i < swapChainImages.size(); i++)
+	{
+		swapChainTextures[i].image = swapChainImages[i];
+	}
 }
 
 VkSurfaceFormatKHR Window::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats)
@@ -195,13 +201,24 @@ VkExtent2D Window::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities
 
 void Window::CreateImageViews()
 {
-	if (swapChainImageViews.size() != 0) throw std::runtime_error("cannot create image views because they already exists");
-
-	swapChainImageViews.resize(swapChainImages.size());
-
-	for (size_t i = 0; i < swapChainImages.size(); i++)
+	//if (swapChainImageViews.size() != 0) throw std::runtime_error("cannot create image views because they already exists");
+	for (Texture &texture : swapChainTextures)
 	{
-		swapChainImageViews[i] = Images::CreateImageView(swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, device);
+		if (texture.imageView != nullptr) throw std::runtime_error("cannot create image views because they already exist");
+	}
+
+	//swapChainImageViews.resize(swapChainImages.size());
+	//for (size_t i = 0; i < swapChainImages.size(); i++)
+	//{
+	//	swapChainImageViews[i] = Images::CreateImageView(swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, device);
+	//}
+
+	ImageConfiguration configuration;
+	configuration.format = swapChainImageFormat;
+
+	for (Texture &texture : swapChainTextures)
+	{
+		texture.CreateImageView(configuration);
 	}
 }
 
@@ -209,11 +226,13 @@ void Window::CreateFramebuffers()
 {
 	if (swapChainFramebuffers.size() != 0) throw std::runtime_error("cannot create framebuffers because they already exists");
 
-	swapChainFramebuffers.resize(swapChainImageViews.size());
+	//swapChainFramebuffers.resize(swapChainImageViews.size());
+	swapChainFramebuffers.resize(swapChainTextures.size());
 
-	for (size_t i = 0; i < swapChainImageViews.size(); i++)
+	for (size_t i = 0; i < swapChainTextures.size(); i++)
 	{
-		std::array<VkImageView, 2> attachments = {swapChainImageViews[i], depthImageView};
+		//std::array<VkImageView, 2> attachments = {swapChainImageViews[i], depthImageView};
+		std::array<VkImageView, 2> attachments = {swapChainTextures[i].imageView, depthTexture.imageView};
 
 		VkFramebufferCreateInfo framebufferInfo{};
 		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -233,14 +252,24 @@ void Window::CreateFramebuffers()
 
 void Window::CreateDepthResources()
 {
-	if (depthImage != nullptr || depthImageMemory != nullptr || depthImageView != nullptr)
+	//if (depthImage != nullptr || depthImageMemory != nullptr || depthImageView != nullptr)
+	//	throw std::runtime_error("cannot create depth resources because they already exist");
+	if (depthTexture.image != nullptr || depthTexture.imageMemory != nullptr || depthTexture.imageView != nullptr)
 		throw std::runtime_error("cannot create depth resources because they already exist");
 
 	VkFormat depthFormat = device.FindDepthFormat();
 
-	Images::CreateImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, 
-		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory, device);
-	depthImageView = Images::CreateImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, device);
+	//Images::CreateImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, 
+	//	VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory, device);
+	//depthImageView = Images::CreateImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, device);
+
+	ImageConfiguration configuration;
+	configuration.width = swapChainExtent.width;
+	configuration.height = swapChainExtent.height;
+	configuration.format = depthFormat;
+	configuration.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+	depthTexture.CreateImage(configuration, true);
 }
 
 void Window::CreateRenderPass()
@@ -341,20 +370,32 @@ void Window::DestroySurface(VkInstance instance)
 
 void Window::DestroySwapChain()
 {
-    if (!swapChain) return;
+    if (swapChain != nullptr)
+	{
+		vkDestroySwapchainKHR(device.logicalDevice, swapChain, nullptr);
+    	swapChain = nullptr;
+	}
 
-    vkDestroySwapchainKHR(device.logicalDevice, swapChain, nullptr);
-    swapChain = nullptr;
+    for (Texture &texture : swapChainTextures)
+	{
+		texture.image = nullptr;
+	}
+
+	swapChainTextures.clear();
 }
 
 void Window::DestroyImageViews()
 {
-	for (VkImageView imageView : swapChainImageViews)
-	{
-		vkDestroyImageView(device.logicalDevice, imageView, nullptr);
-	}
+	//for (VkImageView imageView : swapChainImageViews)
+	//{
+	//	vkDestroyImageView(device.logicalDevice, imageView, nullptr);
+	//}
+	//swapChainImageViews.clear();
 
-	swapChainImageViews.clear();
+	for (Texture &texture : swapChainTextures)
+	{
+		texture.DestroyImageView();
+	}
 }
 
 void Window::DestroyRenderPass()
@@ -377,23 +418,23 @@ void Window::DestroyFramebuffers()
 
 void Window::DestroyDepthResources()
 {
-	if (depthImageView)
-	{
-		vkDestroyImageView(device.logicalDevice, depthImageView, nullptr);
-		depthImageView = nullptr;
-	}
+	//if (depthImageView)
+	//{
+	//	vkDestroyImageView(device.logicalDevice, depthImageView, nullptr);
+	//	depthImageView = nullptr;
+	//}
+	//if (depthImage)
+	//{
+	//	vkDestroyImage(device.logicalDevice, depthImage, nullptr);
+	//	depthImage = nullptr;
+	//}
+	//if (depthImageMemory)
+	//{
+	//	vkFreeMemory(device.logicalDevice, depthImageMemory, nullptr);
+	//	depthImageMemory = nullptr;
+	//}
 
-	if (depthImage)
-	{
-		vkDestroyImage(device.logicalDevice, depthImage, nullptr);
-		depthImage = nullptr;
-	}
-
-	if (depthImageMemory)
-	{
-		vkFreeMemory(device.logicalDevice, depthImageMemory, nullptr);
-		depthImageMemory = nullptr;
-	}
+	depthTexture.Destroy();
 }
 
 void Window::SetMouseVisibility(bool visible)

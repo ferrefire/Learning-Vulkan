@@ -24,11 +24,13 @@ class Terrain
         static Texture noise;
 
         static void Create();
-        static void CreateMesh();
+        static void CreateTextures();
+        static void CreateMeshes();
         static void CreatePipeline();
 
         static void Destroy();
-        static void DestroyMesh();
+        static void DestroyTextures();
+        static void DestroyMeshes();
         static void DestroyPipeline();
 
         static void RecordCommands(VkCommandBuffer commandBuffer);

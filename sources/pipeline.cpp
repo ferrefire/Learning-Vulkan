@@ -74,7 +74,7 @@ PipelineConfiguration Pipeline::DefaultConfiguration()
 	return (configuration);
 }
 
-Pipeline::Pipeline(Device &device, Camera &camera) : device{device} , camera{camera}
+Pipeline::Pipeline(Device &device, Camera &camera) : device{device} , camera{camera}, texture{device}
 {
 	
 }
@@ -89,14 +89,23 @@ void Pipeline::Create()
 	CreateDescriptorSetLayout();
 	CreateGraphicsPipeline("simple", "simple", Mesh::GetVertexInfo(true, true), DefaultConfiguration());
 
-	texture.Create("texture.jpg", &Manager::currentDevice);
+	texture.Create("texture.jpg");
 
 	CreateUniformBuffers();
 	CreateDescriptorPool();
 	CreateDescriptorSets();
 }
 
-void Pipeline::CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VertexInfo vertexInfo, PipelineConfiguration configuration)
+void Pipeline::Create(std::string shader, PipelineConfiguration pipelineConfig, std::vector<DescriptorConfiguration> descriptorConfig, VertexInfo vertexInfo)
+{
+	CreateDescriptorSetLayout(descriptorConfig);
+	CreateGraphicsPipeline(shader, shader, vertexInfo, pipelineConfig);
+	CreateUniformBuffers();
+	CreateDescriptorPool(descriptorConfig);
+	CreateDescriptorSets(descriptorConfig);
+}
+
+void Pipeline::CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VertexInfo &vertexInfo, PipelineConfiguration &configuration)
 {
     if (graphicsPipeline) throw std::runtime_error("cannot create graphics pipeline because it already exists");
 
@@ -374,6 +383,69 @@ void Pipeline::CreateDescriptorSets()
 		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		descriptorWrites[1].descriptorCount = 1;
 		descriptorWrites[1].pImageInfo = &imageInfo;
+
+		vkUpdateDescriptorSets(device.logicalDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+	}
+}
+
+void Pipeline::CreateDescriptorSets(std::vector<DescriptorConfiguration> &configuration)
+{
+    if (descriptorSets.size() != 0) throw std::runtime_error("cannot create descriptor sets because they already exist");
+
+	std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
+	VkDescriptorSetAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	allocInfo.descriptorPool = descriptorPool;
+	allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	allocInfo.pSetLayouts = layouts.data();
+
+	descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+	if (vkAllocateDescriptorSets(device.logicalDevice, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to allocate descriptor sets");
+	}
+
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+	{
+		std::vector<VkWriteDescriptorSet> descriptorWrites{};
+		descriptorWrites.resize(configuration.size());
+
+		int index = 0;
+		for (DescriptorConfiguration &config : configuration)
+		{
+			if (config.type == UNIFORM_BUFFER)
+			{
+				//VkDescriptorBufferInfo bufferInfo{};
+				config.bufferInfo.buffer = uniformBuffers[i];
+				//config.bufferInfo.offset = 0;
+				//config.bufferInfo.range = sizeof(UniformBufferObject);
+
+				descriptorWrites[index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWrites[index].dstSet = descriptorSets[i];
+				descriptorWrites[index].dstBinding = index;
+				descriptorWrites[index].dstArrayElement = 0;
+				descriptorWrites[index].descriptorType = config.type;
+				descriptorWrites[index].descriptorCount = 1;
+				descriptorWrites[index].pBufferInfo = &config.bufferInfo;
+			}
+			else if (config.type == IMAGE_SAMPLER)
+			{
+				//VkDescriptorImageInfo imageInfo{};
+				//imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				//imageInfo.imageView = texture.imageView;
+				//imageInfo.sampler = texture.sampler;
+
+				descriptorWrites[index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWrites[index].dstSet = descriptorSets[i];
+				descriptorWrites[index].dstBinding = index;
+				descriptorWrites[index].dstArrayElement = 0;
+				descriptorWrites[index].descriptorType = config.type;
+				descriptorWrites[index].descriptorCount = 1;
+				descriptorWrites[index].pImageInfo = &config.imageInfo;
+			}
+
+			index++;
+		}
 
 		vkUpdateDescriptorSets(device.logicalDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 	}

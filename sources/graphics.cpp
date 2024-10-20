@@ -3,7 +3,6 @@
 #include "manager.hpp"
 #include "utilities.hpp"
 #include "time.hpp"
-#include "images.hpp"
 #include "terrain.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -218,14 +217,14 @@ void Graphics::Create()
 	obj1->pipeline = Manager::NewPipeline();
 	obj1->pipeline->Create();
 	obj1->Resize(glm::vec3(2));
-	obj1->Move(glm::vec3(0, 0, -5));
+	obj1->Move(glm::vec3(0, 1, -5));
 
 	Object *obj2 = Manager::NewObject();
 	obj2->mesh = Mesh::Cube();
 	obj2->pipeline = Manager::NewPipeline();
 	obj2->pipeline->Create();
 	obj2->Resize(glm::vec3(3));
-	obj2->Move(glm::vec3(0, 0, -10));
+	obj2->Move(glm::vec3(0, 3, -10));
 }
 
 void Graphics::DestroyInstance()

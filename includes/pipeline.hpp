@@ -21,6 +21,9 @@
 
 #define VERTEX_STAGE VK_SHADER_STAGE_VERTEX_BIT
 #define FRAGMENT_STAGE VK_SHADER_STAGE_FRAGMENT_BIT
+#define ALL_STAGE VK_SHADER_STAGE_ALL_GRAPHICS
+
+#define IMAGE_READ_ONLY VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 
 struct PipelineConfiguration
 {
@@ -40,7 +43,10 @@ struct PipelineConfiguration
 struct DescriptorConfiguration
 {
     VkDescriptorType type;
-    VkShaderStageFlagBits stages;
+    VkShaderStageFlags stages;
+
+    VkDescriptorBufferInfo bufferInfo;
+    VkDescriptorImageInfo imageInfo;
 };
 
 struct UniformBufferObject
@@ -77,13 +83,15 @@ class Pipeline
 		std::vector<void *> uniformBuffersMapped;
 
         void Create();
-        void CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VertexInfo vertexInfo, PipelineConfiguration configuration);
+        void Create(std::string shader, PipelineConfiguration pipelineConfig, std::vector<DescriptorConfiguration> descriptorConfig, VertexInfo vertexInfo);
+        void CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VertexInfo &vertexInfo, PipelineConfiguration &configuration);
         void CreateDescriptorSetLayout();
         void CreateDescriptorSetLayout(std::vector<DescriptorConfiguration> &configuration);
         void CreateUniformBuffers();
         void CreateDescriptorPool();
         void CreateDescriptorPool(std::vector<DescriptorConfiguration> &configuration);
         void CreateDescriptorSets();
+        void CreateDescriptorSets(std::vector<DescriptorConfiguration> &configuration);
         VkShaderModule CreateShaderModule(const std::vector<char> &code);
         void UpdateUniformBuffer(glm::mat4 translation, uint32_t currentImage);
         void Bind(VkCommandBuffer commandBuffer, Window &window);
