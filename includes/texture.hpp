@@ -1,11 +1,11 @@
 #pragma once
 
+#include "device.hpp"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 #include <stb_image.h>
-
-#include "device.hpp"
 
 #include <string>
 
@@ -45,7 +45,7 @@ struct SamplerConfiguration
     VkSamplerMipmapMode mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     float mipLodBias = 0.0f;
     float minLod = 0.0f;
-    float maxLod = 0.0f;
+    float maxLod = VK_LOD_CLAMP_NONE;
 };
 
 class Texture
@@ -63,12 +63,12 @@ class Texture
 		VkImageView imageView = nullptr;
 		VkSampler sampler = nullptr;
 
-        void Create(std::string name);
-        void CreateImage(std::string name);
+        void CreateTexture(std::string name);
+        void CreateTextureImage(std::string name);
         void CreateImage(ImageConfiguration &configuration, bool view);
         void CreateImageView(ImageConfiguration &configuration);
-        void CreateSampler();
         void CreateSampler(SamplerConfiguration &configuration);
+        void CreateMipmaps(ImageConfiguration &configuration);
 
         void Destroy();
         void DestroyImage();
@@ -76,4 +76,5 @@ class Texture
 		void DestroySampler();
 
         static stbi_uc *LoadTexture(const std::string path, int *texWidth, int *texHeight, int *texChannels);
+        void TransitionImageLayout(ImageConfiguration &configuration, VkImageLayout newLayout);
 };

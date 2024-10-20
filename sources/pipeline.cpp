@@ -89,7 +89,7 @@ void Pipeline::Create()
 	CreateDescriptorSetLayout();
 	CreateGraphicsPipeline("simple", "simple", Mesh::GetVertexInfo(true, true), DefaultConfiguration());
 
-	texture.Create("texture.jpg");
+	texture.CreateTexture("texture.jpg");
 
 	CreateUniformBuffers();
 	CreateDescriptorPool();

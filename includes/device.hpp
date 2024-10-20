@@ -78,5 +78,5 @@ class Device
         void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
         VkCommandBuffer BeginSingleTimeCommands();
         void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
-        void TransitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+        //void TransitionImageLayout(VkImage image, ImageConfiguration &configuration, VkImageLayout newLayout);
 };

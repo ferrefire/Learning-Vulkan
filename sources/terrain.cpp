@@ -14,7 +14,7 @@ void Terrain::Create()
 
 void Terrain::CreateTextures()
 {
-    noise.Create("perlin_noise_256.jpeg");
+    noise.CreateTexture("perlin_noise_256.jpeg");
 }
 
 void Terrain::CreateMeshes()
