@@ -4,6 +4,7 @@
 #include "utilities.hpp"
 #include "time.hpp"
 #include "terrain.hpp"
+#include "texture.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -211,6 +212,7 @@ void Graphics::Create()
 	device.CreateCommandBuffers();
 	device.CreateSyncObjects();
 
+	Texture::CreateDefaults();
 	Mesh::CreateDefaults();
 
 	Terrain::Create();
@@ -254,6 +256,7 @@ void Graphics::Destroy()
 	Terrain::Destroy();
 
 	Manager::DestroyPipelines();
+	Manager::DestroyTextures();
 	Manager::DestroyMeshes();
 
 	/*for (Pipeline &pipeline : pipelines)

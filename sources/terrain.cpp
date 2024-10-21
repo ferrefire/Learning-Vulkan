@@ -76,7 +76,7 @@ void Terrain::DestroyPipeline()
 {
     pipeline.DestroyGraphicsPipeline();
 
-	pipeline.texture.Destroy();
+	//pipeline.texture.Destroy();
 
 	pipeline.DestroyUniformBuffers();
 	pipeline.DestroyDescriptorPool();

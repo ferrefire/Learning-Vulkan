@@ -94,8 +94,8 @@ QueueFamilies Device::FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR su
     int i = 0;
     for (const auto &queueFamily : queueFamilies)
     {
-        if (!result.graphicsFamilyFound && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-        {
+		if (!result.graphicsFamilyFound && (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT))
+		{
             result.graphicsFamily = i;
             result.graphicsFamilyFound = true;
         }
@@ -203,9 +203,10 @@ void Device::CreateLogicalDevice(VkSurfaceKHR surface)
     }
 
     vkGetDeviceQueue(logicalDevice, queueFamilies.graphicsFamily, 0, &graphicsQueue);
-    vkGetDeviceQueue(logicalDevice, queueFamilies.presentationFamily, 0, &presentationQueue);
+	vkGetDeviceQueue(logicalDevice, queueFamilies.presentationFamily, 0, &presentationQueue);
+	vkGetDeviceQueue(logicalDevice, queueFamilies.graphicsFamily, 0, &computeQueue);
 
-    queueFamilies = FindQueueFamilies(physicalDevice, surface);
+	queueFamilies = FindQueueFamilies(physicalDevice, surface);
     swapChainSupportDetails = QuerySwapChainSupport(physicalDevice, surface);
 }
 

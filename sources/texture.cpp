@@ -7,6 +7,16 @@
 #include <cstring>
 #include <iostream>
 
+Texture *Texture::Statue()
+{
+	return (statue);
+}
+
+void Texture::CreateDefaults()
+{
+	statue->CreateTexture("texture.jpg");
+}
+
 Texture::Texture() : device{Manager::currentDevice}
 {
 
@@ -394,3 +404,5 @@ void Texture::DestroySampler()
 	vkDestroySampler(device.logicalDevice, sampler, nullptr);
 	sampler = nullptr;
 }
+
+Texture *Texture::statue = Manager::NewTexture();

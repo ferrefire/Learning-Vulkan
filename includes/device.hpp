@@ -40,8 +40,9 @@ class Device
         VkPhysicalDeviceProperties properties;
 
         VkQueue graphicsQueue = nullptr;
-        VkQueue presentationQueue = nullptr;
-        QueueFamilies queueFamilies;
+		VkQueue presentationQueue = nullptr;
+		VkQueue computeQueue = nullptr;
+		QueueFamilies queueFamilies;
 
         VkCommandPool commandPool = nullptr;
 		std::vector<VkCommandBuffer> commandBuffers;

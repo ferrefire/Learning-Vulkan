@@ -2,7 +2,7 @@
 
 #include "device.hpp"
 #include "mesh.hpp"
-#include "texture.hpp"
+//#include "texture.hpp"
 #include "camera.hpp"
 
 #define GLFW_INCLUDE_VULKAN
@@ -71,7 +71,7 @@ class Pipeline
         ~Pipeline();
 
 		UniformBufferObject ubo;
-        Texture texture;
+        //Texture texture;
 
 		VkDescriptorSetLayout descriptorSetLayout = nullptr;
 		VkPipelineLayout graphicsPipelineLayout = nullptr;
@@ -88,9 +88,9 @@ class Pipeline
         void CreateDescriptorSetLayout();
         void CreateDescriptorSetLayout(std::vector<DescriptorConfiguration> &configuration);
         void CreateUniformBuffers();
-        void CreateDescriptorPool();
+        //void CreateDescriptorPool();
         void CreateDescriptorPool(std::vector<DescriptorConfiguration> &configuration);
-        void CreateDescriptorSets();
+        //void CreateDescriptorSets();
         void CreateDescriptorSets(std::vector<DescriptorConfiguration> &configuration);
         VkShaderModule CreateShaderModule(const std::vector<char> &code);
         void UpdateUniformBuffer(glm::mat4 translation, uint32_t currentImage);

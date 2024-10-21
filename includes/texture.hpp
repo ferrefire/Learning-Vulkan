@@ -51,9 +51,14 @@ struct SamplerConfiguration
 class Texture
 {
     private:
-        Device &device;
+		static Texture *statue;
+
+		Device &device;
 
     public:
+		static void CreateDefaults();
+		static Texture *Statue();
+
         Texture();
         Texture(Device &device);
         ~Texture();

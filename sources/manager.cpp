@@ -83,6 +83,19 @@ void Manager::DestroyPipelines()
     pipelines.clear();
 }
 
+void Manager::DestroyTextures()
+{
+	for (Texture *texture : textures)
+	{
+		if (!texture)
+			continue;
+
+		texture->Destroy();
+		delete (texture);
+	}
+	textures.clear();
+}
+
 void Manager::DestroyMeshes()
 {
 	for (Mesh *mesh : meshes)
@@ -124,6 +137,14 @@ Pipeline *Manager::NewPipeline()
 	return (pipeline);
 }
 
+Texture *Manager::NewTexture()
+{
+	Texture *texture = new Texture();
+	textures.push_back(texture);
+
+	return (texture);
+}
+
 Mesh *Manager::NewMesh()
 {
 	Mesh *mesh = new Mesh();
@@ -146,6 +167,7 @@ bool Manager::vulkanInitialized = false;
 Device Manager::device;
 Window Manager::window{device};
 Camera Manager::camera{window};
+std::vector<Texture *> Manager::textures;
 std::vector<Mesh *> Manager::meshes;
 std::vector<Pipeline *> Manager::pipelines;
 Graphics Manager::graphics{device, window};
@@ -154,6 +176,8 @@ Device &Manager::currentDevice = Manager::device;
 Window &Manager::currentWindow = Manager::window;
 Camera &Manager::currentCamera = Manager::camera;
 Graphics &Manager::currentGraphics = Manager::graphics;
+
+//Texture Manager::defaultTexture{Manager::device};
 
 uint32_t Manager::currentFrame = 0;
 

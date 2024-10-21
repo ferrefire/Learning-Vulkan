@@ -4,6 +4,7 @@
 #include "utilities.hpp"
 #include "time.hpp"
 #include "shape.hpp"
+#include "texture.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -74,7 +75,7 @@ PipelineConfiguration Pipeline::DefaultConfiguration()
 	return (configuration);
 }
 
-Pipeline::Pipeline(Device &device, Camera &camera) : device{device} , camera{camera}, texture{device}
+Pipeline::Pipeline(Device &device, Camera &camera) : device{device} , camera{camera}
 {
 	
 }
@@ -92,11 +93,24 @@ void Pipeline::Create()
 	PipelineConfiguration pipelineConfiguration = DefaultConfiguration();
 	CreateGraphicsPipeline("simple", "simple", vertexInfo, pipelineConfiguration);
 
-	texture.CreateTexture("texture.jpg");
+	//texture.CreateTexture("texture.jpg");
+	std::vector<DescriptorConfiguration> descriptorConfiguration;
+	descriptorConfiguration.resize(2);
+
+	descriptorConfiguration[0].type = UNIFORM_BUFFER;
+	descriptorConfiguration[0].stages = VERTEX_STAGE;
+	descriptorConfiguration[0].bufferInfo.offset = 0;
+	descriptorConfiguration[0].bufferInfo.range = sizeof(UniformBufferObject);
+
+	descriptorConfiguration[1].type = IMAGE_SAMPLER;
+	descriptorConfiguration[1].stages = FRAGMENT_STAGE;
+	descriptorConfiguration[1].imageInfo.imageLayout = IMAGE_READ_ONLY;
+	descriptorConfiguration[1].imageInfo.imageView = Texture::Statue()->imageView;
+	descriptorConfiguration[1].imageInfo.sampler = Texture::Statue()->sampler;
 
 	CreateUniformBuffers();
-	CreateDescriptorPool();
-	CreateDescriptorSets();
+	CreateDescriptorPool(descriptorConfiguration);
+	CreateDescriptorSets(descriptorConfiguration);
 }
 
 void Pipeline::Create(std::string shader, PipelineConfiguration pipelineConfig, std::vector<DescriptorConfiguration> descriptorConfig, VertexInfo vertexInfo)
@@ -293,6 +307,7 @@ void Pipeline::CreateUniformBuffers()
 	}
 }
 
+/*
 void Pipeline::CreateDescriptorPool()
 {
     if (descriptorPool) throw std::runtime_error("cannot create descriptor pool because it already exists");
@@ -314,6 +329,7 @@ void Pipeline::CreateDescriptorPool()
 		throw std::runtime_error("failed to create descriptor pool");
 	}
 }
+*/
 
 void Pipeline::CreateDescriptorPool(std::vector<DescriptorConfiguration> &configuration)
 {
@@ -342,6 +358,7 @@ void Pipeline::CreateDescriptorPool(std::vector<DescriptorConfiguration> &config
 	}
 }
 
+/*
 void Pipeline::CreateDescriptorSets()
 {
     if (descriptorSets.size() != 0) throw std::runtime_error("cannot create descriptor sets because they already exist");
@@ -392,6 +409,7 @@ void Pipeline::CreateDescriptorSets()
 		vkUpdateDescriptorSets(device.logicalDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 	}
 }
+*/
 
 void Pipeline::CreateDescriptorSets(std::vector<DescriptorConfiguration> &configuration)
 {
@@ -491,7 +509,7 @@ void Pipeline::Destroy()
 {
 	DestroyGraphicsPipeline();
 
-	texture.Destroy();
+	//texture.Destroy();
 
 	DestroyUniformBuffers();
 	DestroyDescriptorPool();
