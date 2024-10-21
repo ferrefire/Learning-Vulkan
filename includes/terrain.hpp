@@ -21,9 +21,11 @@ class Terrain
         static Mesh mesh;
         static Pipeline pipeline;
         static Object object;
-        static Texture noiseTexture;
 
-        static void Create();
+		static Texture noiseTexture;
+		static Texture heightMapTexture;
+
+		static void Create();
         static void CreateTextures();
 		static void CreateMeshes();
 		static void CreateObjects();

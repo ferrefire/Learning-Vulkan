@@ -16,6 +16,14 @@ void Terrain::Create()
 void Terrain::CreateTextures()
 {
 	noiseTexture.CreateTexture("perlin_noise_256.jpeg");
+
+	ImageConfiguration heightMapConfig;
+	heightMapConfig.format = R16;
+	heightMapConfig.layout = LAYOUT_GENERAL;
+	heightMapConfig.width = 512;
+	heightMapConfig.height = 512;
+
+	heightMapTexture.CreateImage(heightMapConfig, true);
 }
 
 void Terrain::CreateMeshes()
@@ -73,6 +81,7 @@ void Terrain::Destroy()
 void Terrain::DestroyTextures()
 {
 	noiseTexture.Destroy();
+	heightMapTexture.Destroy();
 }
 
 void Terrain::DestroyMeshes()
@@ -110,5 +119,6 @@ void Terrain::RecordCommands(VkCommandBuffer commandBuffer)
 
 Pipeline Terrain::pipeline{Manager::currentDevice, Manager::currentCamera};
 Texture Terrain::noiseTexture{Manager::currentDevice};
+Texture Terrain::heightMapTexture{Manager::currentDevice};
 Mesh Terrain::mesh{};
 Object Terrain::object{&Terrain::mesh, &Terrain::pipeline};

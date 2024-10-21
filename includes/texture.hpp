@@ -12,6 +12,10 @@
 #define IMAGE_2D VK_IMAGE_TYPE_2D
 
 #define R8G8B8A8 VK_FORMAT_R8G8B8A8_SRGB
+#define R16 VK_FORMAT_R16_UNORM
+
+#define LAYOUT_READ_ONLY VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+#define LAYOUT_GENERAL VK_IMAGE_LAYOUT_GENERAL
 
 struct ImageConfiguration
 {
@@ -24,7 +28,7 @@ struct ImageConfiguration
     uint32_t arrayLayers = 1;
     VkFormat format = R8G8B8A8;
     VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-    VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    VkImageLayout layout = LAYOUT_READ_ONLY;
     VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT;
     VkMemoryPropertyFlags memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
     VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;

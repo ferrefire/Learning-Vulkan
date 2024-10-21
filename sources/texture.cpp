@@ -109,10 +109,10 @@ void Texture::CreateTextureImage(std::string name)
 
 	CreateImageView(configuration);
 
-	SamplerConfiguration samplerConfiguration;
+	//SamplerConfiguration samplerConfiguration;
 	//samplerConfiguration.minLod = static_cast<float>(configuration.mipLevels / 2);
 
-    CreateSampler(samplerConfiguration);
+    //CreateSampler(samplerConfiguration);
 }
 
 void Texture::CreateImage(ImageConfiguration &configuration, bool view)
@@ -179,6 +179,9 @@ void Texture::CreateImageView(ImageConfiguration &configuration)
 	}
 
 	//imageView = Images::CreateImageView(image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, *device);
+
+	SamplerConfiguration samplerConfiguration;
+	CreateSampler(samplerConfiguration);
 }
 
 /*
