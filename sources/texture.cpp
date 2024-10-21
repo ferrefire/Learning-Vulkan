@@ -352,17 +352,17 @@ void Texture::TransitionImageLayout(ImageConfiguration &configuration, VkImageLa
 
 void Texture::DestroyImage()
 {
-	if (!&device)
-	{
-		std::cout << ": error: cannot destroy image because device does not exist" << std::endl;
-		return;
-	}
-    if (image != nullptr)
+	//if (!device.logicalDevice)
+	//{
+	//	std::cout << ": error: cannot destroy image because device does not exist" << std::endl;
+	//	return;
+	//}
+    if (image != nullptr && device.logicalDevice != nullptr)
 	{
 		vkDestroyImage(device.logicalDevice, image, nullptr);
 		image = nullptr;
 	}
-	if (imageMemory != nullptr)
+	if (imageMemory != nullptr && device.logicalDevice != nullptr)
 	{
 		vkFreeMemory(device.logicalDevice, imageMemory, nullptr);
 		imageMemory = nullptr;
@@ -372,7 +372,7 @@ void Texture::DestroyImage()
 void Texture::DestroyImageView()
 {
     if (!imageView) return;
-	if (!&device)
+	if (!device.logicalDevice)
 	{
 		std::cout << ": error: cannot destroy image view because device does not exist" << std::endl;
 		return;
@@ -385,7 +385,7 @@ void Texture::DestroyImageView()
 void Texture::DestroySampler()
 {
     if (!sampler) return;
-	if (!&device)
+	if (!device.logicalDevice)
 	{
 		std::cout << ": error: cannot destroy image sampler because device does not exist" << std::endl;
 		return;

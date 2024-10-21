@@ -44,8 +44,9 @@ void Terrain::CreatePipeline()
     descriptorConfiguration[1].imageInfo.sampler = noise.sampler;
 
     PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
+    VertexInfo vertexInfo = mesh.MeshVertexInfo();
 
-    pipeline.Create("terrain", pipelineConfiguration, descriptorConfiguration, mesh.MeshVertexInfo());
+    pipeline.Create("terrain", pipelineConfiguration, descriptorConfiguration, vertexInfo);
 
     //pipeline.CreateDescriptorSetLayout(descriptorConfiguration);
 	//pipeline.CreateGraphicsPipeline("terrain", "terrain", mesh.MeshVertexInfo(), Pipeline::DefaultConfiguration());

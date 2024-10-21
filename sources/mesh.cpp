@@ -166,7 +166,7 @@ void Mesh::RecalculateVertices()
 		if (i < shape.coordinates.size()) vertices[i].coordinate = shape.coordinates[i];
 	}
 
-	VertexInfo info = MeshVertexInfo();
+	VertexInfo info = MeshVertexInfo(); //Check if can be removed
 	verticesData.clear();
 	
 	for (Vertex vertex : vertices)

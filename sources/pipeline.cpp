@@ -87,7 +87,10 @@ Pipeline::~Pipeline()
 void Pipeline::Create()
 {
 	CreateDescriptorSetLayout();
-	CreateGraphicsPipeline("simple", "simple", Mesh::GetVertexInfo(true, true), DefaultConfiguration());
+
+	VertexInfo vertexInfo = Mesh::GetVertexInfo(true, true);
+	PipelineConfiguration pipelineConfiguration = DefaultConfiguration();
+	CreateGraphicsPipeline("simple", "simple", vertexInfo, pipelineConfiguration);
 
 	texture.CreateTexture("texture.jpg");
 
