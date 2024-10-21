@@ -25,13 +25,15 @@ class Terrain
 
         static void Create();
         static void CreateTextures();
-        static void CreateMeshes();
-        static void CreatePipeline();
+		static void CreateMeshes();
+		static void CreateObjects();
+		static void CreatePipeline();
 
         static void Destroy();
         static void DestroyTextures();
-        static void DestroyMeshes();
-        static void DestroyPipeline();
+		static void DestroyMeshes();
+		static void DestroyObjects();
+		static void DestroyPipeline();
 
         static void RecordCommands(VkCommandBuffer commandBuffer);
 };

@@ -6,6 +6,7 @@ void Terrain::Create()
 {
     CreateTextures();
     CreateMeshes();
+	CreateObjects();
     CreatePipeline();
 
     object.Resize(glm::vec3(25));
@@ -26,6 +27,11 @@ void Terrain::CreateMeshes()
 	mesh.Create();
 }
 
+void Terrain::CreateObjects()
+{
+	object.CreateUniformBuffers();
+}
+
 void Terrain::CreatePipeline()
 {
     //pipeline.CreateDescriptorSetLayout();
@@ -35,9 +41,10 @@ void Terrain::CreatePipeline()
     descriptorConfiguration[0].type = UNIFORM_BUFFER;
     descriptorConfiguration[0].stages = VERTEX_STAGE;
     descriptorConfiguration[0].bufferInfo.offset = 0;
-    descriptorConfiguration[0].bufferInfo.range = sizeof(UniformBufferObject);
+	descriptorConfiguration[0].bufferInfo.range = sizeof(UniformBufferObject);
+	descriptorConfiguration[0].buffers = &object.uniformBuffers;
 
-    descriptorConfiguration[1].type = IMAGE_SAMPLER;
+	descriptorConfiguration[1].type = IMAGE_SAMPLER;
     descriptorConfiguration[1].stages = VERTEX_STAGE | FRAGMENT_STAGE;
     descriptorConfiguration[1].imageInfo.imageLayout = IMAGE_READ_ONLY;
     descriptorConfiguration[1].imageInfo.imageView = noiseTexture.imageView;
@@ -58,6 +65,7 @@ void Terrain::CreatePipeline()
 void Terrain::Destroy()
 {
     DestroyPipeline();
+	DestroyObjects();
     DestroyMeshes();
     DestroyTextures();
 }
@@ -72,13 +80,18 @@ void Terrain::DestroyMeshes()
 	mesh.Destroy();
 }
 
+void Terrain::DestroyObjects()
+{
+	object.DestroyUniformBuffers();
+}
+
 void Terrain::DestroyPipeline()
 {
     pipeline.DestroyGraphicsPipeline();
 
 	//pipeline.texture.Destroy();
 
-	pipeline.DestroyUniformBuffers();
+	//pipeline.DestroyUniformBuffers();
 	pipeline.DestroyDescriptorPool();
 	pipeline.DestroyDescriptorSetLayout();
 }
@@ -86,7 +99,8 @@ void Terrain::DestroyPipeline()
 void Terrain::RecordCommands(VkCommandBuffer commandBuffer)
 {
     pipeline.Bind(commandBuffer, Manager::currentWindow);
-    pipeline.UpdateUniformBuffer(object.Translation(), Manager::currentFrame);
+    //pipeline.UpdateUniformBuffer(object.Translation(), Manager::currentFrame);
+	object.UpdateUniformBuffer(Manager::currentFrame);
     mesh.Bind(commandBuffer);
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
 }

@@ -77,15 +77,17 @@ void Texture::CreateTextureImage(std::string name)
 	configuration.layout = VK_IMAGE_LAYOUT_UNDEFINED;
 	configuration.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
 
-	VkBuffer stagingBuffer;
-	VkDeviceMemory stagingBufferMemory;
-	device.CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
-		VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+	//VkBuffer stagingBuffer;
+	//VkDeviceMemory stagingBufferMemory;
+	//device.CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
+	//	VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+	//void *data;
+	//vkMapMemory(device.logicalDevice, stagingBufferMemory, 0, imageSize, 0, &data);
+	//memcpy(data, pixels, static_cast<size_t>(imageSize));
+	//vkUnmapMemory(device.logicalDevice, stagingBufferMemory);
 
-	void *data;
-	vkMapMemory(device.logicalDevice, stagingBufferMemory, 0, imageSize, 0, &data);
-	memcpy(data, pixels, static_cast<size_t>(imageSize));
-	vkUnmapMemory(device.logicalDevice, stagingBufferMemory);
+	Buffer stagingBuffer;
+	stagingBuffer.CreateStagingBuffer(pixels, imageSize);
 
 	stbi_image_free(pixels);
 
@@ -95,11 +97,13 @@ void Texture::CreateTextureImage(std::string name)
 	//	VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image, imageMemory, *device);
 
 	TransitionImageLayout(configuration, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-	device.CopyBufferToImage(stagingBuffer, image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+	//device.CopyBufferToImage(stagingBuffer, image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+	stagingBuffer.CopyTo(image, configuration);
 	//device.TransitionImageLayout(image, configuration, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-	vkDestroyBuffer(device.logicalDevice, stagingBuffer, nullptr);
-	vkFreeMemory(device.logicalDevice, stagingBufferMemory, nullptr);
+	//vkDestroyBuffer(device.logicalDevice, stagingBuffer, nullptr);
+	//vkFreeMemory(device.logicalDevice, stagingBufferMemory, nullptr);
+	stagingBuffer.Destroy();
 
 	CreateMipmaps(configuration);
 
@@ -359,6 +363,30 @@ void Texture::TransitionImageLayout(ImageConfiguration &configuration, VkImageLa
 
 	configuration.layout = newLayout;
 }
+
+/*
+void Texture::CopyFrom(VkBuffer buffer, ImageConfiguration &configuration)
+{
+	VkCommandBuffer commandBuffer = device.BeginSingleTimeCommands();
+
+	VkBufferImageCopy region{};
+	region.bufferOffset = 0;
+	region.bufferRowLength = 0;
+	region.bufferImageHeight = 0;
+
+	region.imageSubresource.aspectMask = configuration.aspect;
+	region.imageSubresource.mipLevel = 0;
+	region.imageSubresource.baseArrayLayer = 0;
+	region.imageSubresource.layerCount = configuration.arrayLayers;
+
+	region.imageOffset = {0, 0, 0};
+	region.imageExtent = {configuration.width, configuration.height, 1};
+
+	vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+	device.EndSingleTimeCommands(commandBuffer);
+}
+*/
 
 void Texture::DestroyImage()
 {

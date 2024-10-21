@@ -4,6 +4,7 @@
 #include "mesh.hpp"
 //#include "texture.hpp"
 #include "camera.hpp"
+#include "buffer.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -22,6 +23,7 @@
 #define VERTEX_STAGE VK_SHADER_STAGE_VERTEX_BIT
 #define FRAGMENT_STAGE VK_SHADER_STAGE_FRAGMENT_BIT
 #define ALL_STAGE VK_SHADER_STAGE_ALL_GRAPHICS
+#define COMPUTE_STAGE VK_SHADER_STAGE_COMPUTE_BIT
 
 #define IMAGE_READ_ONLY VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 
@@ -46,15 +48,16 @@ struct DescriptorConfiguration
     VkShaderStageFlags stages;
 
     VkDescriptorBufferInfo bufferInfo;
+	std::vector<Buffer> *buffers = nullptr;
     VkDescriptorImageInfo imageInfo;
 };
 
-struct UniformBufferObject
-{
-	alignas(16) glm::mat4 model = glm::mat4(1);
-	alignas(16) glm::mat4 view;
-	alignas(16) glm::mat4 projection;
-};
+//struct UniformBufferObject
+//{
+//	alignas(16) glm::mat4 model = glm::mat4(1);
+//	alignas(16) glm::mat4 view;
+//	alignas(16) glm::mat4 projection;
+//};
 
 class Pipeline
 {
@@ -62,7 +65,7 @@ class Pipeline
         Device &device;
 		Camera &camera;
 
-        const int MAX_FRAMES_IN_FLIGHT = 2;
+        //const int MAX_FRAMES_IN_FLIGHT = 2;
 
     public:
         static PipelineConfiguration DefaultConfiguration();
@@ -70,35 +73,34 @@ class Pipeline
         Pipeline(Device &device, Camera &camera);
         ~Pipeline();
 
-		UniformBufferObject ubo;
+		//UniformBufferObject ubo;
         //Texture texture;
 
 		VkDescriptorSetLayout descriptorSetLayout = nullptr;
 		VkPipelineLayout graphicsPipelineLayout = nullptr;
 		VkPipeline graphicsPipeline = nullptr;
+		VkPipeline computePipeline = nullptr;
 		VkDescriptorPool descriptorPool = nullptr;
 		std::vector<VkDescriptorSet> descriptorSets;
-		std::vector<VkBuffer> uniformBuffers;
-		std::vector<VkDeviceMemory> uniformBuffersMemory;
-		std::vector<void *> uniformBuffersMapped;
+		//std::vector<VkBuffer> uniformBuffers;
+		//std::vector<VkDeviceMemory> uniformBuffersMemory;
+		//std::vector<void *> uniformBuffersMapped;
 
-        void Create();
-        void Create(std::string shader, PipelineConfiguration pipelineConfig, std::vector<DescriptorConfiguration> descriptorConfig, VertexInfo vertexInfo);
-        void CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VertexInfo &vertexInfo, PipelineConfiguration &configuration);
-        //void CreateDescriptorSetLayout();
-        void CreateDescriptorSetLayout(std::vector<DescriptorConfiguration> &configuration);
-        void CreateUniformBuffers();
-        //void CreateDescriptorPool();
+		void Create(std::vector<Buffer> *uniformBuffers);
+		void Create(std::string shader, PipelineConfiguration pipelineConfig, std::vector<DescriptorConfiguration> descriptorConfig, VertexInfo vertexInfo);
+		void CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VertexInfo &vertexInfo, PipelineConfiguration &configuration);
+		void CreateComputePipeline(std::string computeShader);
+		void CreateDescriptorSetLayout(std::vector<DescriptorConfiguration> &configuration);
+        //void CreateUniformBuffers();
         void CreateDescriptorPool(std::vector<DescriptorConfiguration> &configuration);
-        //void CreateDescriptorSets();
         void CreateDescriptorSets(std::vector<DescriptorConfiguration> &configuration);
         VkShaderModule CreateShaderModule(const std::vector<char> &code);
-        void UpdateUniformBuffer(glm::mat4 translation, uint32_t currentImage);
+        //void UpdateUniformBuffer(glm::mat4 translation, uint32_t currentImage);
         void Bind(VkCommandBuffer commandBuffer, Window &window);
 
         void Destroy();
         void DestroyGraphicsPipeline();
         void DestroyDescriptorSetLayout();
-        void DestroyUniformBuffers();
+        //void DestroyUniformBuffers();
         void DestroyDescriptorPool();
 };

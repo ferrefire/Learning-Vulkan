@@ -114,6 +114,7 @@ void Manager::DestroyObjects()
 	{
 		if (!object) continue;
 
+		object->DestroyUniformBuffers();
 		delete(object);
 	}
 	objects.clear();

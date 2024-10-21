@@ -85,7 +85,7 @@ Pipeline::~Pipeline()
     Destroy();
 }
 
-void Pipeline::Create()
+void Pipeline::Create(std::vector<Buffer> *uniformBuffers)
 {
 	/*
 	CreateDescriptorSetLayout();
@@ -123,6 +123,7 @@ void Pipeline::Create()
 	descriptorConfiguration[0].stages = VERTEX_STAGE;
 	descriptorConfiguration[0].bufferInfo.offset = 0;
 	descriptorConfiguration[0].bufferInfo.range = sizeof(UniformBufferObject);
+	descriptorConfiguration[0].buffers = uniformBuffers;
 
 	descriptorConfiguration[1].type = IMAGE_SAMPLER;
 	descriptorConfiguration[1].stages = FRAGMENT_STAGE;
@@ -137,7 +138,7 @@ void Pipeline::Create(std::string shader, PipelineConfiguration pipelineConfig, 
 {
 	CreateDescriptorSetLayout(descriptorConfig);
 	CreateGraphicsPipeline(shader, shader, vertexInfo, pipelineConfig);
-	CreateUniformBuffers();
+	//CreateUniformBuffers();
 	CreateDescriptorPool(descriptorConfig);
 	CreateDescriptorSets(descriptorConfig);
 }
@@ -156,13 +157,13 @@ void Pipeline::CreateGraphicsPipeline(std::string vertexShader, std::string frag
 
 	VkPipelineShaderStageCreateInfo vertexShaderStageInfo{};
 	vertexShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	vertexShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+	vertexShaderStageInfo.stage = VERTEX_STAGE;
 	vertexShaderStageInfo.module = vertexShaderModule;
 	vertexShaderStageInfo.pName = "main";
 
 	VkPipelineShaderStageCreateInfo fragmentShaderStageInfo{};
 	fragmentShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	fragmentShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	fragmentShaderStageInfo.stage = FRAGMENT_STAGE;
 	fragmentShaderStageInfo.module = fragmentShaderModule;
 	fragmentShaderStageInfo.pName = "main";
 
@@ -230,6 +231,27 @@ void Pipeline::CreateGraphicsPipeline(std::string vertexShader, std::string frag
 
 	vkDestroyShaderModule(device.logicalDevice, vertexShaderModule, nullptr);
 	vkDestroyShaderModule(device.logicalDevice, fragmentShaderModule, nullptr);
+}
+
+void Pipeline::CreateComputePipeline(std::string computeShader)
+{
+	if (computePipeline) throw std::runtime_error("cannot create compute pipeline because it already exists");
+
+	std::string currentPath = Utilities::GetPath();
+
+	auto computeCode = Utilities::FileToBinary((currentPath + "/shaders/" + computeShader + ".comp.spv").c_str());
+
+	VkShaderModule computeShaderModule = CreateShaderModule(computeCode);
+
+	VkPipelineShaderStageCreateInfo vertexShaderStageInfo{};
+	vertexShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	vertexShaderStageInfo.stage = COMPUTE_STAGE;
+	vertexShaderStageInfo.module = computeShaderModule;
+	vertexShaderStageInfo.pName = "main";
+
+
+
+	vkDestroyShaderModule(device.logicalDevice, computeShaderModule, nullptr);
 }
 
 VkShaderModule Pipeline::CreateShaderModule(const std::vector<char> &code)
@@ -309,6 +331,7 @@ void Pipeline::CreateDescriptorSetLayout(std::vector<DescriptorConfiguration> &c
 	}
 }
 
+/*
 void Pipeline::CreateUniformBuffers()
 {
     if (uniformBuffers.size() != 0 || uniformBuffersMemory.size() != 0)
@@ -316,11 +339,11 @@ void Pipeline::CreateUniformBuffers()
 
 	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
-	uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-	uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-	uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+	uniformBuffers.resize(Manager::settings.maxFramesInFlight);
+	uniformBuffersMemory.resize(Manager::settings.maxFramesInFlight);
+	uniformBuffersMapped.resize(Manager::settings.maxFramesInFlight);
 
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+	for (size_t i = 0; i < Manager::settings.maxFramesInFlight; i++)
 	{
 		device.CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
 			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
@@ -329,22 +352,21 @@ void Pipeline::CreateUniformBuffers()
 	}
 }
 
-/*
 void Pipeline::CreateDescriptorPool()
 {
     if (descriptorPool) throw std::runtime_error("cannot create descriptor pool because it already exists");
 
 	std::array<VkDescriptorPoolSize, 2> poolSizes{};
 	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	poolSizes[0].descriptorCount = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
 	poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	poolSizes[1].descriptorCount = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
 
 	VkDescriptorPoolCreateInfo poolInfo{};
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	poolInfo.maxSets = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
 
 	if (vkCreateDescriptorPool(device.logicalDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
 	{
@@ -364,7 +386,7 @@ void Pipeline::CreateDescriptorPool(std::vector<DescriptorConfiguration> &config
 	for (DescriptorConfiguration &config : configuration)
 	{
 		poolSizes[index].type = config.type;
-		poolSizes[index].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+		poolSizes[index].descriptorCount = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
 		index++;
 	}
 
@@ -372,7 +394,7 @@ void Pipeline::CreateDescriptorPool(std::vector<DescriptorConfiguration> &config
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	poolInfo.maxSets = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
 
 	if (vkCreateDescriptorPool(device.logicalDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
 	{
@@ -385,20 +407,20 @@ void Pipeline::CreateDescriptorSets()
 {
     if (descriptorSets.size() != 0) throw std::runtime_error("cannot create descriptor sets because they already exist");
 
-	std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
+	std::vector<VkDescriptorSetLayout> layouts(Manager::settings.maxFramesInFlight, descriptorSetLayout);
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocInfo.descriptorPool = descriptorPool;
-	allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	allocInfo.descriptorSetCount = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
 	allocInfo.pSetLayouts = layouts.data();
 
-	descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+	descriptorSets.resize(Manager::settings.maxFramesInFlight);
 	if (vkAllocateDescriptorSets(device.logicalDevice, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to allocate descriptor sets");
 	}
 
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+	for (size_t i = 0; i < Manager::settings.maxFramesInFlight; i++)
 	{
 		VkDescriptorBufferInfo bufferInfo{};
 		bufferInfo.buffer = uniformBuffers[i];
@@ -437,20 +459,20 @@ void Pipeline::CreateDescriptorSets(std::vector<DescriptorConfiguration> &config
 {
     if (descriptorSets.size() != 0) throw std::runtime_error("cannot create descriptor sets because they already exist");
 
-	std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
+	std::vector<VkDescriptorSetLayout> layouts(Manager::settings.maxFramesInFlight, descriptorSetLayout);
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocInfo.descriptorPool = descriptorPool;
-	allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+	allocInfo.descriptorSetCount = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
 	allocInfo.pSetLayouts = layouts.data();
 
-	descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+	descriptorSets.resize(Manager::settings.maxFramesInFlight);
 	if (vkAllocateDescriptorSets(device.logicalDevice, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to allocate descriptor sets");
 	}
 
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+	for (size_t i = 0; i < Manager::settings.maxFramesInFlight; i++)
 	{
 		std::vector<VkWriteDescriptorSet> descriptorWrites{};
 		descriptorWrites.resize(configuration.size());
@@ -461,7 +483,8 @@ void Pipeline::CreateDescriptorSets(std::vector<DescriptorConfiguration> &config
 			if (config.type == UNIFORM_BUFFER)
 			{
 				//VkDescriptorBufferInfo bufferInfo{};
-				config.bufferInfo.buffer = uniformBuffers[i];
+				//config.bufferInfo.buffer = uniformBuffers[i];
+				config.bufferInfo.buffer = config.buffers->data()[i].buffer; //check later
 				//config.bufferInfo.offset = 0;
 				//config.bufferInfo.range = sizeof(UniformBufferObject);
 
@@ -496,6 +519,7 @@ void Pipeline::CreateDescriptorSets(std::vector<DescriptorConfiguration> &config
 	}
 }
 
+/*
 void Pipeline::UpdateUniformBuffer(glm::mat4 translation, uint32_t currentImage)
 {
 	//ubo.model = glm::rotate(glm::mat4(1.0f), Time::currentFrame * glm::radians(90.0f), glm::vec3(0.5f, 1.0f, 0.25f));
@@ -505,6 +529,7 @@ void Pipeline::UpdateUniformBuffer(glm::mat4 translation, uint32_t currentImage)
 	ubo.projection = camera.Projection();
 	memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
 }
+*/
 
 void Pipeline::Bind(VkCommandBuffer commandBuffer, Window &window)
 {
@@ -533,7 +558,7 @@ void Pipeline::Destroy()
 
 	//texture.Destroy();
 
-	DestroyUniformBuffers();
+	//DestroyUniformBuffers();
 	DestroyDescriptorPool();
 	DestroyDescriptorSetLayout();
 }
@@ -561,6 +586,7 @@ void Pipeline::DestroyDescriptorSetLayout()
 	descriptorSetLayout = nullptr;
 }
 
+/*
 void Pipeline::DestroyUniformBuffers()
 {
     for (VkBuffer &buffer : uniformBuffers)
@@ -574,7 +600,9 @@ void Pipeline::DestroyUniformBuffers()
 		vkFreeMemory(device.logicalDevice, memory, nullptr);
 	}
 	uniformBuffersMemory.clear();
+	uniformBuffersMapped.clear();
 }
+*/
 
 void Pipeline::DestroyDescriptorPool()
 {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "shape.hpp"
+#include "buffer.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -57,10 +58,12 @@ class Mesh
 		std::vector<float> verticesData;
 		std::vector<uint16_t> indices;
 
-		VkBuffer vertexBuffer = nullptr;
-		VkDeviceMemory vertexBufferMemory = nullptr;
-		VkBuffer indexBuffer = nullptr;
-		VkDeviceMemory indexBufferMemory = nullptr;
+		//VkBuffer vertexBuffer = nullptr;
+		//VkDeviceMemory vertexBufferMemory = nullptr;
+		Buffer vertexBuffer;
+		//VkBuffer indexBuffer = nullptr;
+		//VkDeviceMemory indexBufferMemory = nullptr;
+		Buffer indexBuffer;
 
 		void Create();
 		void CreateVertexBuffer();

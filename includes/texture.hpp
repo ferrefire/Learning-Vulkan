@@ -82,4 +82,5 @@ class Texture
 
         static stbi_uc *LoadTexture(const std::string path, int *texWidth, int *texHeight, int *texChannels);
         void TransitionImageLayout(ImageConfiguration &configuration, VkImageLayout newLayout);
+		//void CopyFrom(VkBuffer buffer, ImageConfiguration &configuration);
 };

@@ -28,6 +28,10 @@ void Setup(int argc, char **argv)
 		{
 			Manager::settings.fullscreen = true;
 		}
+		else if (std::string(argv[i]).compare("dc") == 0)
+		{
+			Manager::settings.discrete = false;
+		}
 	}
 }
 

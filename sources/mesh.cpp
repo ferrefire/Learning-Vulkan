@@ -71,11 +71,12 @@ void Mesh::Create()
 
 void Mesh::CreateVertexBuffer()
 {
-	if (vertexBuffer) throw std::runtime_error(name + ": cannot create vertex buffer because it already exists");
+	if (vertexBuffer.buffer || vertexBuffer.memory) throw std::runtime_error(name + ": cannot create vertex buffer because it already exists");
 	if (verticesData.size() == 0) throw std::runtime_error(name + ": cannot create vertex buffer because there are no vertices");
 
 	VkDeviceSize bufferSize = sizeof(verticesData[0]) * verticesData.size();
 
+	/*
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
 	Manager::currentDevice.CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
@@ -92,15 +93,22 @@ void Mesh::CreateVertexBuffer()
 
 	vkDestroyBuffer(Manager::currentDevice.logicalDevice, stagingBuffer, nullptr);
 	vkFreeMemory(Manager::currentDevice.logicalDevice, stagingBufferMemory, nullptr);
+	*/
+
+	BufferConfiguration configuration = Buffer::VertexBuffer();
+	configuration.size = bufferSize;
+
+	vertexBuffer.Create(verticesData.data(), configuration);
 }
 
 void Mesh::CreateIndexBuffer()
 {
-	if (indexBuffer) throw std::runtime_error(name + ": cannot create index buffer because it already exists");
+	if (indexBuffer.buffer || indexBuffer.memory) throw std::runtime_error(name + ": cannot create index buffer because it already exists");
 	if (indices.size() == 0) throw std::runtime_error(name + ": cannot create index buffer because there are no indices");
 
 	VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
+	/*
 	VkBuffer stagingBuffer;
 	VkDeviceMemory stagingBufferMemory;
 	Manager::currentDevice.CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -117,6 +125,12 @@ void Mesh::CreateIndexBuffer()
 
 	vkDestroyBuffer(Manager::currentDevice.logicalDevice, stagingBuffer, nullptr);
 	vkFreeMemory(Manager::currentDevice.logicalDevice, stagingBufferMemory, nullptr);
+	*/
+
+	BufferConfiguration configuration = Buffer::IndexBuffer();
+	configuration.size = bufferSize;
+
+	indexBuffer.Create(indices.data(), configuration);
 }
 
 void Mesh::Destroy()
@@ -127,32 +141,34 @@ void Mesh::Destroy()
 
 void Mesh::DestroyVertexBuffer()
 {
-	if (vertexBuffer)
-	{
-		vkDestroyBuffer(Manager::currentDevice.logicalDevice, vertexBuffer, nullptr);
-		vertexBuffer = nullptr;
-	}
+	//if (vertexBuffer)
+	//{
+	//	vkDestroyBuffer(Manager::currentDevice.logicalDevice, vertexBuffer, nullptr);
+	//	vertexBuffer = nullptr;
+	//}
+	//if (vertexBufferMemory)
+	//{
+	//	vkFreeMemory(Manager::currentDevice.logicalDevice, vertexBufferMemory, nullptr);
+	//	vertexBufferMemory = nullptr;
+	//}
 
-	if (vertexBufferMemory)
-	{
-		vkFreeMemory(Manager::currentDevice.logicalDevice, vertexBufferMemory, nullptr);
-		vertexBufferMemory = nullptr;
-	}
+	vertexBuffer.Destroy();
 }
 
 void Mesh::DestroyIndexBuffer()
 {
-	if (indexBuffer)
-	{
-		vkDestroyBuffer(Manager::currentDevice.logicalDevice, indexBuffer, nullptr);
-		indexBuffer = nullptr;
-	}
+	//if (indexBuffer)
+	//{
+	//	vkDestroyBuffer(Manager::currentDevice.logicalDevice, indexBuffer, nullptr);
+	//	indexBuffer = nullptr;
+	//}
+	//if (indexBufferMemory)
+	//{
+	//	vkFreeMemory(Manager::currentDevice.logicalDevice, indexBufferMemory, nullptr);
+	//	indexBufferMemory = nullptr;
+	//}
 
-	if (indexBufferMemory)
-	{
-		vkFreeMemory(Manager::currentDevice.logicalDevice, indexBufferMemory, nullptr);
-		indexBufferMemory = nullptr;
-	}
+	indexBuffer.Destroy();
 }
 
 void Mesh::RecalculateVertices()
@@ -195,7 +211,7 @@ void Mesh::RecalculateVertices()
 
 void Mesh::Bind(VkCommandBuffer commandBuffer)
 {
-	if (!vertexBuffer || !indexBuffer)
+	if (!vertexBuffer.buffer || !indexBuffer.buffer)
 	{
 		std::cout << name + ": error: cannot bind mesh because not all buffers exist" << std::endl;
 		return ;
@@ -204,11 +220,11 @@ void Mesh::Bind(VkCommandBuffer commandBuffer)
 	//if (bound == this) return ;
 	//bound = this;
 
-	VkBuffer vertexBuffers[] = {vertexBuffer};
+	VkBuffer vertexBuffers[] = {vertexBuffer.buffer};
 	VkDeviceSize offsets[] = {0};
 
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-	vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+	vkCmdBindIndexBuffer(commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT16);
 }
 
 VertexInfo Mesh::MeshVertexInfo()

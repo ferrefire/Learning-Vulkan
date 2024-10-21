@@ -16,8 +16,10 @@
 
 struct Settings
 {
+	uint32_t maxFramesInFlight = 2;
 	bool fullscreen = false;
 	bool wireframe = false;
+	bool discrete = true;
 };
 
 class Manager

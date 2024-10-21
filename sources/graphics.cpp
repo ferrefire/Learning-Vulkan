@@ -90,7 +90,8 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	for (Object *object : Manager::objects)
 	{
 		object->pipeline->Bind(commandBuffer, Manager::currentWindow);
-		object->pipeline->UpdateUniformBuffer(object->Translation(), Manager::currentFrame);
+		//object->pipeline->UpdateUniformBuffer(object->Translation(), Manager::currentFrame);
+		object->UpdateUniformBuffer(Manager::currentFrame);
 		object->mesh->Bind(commandBuffer);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(object->mesh->indices.size()), 1, 0, 0, 0);
 	}
@@ -188,7 +189,7 @@ void Graphics::DrawFrame()
 
 	vkQueuePresentKHR(device.presentationQueue, &presentInfo);
 
-	Manager::currentFrame = (Manager::currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+	Manager::currentFrame = (Manager::currentFrame + 1) % Manager::settings.maxFramesInFlight;
 }
 
 void Graphics::Create()
@@ -219,15 +220,17 @@ void Graphics::Create()
 
 	Object *obj1 = Manager::NewObject();
 	obj1->mesh = Mesh::Cube();
+	obj1->CreateUniformBuffers();
 	obj1->pipeline = Manager::NewPipeline();
-	obj1->pipeline->Create();
+	obj1->pipeline->Create(&obj1->uniformBuffers);
 	obj1->Resize(glm::vec3(2));
 	obj1->Move(glm::vec3(0, 1, -5));
 
 	Object *obj2 = Manager::NewObject();
 	obj2->mesh = Mesh::Cube();
+	obj2->CreateUniformBuffers();
 	obj2->pipeline = Manager::NewPipeline();
-	obj2->pipeline->Create();
+	obj2->pipeline->Create(&obj2->uniformBuffers);
 	obj2->Resize(glm::vec3(3));
 	obj2->Move(glm::vec3(0, 3, -10));
 }
@@ -256,6 +259,7 @@ void Graphics::Destroy()
 	Terrain::Destroy();
 
 	Manager::DestroyPipelines();
+	Manager::DestroyObjects();
 	Manager::DestroyTextures();
 	Manager::DestroyMeshes();
 

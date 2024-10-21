@@ -18,7 +18,7 @@ class Graphics
 		Window &window;
 		//std::vector<Pipeline> &pipelines;
 
-		const int MAX_FRAMES_IN_FLIGHT = 2;
+		//const int MAX_FRAMES_IN_FLIGHT = 2;
 		//uint32_t currentFrame = 0;
 
 	public:

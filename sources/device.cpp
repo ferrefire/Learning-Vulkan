@@ -1,5 +1,7 @@
 #include "device.hpp"
 
+#include "manager.hpp"
+
 #include <stdexcept>
 #include <vector>
 #include <set>
@@ -78,7 +80,8 @@ bool Device::IsDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface)
 	VkPhysicalDeviceFeatures supportedFeatures;
 	vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-	return (queueFamilies.Complete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy && isDiscrete);
+	return (queueFamilies.Complete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy &&
+		(!Manager::settings.discrete || isDiscrete));
 }
 
 QueueFamilies Device::FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface)
@@ -215,9 +218,9 @@ void Device::CreateSyncObjects()
     if (imageAvailableSemaphores.size() != 0 || renderFinishedSemaphores.size() != 0 || inFlightFences.size() != 0) 
 		throw std::runtime_error("cannot create sync objects because they already exists");
 
-	imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-	renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-	inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+	imageAvailableSemaphores.resize(Manager::settings.maxFramesInFlight);
+	renderFinishedSemaphores.resize(Manager::settings.maxFramesInFlight);
+	inFlightFences.resize(Manager::settings.maxFramesInFlight);
 
 	VkSemaphoreCreateInfo semaphoreInfo{};
 	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -226,7 +229,7 @@ void Device::CreateSyncObjects()
 	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+	for (size_t i = 0; i < Manager::settings.maxFramesInFlight; i++)
 	{
 		if (vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
 			vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
@@ -264,6 +267,7 @@ void Device::WaitForIdle()
     vkDeviceWaitIdle(logicalDevice);
 }
 
+/*
 void Device::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 {
     VkBufferCreateInfo bufferInfo{};
@@ -292,6 +296,7 @@ void Device::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryP
 
 	vkBindBufferMemory(logicalDevice, buffer, bufferMemory, 0);
 }
+*/
 
 uint32_t Device::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
@@ -356,13 +361,13 @@ void Device::CreateCommandBuffers()
 {
 	if (commandBuffers.size() != 0) throw std::runtime_error("cannot create command buffers because they already exists");
 
-	commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+	commandBuffers.resize(Manager::settings.maxFramesInFlight);
 
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.commandPool = commandPool;
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandBufferCount = (uint32_t)MAX_FRAMES_IN_FLIGHT;
+	allocInfo.commandBufferCount = (uint32_t)Manager::settings.maxFramesInFlight;
 
 	if (vkAllocateCommandBuffers(logicalDevice, &allocInfo, commandBuffers.data()) != VK_SUCCESS)
 	{
@@ -378,6 +383,7 @@ void Device::DestroyCommandPool()
 	commandPool = nullptr;
 }
 
+/*
 void Device::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
 	VkCommandBuffer commandBuffer = BeginSingleTimeCommands();
@@ -412,6 +418,7 @@ void Device::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, u
 
 	EndSingleTimeCommands(commandBuffer);
 }
+*/
 
 VkCommandBuffer Device::BeginSingleTimeCommands()
 {
