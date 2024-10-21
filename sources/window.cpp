@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <algorithm>
 
-Window::Window(Device &device) : device{device} , depthTexture{device}
+Window::Window(Device &device) : device{device} , depthTexture{device}, colorTexture{device}
 {
 	
 }
@@ -252,24 +252,32 @@ void Window::CreateFramebuffers()
 
 void Window::CreateDepthResources()
 {
-	//if (depthImage != nullptr || depthImageMemory != nullptr || depthImageView != nullptr)
-	//	throw std::runtime_error("cannot create depth resources because they already exist");
 	if (depthTexture.image != nullptr || depthTexture.imageMemory != nullptr || depthTexture.imageView != nullptr)
 		throw std::runtime_error("cannot create depth resources because they already exist");
-
-	VkFormat depthFormat = device.FindDepthFormat();
-
-	//Images::CreateImage(swapChainExtent.width, swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, 
-	//	VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage, depthImageMemory, device);
-	//depthImageView = Images::CreateImageView(depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, device);
 
 	ImageConfiguration configuration;
 	configuration.width = swapChainExtent.width;
 	configuration.height = swapChainExtent.height;
-	configuration.format = depthFormat;
+	configuration.format = device.FindDepthFormat();
 	configuration.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	configuration.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
 
 	depthTexture.CreateImage(configuration, true);
+}
+
+void Window::CreateColorResources()
+{
+	if (colorTexture.image != nullptr || colorTexture.imageMemory != nullptr || colorTexture.imageView != nullptr)
+		throw std::runtime_error("cannot create color resources because they already exist");
+
+	ImageConfiguration configuration;
+	configuration.width = swapChainExtent.width;
+	configuration.height = swapChainExtent.height;
+	configuration.format = swapChainImageFormat;
+	configuration.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	configuration.sampleCount = device.MaxSampleCount();
+
+	colorTexture.CreateImage(configuration, true);
 }
 
 void Window::CreateRenderPass()

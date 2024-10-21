@@ -38,6 +38,7 @@ class Window
 		//VkImageView depthImageView = nullptr;
 
 		Texture depthTexture;
+		Texture colorTexture;
 
 		bool framebufferResized = false;
 		bool isResizeable = true;
@@ -51,6 +52,7 @@ class Window
 		void CreateSwapChain();
 		void CreateImageViews();
 		void CreateFramebuffers();
+		void CreateColorResources();
 		void CreateDepthResources();
 		void CreateRenderPass();
 
@@ -59,6 +61,7 @@ class Window
 		void DestroyImageViews();
 		void DestroyFramebuffers();
 		void DestroyDepthResources();
+		void DestroyColorResources();
 		void DestroyRenderPass();
 
 		bool IsOpen();
