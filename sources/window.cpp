@@ -73,6 +73,16 @@ void Window::framebufferResizeCallback(GLFWwindow *window, int width, int height
 	Manager::currentWindow.framebufferResized = true;
 }
 
+void Window::CreateResources()
+{
+	CreateSwapChain();
+	CreateImageViews();
+	CreateRenderPass();
+	CreateColorResources();
+	CreateDepthResources();
+	CreateFramebuffers();
+}
+
 void Window::CreateSurface(VkInstance instance)
 {
 	if (surface) throw std::runtime_error("cannot create surface because it already exists");
@@ -145,8 +155,8 @@ void Window::CreateSwapChain()
 	swapChainExtent = extent;
 	width = extent.width;
 	height = extent.height;
-	swapChainTextures.resize(swapChainImages.size());
 
+	swapChainTextures.resize(swapChainImages.size());
 	for (int i = 0; i < swapChainImages.size(); i++)
 	{
 		swapChainTextures[i].image = swapChainImages[i];
@@ -232,7 +242,7 @@ void Window::CreateFramebuffers()
 	for (size_t i = 0; i < swapChainTextures.size(); i++)
 	{
 		//std::array<VkImageView, 2> attachments = {swapChainImageViews[i], depthImageView};
-		std::array<VkImageView, 2> attachments = {swapChainTextures[i].imageView, depthTexture.imageView};
+		std::array<VkImageView, 3> attachments = {colorTexture.imageView, depthTexture.imageView, swapChainTextures[i].imageView};
 
 		VkFramebufferCreateInfo framebufferInfo{};
 		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -261,11 +271,12 @@ void Window::CreateDepthResources()
 	configuration.format = device.FindDepthFormat();
 	configuration.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 	configuration.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
+	configuration.sampleCount = device.MaxSampleCount();
 
 	depthTexture.CreateImage(configuration, true);
 }
 
-void Window::CreateColorResources() //function still needs to be called!!!!!
+void Window::CreateColorResources()
 {
 	if (colorTexture.image != nullptr || colorTexture.imageMemory != nullptr || colorTexture.imageView != nullptr)
 		throw std::runtime_error("cannot create color resources because they already exist");
@@ -286,13 +297,14 @@ void Window::CreateRenderPass()
 
 	VkAttachmentDescription colorAttachment{};
 	colorAttachment.format = swapChainImageFormat;
-	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	colorAttachment.samples = device.MaxSampleCount();
 	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 	colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	//colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 	VkAttachmentReference colorAttachmentRef{};
 	colorAttachmentRef.attachment = 0;
@@ -300,7 +312,7 @@ void Window::CreateRenderPass()
 
 	VkAttachmentDescription depthAttachment{};
 	depthAttachment.format = device.FindDepthFormat();
-	depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	depthAttachment.samples = device.MaxSampleCount();
 	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -312,21 +324,37 @@ void Window::CreateRenderPass()
 	depthAttachmentRef.attachment = 1;
 	depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
+	VkAttachmentDescription colorAttachmentResolve{};
+	colorAttachmentResolve.format = swapChainImageFormat;
+	colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
+	colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+	VkAttachmentReference colorAttachmentResolveRef{};
+	colorAttachmentResolveRef.attachment = 2;
+	colorAttachmentResolveRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
 	VkSubpassDescription subpass{};
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &colorAttachmentRef;
 	subpass.pDepthStencilAttachment = &depthAttachmentRef;
+	subpass.pResolveAttachments = &colorAttachmentResolveRef;
 
 	VkSubpassDependency dependency{};
 	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 	dependency.dstSubpass = 0;
 	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-	dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+	//dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+	dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-	std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+	std::array<VkAttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorAttachmentResolve};
 	VkRenderPassCreateInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 	renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
@@ -355,6 +383,7 @@ void Window::RecreateSwapChain()
 	device.WaitForIdle();
 
 	DestroyDepthResources();
+	DestroyColorResources();
 	DestroyFramebuffers();
 	DestroyImageViews();
 	DestroySwapChain();
@@ -364,6 +393,7 @@ void Window::RecreateSwapChain()
 
 	CreateSwapChain();
 	CreateImageViews();
+	CreateColorResources();
 	CreateDepthResources();
 	CreateFramebuffers();
 }
@@ -443,6 +473,11 @@ void Window::DestroyDepthResources()
 	//}
 
 	depthTexture.Destroy();
+}
+
+void Window::DestroyColorResources()
+{
+	colorTexture.Destroy();
 }
 
 void Window::SetMouseVisibility(bool visible)

@@ -29,7 +29,7 @@ PipelineConfiguration Pipeline::DefaultConfiguration()
 	configuration.rasterization.depthClampEnable = VK_FALSE;
 	configuration.rasterization.rasterizerDiscardEnable = VK_FALSE;
 	configuration.rasterization.polygonMode = VK_POLYGON_MODE_FILL;
-	configuration.rasterization.lineWidth = 3.0f;
+	configuration.rasterization.lineWidth = 1.0f;
 	configuration.rasterization.cullMode = VK_CULL_MODE_BACK_BIT;
 	configuration.rasterization.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	configuration.rasterization.depthBiasEnable = VK_FALSE;
@@ -168,6 +168,8 @@ void Pipeline::CreateGraphicsPipeline(std::string vertexShader, std::string frag
 	}
 
 	if (Manager::settings.wireframe) configuration.rasterization.polygonMode = VK_POLYGON_MODE_LINE;
+
+	configuration.multisampling.rasterizationSamples = device.MaxSampleCount();
 
 	VkGraphicsPipelineCreateInfo graphicsPipelineInfo{};
 	graphicsPipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

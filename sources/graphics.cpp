@@ -198,11 +198,14 @@ void Graphics::Create()
 
 	device.Create(instance, window.surface);
 
-	window.CreateSwapChain();
-	window.CreateImageViews();
-	window.CreateRenderPass();
-	window.CreateDepthResources();
-	window.CreateFramebuffers();
+	//window.CreateSwapChain();
+	//window.CreateImageViews();
+	//window.CreateRenderPass();
+	//window.CreateColorResources();
+	//window.CreateDepthResources();
+	//window.CreateFramebuffers();
+
+	window.CreateResources();
 
 	device.CreateCommandPool();
 	device.CreateCommandBuffers();
@@ -243,6 +246,7 @@ void Graphics::Destroy()
 	window.DestroyFramebuffers();
 	window.DestroyRenderPass();
 	window.DestroyDepthResources();
+	window.DestroyColorResources();
 	window.DestroyImageViews();
 	window.DestroySwapChain();
 	window.DestroySurface(instance);

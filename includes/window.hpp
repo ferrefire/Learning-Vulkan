@@ -48,6 +48,7 @@ class Window
 		void Destroy();
 		void Close();
 
+		void CreateResources();
 		void CreateSurface(VkInstance instance);
 		void CreateSwapChain();
 		void CreateImageViews();
