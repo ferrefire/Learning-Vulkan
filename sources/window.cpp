@@ -265,7 +265,7 @@ void Window::CreateDepthResources()
 	depthTexture.CreateImage(configuration, true);
 }
 
-void Window::CreateColorResources()
+void Window::CreateColorResources() //function still needs to be called!!!!!
 {
 	if (colorTexture.image != nullptr || colorTexture.imageMemory != nullptr || colorTexture.imageView != nullptr)
 		throw std::runtime_error("cannot create color resources because they already exist");
