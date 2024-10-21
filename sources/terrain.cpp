@@ -14,7 +14,7 @@ void Terrain::Create()
 
 void Terrain::CreateTextures()
 {
-    noise.CreateTexture("perlin_noise_256.jpeg");
+	noiseTexture.CreateTexture("perlin_noise_256.jpeg");
 }
 
 void Terrain::CreateMeshes()
@@ -40,8 +40,8 @@ void Terrain::CreatePipeline()
     descriptorConfiguration[1].type = IMAGE_SAMPLER;
     descriptorConfiguration[1].stages = VERTEX_STAGE | FRAGMENT_STAGE;
     descriptorConfiguration[1].imageInfo.imageLayout = IMAGE_READ_ONLY;
-    descriptorConfiguration[1].imageInfo.imageView = noise.imageView;
-    descriptorConfiguration[1].imageInfo.sampler = noise.sampler;
+    descriptorConfiguration[1].imageInfo.imageView = noiseTexture.imageView;
+    descriptorConfiguration[1].imageInfo.sampler = noiseTexture.sampler;
 
     PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
     VertexInfo vertexInfo = mesh.MeshVertexInfo();
@@ -64,7 +64,7 @@ void Terrain::Destroy()
 
 void Terrain::DestroyTextures()
 {
-	noise.Destroy();
+	noiseTexture.Destroy();
 }
 
 void Terrain::DestroyMeshes()
@@ -95,6 +95,6 @@ void Terrain::RecordCommands(VkCommandBuffer commandBuffer)
 //Mesh &Terrain::mesh = Manager::NewMesh();
 
 Pipeline Terrain::pipeline{Manager::currentDevice, Manager::currentCamera};
-Texture Terrain::noise{Manager::currentDevice};
+Texture Terrain::noiseTexture{Manager::currentDevice};
 Mesh Terrain::mesh{};
 Object Terrain::object{&Terrain::mesh, &Terrain::pipeline};

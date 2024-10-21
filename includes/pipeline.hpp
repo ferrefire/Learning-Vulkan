@@ -85,7 +85,7 @@ class Pipeline
         void Create();
         void Create(std::string shader, PipelineConfiguration pipelineConfig, std::vector<DescriptorConfiguration> descriptorConfig, VertexInfo vertexInfo);
         void CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VertexInfo &vertexInfo, PipelineConfiguration &configuration);
-        void CreateDescriptorSetLayout();
+        //void CreateDescriptorSetLayout();
         void CreateDescriptorSetLayout(std::vector<DescriptorConfiguration> &configuration);
         void CreateUniformBuffers();
         //void CreateDescriptorPool();

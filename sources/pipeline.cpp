@@ -87,6 +87,7 @@ Pipeline::~Pipeline()
 
 void Pipeline::Create()
 {
+	/*
 	CreateDescriptorSetLayout();
 
 	VertexInfo vertexInfo = Mesh::GetVertexInfo(true, true);
@@ -111,6 +112,25 @@ void Pipeline::Create()
 	CreateUniformBuffers();
 	CreateDescriptorPool(descriptorConfiguration);
 	CreateDescriptorSets(descriptorConfiguration);
+	*/
+
+	VertexInfo vertexInfo = Mesh::GetVertexInfo(true, true);
+	PipelineConfiguration pipelineConfiguration = DefaultConfiguration();
+	std::vector<DescriptorConfiguration> descriptorConfiguration;
+	descriptorConfiguration.resize(2);
+
+	descriptorConfiguration[0].type = UNIFORM_BUFFER;
+	descriptorConfiguration[0].stages = VERTEX_STAGE;
+	descriptorConfiguration[0].bufferInfo.offset = 0;
+	descriptorConfiguration[0].bufferInfo.range = sizeof(UniformBufferObject);
+
+	descriptorConfiguration[1].type = IMAGE_SAMPLER;
+	descriptorConfiguration[1].stages = FRAGMENT_STAGE;
+	descriptorConfiguration[1].imageInfo.imageLayout = IMAGE_READ_ONLY;
+	descriptorConfiguration[1].imageInfo.imageView = Texture::Statue()->imageView;
+	descriptorConfiguration[1].imageInfo.sampler = Texture::Statue()->sampler;
+
+	Create("simple", pipelineConfiguration, descriptorConfiguration, vertexInfo);
 }
 
 void Pipeline::Create(std::string shader, PipelineConfiguration pipelineConfig, std::vector<DescriptorConfiguration> descriptorConfig, VertexInfo vertexInfo)
@@ -228,6 +248,7 @@ VkShaderModule Pipeline::CreateShaderModule(const std::vector<char> &code)
 	return (shaderModule);
 }
 
+/*
 void Pipeline::CreateDescriptorSetLayout()
 {
     if (descriptorSetLayout) throw std::runtime_error("cannot create descriptor set layout because it already exists");
@@ -257,6 +278,7 @@ void Pipeline::CreateDescriptorSetLayout()
 		throw std::runtime_error("failed to create descriptor set layout");
 	}
 }
+*/
 
 void Pipeline::CreateDescriptorSetLayout(std::vector<DescriptorConfiguration> &configuration)
 {
