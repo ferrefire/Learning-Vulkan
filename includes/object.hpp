@@ -3,6 +3,7 @@
 #include "pipeline.hpp"
 #include "mesh.hpp"
 #include "buffer.hpp"
+//#include "descriptor.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -41,8 +42,16 @@ class Object
 		UniformBufferObject ubo;
 		std::vector<Buffer> uniformBuffers;
 
+		//Descriptor descriptor;
+
+		void Create();
 		void CreateUniformBuffers();
+		//void CreateDescriptor();
+
+		void Destroy();
 		void DestroyUniformBuffers();
+		//void DestroyDescriptor();
+
 		void UpdateUniformBuffer(uint32_t currentImage);
 
 		void Move(glm::vec3 amount);

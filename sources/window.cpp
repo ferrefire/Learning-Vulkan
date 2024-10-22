@@ -265,15 +265,17 @@ void Window::CreateDepthResources()
 	if (depthTexture.image != nullptr || depthTexture.imageMemory != nullptr || depthTexture.imageView != nullptr)
 		throw std::runtime_error("cannot create depth resources because they already exist");
 
-	ImageConfiguration configuration;
-	configuration.width = swapChainExtent.width;
-	configuration.height = swapChainExtent.height;
-	configuration.format = device.FindDepthFormat();
-	configuration.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-	configuration.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
-	configuration.sampleCount = device.MaxSampleCount();
+	ImageConfiguration imageConfig;
+	imageConfig.width = swapChainExtent.width;
+	imageConfig.height = swapChainExtent.height;
+	imageConfig.format = device.FindDepthFormat();
+	imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	imageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
+	imageConfig.sampleCount = device.MaxSampleCount();
 
-	depthTexture.CreateImage(configuration, true);
+	SamplerConfiguration samplerConfig;
+
+	depthTexture.CreateImage(imageConfig, samplerConfig);
 }
 
 void Window::CreateColorResources()
@@ -281,14 +283,16 @@ void Window::CreateColorResources()
 	if (colorTexture.image != nullptr || colorTexture.imageMemory != nullptr || colorTexture.imageView != nullptr)
 		throw std::runtime_error("cannot create color resources because they already exist");
 
-	ImageConfiguration configuration;
-	configuration.width = swapChainExtent.width;
-	configuration.height = swapChainExtent.height;
-	configuration.format = swapChainImageFormat;
-	configuration.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	configuration.sampleCount = device.MaxSampleCount();
+	ImageConfiguration imageConfig;
+	imageConfig.width = swapChainExtent.width;
+	imageConfig.height = swapChainExtent.height;
+	imageConfig.format = swapChainImageFormat;
+	imageConfig.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	imageConfig.sampleCount = device.MaxSampleCount();
 
-	colorTexture.CreateImage(configuration, true);
+	SamplerConfiguration samplerConfig;
+
+	colorTexture.CreateImage(imageConfig, samplerConfig);
 }
 
 void Window::CreateRenderPass()

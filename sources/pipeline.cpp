@@ -85,67 +85,51 @@ Pipeline::~Pipeline()
     Destroy();
 }
 
-void Pipeline::Create(std::vector<Buffer> *uniformBuffers)
+/*
+void Pipeline::Create(VertexInfo vertexInfo)
 {
-	/*
-	CreateDescriptorSetLayout();
-
-	VertexInfo vertexInfo = Mesh::GetVertexInfo(true, true);
+	//VertexInfo vertexInfo = Mesh::GetVertexInfo(true, true);
 	PipelineConfiguration pipelineConfiguration = DefaultConfiguration();
-	CreateGraphicsPipeline("simple", "simple", vertexInfo, pipelineConfiguration);
 
-	//texture.CreateTexture("texture.jpg");
-	std::vector<DescriptorConfiguration> descriptorConfiguration;
-	descriptorConfiguration.resize(2);
+	//std::vector<DescriptorConfiguration> descriptorConfiguration;
+	//descriptorConfiguration.resize(2);
+	//descriptorConfiguration[0].type = UNIFORM_BUFFER;
+	//descriptorConfiguration[0].stages = VERTEX_STAGE;
+	//descriptorConfiguration[0].bufferInfo.offset = 0;
+	//descriptorConfiguration[0].bufferInfo.range = sizeof(UniformBufferObject);
+	//descriptorConfiguration[0].buffers = uniformBuffers;
+	//descriptorConfiguration[1].type = IMAGE_SAMPLER;
+	//descriptorConfiguration[1].stages = FRAGMENT_STAGE;
+	//descriptorConfiguration[1].imageInfo.imageLayout = IMAGE_READ_ONLY;
+	//descriptorConfiguration[1].imageInfo.imageView = Texture::Statue()->imageView;
+	//descriptorConfiguration[1].imageInfo.sampler = Texture::Statue()->sampler;
 
-	descriptorConfiguration[0].type = UNIFORM_BUFFER;
-	descriptorConfiguration[0].stages = VERTEX_STAGE;
-	descriptorConfiguration[0].bufferInfo.offset = 0;
-	descriptorConfiguration[0].bufferInfo.range = sizeof(UniformBufferObject);
-
-	descriptorConfiguration[1].type = IMAGE_SAMPLER;
-	descriptorConfiguration[1].stages = FRAGMENT_STAGE;
-	descriptorConfiguration[1].imageInfo.imageLayout = IMAGE_READ_ONLY;
-	descriptorConfiguration[1].imageInfo.imageView = Texture::Statue()->imageView;
-	descriptorConfiguration[1].imageInfo.sampler = Texture::Statue()->sampler;
-
-	CreateUniformBuffers();
-	CreateDescriptorPool(descriptorConfiguration);
-	CreateDescriptorSets(descriptorConfiguration);
-	*/
-
-	VertexInfo vertexInfo = Mesh::GetVertexInfo(true, true);
-	PipelineConfiguration pipelineConfiguration = DefaultConfiguration();
-	std::vector<DescriptorConfiguration> descriptorConfiguration;
-	descriptorConfiguration.resize(2);
-
-	descriptorConfiguration[0].type = UNIFORM_BUFFER;
-	descriptorConfiguration[0].stages = VERTEX_STAGE;
-	descriptorConfiguration[0].bufferInfo.offset = 0;
-	descriptorConfiguration[0].bufferInfo.range = sizeof(UniformBufferObject);
-	descriptorConfiguration[0].buffers = uniformBuffers;
-
-	descriptorConfiguration[1].type = IMAGE_SAMPLER;
-	descriptorConfiguration[1].stages = FRAGMENT_STAGE;
-	descriptorConfiguration[1].imageInfo.imageLayout = IMAGE_READ_ONLY;
-	descriptorConfiguration[1].imageInfo.imageView = Texture::Statue()->imageView;
-	descriptorConfiguration[1].imageInfo.sampler = Texture::Statue()->sampler;
-
-	Create("simple", pipelineConfiguration, descriptorConfiguration, vertexInfo);
+	Create("simple", pipelineConfiguration, vertexInfo);
 }
+*/
 
-void Pipeline::Create(std::string shader, PipelineConfiguration pipelineConfig, std::vector<DescriptorConfiguration> descriptorConfig, VertexInfo vertexInfo)
+void Pipeline::Create(std::string shader, std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig, PipelineConfiguration &pipelineConfig, VertexInfo &vertexInfo)
 {
-	CreateDescriptorSetLayout(descriptorConfig);
+	CreateDescriptorSetLayout(descriptorLayoutConfig);
 	CreateGraphicsPipeline(shader, shader, vertexInfo, pipelineConfig);
-	//CreateUniformBuffers();
-	CreateDescriptorPool(descriptorConfig);
-	CreateDescriptorSets(descriptorConfig);
+	//CreateDescriptorPool(descriptorConfig);
+	//CreateDescriptorSets(descriptorConfig);
 }
+
+/*
+void Pipeline::CreateCompute(std::string shader)
+{
+	//CreateDescriptorSetLayout(descriptorConfig);
+	CreateComputePipeline(shader);
+	//CreateDescriptorPool(descriptorConfig);
+	//CreateDescriptorSets(descriptorConfig);
+}
+*/
 
 void Pipeline::CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VertexInfo &vertexInfo, PipelineConfiguration &configuration)
 {
     if (graphicsPipeline) throw std::runtime_error("cannot create graphics pipeline because it already exists");
+    if (!descriptorSetLayout) throw std::runtime_error("cannot create graphics pipeline because descriptor set layout does not exist");
 
 	std::string currentPath = Utilities::GetPath();
 
@@ -233,6 +217,7 @@ void Pipeline::CreateGraphicsPipeline(std::string vertexShader, std::string frag
 	vkDestroyShaderModule(device.logicalDevice, fragmentShaderModule, nullptr);
 }
 
+/*
 void Pipeline::CreateComputePipeline(std::string computeShader)
 {
 	if (computePipeline) throw std::runtime_error("cannot create compute pipeline because it already exists");
@@ -243,16 +228,35 @@ void Pipeline::CreateComputePipeline(std::string computeShader)
 
 	VkShaderModule computeShaderModule = CreateShaderModule(computeCode);
 
-	VkPipelineShaderStageCreateInfo vertexShaderStageInfo{};
-	vertexShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	vertexShaderStageInfo.stage = COMPUTE_STAGE;
-	vertexShaderStageInfo.module = computeShaderModule;
-	vertexShaderStageInfo.pName = "main";
+	VkPipelineShaderStageCreateInfo computeShaderStageInfo{};
+	computeShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	computeShaderStageInfo.stage = COMPUTE_STAGE;
+	computeShaderStageInfo.module = computeShaderModule;
+	computeShaderStageInfo.pName = "main";
 
+	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+	pipelineLayoutInfo.setLayoutCount = 1;
+	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
+	if (vkCreatePipelineLayout(device.logicalDevice, &pipelineLayoutInfo, nullptr, &computePipelineLayout) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create compute pipeline layout");
+	}
+
+	VkComputePipelineCreateInfo pipelineInfo{};
+	pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+	pipelineInfo.layout = computePipelineLayout;
+	pipelineInfo.stage = computeShaderStageInfo;
+
+	if (vkCreateComputePipelines(device.logicalDevice, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &computePipeline) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create compute pipeline");
+	}
 
 	vkDestroyShaderModule(device.logicalDevice, computeShaderModule, nullptr);
 }
+*/
 
 VkShaderModule Pipeline::CreateShaderModule(const std::vector<char> &code)
 {
@@ -302,15 +306,15 @@ void Pipeline::CreateDescriptorSetLayout()
 }
 */
 
-void Pipeline::CreateDescriptorSetLayout(std::vector<DescriptorConfiguration> &configuration)
+void Pipeline::CreateDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig)
 {
     if (descriptorSetLayout) throw std::runtime_error("cannot create descriptor set layout because it already exists");
 
 	std::vector<VkDescriptorSetLayoutBinding> bindings;
-	bindings.resize(configuration.size());
+	bindings.resize(descriptorLayoutConfig.size());
 
 	int index = 0;
-	for (DescriptorConfiguration &config : configuration)
+	for (DescriptorLayoutConfiguration &config : descriptorLayoutConfig)
 	{
 		bindings[index].binding = index;
 		bindings[index].descriptorCount = 1;
@@ -373,7 +377,6 @@ void Pipeline::CreateDescriptorPool()
 		throw std::runtime_error("failed to create descriptor pool");
 	}
 }
-*/
 
 void Pipeline::CreateDescriptorPool(std::vector<DescriptorConfiguration> &configuration)
 {
@@ -402,7 +405,6 @@ void Pipeline::CreateDescriptorPool(std::vector<DescriptorConfiguration> &config
 	}
 }
 
-/*
 void Pipeline::CreateDescriptorSets()
 {
     if (descriptorSets.size() != 0) throw std::runtime_error("cannot create descriptor sets because they already exist");
@@ -453,7 +455,6 @@ void Pipeline::CreateDescriptorSets()
 		vkUpdateDescriptorSets(device.logicalDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 	}
 }
-*/
 
 void Pipeline::CreateDescriptorSets(std::vector<DescriptorConfiguration> &configuration)
 {
@@ -496,7 +497,7 @@ void Pipeline::CreateDescriptorSets(std::vector<DescriptorConfiguration> &config
 				descriptorWrites[index].descriptorCount = 1;
 				descriptorWrites[index].pBufferInfo = &config.bufferInfo;
 			}
-			else if (config.type == IMAGE_SAMPLER)
+			else if (config.type == IMAGE_SAMPLER || config.type == IMAGE_STORAGE)
 			{
 				//VkDescriptorImageInfo imageInfo{};
 				//imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -519,7 +520,6 @@ void Pipeline::CreateDescriptorSets(std::vector<DescriptorConfiguration> &config
 	}
 }
 
-/*
 void Pipeline::UpdateUniformBuffer(glm::mat4 translation, uint32_t currentImage)
 {
 	//ubo.model = glm::rotate(glm::mat4(1.0f), Time::currentFrame * glm::radians(90.0f), glm::vec3(0.5f, 1.0f, 0.25f));
@@ -549,7 +549,7 @@ void Pipeline::Bind(VkCommandBuffer commandBuffer, Window &window)
 	scissor.extent = window.swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineLayout, 0, 1, &descriptorSets[Manager::currentFrame], 0, nullptr);
+	//vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineLayout, 0, 1, &descriptorSets[Manager::currentFrame], 0, nullptr);
 }
 
 void Pipeline::Destroy()
@@ -559,7 +559,7 @@ void Pipeline::Destroy()
 	//texture.Destroy();
 
 	//DestroyUniformBuffers();
-	DestroyDescriptorPool();
+	//DestroyDescriptorPool();
 	DestroyDescriptorSetLayout();
 }
 
@@ -580,7 +580,7 @@ void Pipeline::DestroyGraphicsPipeline()
 
 void Pipeline::DestroyDescriptorSetLayout()
 {
-    if (!descriptorSetLayout) return;
+	if (!descriptorSetLayout) return;
 
 	vkDestroyDescriptorSetLayout(device.logicalDevice, descriptorSetLayout, nullptr);
 	descriptorSetLayout = nullptr;
@@ -589,7 +589,7 @@ void Pipeline::DestroyDescriptorSetLayout()
 /*
 void Pipeline::DestroyUniformBuffers()
 {
-    for (VkBuffer &buffer : uniformBuffers)
+	for (VkBuffer &buffer : uniformBuffers)
 	{
 		vkDestroyBuffer(device.logicalDevice, buffer, nullptr);
 	}
@@ -602,12 +602,12 @@ void Pipeline::DestroyUniformBuffers()
 	uniformBuffersMemory.clear();
 	uniformBuffersMapped.clear();
 }
-*/
 
 void Pipeline::DestroyDescriptorPool()
 {
-    if (!descriptorPool) return;
+	if (!descriptorPool) return;
 
 	vkDestroyDescriptorPool(device.logicalDevice, descriptorPool, nullptr);
 	descriptorPool = nullptr;
 }
+*/

@@ -16,7 +16,13 @@ Object::Object(Mesh *mesh, Pipeline *pipeline) : mesh{mesh} , pipeline{pipeline}
 
 Object::~Object()
 {
-	DestroyUniformBuffers();
+	Destroy();
+}
+
+void Object::Create()
+{
+	CreateUniformBuffers();
+	//CreateDescriptor();
 }
 
 void Object::CreateUniformBuffers()
@@ -38,6 +44,35 @@ void Object::CreateUniformBuffers()
 	}
 }
 
+/*
+void Object::CreateDescriptor()
+{
+	if (!pipeline || !pipeline->descriptorSetLayout) throw std::runtime_error("cannot create descriptor because pipeline descriptor set layout does not exist");
+
+	std::vector<DescriptorConfiguration> descriptorConfig(1);
+	descriptorConfig[0].type = UNIFORM_BUFFER;
+	descriptorConfig[0].stages = VERTEX_STAGE;
+
+	descriptorConfig[0].buffersInfo.resize(uniformBuffers.size());
+	int i = 0;
+	for (Buffer &buffer : uniformBuffers)
+	{
+		descriptorConfig[0].buffersInfo[i].buffer = uniformBuffers[i].buffer;
+		descriptorConfig[0].buffersInfo[i].range = sizeof(UniformBufferObject);
+		descriptorConfig[0].buffersInfo[i].offset = 0;
+		i++;
+	}
+
+	descriptor.Create(descriptorConfig, pipeline->descriptorSetLayout, 0);
+}
+*/
+
+void Object::Destroy()
+{
+	//DestroyDescriptor();
+	DestroyUniformBuffers();
+}
+
 void Object::DestroyUniformBuffers()
 {
 	for (Buffer &buffer : uniformBuffers)
@@ -47,6 +82,13 @@ void Object::DestroyUniformBuffers()
 
 	uniformBuffers.clear();
 }
+
+/*
+void Object::DestroyDescriptor()
+{
+	descriptor.Destroy();
+}
+*/
 
 void Object::Move(glm::vec3 amount)
 {

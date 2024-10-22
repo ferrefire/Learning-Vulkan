@@ -17,6 +17,10 @@
 #define LAYOUT_READ_ONLY VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 #define LAYOUT_GENERAL VK_IMAGE_LAYOUT_GENERAL
 
+#define CLAMP_TO_EDGE VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE
+#define REPEAT VK_SAMPLER_ADDRESS_MODE_REPEAT
+#define MIRRORED_REPEAT VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT
+
 struct ImageConfiguration
 {
     VkImageType type = IMAGE_2D;
@@ -34,13 +38,14 @@ struct ImageConfiguration
     VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
     VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT;
+	bool createMipmaps = true;
 };
 
 struct SamplerConfiguration
 {
     VkFilter magFilter = VK_FILTER_LINEAR;
     VkFilter minFilter = VK_FILTER_LINEAR;
-    VkSamplerAddressMode repeatMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    VkSamplerAddressMode repeatMode = CLAMP_TO_EDGE;
     VkBool32 anisotrophic = VK_TRUE;
     VkBorderColor borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
     VkBool32 unnormalizedCoordinates = VK_FALSE;
@@ -63,6 +68,8 @@ class Texture
 		static void CreateDefaults();
 		static Texture *Statue();
 
+		static ImageConfiguration ImageStorage(uint32_t width, uint32_t height);
+
         Texture();
         Texture(Device &device);
         ~Texture();
@@ -72,19 +79,22 @@ class Texture
 		VkImageView imageView = nullptr;
 		VkSampler sampler = nullptr;
 
-        void CreateTexture(std::string name);
-        void CreateTextureImage(std::string name);
-        void CreateImage(ImageConfiguration &configuration, bool view);
-        void CreateImageView(ImageConfiguration &configuration);
-        void CreateSampler(SamplerConfiguration &configuration);
-        void CreateMipmaps(ImageConfiguration &configuration);
+		void CreateTexture(std::string name);
+		void CreateTexture(std::string name, SamplerConfiguration &samplerConfig);
+		void CreateTextureImage(std::string name, SamplerConfiguration &samplerConfig);
+		void CreateImage(ImageConfiguration &imageConfig);
+		void CreateImage(ImageConfiguration &imageConfig, SamplerConfiguration &samplerConfig);
+		void CreateImageView(ImageConfiguration &imageConfig);
+		void CreateImageView(ImageConfiguration &imageConfig, SamplerConfiguration &samplerConfig);
+		void CreateSampler(SamplerConfiguration &samplerConfig);
+		void CreateMipmaps(ImageConfiguration &imageConfig);
 
-        void Destroy();
+		void Destroy();
         void DestroyImage();
         void DestroyImageView();
 		void DestroySampler();
 
         static stbi_uc *LoadTexture(const std::string path, int *texWidth, int *texHeight, int *texChannels);
-        void TransitionImageLayout(ImageConfiguration &configuration, VkImageLayout newLayout);
+		void TransitionImageLayout(ImageConfiguration &imageConfig, VkImageLayout newLayout);
 		//void CopyFrom(VkBuffer buffer, ImageConfiguration &configuration);
 };

@@ -4,6 +4,7 @@
 #include "mesh.hpp"
 #include "object.hpp"
 #include "texture.hpp"
+#include "descriptor.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -19,23 +20,27 @@ class Terrain
 
     public:
         static Mesh mesh;
-        static Pipeline pipeline;
-        static Object object;
-
-		static Texture noiseTexture;
+		static Pipeline graphicsPipeline;
+		static Pipeline computePipeline;
+		static Object object;
+		static Texture grassTexture;
 		static Texture heightMapTexture;
+		static Descriptor descriptor;
 
 		static void Create();
         static void CreateTextures();
 		static void CreateMeshes();
 		static void CreateObjects();
-		static void CreatePipeline();
+		static void CreateGraphicsPipeline();
+		static void CreateComputePipeline();
+		static void CreateDescriptor();
 
-        static void Destroy();
+		static void Destroy();
         static void DestroyTextures();
 		static void DestroyMeshes();
 		static void DestroyObjects();
-		static void DestroyPipeline();
+		static void DestroyPipelines();
+		static void DestroyDescriptor();
 
-        static void RecordCommands(VkCommandBuffer commandBuffer);
+		static void RecordCommands(VkCommandBuffer commandBuffer);
 };

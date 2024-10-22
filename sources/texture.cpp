@@ -17,6 +17,19 @@ void Texture::CreateDefaults()
 	statue->CreateTexture("texture.jpg");
 }
 
+ImageConfiguration Texture::ImageStorage(uint32_t width, uint32_t height)
+{
+	ImageConfiguration imageConfig;
+	imageConfig.width = width;
+	imageConfig.height = height;
+	imageConfig.format = R16;
+	imageConfig.layout = LAYOUT_GENERAL;
+	imageConfig.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+	imageConfig.createMipmaps = false;
+
+	return (imageConfig);
+}
+
 Texture::Texture() : device{Manager::currentDevice}
 {
 
@@ -34,11 +47,14 @@ Texture::~Texture()
 
 void Texture::CreateTexture(std::string name)
 {
-    //this->device = device;
-    CreateTextureImage(name);
-    //CreateImageView();
-	//SamplerConfiguration samplerConfiguration;
-    //CreateSampler(samplerConfiguration);
+	SamplerConfiguration samplerConfig;
+
+    CreateTextureImage(name, samplerConfig);
+}
+
+void Texture::CreateTexture(std::string name, SamplerConfiguration &samplerConfig)
+{
+	CreateTextureImage(name, samplerConfig);
 }
 
 void Texture::Destroy()
@@ -60,7 +76,7 @@ stbi_uc *Texture::LoadTexture(const std::string path, int *texWidth, int *texHei
 	return (pixels);
 }
 
-void Texture::CreateTextureImage(std::string name)
+void Texture::CreateTextureImage(std::string name, SamplerConfiguration &samplerConfig)
 {
     if (image != nullptr || imageMemory != nullptr)
 		throw std::runtime_error("cannot create texture image because it already exists");
@@ -70,70 +86,49 @@ void Texture::CreateTextureImage(std::string name)
 	stbi_uc *pixels = Texture::LoadTexture(Utilities::GetPath() + "/textures/" + name, &texWidth, &texHeight, &texChannels);
 	imageSize = texWidth * texHeight * 4;
 
-	ImageConfiguration configuration;
-	configuration.width = texWidth;
-	configuration.height = texHeight;
-	configuration.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-	configuration.layout = VK_IMAGE_LAYOUT_UNDEFINED;
-	configuration.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
-
-	//VkBuffer stagingBuffer;
-	//VkDeviceMemory stagingBufferMemory;
-	//device.CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
-	//	VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-	//void *data;
-	//vkMapMemory(device.logicalDevice, stagingBufferMemory, 0, imageSize, 0, &data);
-	//memcpy(data, pixels, static_cast<size_t>(imageSize));
-	//vkUnmapMemory(device.logicalDevice, stagingBufferMemory);
+	ImageConfiguration imageConfig;
+	imageConfig.width = texWidth;
+	imageConfig.height = texHeight;
+	imageConfig.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	imageConfig.layout = VK_IMAGE_LAYOUT_UNDEFINED;
+	imageConfig.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
 
 	Buffer stagingBuffer;
 	stagingBuffer.CreateStagingBuffer(pixels, imageSize);
 
 	stbi_image_free(pixels);
 
-	CreateImage(configuration, false);
+	CreateImage(imageConfig);
 
-	//Images::CreateImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | 
-	//	VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, image, imageMemory, *device);
+	TransitionImageLayout(imageConfig, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-	TransitionImageLayout(configuration, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-	//device.CopyBufferToImage(stagingBuffer, image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-	stagingBuffer.CopyTo(image, configuration);
-	//device.TransitionImageLayout(image, configuration, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-	//vkDestroyBuffer(device.logicalDevice, stagingBuffer, nullptr);
-	//vkFreeMemory(device.logicalDevice, stagingBufferMemory, nullptr);
+	stagingBuffer.CopyTo(image, imageConfig);
 	stagingBuffer.Destroy();
 
-	CreateMipmaps(configuration);
+	CreateMipmaps(imageConfig);
 
-	CreateImageView(configuration);
-
-	//SamplerConfiguration samplerConfiguration;
-	//samplerConfiguration.minLod = static_cast<float>(configuration.mipLevels / 2);
-
-    //CreateSampler(samplerConfiguration);
+	CreateImageView(imageConfig, samplerConfig);
 }
 
-void Texture::CreateImage(ImageConfiguration &configuration, bool view)
+void Texture::CreateImage(ImageConfiguration &imageConfig)
 {
     if (image != nullptr || imageMemory != nullptr)
 		throw std::runtime_error("cannot create texture image because it already exists");
 
 	VkImageCreateInfo imageInfo{};
 	imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	imageInfo.imageType = configuration.type;
-	imageInfo.extent.width = configuration.width;
-	imageInfo.extent.height = configuration.height;
-	imageInfo.extent.depth = configuration.depth;
-	imageInfo.mipLevels = configuration.mipLevels;
-	imageInfo.arrayLayers = configuration.arrayLayers;
-	imageInfo.format = configuration.format;
-	imageInfo.tiling = configuration.tiling;
-	imageInfo.initialLayout = configuration.layout;
-	imageInfo.usage = configuration.usage;
-	imageInfo.samples = configuration.sampleCount;
-	imageInfo.sharingMode = configuration.sharingMode;
+	imageInfo.imageType = imageConfig.type;
+	imageInfo.extent.width = imageConfig.width;
+	imageInfo.extent.height = imageConfig.height;
+	imageInfo.extent.depth = imageConfig.depth;
+	imageInfo.mipLevels = imageConfig.mipLevels;
+	imageInfo.arrayLayers = imageConfig.arrayLayers;
+	imageInfo.format = imageConfig.format;
+	imageInfo.tiling = imageConfig.tiling;
+	imageInfo.initialLayout = imageConfig.layout;
+	imageInfo.usage = imageConfig.usage;
+	imageInfo.samples = imageConfig.sampleCount;
+	imageInfo.sharingMode = imageConfig.sharingMode;
 
 	if (vkCreateImage(device.logicalDevice, &imageInfo, nullptr, &image) != VK_SUCCESS)
 	{
@@ -146,7 +141,7 @@ void Texture::CreateImage(ImageConfiguration &configuration, bool view)
 	VkMemoryAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex = device.FindMemoryType(memRequirements.memoryTypeBits, configuration.memoryProperties);
+	allocInfo.memoryTypeIndex = device.FindMemoryType(memRequirements.memoryTypeBits, imageConfig.memoryProperties);
 
 	if (vkAllocateMemory(device.logicalDevice, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
 	{
@@ -154,24 +149,34 @@ void Texture::CreateImage(ImageConfiguration &configuration, bool view)
 	}
 
 	vkBindImageMemory(device.logicalDevice, image, imageMemory, 0);
-
-	if (view) CreateImageView(configuration);
 }
 
-void Texture::CreateImageView(ImageConfiguration &configuration)
+void Texture::CreateImage(ImageConfiguration &imageConfig, SamplerConfiguration &samplerConfig)
+{
+	CreateImage(imageConfig);
+	CreateImageView(imageConfig, samplerConfig);
+}
+
+void Texture::CreateImageView(ImageConfiguration &imageConfig)
+{
+	SamplerConfiguration samplerConfig;
+	CreateImageView(imageConfig, samplerConfig);
+}
+
+void Texture::CreateImageView(ImageConfiguration &imageConfig, SamplerConfiguration &samplerConfig)
 {
     if (imageView != nullptr) throw std::runtime_error("cannot create texture image view because it already exists");
 
 	VkImageViewCreateInfo viewInfo{};
 	viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 	viewInfo.image = image;
-	viewInfo.viewType = configuration.viewType;
-	viewInfo.format = configuration.format;
-	viewInfo.subresourceRange.aspectMask = configuration.aspect;
+	viewInfo.viewType = imageConfig.viewType;
+	viewInfo.format = imageConfig.format;
+	viewInfo.subresourceRange.aspectMask = imageConfig.aspect;
 	viewInfo.subresourceRange.baseMipLevel = 0;
-	viewInfo.subresourceRange.levelCount = configuration.mipLevels;
+	viewInfo.subresourceRange.levelCount = imageConfig.mipLevels;
 	viewInfo.subresourceRange.baseArrayLayer = 0;
-	viewInfo.subresourceRange.layerCount = configuration.arrayLayers;
+	viewInfo.subresourceRange.layerCount = imageConfig.arrayLayers;
 
 	if (vkCreateImageView(device.logicalDevice, &viewInfo, nullptr, &imageView) != VK_SUCCESS)
 	{
@@ -180,8 +185,8 @@ void Texture::CreateImageView(ImageConfiguration &configuration)
 
 	//imageView = Images::CreateImageView(image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, *device);
 
-	SamplerConfiguration samplerConfiguration;
-	CreateSampler(samplerConfiguration);
+	//SamplerConfiguration samplerConfiguration;
+	CreateSampler(samplerConfig);
 }
 
 /*
@@ -214,27 +219,27 @@ void Texture::CreateSampler()
 }
 */
 
-void Texture::CreateSampler(SamplerConfiguration &configuration)
+void Texture::CreateSampler(SamplerConfiguration &samplerConfig)
 {
     if (sampler != nullptr) throw std::runtime_error("cannot create texture sampler because it already exists");
 
 	VkSamplerCreateInfo samplerInfo{};
 	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	samplerInfo.magFilter = configuration.magFilter;
-	samplerInfo.minFilter = configuration.minFilter;
-	samplerInfo.addressModeU = configuration.repeatMode;
-	samplerInfo.addressModeV = configuration.repeatMode;
-	samplerInfo.addressModeW = configuration.repeatMode;
-	samplerInfo.anisotropyEnable = configuration.anisotrophic;
+	samplerInfo.magFilter = samplerConfig.magFilter;
+	samplerInfo.minFilter = samplerConfig.minFilter;
+	samplerInfo.addressModeU = samplerConfig.repeatMode;
+	samplerInfo.addressModeV = samplerConfig.repeatMode;
+	samplerInfo.addressModeW = samplerConfig.repeatMode;
+	samplerInfo.anisotropyEnable = samplerConfig.anisotrophic;
 	samplerInfo.maxAnisotropy = device.properties.limits.maxSamplerAnisotropy;
-	samplerInfo.borderColor = configuration.borderColor;
-	samplerInfo.unnormalizedCoordinates = configuration.unnormalizedCoordinates;
-	samplerInfo.compareEnable = configuration.compare;
-	samplerInfo.compareOp = configuration.compareOp;
-	samplerInfo.mipmapMode = configuration.mipmapMode;
-	samplerInfo.mipLodBias = configuration.mipLodBias;
-	samplerInfo.minLod = configuration.minLod;
-	samplerInfo.maxLod = configuration.maxLod;
+	samplerInfo.borderColor = samplerConfig.borderColor;
+	samplerInfo.unnormalizedCoordinates = samplerConfig.unnormalizedCoordinates;
+	samplerInfo.compareEnable = samplerConfig.compare;
+	samplerInfo.compareOp = samplerConfig.compareOp;
+	samplerInfo.mipmapMode = samplerConfig.mipmapMode;
+	samplerInfo.mipLodBias = samplerConfig.mipLodBias;
+	samplerInfo.minLod = samplerConfig.minLod;
+	samplerInfo.maxLod = samplerConfig.maxLod;
 
 	if (vkCreateSampler(device.logicalDevice, &samplerInfo, nullptr, &sampler) != VK_SUCCESS)
 	{
@@ -242,10 +247,10 @@ void Texture::CreateSampler(SamplerConfiguration &configuration)
 	}
 }
 
-void Texture::CreateMipmaps(ImageConfiguration &configuration)
+void Texture::CreateMipmaps(ImageConfiguration &imageConfig)
 {
 	VkFormatProperties formatProperties;
-    vkGetPhysicalDeviceFormatProperties(device.physicalDevice, configuration.format, &formatProperties);
+    vkGetPhysicalDeviceFormatProperties(device.physicalDevice, imageConfig.format, &formatProperties);
 
 	if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) 
 	{
@@ -259,15 +264,15 @@ void Texture::CreateMipmaps(ImageConfiguration &configuration)
     barrier.image = image;
     barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.subresourceRange.aspectMask = configuration.aspect;
+    barrier.subresourceRange.aspectMask = imageConfig.aspect;
     barrier.subresourceRange.baseArrayLayer = 0;
     barrier.subresourceRange.layerCount = 1;
     barrier.subresourceRange.levelCount = 1;
 
-	int32_t mipWidth = configuration.width;
-	int32_t mipHeight = configuration.height;
+	int32_t mipWidth = imageConfig.width;
+	int32_t mipHeight = imageConfig.height;
 
-	for (uint32_t i = 1; i < configuration.mipLevels; i++) 
+	for (uint32_t i = 1; i < imageConfig.mipLevels; i++) 
 	{
 		barrier.subresourceRange.baseMipLevel = i - 1;
 		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
@@ -280,13 +285,13 @@ void Texture::CreateMipmaps(ImageConfiguration &configuration)
 		VkImageBlit blit{};
 		blit.srcOffsets[0] = { 0, 0, 0 };
 		blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
-		blit.srcSubresource.aspectMask = configuration.aspect;
+		blit.srcSubresource.aspectMask = imageConfig.aspect;
 		blit.srcSubresource.mipLevel = i - 1;
 		blit.srcSubresource.baseArrayLayer = 0;
 		blit.srcSubresource.layerCount = 1;
 		blit.dstOffsets[0] = { 0, 0, 0 };
 		blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1, mipHeight > 1 ? mipHeight / 2 : 1, 1 };
-		blit.dstSubresource.aspectMask = configuration.aspect;
+		blit.dstSubresource.aspectMask = imageConfig.aspect;
 		blit.dstSubresource.mipLevel = i;
 		blit.dstSubresource.baseArrayLayer = 0;
 		blit.dstSubresource.layerCount = 1;
@@ -304,7 +309,7 @@ void Texture::CreateMipmaps(ImageConfiguration &configuration)
     	if (mipHeight > 1) mipHeight /= 2;
 	}
 
-	barrier.subresourceRange.baseMipLevel = configuration.mipLevels - 1;
+	barrier.subresourceRange.baseMipLevel = imageConfig.mipLevels - 1;
     barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
     barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -314,25 +319,25 @@ void Texture::CreateMipmaps(ImageConfiguration &configuration)
 
     device.EndSingleTimeCommands(commandBuffer);
 
-	configuration.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	imageConfig.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
 
-void Texture::TransitionImageLayout(ImageConfiguration &configuration, VkImageLayout newLayout)
+void Texture::TransitionImageLayout(ImageConfiguration &imageConfig, VkImageLayout newLayout)
 {
 	VkCommandBuffer commandBuffer = device.BeginSingleTimeCommands();
 
 	VkImageMemoryBarrier barrier{};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	barrier.oldLayout = configuration.layout;
+	barrier.oldLayout = imageConfig.layout;
 	barrier.newLayout = newLayout;
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.image = image;
-	barrier.subresourceRange.aspectMask = configuration.aspect;
+	barrier.subresourceRange.aspectMask = imageConfig.aspect;
 	barrier.subresourceRange.baseMipLevel = 0;
-	barrier.subresourceRange.levelCount = configuration.mipLevels;
+	barrier.subresourceRange.levelCount = imageConfig.mipLevels;
 	barrier.subresourceRange.baseArrayLayer = 0;
-	barrier.subresourceRange.layerCount = configuration.arrayLayers;
+	barrier.subresourceRange.layerCount = imageConfig.arrayLayers;
 	barrier.srcAccessMask = 0; // TODO
 	barrier.dstAccessMask = 0; // TODO
 
@@ -364,7 +369,7 @@ void Texture::TransitionImageLayout(ImageConfiguration &configuration, VkImageLa
 
 	device.EndSingleTimeCommands(commandBuffer);
 
-	configuration.layout = newLayout;
+	imageConfig.layout = newLayout;
 }
 
 /*
