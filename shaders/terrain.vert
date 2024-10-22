@@ -18,7 +18,7 @@ void main()
 {
     outTexCoord = vec2(inPosition.xz + 0.5);
     vec3 position = inPosition;
-    //position.y += texture(heightMapSampler, outTexCoord).r * 0.1;
+    position.y += texture(heightMapSampler, outTexCoord).r * 0.1;
 	outPosition = (ubo.model * vec4(position, 1.0)).xyz;
     gl_Position = ubo.projection * ubo.view * ubo.model * vec4(position, 1.0);
 }

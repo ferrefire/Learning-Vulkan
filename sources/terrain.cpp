@@ -3,6 +3,7 @@
 #include "manager.hpp"
 
 #include <stdexcept>
+#include <iostream>
 
 void Terrain::Create()
 {
@@ -168,6 +169,8 @@ void Terrain::Start()
 	computeDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT);
 	vkCmdDispatch(commandBuffer, 512, 512, 1);
 	Manager::currentDevice.EndSingleTimeComputeCommands(commandBuffer);
+
+	std::cout << "Computed!" << std::endl;
 }
 
 void Terrain::RecordCommands(VkCommandBuffer commandBuffer)
