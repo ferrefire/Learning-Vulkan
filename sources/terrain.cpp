@@ -25,6 +25,8 @@ void Terrain::CreateTextures()
 
 	ImageConfiguration heightMapConfig = Texture::ImageStorage(512, 512);
 	SamplerConfiguration heightMapSamplerConfig;
+	heightMapSamplerConfig.maxLod = 0.0f;
+	heightMapSamplerConfig.anisotrophic = VK_FALSE;
 	heightMapTexture.CreateImage(heightMapConfig, heightMapSamplerConfig);
 }
 
@@ -164,8 +166,8 @@ void Terrain::Start()
 	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginSingleTimeCommands();
 	computePipeline.BindCompute(commandBuffer);
 	computeDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT);
-	vkCmdDispatch(commandBuffer, 1, 1, 1);
-	Manager::currentDevice.EndSingleTimeCommands(commandBuffer);
+	vkCmdDispatch(commandBuffer, 512, 512, 1);
+	Manager::currentDevice.EndSingleTimeComputeCommands(commandBuffer);
 }
 
 void Terrain::RecordCommands(VkCommandBuffer commandBuffer)

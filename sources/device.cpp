@@ -435,14 +435,20 @@ VkCommandBuffer Device::BeginSingleTimeCommands()
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-	vkBeginCommandBuffer(commandBuffer, &beginInfo);
+	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to begin recording command buffer!");
+	}
 
 	return commandBuffer;
 }
 
 void Device::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
 {
-	vkEndCommandBuffer(commandBuffer);
+	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed record command buffer!");
+	}
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -451,6 +457,24 @@ void Device::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
 
 	vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 	vkQueueWaitIdle(graphicsQueue);
+
+	vkFreeCommandBuffers(logicalDevice, commandPool, 1, &commandBuffer);
+}
+
+void Device::EndSingleTimeComputeCommands(VkCommandBuffer commandBuffer)
+{
+	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed record command buffer!");
+	}
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffer;
+
+	vkQueueSubmit(computeQueue, 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(computeQueue);
 
 	vkFreeCommandBuffers(logicalDevice, commandPool, 1, &commandBuffer);
 }

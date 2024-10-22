@@ -106,7 +106,7 @@ void Texture::CreateTextureImage(std::string name, SamplerConfiguration &sampler
 	stagingBuffer.CopyTo(image, imageConfig);
 	stagingBuffer.Destroy();
 
-	CreateMipmaps(imageConfig);
+	if (imageConfig.createMipmaps) CreateMipmaps(imageConfig);
 
 	CreateImageView(imageConfig, samplerConfig);
 }

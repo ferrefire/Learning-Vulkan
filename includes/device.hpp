@@ -78,7 +78,8 @@ class Device
         void DestroyCommandPool();
 
         VkCommandBuffer BeginSingleTimeCommands();
-        void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
+		void EndSingleTimeComputeCommands(VkCommandBuffer commandBuffer);
 		VkSampleCountFlagBits MaxSampleCount();
 		VkSampleCountFlagBits MaxDeviceSampleCount();
 };

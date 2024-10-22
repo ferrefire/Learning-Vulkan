@@ -72,6 +72,11 @@ void Manager::Frame()
 	{
 		window.Close();
 	}
+	else if (Input::GetKey(GLFW_KEY_C).pressed)
+	{
+		Terrain::Start();
+	}
+	
 }
 
 void Manager::DestroyPipelines()
