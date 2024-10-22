@@ -22,7 +22,8 @@ ImageConfiguration Texture::ImageStorage(uint32_t width, uint32_t height)
 	ImageConfiguration imageConfig;
 	imageConfig.width = width;
 	imageConfig.height = height;
-	imageConfig.format = R16;
+	//imageConfig.format = R16;
+	imageConfig.format = R8G8B8A8;
 	imageConfig.layout = LAYOUT_GENERAL;
 	imageConfig.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
 	imageConfig.createMipmaps = false;

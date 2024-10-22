@@ -21,26 +21,29 @@ class Terrain
     public:
         static Mesh mesh;
 		static Pipeline graphicsPipeline;
+		static Descriptor graphicsDescriptor;
 		static Pipeline computePipeline;
+		static Descriptor computeDescriptor;
 		static Object object;
 		static Texture grassTexture;
 		static Texture heightMapTexture;
-		static Descriptor descriptor;
 
 		static void Create();
         static void CreateTextures();
 		static void CreateMeshes();
 		static void CreateObjects();
 		static void CreateGraphicsPipeline();
+		static void CreateGraphicsDescriptor();
 		static void CreateComputePipeline();
-		static void CreateDescriptor();
+		static void CreateComputeDescriptor();
 
 		static void Destroy();
         static void DestroyTextures();
 		static void DestroyMeshes();
 		static void DestroyObjects();
 		static void DestroyPipelines();
-		static void DestroyDescriptor();
+		static void DestroyDescriptors();
 
+		static void Start();
 		static void RecordCommands(VkCommandBuffer commandBuffer);
 };

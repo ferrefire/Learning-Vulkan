@@ -28,6 +28,9 @@
 
 #define IMAGE_READ_ONLY VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 
+#define GRAPHICS_BIND_POINT VK_PIPELINE_BIND_POINT_GRAPHICS
+#define COMPUTE_BIND_POINT VK_PIPELINE_BIND_POINT_COMPUTE
+
 struct PipelineConfiguration
 {
     //VkViewport viewport;
@@ -62,8 +65,6 @@ class Pipeline
         ~Pipeline();
 
 		VkDescriptorSetLayout descriptorSetLayout = nullptr;
-		//VkDescriptorPool descriptorPool = nullptr;
-		//std::vector<VkDescriptorSet> descriptorSets;
 
 		VkPipelineLayout graphicsPipelineLayout = nullptr;
 		VkPipeline graphicsPipeline = nullptr;
@@ -71,21 +72,15 @@ class Pipeline
 		VkPipelineLayout computePipelineLayout = nullptr;
 		VkPipeline computePipeline = nullptr;
 
-		//void Create(VertexInfo vertexInfo);
-		//void Create(std::string shader, PipelineConfiguration pipelineConfig, std::vector<DescriptorConfiguration> descriptorConfig, VertexInfo vertexInfo);
-		void Create(std::string shader, std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig, PipelineConfiguration &pipelineConfig, VertexInfo &vertexInfo);
-		//void CreateCompute(std::string shader, std::vector<DescriptorConfiguration> descriptorConfig);
-		//void CreateCompute(std::string shader);
-		void CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VertexInfo &vertexInfo, PipelineConfiguration &configuration);
-		//void CreateComputePipeline(std::string computeShader);
+		void CreateGraphicsPipeline(std::string shader, std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig, PipelineConfiguration &pipelineConfig, VertexInfo &vertexInfo);
+		void CreateComputePipeline(std::string shader, std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig);
 		void CreateDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig);
-		//void CreateDescriptorPool(std::vector<DescriptorConfiguration> &configuration);
-        //void CreateDescriptorSets(std::vector<DescriptorConfiguration> &configuration);
-        VkShaderModule CreateShaderModule(const std::vector<char> &code);
-        void Bind(VkCommandBuffer commandBuffer, Window &window);
+		VkShaderModule CreateShaderModule(const std::vector<char> &code);
+		void BindGraphics(VkCommandBuffer commandBuffer, Window &window);
+		void BindCompute(VkCommandBuffer commandBuffer);
 
-        void Destroy();
-        void DestroyGraphicsPipeline();
-        void DestroyDescriptorSetLayout();
-        //void DestroyDescriptorPool();
+		void Destroy();
+		void DestroyGraphicsPipeline();
+		void DestroyComputePipeline();
+		void DestroyDescriptorSetLayout();
 };

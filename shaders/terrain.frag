@@ -12,7 +12,8 @@ void main()
 {
     //outColor = vec4(1);
 
-	float height = texture(heightMapSampler, inTexCoord).r * 1.5;
+	//float height = texture(heightMapSampler, inTexCoord).r * 2;
+	float height = 1;
     outColor = texture(grassSampler, inPosition.xz * 0.2) * vec4(vec3(height), 1);
 
     //outColor = texture(heightMapSampler, inTexCoord);

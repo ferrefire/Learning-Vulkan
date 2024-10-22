@@ -8,43 +8,24 @@ void Terrain::Create()
 {
     CreateMeshes();
 	CreateGraphicsPipeline();
+	CreateComputePipeline();
 	CreateTextures();
 	CreateObjects();
-	CreateDescriptor();
-	//CreateComputePipeline();
+	CreateGraphicsDescriptor();
+	CreateComputeDescriptor();
 }
 
 void Terrain::CreateTextures()
 {
-	if (!graphicsPipeline.descriptorSetLayout)
-		throw std::runtime_error("cannot create terrain textures because pipeline descriptor set layout does not exist");
-
 	SamplerConfiguration grassSamplerConfig;
 	grassSamplerConfig.repeatMode = REPEAT;
 	grassTexture.CreateTexture("sparse_grass_diff.jpg", grassSamplerConfig);
 
-	heightMapTexture.CreateTexture("perlin_noise_256.jpeg");
+	//heightMapTexture.CreateTexture("perlin_noise_256.jpeg");
 
-	//std::vector<DescriptorConfiguration> descriptorConfig(2);
-	//descriptorConfig[0].type = IMAGE_SAMPLER;
-	//descriptorConfig[0].stages = VERTEX_STAGE | FRAGMENT_STAGE;
-	//descriptorConfig[0].imageInfo.imageLayout = IMAGE_READ_ONLY;
-	//descriptorConfig[0].imageInfo.imageView = heightMapTexture.imageView;
-	//descriptorConfig[0].imageInfo.sampler = heightMapTexture.sampler;
-	//descriptorConfig[1].type = IMAGE_SAMPLER;
-	//descriptorConfig[1].stages = FRAGMENT_STAGE;
-	//descriptorConfig[1].imageInfo.imageLayout = IMAGE_READ_ONLY;
-	//descriptorConfig[1].imageInfo.imageView = grassTexture.imageView;
-	//descriptorConfig[1].imageInfo.sampler = grassTexture.sampler;
-
-	//descriptor.Create(descriptorConfig, graphicsPipeline.descriptorSetLayout, 1);
-
-	//ImageConfiguration heightMapConfig;
-	//heightMapConfig.format = R16;
-	//heightMapConfig.layout = LAYOUT_GENERAL;
-	//heightMapConfig.width = 512;
-	//heightMapConfig.height = 512;
-	//heightMapTexture.CreateImage(heightMapConfig, true);
+	ImageConfiguration heightMapConfig = Texture::ImageStorage(512, 512);
+	SamplerConfiguration heightMapSamplerConfig;
+	heightMapTexture.CreateImage(heightMapConfig, heightMapSamplerConfig);
 }
 
 void Terrain::CreateMeshes()
@@ -65,29 +46,6 @@ void Terrain::CreateObjects()
 
 void Terrain::CreateGraphicsPipeline()
 {
-	/*
-    std::vector<DescriptorConfiguration> descriptorConfiguration;
-    descriptorConfiguration.resize(3);
-
-    descriptorConfiguration[0].type = UNIFORM_BUFFER;
-    descriptorConfiguration[0].stages = VERTEX_STAGE;
-    descriptorConfiguration[0].bufferInfo.offset = 0;
-	descriptorConfiguration[0].bufferInfo.range = sizeof(UniformBufferObject);
-	descriptorConfiguration[0].buffers = &object.uniformBuffers;
-
-	descriptorConfiguration[1].type = IMAGE_SAMPLER;
-    descriptorConfiguration[1].stages = VERTEX_STAGE | FRAGMENT_STAGE;
-    descriptorConfiguration[1].imageInfo.imageLayout = IMAGE_READ_ONLY;
-    descriptorConfiguration[1].imageInfo.imageView = heightMapTexture.imageView;
-    descriptorConfiguration[1].imageInfo.sampler = heightMapTexture.sampler;
-
-	descriptorConfiguration[2].type = IMAGE_SAMPLER;
-	descriptorConfiguration[2].stages = FRAGMENT_STAGE;
-	descriptorConfiguration[2].imageInfo.imageLayout = IMAGE_READ_ONLY;
-	descriptorConfiguration[2].imageInfo.imageView = grassTexture.imageView;
-	descriptorConfiguration[2].imageInfo.sampler = grassTexture.sampler;
-	*/
-
 	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(3);
 	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
 	descriptorLayoutConfig[0].stages = VERTEX_STAGE;
@@ -100,27 +58,19 @@ void Terrain::CreateGraphicsPipeline()
 
     VertexInfo vertexInfo = mesh.MeshVertexInfo();
 
-    graphicsPipeline.Create("terrain", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
+    graphicsPipeline.CreateGraphicsPipeline("terrain", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
 }
 
 void Terrain::CreateComputePipeline()
 {
-	std::vector<DescriptorConfiguration> descriptorConfiguration;
-	descriptorConfiguration.resize(1);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(1);
+	descriptorLayoutConfig[0].type = IMAGE_STORAGE;
+	descriptorLayoutConfig[0].stages = COMPUTE_STAGE;
 
-	descriptorConfiguration[0].type = IMAGE_STORAGE;
-	descriptorConfiguration[0].stages = COMPUTE_STAGE;
-	descriptorConfiguration[0].imageInfo.imageLayout = LAYOUT_GENERAL;
-	descriptorConfiguration[0].imageInfo.imageView = heightMapTexture.imageView;
-	descriptorConfiguration[0].imageInfo.sampler = heightMapTexture.sampler;
-
-	//PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
-	//VertexInfo vertexInfo = mesh.MeshVertexInfo();
-
-	//graphicsPipeline.Create("terrain", pipelineConfiguration, descriptorConfiguration, vertexInfo);
+	computePipeline.CreateComputePipeline("heightMapCompute", descriptorLayoutConfig);
 }
 
-void Terrain::CreateDescriptor()
+void Terrain::CreateGraphicsDescriptor()
 {
 	std::vector<DescriptorConfiguration> descriptorConfig(3);
 
@@ -138,17 +88,30 @@ void Terrain::CreateDescriptor()
 
 	descriptorConfig[1].type = IMAGE_SAMPLER;
 	descriptorConfig[1].stages = VERTEX_STAGE | FRAGMENT_STAGE;
-	descriptorConfig[1].imageInfo.imageLayout = IMAGE_READ_ONLY;
+	descriptorConfig[1].imageInfo.imageLayout = LAYOUT_GENERAL;
 	descriptorConfig[1].imageInfo.imageView = heightMapTexture.imageView;
 	descriptorConfig[1].imageInfo.sampler = heightMapTexture.sampler;
 
 	descriptorConfig[2].type = IMAGE_SAMPLER;
 	descriptorConfig[2].stages = FRAGMENT_STAGE;
-	descriptorConfig[2].imageInfo.imageLayout = IMAGE_READ_ONLY;
+	descriptorConfig[2].imageInfo.imageLayout = LAYOUT_READ_ONLY;
 	descriptorConfig[2].imageInfo.imageView = grassTexture.imageView;
 	descriptorConfig[2].imageInfo.sampler = grassTexture.sampler;
 
-	descriptor.Create(descriptorConfig, graphicsPipeline.descriptorSetLayout);
+	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.descriptorSetLayout);
+}
+
+void Terrain::CreateComputeDescriptor()
+{
+	std::vector<DescriptorConfiguration> descriptorConfig(1);
+
+	descriptorConfig[0].type = IMAGE_STORAGE;
+	descriptorConfig[0].stages = COMPUTE_STAGE;
+	descriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
+	descriptorConfig[0].imageInfo.imageView = heightMapTexture.imageView;
+	descriptorConfig[0].imageInfo.sampler = heightMapTexture.sampler;
+
+	computeDescriptor.Create(descriptorConfig, computePipeline.descriptorSetLayout);
 }
 
 void Terrain::Destroy()
@@ -157,13 +120,11 @@ void Terrain::Destroy()
     DestroyMeshes();
     DestroyTextures();
 	DestroyObjects();
-	DestroyDescriptor();
+	DestroyDescriptors();
 }
 
 void Terrain::DestroyTextures()
 {
-	//descriptor.Destroy();
-
 	grassTexture.Destroy();
 	heightMapTexture.Destroy();
 }
@@ -181,6 +142,7 @@ void Terrain::DestroyObjects()
 void Terrain::DestroyPipelines()
 {
 	graphicsPipeline.Destroy();
+	computePipeline.Destroy();
 
     //graphicsPipeline.DestroyGraphicsPipeline();
 	//graphicsPipeline.DestroyDescriptorPool();
@@ -191,17 +153,26 @@ void Terrain::DestroyPipelines()
 	//computePipeline.DestroyDescriptorSetLayout();
 }
 
-void Terrain::DestroyDescriptor()
+void Terrain::DestroyDescriptors()
 {
-	descriptor.Destroy();
+	graphicsDescriptor.Destroy();
+	computeDescriptor.Destroy();
+}
+
+void Terrain::Start()
+{
+	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginSingleTimeCommands();
+	computePipeline.BindCompute(commandBuffer);
+	computeDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT);
+	vkCmdDispatch(commandBuffer, 1, 1, 1);
+	Manager::currentDevice.EndSingleTimeCommands(commandBuffer);
 }
 
 void Terrain::RecordCommands(VkCommandBuffer commandBuffer)
 {
-    graphicsPipeline.Bind(commandBuffer, Manager::currentWindow);
-	descriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout);
+    graphicsPipeline.BindGraphics(commandBuffer, Manager::currentWindow);
+	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT);
 	object.UpdateUniformBuffer(Manager::currentFrame);
-	//descriptor.Bind(commandBuffer, graphicsPipeline.computePipelineLayout, 1);
     mesh.Bind(commandBuffer);
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
 }
@@ -210,6 +181,7 @@ Pipeline Terrain::graphicsPipeline{Manager::currentDevice, Manager::currentCamer
 Pipeline Terrain::computePipeline{Manager::currentDevice, Manager::currentCamera};
 Texture Terrain::grassTexture{Manager::currentDevice};
 Texture Terrain::heightMapTexture{Manager::currentDevice};
-Descriptor Terrain::descriptor{Manager::currentDevice};
+Descriptor Terrain::graphicsDescriptor{Manager::currentDevice};
+Descriptor Terrain::computeDescriptor{Manager::currentDevice};
 Mesh Terrain::mesh{};
 Object Terrain::object{&Terrain::mesh, &Terrain::graphicsPipeline};

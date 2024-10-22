@@ -35,7 +35,6 @@ class Mesh
 {
 	private:
 		static Mesh *cube;
-		static Mesh *bound;
 
 	public:
 		static void CreateDefaults();
@@ -56,13 +55,9 @@ class Mesh
 
 		std::vector<Vertex> vertices;
 		std::vector<float> verticesData;
-		std::vector<uint16_t> indices;
+		std::vector<indexType> indices;
 
-		//VkBuffer vertexBuffer = nullptr;
-		//VkDeviceMemory vertexBufferMemory = nullptr;
 		Buffer vertexBuffer;
-		//VkBuffer indexBuffer = nullptr;
-		//VkDeviceMemory indexBufferMemory = nullptr;
 		Buffer indexBuffer;
 
 		void Create();

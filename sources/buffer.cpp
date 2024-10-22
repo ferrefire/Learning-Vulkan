@@ -57,17 +57,6 @@ void Buffer::Create(BufferConfiguration &configuration)
 
 void Buffer::Create(void *data, BufferConfiguration &configuration)
 {
-	/*Buffer stagingBuffer;
-	BufferConfiguration stagingConfig = StagingBuffer();
-	stagingConfig.size = configuration.size;
-	stagingBuffer.Create(stagingConfig);
-
-	void *stagingData;
-	vkMapMemory(device.logicalDevice, stagingBuffer.memory, 0, stagingConfig.size, 0, &stagingData);
-	memcpy(stagingData, data, (size_t)stagingConfig.size);
-	vkUnmapMemory(device.logicalDevice, stagingBuffer.memory);
-	stagingBuffer.mappedBuffer = nullptr;*/
-
 	Buffer stagingBuffer;
 	stagingBuffer.CreateStagingBuffer(data, configuration.size);
 

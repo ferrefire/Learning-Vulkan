@@ -114,7 +114,7 @@ void Shape::AddCoordinate(glm::vec2 uv)
 	coordinates.push_back(uv);
 }
 
-void Shape::AddIndice(uint16_t index)
+void Shape::AddIndice(indexType index)
 {
 	indices.push_back(index);
 }
@@ -128,7 +128,7 @@ void Shape::Join(Shape &joinShape)
         positions.push_back(pos);
     }
 
-	for (uint16_t index : joinShape.indices)
+	for (indexType index : joinShape.indices)
 	{
 		indices.push_back(index + count);
 	}

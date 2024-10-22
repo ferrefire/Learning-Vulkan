@@ -87,37 +87,14 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 	Terrain::RecordCommands(commandBuffer);
 
-	for (Object *object : Manager::objects)
-	{
-		object->pipeline->Bind(commandBuffer, Manager::currentWindow);
-		//object->pipeline->UpdateUniformBuffer(object->Translation(), Manager::currentFrame);
-		object->UpdateUniformBuffer(Manager::currentFrame);
-		object->mesh->Bind(commandBuffer);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(object->mesh->indices.size()), 1, 0, 0, 0);
-	}
-
-	/*vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[0].graphicsPipeline);
-
-	VkViewport viewport{};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = static_cast<float>(window.swapChainExtent.width);
-	viewport.height = static_cast<float>(window.swapChainExtent.height);
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-	VkRect2D scissor{};
-	scissor.offset = {0, 0};
-	scissor.extent = window.swapChainExtent;
-	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-	VkBuffer vertexBuffers[] = {pipelines[0].mesh.vertexBuffer};
-	VkDeviceSize offsets[] = {0};
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-	vkCmdBindIndexBuffer(commandBuffer, pipelines[0].mesh.indexBuffer, 0, VK_INDEX_TYPE_UINT16);
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[0].graphicsPipelineLayout, 0, 1, &pipelines[0].descriptorSets[currentFrame], 0, nullptr);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(pipelines[0].mesh.indices.size()), 1, 0, 0, 0);*/
+	//for (Object *object : Manager::objects)
+	//{
+	//	object->pipeline->Bind(commandBuffer, Manager::currentWindow);
+	//	//object->pipeline->UpdateUniformBuffer(object->Translation(), Manager::currentFrame);
+	//	object->UpdateUniformBuffer(Manager::currentFrame);
+	//	object->mesh->Bind(commandBuffer);
+	//	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(object->mesh->indices.size()), 1, 0, 0, 0);
+	//}
 
 	vkCmdEndRenderPass(commandBuffer);
 
@@ -149,12 +126,6 @@ void Graphics::DrawFrame()
 
 	vkResetCommandBuffer(device.commandBuffers[Manager::currentFrame], 0);
 	RecordCommandBuffer(device.commandBuffers[Manager::currentFrame], imageIndex);
-
-	//pipelines[0].UpdateUniformBuffer(Manager::currentFrame);
-	//for (Pipeline &pipeline : pipelines)
-	//{
-	//	pipeline.UpdateUniformBuffer(Manager::currentFrame);
-	//}
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -199,13 +170,6 @@ void Graphics::Create()
 	window.CreateSurface(instance);
 
 	device.Create(instance, window.surface);
-
-	//window.CreateSwapChain();
-	//window.CreateImageViews();
-	//window.CreateRenderPass();
-	//window.CreateColorResources();
-	//window.CreateDepthResources();
-	//window.CreateFramebuffers();
 
 	window.CreateResources();
 
@@ -264,16 +228,6 @@ void Graphics::Destroy()
 	Manager::DestroyTextures();
 	Manager::DestroyMeshes();
 	Manager::DestroyObjects();
-
-	/*for (Pipeline &pipeline : pipelines)
-	{
-		pipeline.DestroyGraphicsPipeline();
-		pipeline.texture.Destroy();
-		pipeline.DestroyUniformBuffers();
-		pipeline.DestroyDescriptorPool();
-		pipeline.DestroyDescriptorSetLayout();
-		pipeline.mesh.Destroy();
-	}*/
 
 	device.DestroyLogicalDevice();
 	window.DestroySurface(instance);

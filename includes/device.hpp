@@ -29,7 +29,7 @@ struct SwapChainSupportDetails
 class Device
 {
     private:
-        //const int MAX_FRAMES_IN_FLIGHT = 2;
+        
 
     public:
         Device();
@@ -67,18 +67,18 @@ class Device
         void CreateSyncObjects();
         void DestroySyncObjects();
         void WaitForIdle();
-        //void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+
         uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
         VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
         VkFormat FindDepthFormat();
         bool HasStencilComponent(VkFormat format);
+
         void CreateCommandPool();
         void CreateCommandBuffers();
         void DestroyCommandPool();
-        //void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-        //void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+
         VkCommandBuffer BeginSingleTimeCommands();
         void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
-        VkSampleCountFlagBits MaxSampleCount();
-        //void TransitionImageLayout(VkImage image, ImageConfiguration &configuration, VkImageLayout newLayout);
+		VkSampleCountFlagBits MaxSampleCount();
+		VkSampleCountFlagBits MaxDeviceSampleCount();
 };

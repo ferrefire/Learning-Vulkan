@@ -10,6 +10,10 @@
 #define CUBE 2
 #define PLANE 3
 
+#define INDEX_TYPE VK_INDEX_TYPE_UINT16
+
+typedef uint16_t indexType;
+
 class Shape
 {
     private:
@@ -24,7 +28,7 @@ class Shape
         std::vector<glm::vec2> coordinates;
         std::vector<glm::vec3> normals;
         std::vector<glm::vec3> colors;
-        std::vector<uint16_t> indices;
+        std::vector<indexType> indices;
 
 		bool positionsOnly = false;
 
@@ -32,9 +36,9 @@ class Shape
 
         void AddPosition(glm::vec3 pos);
 		void AddCoordinate(glm::vec2 uv);
-		void AddIndice(uint16_t index);
+		void AddIndice(indexType index);
 
-        void Join(Shape &joinShape);
+		void Join(Shape &joinShape);
 
         void Move(glm::vec3 movement);
         void Rotate(float degrees, glm::vec3 axis);

@@ -85,56 +85,18 @@ Pipeline::~Pipeline()
     Destroy();
 }
 
-/*
-void Pipeline::Create(VertexInfo vertexInfo)
-{
-	//VertexInfo vertexInfo = Mesh::GetVertexInfo(true, true);
-	PipelineConfiguration pipelineConfiguration = DefaultConfiguration();
-
-	//std::vector<DescriptorConfiguration> descriptorConfiguration;
-	//descriptorConfiguration.resize(2);
-	//descriptorConfiguration[0].type = UNIFORM_BUFFER;
-	//descriptorConfiguration[0].stages = VERTEX_STAGE;
-	//descriptorConfiguration[0].bufferInfo.offset = 0;
-	//descriptorConfiguration[0].bufferInfo.range = sizeof(UniformBufferObject);
-	//descriptorConfiguration[0].buffers = uniformBuffers;
-	//descriptorConfiguration[1].type = IMAGE_SAMPLER;
-	//descriptorConfiguration[1].stages = FRAGMENT_STAGE;
-	//descriptorConfiguration[1].imageInfo.imageLayout = IMAGE_READ_ONLY;
-	//descriptorConfiguration[1].imageInfo.imageView = Texture::Statue()->imageView;
-	//descriptorConfiguration[1].imageInfo.sampler = Texture::Statue()->sampler;
-
-	Create("simple", pipelineConfiguration, vertexInfo);
-}
-*/
-
-void Pipeline::Create(std::string shader, std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig, PipelineConfiguration &pipelineConfig, VertexInfo &vertexInfo)
-{
-	CreateDescriptorSetLayout(descriptorLayoutConfig);
-	CreateGraphicsPipeline(shader, shader, vertexInfo, pipelineConfig);
-	//CreateDescriptorPool(descriptorConfig);
-	//CreateDescriptorSets(descriptorConfig);
-}
-
-/*
-void Pipeline::CreateCompute(std::string shader)
-{
-	//CreateDescriptorSetLayout(descriptorConfig);
-	CreateComputePipeline(shader);
-	//CreateDescriptorPool(descriptorConfig);
-	//CreateDescriptorSets(descriptorConfig);
-}
-*/
-
-void Pipeline::CreateGraphicsPipeline(std::string vertexShader, std::string fragmentShader, VertexInfo &vertexInfo, PipelineConfiguration &configuration)
+void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig, PipelineConfiguration &pipelineConfig, VertexInfo &vertexInfo)
 {
     if (graphicsPipeline) throw std::runtime_error("cannot create graphics pipeline because it already exists");
+
+	CreateDescriptorSetLayout(descriptorLayoutConfig);
+
     if (!descriptorSetLayout) throw std::runtime_error("cannot create graphics pipeline because descriptor set layout does not exist");
 
 	std::string currentPath = Utilities::GetPath();
 
-	auto vertexCode = Utilities::FileToBinary((currentPath + "/shaders/" + vertexShader + ".vert.spv").c_str());
-	auto fragmentCode = Utilities::FileToBinary((currentPath + "/shaders/" + fragmentShader + ".frag.spv").c_str());
+	auto vertexCode = Utilities::FileToBinary((currentPath + "/shaders/" + shader + ".vert.spv").c_str());
+	auto fragmentCode = Utilities::FileToBinary((currentPath + "/shaders/" + shader + ".frag.spv").c_str());
 
 	VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
 	VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode);
@@ -186,25 +148,25 @@ void Pipeline::CreateGraphicsPipeline(std::string vertexShader, std::string frag
 		throw std::runtime_error("failed to create pipeline layout");
 	}
 
-	if (Manager::settings.wireframe) configuration.rasterization.polygonMode = VK_POLYGON_MODE_LINE;
+	if (Manager::settings.wireframe) pipelineConfig.rasterization.polygonMode = VK_POLYGON_MODE_LINE;
 
-	configuration.multisampling.rasterizationSamples = device.MaxSampleCount();
+	pipelineConfig.multisampling.rasterizationSamples = device.MaxSampleCount();
 
 	VkGraphicsPipelineCreateInfo graphicsPipelineInfo{};
 	graphicsPipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	graphicsPipelineInfo.stageCount = 2;
 	graphicsPipelineInfo.pStages = shaderStages;
 	graphicsPipelineInfo.pVertexInputState = &vertexInputInfo;
-	graphicsPipelineInfo.pInputAssemblyState = &configuration.inputAssembly;
-	graphicsPipelineInfo.pViewportState = &configuration.viewportState;
-	graphicsPipelineInfo.pRasterizationState = &configuration.rasterization;
-	graphicsPipelineInfo.pMultisampleState = &configuration.multisampling;
-	graphicsPipelineInfo.pDepthStencilState = &configuration.depthStencil;
-	graphicsPipelineInfo.pColorBlendState = &configuration.colorBlending;
+	graphicsPipelineInfo.pInputAssemblyState = &pipelineConfig.inputAssembly;
+	graphicsPipelineInfo.pViewportState = &pipelineConfig.viewportState;
+	graphicsPipelineInfo.pRasterizationState = &pipelineConfig.rasterization;
+	graphicsPipelineInfo.pMultisampleState = &pipelineConfig.multisampling;
+	graphicsPipelineInfo.pDepthStencilState = &pipelineConfig.depthStencil;
+	graphicsPipelineInfo.pColorBlendState = &pipelineConfig.colorBlending;
 	graphicsPipelineInfo.pDynamicState = &dynamicState;
 	graphicsPipelineInfo.layout = graphicsPipelineLayout;
-	graphicsPipelineInfo.renderPass = configuration.renderPass;
-	graphicsPipelineInfo.subpass = configuration.subpass;
+	graphicsPipelineInfo.renderPass = pipelineConfig.renderPass;
+	graphicsPipelineInfo.subpass = pipelineConfig.subpass;
 	graphicsPipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 	graphicsPipelineInfo.basePipelineIndex = -1;
 
@@ -217,14 +179,17 @@ void Pipeline::CreateGraphicsPipeline(std::string vertexShader, std::string frag
 	vkDestroyShaderModule(device.logicalDevice, fragmentShaderModule, nullptr);
 }
 
-/*
-void Pipeline::CreateComputePipeline(std::string computeShader)
+void Pipeline::CreateComputePipeline(std::string shader, std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig)
 {
 	if (computePipeline) throw std::runtime_error("cannot create compute pipeline because it already exists");
 
+	CreateDescriptorSetLayout(descriptorLayoutConfig);
+
+	if (!descriptorSetLayout) throw std::runtime_error("cannot create compute pipeline because descriptor set layout does not exist");
+
 	std::string currentPath = Utilities::GetPath();
 
-	auto computeCode = Utilities::FileToBinary((currentPath + "/shaders/" + computeShader + ".comp.spv").c_str());
+	auto computeCode = Utilities::FileToBinary((currentPath + "/shaders/" + shader + ".comp.spv").c_str());
 
 	VkShaderModule computeShaderModule = CreateShaderModule(computeCode);
 
@@ -256,7 +221,6 @@ void Pipeline::CreateComputePipeline(std::string computeShader)
 
 	vkDestroyShaderModule(device.logicalDevice, computeShaderModule, nullptr);
 }
-*/
 
 VkShaderModule Pipeline::CreateShaderModule(const std::vector<char> &code)
 {
@@ -273,38 +237,6 @@ VkShaderModule Pipeline::CreateShaderModule(const std::vector<char> &code)
 
 	return (shaderModule);
 }
-
-/*
-void Pipeline::CreateDescriptorSetLayout()
-{
-    if (descriptorSetLayout) throw std::runtime_error("cannot create descriptor set layout because it already exists");
-
-	VkDescriptorSetLayoutBinding uboLayoutBinding{};
-	uboLayoutBinding.binding = 0;
-	uboLayoutBinding.descriptorCount = 1;
-	uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-	uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
-
-	VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-	samplerLayoutBinding.binding = 1;
-	samplerLayoutBinding.descriptorCount = 1;
-	samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-	samplerLayoutBinding.pImmutableSamplers = nullptr;
-
-	std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
-	VkDescriptorSetLayoutCreateInfo layoutInfo{};
-	layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-	layoutInfo.pBindings = bindings.data();
-
-	if (vkCreateDescriptorSetLayout(device.logicalDevice, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create descriptor set layout");
-	}
-}
-*/
 
 void Pipeline::CreateDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig)
 {
@@ -335,205 +267,9 @@ void Pipeline::CreateDescriptorSetLayout(std::vector<DescriptorLayoutConfigurati
 	}
 }
 
-/*
-void Pipeline::CreateUniformBuffers()
+void Pipeline::BindGraphics(VkCommandBuffer commandBuffer, Window &window)
 {
-    if (uniformBuffers.size() != 0 || uniformBuffersMemory.size() != 0)
-		throw std::runtime_error("cannot create uniform buffers because they already exist");
-
-	VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-
-	uniformBuffers.resize(Manager::settings.maxFramesInFlight);
-	uniformBuffersMemory.resize(Manager::settings.maxFramesInFlight);
-	uniformBuffersMapped.resize(Manager::settings.maxFramesInFlight);
-
-	for (size_t i = 0; i < Manager::settings.maxFramesInFlight; i++)
-	{
-		device.CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
-			VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
-
-		vkMapMemory(device.logicalDevice, uniformBuffersMemory[i], 0, bufferSize, 0, &uniformBuffersMapped[i]);
-	}
-}
-
-void Pipeline::CreateDescriptorPool()
-{
-    if (descriptorPool) throw std::runtime_error("cannot create descriptor pool because it already exists");
-
-	std::array<VkDescriptorPoolSize, 2> poolSizes{};
-	poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-	poolSizes[0].descriptorCount = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
-	poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	poolSizes[1].descriptorCount = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
-
-	VkDescriptorPoolCreateInfo poolInfo{};
-	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
-
-	if (vkCreateDescriptorPool(device.logicalDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create descriptor pool");
-	}
-}
-
-void Pipeline::CreateDescriptorPool(std::vector<DescriptorConfiguration> &configuration)
-{
-    if (descriptorPool) throw std::runtime_error("cannot create descriptor pool because it already exists");
-
-	std::vector<VkDescriptorPoolSize> poolSizes;
-	poolSizes.resize(configuration.size());
-
-	int index = 0;
-	for (DescriptorConfiguration &config : configuration)
-	{
-		poolSizes[index].type = config.type;
-		poolSizes[index].descriptorCount = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
-		index++;
-	}
-
-	VkDescriptorPoolCreateInfo poolInfo{};
-	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
-
-	if (vkCreateDescriptorPool(device.logicalDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create descriptor pool");
-	}
-}
-
-void Pipeline::CreateDescriptorSets()
-{
-    if (descriptorSets.size() != 0) throw std::runtime_error("cannot create descriptor sets because they already exist");
-
-	std::vector<VkDescriptorSetLayout> layouts(Manager::settings.maxFramesInFlight, descriptorSetLayout);
-	VkDescriptorSetAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = descriptorPool;
-	allocInfo.descriptorSetCount = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
-	allocInfo.pSetLayouts = layouts.data();
-
-	descriptorSets.resize(Manager::settings.maxFramesInFlight);
-	if (vkAllocateDescriptorSets(device.logicalDevice, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to allocate descriptor sets");
-	}
-
-	for (size_t i = 0; i < Manager::settings.maxFramesInFlight; i++)
-	{
-		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = uniformBuffers[i];
-		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(UniformBufferObject);
-
-		VkDescriptorImageInfo imageInfo{};
-		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		imageInfo.imageView = texture.imageView;
-		imageInfo.sampler = texture.sampler;
-
-		std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
-
-		descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[0].dstSet = descriptorSets[i];
-		descriptorWrites[0].dstBinding = 0;
-		descriptorWrites[0].dstArrayElement = 0;
-		descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrites[0].descriptorCount = 1;
-		descriptorWrites[0].pBufferInfo = &bufferInfo;
-
-		descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrites[1].dstSet = descriptorSets[i];
-		descriptorWrites[1].dstBinding = 1;
-		descriptorWrites[1].dstArrayElement = 0;
-		descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		descriptorWrites[1].descriptorCount = 1;
-		descriptorWrites[1].pImageInfo = &imageInfo;
-
-		vkUpdateDescriptorSets(device.logicalDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-	}
-}
-
-void Pipeline::CreateDescriptorSets(std::vector<DescriptorConfiguration> &configuration)
-{
-    if (descriptorSets.size() != 0) throw std::runtime_error("cannot create descriptor sets because they already exist");
-
-	std::vector<VkDescriptorSetLayout> layouts(Manager::settings.maxFramesInFlight, descriptorSetLayout);
-	VkDescriptorSetAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = descriptorPool;
-	allocInfo.descriptorSetCount = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
-	allocInfo.pSetLayouts = layouts.data();
-
-	descriptorSets.resize(Manager::settings.maxFramesInFlight);
-	if (vkAllocateDescriptorSets(device.logicalDevice, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to allocate descriptor sets");
-	}
-
-	for (size_t i = 0; i < Manager::settings.maxFramesInFlight; i++)
-	{
-		std::vector<VkWriteDescriptorSet> descriptorWrites{};
-		descriptorWrites.resize(configuration.size());
-
-		int index = 0;
-		for (DescriptorConfiguration &config : configuration)
-		{
-			if (config.type == UNIFORM_BUFFER)
-			{
-				//VkDescriptorBufferInfo bufferInfo{};
-				//config.bufferInfo.buffer = uniformBuffers[i];
-				config.bufferInfo.buffer = config.buffers->data()[i].buffer; //check later
-				//config.bufferInfo.offset = 0;
-				//config.bufferInfo.range = sizeof(UniformBufferObject);
-
-				descriptorWrites[index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				descriptorWrites[index].dstSet = descriptorSets[i];
-				descriptorWrites[index].dstBinding = index;
-				descriptorWrites[index].dstArrayElement = 0;
-				descriptorWrites[index].descriptorType = config.type;
-				descriptorWrites[index].descriptorCount = 1;
-				descriptorWrites[index].pBufferInfo = &config.bufferInfo;
-			}
-			else if (config.type == IMAGE_SAMPLER || config.type == IMAGE_STORAGE)
-			{
-				//VkDescriptorImageInfo imageInfo{};
-				//imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-				//imageInfo.imageView = texture.imageView;
-				//imageInfo.sampler = texture.sampler;
-
-				descriptorWrites[index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				descriptorWrites[index].dstSet = descriptorSets[i];
-				descriptorWrites[index].dstBinding = index;
-				descriptorWrites[index].dstArrayElement = 0;
-				descriptorWrites[index].descriptorType = config.type;
-				descriptorWrites[index].descriptorCount = 1;
-				descriptorWrites[index].pImageInfo = &config.imageInfo;
-			}
-
-			index++;
-		}
-
-		vkUpdateDescriptorSets(device.logicalDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-	}
-}
-
-void Pipeline::UpdateUniformBuffer(glm::mat4 translation, uint32_t currentImage)
-{
-	//ubo.model = glm::rotate(glm::mat4(1.0f), Time::currentFrame * glm::radians(90.0f), glm::vec3(0.5f, 1.0f, 0.25f));
-	//ubo.model = glm::mat4(1.0f);
-	ubo.model = translation;
-	ubo.view = camera.View();
-	ubo.projection = camera.Projection();
-	memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
-}
-*/
-
-void Pipeline::Bind(VkCommandBuffer commandBuffer, Window &window)
-{
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+	vkCmdBindPipeline(commandBuffer, GRAPHICS_BIND_POINT, graphicsPipeline);
 
 	VkViewport viewport{};
 	viewport.x = 0.0f;
@@ -548,18 +284,17 @@ void Pipeline::Bind(VkCommandBuffer commandBuffer, Window &window)
 	scissor.offset = {0, 0};
 	scissor.extent = window.swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+}
 
-	//vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineLayout, 0, 1, &descriptorSets[Manager::currentFrame], 0, nullptr);
+void Pipeline::BindCompute(VkCommandBuffer commandBuffer)
+{
+	vkCmdBindPipeline(commandBuffer, COMPUTE_BIND_POINT, computePipeline);
 }
 
 void Pipeline::Destroy()
 {
 	DestroyGraphicsPipeline();
-
-	//texture.Destroy();
-
-	//DestroyUniformBuffers();
-	//DestroyDescriptorPool();
+	DestroyComputePipeline();
 	DestroyDescriptorSetLayout();
 }
 
@@ -578,6 +313,21 @@ void Pipeline::DestroyGraphicsPipeline()
 	}
 }
 
+void Pipeline::DestroyComputePipeline()
+{
+	if (computePipeline)
+	{
+		vkDestroyPipeline(device.logicalDevice, computePipeline, nullptr);
+		computePipeline = nullptr;
+	}
+
+	if (computePipelineLayout)
+	{
+		vkDestroyPipelineLayout(device.logicalDevice, computePipelineLayout, nullptr);
+		computePipelineLayout = nullptr;
+	}
+}
+
 void Pipeline::DestroyDescriptorSetLayout()
 {
 	if (!descriptorSetLayout) return;
@@ -585,29 +335,3 @@ void Pipeline::DestroyDescriptorSetLayout()
 	vkDestroyDescriptorSetLayout(device.logicalDevice, descriptorSetLayout, nullptr);
 	descriptorSetLayout = nullptr;
 }
-
-/*
-void Pipeline::DestroyUniformBuffers()
-{
-	for (VkBuffer &buffer : uniformBuffers)
-	{
-		vkDestroyBuffer(device.logicalDevice, buffer, nullptr);
-	}
-	uniformBuffers.clear();
-
-	for (VkDeviceMemory &memory : uniformBuffersMemory)
-	{
-		vkFreeMemory(device.logicalDevice, memory, nullptr);
-	}
-	uniformBuffersMemory.clear();
-	uniformBuffersMapped.clear();
-}
-
-void Pipeline::DestroyDescriptorPool()
-{
-	if (!descriptorPool) return;
-
-	vkDestroyDescriptorPool(device.logicalDevice, descriptorPool, nullptr);
-	descriptorPool = nullptr;
-}
-*/

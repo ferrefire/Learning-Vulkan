@@ -167,7 +167,7 @@ void Descriptor::DestroyDescriptorPool()
 	descriptorPool = nullptr;
 }
 
-void Descriptor::Bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout)
+void Descriptor::Bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, VkPipelineBindPoint bindPoint)
 {
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[Manager::currentFrame], 0, nullptr);
+	vkCmdBindDescriptorSets(commandBuffer, bindPoint, pipelineLayout, 0, 1, &descriptorSets[Manager::currentFrame], 0, nullptr);
 }

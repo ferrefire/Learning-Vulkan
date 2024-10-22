@@ -1,10 +1,11 @@
 #include "manager.hpp"
 
+#include "input.hpp"
+#include "terrain.hpp"
+
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
-
-#include "input.hpp"
 
 void Manager::Start()
 {
@@ -12,6 +13,8 @@ void Manager::Start()
 	{
 		InitializeGLFW();
 		InitializeVulkan();
+
+		//Terrain::Start();
 	}
 	catch (const std::exception &e)
 	{

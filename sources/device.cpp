@@ -457,7 +457,16 @@ void Device::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
 
 VkSampleCountFlagBits Device::MaxSampleCount() 
 {
-    VkSampleCountFlags counts = properties.limits.framebufferColorSampleCounts & properties.limits.framebufferDepthSampleCounts;
+	VkSampleCountFlagBits maxDevice = MaxDeviceSampleCount();
+
+	if (Manager::settings.maxSampleCount < maxDevice) return (Manager::settings.maxSampleCount);
+
+	return (maxDevice);
+}
+
+VkSampleCountFlagBits Device::MaxDeviceSampleCount() 
+{
+	VkSampleCountFlags counts = properties.limits.framebufferColorSampleCounts & properties.limits.framebufferDepthSampleCounts;
     if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
     if (counts & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
     if (counts & VK_SAMPLE_COUNT_16_BIT) { return VK_SAMPLE_COUNT_16_BIT; }

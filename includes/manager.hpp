@@ -20,6 +20,7 @@ struct Settings
 	bool fullscreen = false;
 	bool wireframe = false;
 	bool discrete = true;
+	VkSampleCountFlagBits maxSampleCount = VK_SAMPLE_COUNT_1_BIT;
 };
 
 class Manager
@@ -43,8 +44,6 @@ class Manager
 		static Camera &currentCamera;
 		static Device &currentDevice;
 		static Graphics &currentGraphics;
-
-		//static Texture defaultTexture;
 
 		static uint32_t currentFrame;
 
