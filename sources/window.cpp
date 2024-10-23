@@ -5,6 +5,7 @@
 
 #include <stdexcept>
 #include <algorithm>
+#include <vector>
 
 Window::Window(Device &device) : device{device} , depthTexture{device}, colorTexture{device}
 {
@@ -241,8 +242,23 @@ void Window::CreateFramebuffers()
 
 	for (size_t i = 0; i < swapChainTextures.size(); i++)
 	{
+		std::vector<VkImageView> attachments;
+
+		if (Manager::settings.maxSampleCount == VK_SAMPLE_COUNT_1_BIT)
+		{
+			attachments.resize(2);
+			attachments[0] = swapChainTextures[i].imageView;
+			attachments[1] = depthTexture.imageView;
+		}
+		else
+		{
+			attachments.resize(3);
+			attachments[0] = colorTexture.imageView;
+			attachments[1] = depthTexture.imageView;
+			attachments[2] = swapChainTextures[i].imageView;
+		}
 		//std::array<VkImageView, 2> attachments = {swapChainImageViews[i], depthImageView};
-		std::array<VkImageView, 3> attachments = {colorTexture.imageView, depthTexture.imageView, swapChainTextures[i].imageView};
+		//std::array<VkImageView, 3> attachments = {colorTexture.imageView, depthTexture.imageView, swapChainTextures[i].imageView};
 
 		VkFramebufferCreateInfo framebufferInfo{};
 		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -308,7 +324,7 @@ void Window::CreateRenderPass()
 	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	//colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	//colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 	VkAttachmentReference colorAttachmentRef{};
 	colorAttachmentRef.attachment = 0;
@@ -347,18 +363,43 @@ void Window::CreateRenderPass()
 	subpass.colorAttachmentCount = 1;
 	subpass.pColorAttachments = &colorAttachmentRef;
 	subpass.pDepthStencilAttachment = &depthAttachmentRef;
-	subpass.pResolveAttachments = &colorAttachmentResolveRef;
+	//subpass.pResolveAttachments = &colorAttachmentResolveRef;
 
 	VkSubpassDependency dependency{};
 	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 	dependency.dstSubpass = 0;
 	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
 	//dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-	dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+	//dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-	std::array<VkAttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorAttachmentResolve};
+	//std::array<VkAttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorAttachmentResolve};
+	//VkRenderPassCreateInfo renderPassInfo{};
+	std::vector<VkAttachmentDescription> attachments;
+
+	if (colorAttachment.samples == VK_SAMPLE_COUNT_1_BIT)
+	{
+		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+		attachments.resize(2);
+		attachments[0] = colorAttachment;
+		attachments[1] = depthAttachment;
+	}
+	else
+	{
+		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		subpass.pResolveAttachments = &colorAttachmentResolveRef;
+		dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+		attachments.resize(3);
+		attachments[0] = colorAttachment;
+		attachments[1] = depthAttachment;
+		attachments[2] = colorAttachmentResolve;
+	}
+
+	// std::array<VkAttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorAttachmentResolve};
 	VkRenderPassCreateInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 	renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());

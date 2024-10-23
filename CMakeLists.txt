@@ -68,6 +68,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable("stb_image")
 
+FetchContent_Declare(
+    Vulkan_Validation_Layers
+    URL https://github.com/ferrefire/Vulkan_Validation_Layers/archive/refs/heads/main.zip
+	#DOWNLOAD_NO_EXTRACT True
+    SOURCE_DIR VK_Layers
+)
+FetchContent_MakeAvailable("Vulkan_Validation_Layers")
+
 #FetchContent_Declare(
 #    Vulkan-Headers
 #    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git

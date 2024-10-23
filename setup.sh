@@ -7,6 +7,33 @@ dev="-DDEV=ON"
 check_found="-DCHECK_FOUND=OFF"
 release=0
 arguments=""
+vulkan_sdk_setup_path="/home/fmolenbe/Downloads/vulkansdk-linux-x86_64-1.3.296.0/1.3.296.0/"
+
+set_env () {
+
+	##ARCH="$(uname -m)"
+	#VULKAN_SDK="$(dirname "$(readlink -f "${BASH_SOURCE:-$0}" )" )/VK_Layers"
+	#export VULKAN_SDK
+	#VK_ADD_LAYER_PATH="$VULKAN_SDK/layers${VK_ADD_LAYER_PATH:+:$VK_ADD_LAYER_PATH}"
+	#export VK_ADD_LAYER_PATH
+
+	cd $vulkan_sdk_setup_path
+	#./setup-env.sh
+
+	ARCH="$(uname -m)"
+	VULKAN_SDK="$(dirname "$(readlink -f "${BASH_SOURCE:-$0}" )" )/$ARCH"
+	export VULKAN_SDK
+	PATH="$VULKAN_SDK/bin:$PATH"
+	export PATH
+	LD_LIBRARY_PATH="$VULKAN_SDK/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+	export LD_LIBRARY_PATH
+	VK_ADD_LAYER_PATH="$VULKAN_SDK/share/vulkan/explicit_layer.d${VK_ADD_LAYER_PATH:+:$VK_ADD_LAYER_PATH}"
+	export VK_ADD_LAYER_PATH
+
+	#$vulkan_sdk_setup_path/setup-env.sh
+
+	echo $VULKAN_SDK
+}
 
 run_command () {
 
@@ -40,6 +67,7 @@ run_command () {
 			mkdir build
 		fi
 		cd $path/build
+		mkdir VK_Layers
 		cmake $dev .. $fresh
 		#cmake $dev $check_found .. $fresh
 
@@ -49,6 +77,7 @@ run_command () {
 	elif [[ $1 == "run" ]] || [[ $1 == "r" ]]; then
 		if [[ $OSTYPE == "linux-gnu" ]]; then
 			if test -f $path/build/limitless; then
+				set_env
 				cd $path/build
 				./limitless $args
 			else
@@ -57,6 +86,7 @@ run_command () {
 			fi
 		elif [[ $OSTYPE == "msys" ]]; then
 			if test -f $path/build/Release/limitless; then
+				set_env
 				cd $path/build
 				./Release/limitless $args
 			else

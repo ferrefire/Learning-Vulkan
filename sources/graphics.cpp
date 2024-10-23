@@ -32,10 +32,10 @@ void Graphics::CreateInstance()
 {
     if (instance) throw std::runtime_error("cannot create instance because it already exists");
 
-	//if (Manager::settings.enableValidationLayers && !CheckValidationLayerSupport())
-	//{
-	//	throw std::runtime_error("validation layers requested, but not available");
-	//}
+	if (Manager::settings.enableValidationLayers && !CheckValidationLayerSupport())
+	{
+		throw std::runtime_error("validation layers requested, but not available");
+	}
 
 	VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -54,9 +54,18 @@ void Graphics::CreateInstance()
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
     createInfo.enabledExtensionCount = glfwExtensionCount;
     createInfo.ppEnabledExtensionNames = glfwExtensions;
-    createInfo.enabledLayerCount = 0;
 
-    if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS)
+	if (Manager::settings.enableValidationLayers)
+	{
+		createInfo.enabledLayerCount = static_cast<uint32_t>(Manager::settings.validationLayers.size());
+		createInfo.ppEnabledLayerNames = Manager::settings.validationLayers.data();
+	}
+	else
+	{
+		createInfo.enabledLayerCount = 0;
+	}
+
+	if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create vulkan instance");
     }
