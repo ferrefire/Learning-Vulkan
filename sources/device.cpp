@@ -97,11 +97,17 @@ QueueFamilies Device::FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR su
     int i = 0;
     for (const auto &queueFamily : queueFamilies)
     {
-		if (!result.graphicsFamilyFound && (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) && (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT))
+		if (!result.graphicsFamilyFound && (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT))
 		{
             result.graphicsFamily = i;
             result.graphicsFamilyFound = true;
         }
+
+		if (!result.computeFamilyFound && (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT))
+		{
+			result.computeFamily = i;
+			result.computeFamilyFound = true;
+		}
 
         if (!result.presentationFamilyFound)
         {
@@ -120,7 +126,9 @@ QueueFamilies Device::FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR su
         i++;
     }
 
-    return (result);
+	throw std::runtime_error("failed to find required queue families");
+
+	return (result);
 }
 
 bool Device::CheckDeviceExtensionSupport(VkPhysicalDevice device)
@@ -175,9 +183,9 @@ void Device::CreateLogicalDevice(VkSurfaceKHR surface)
     QueueFamilies queueFamilies = FindQueueFamilies(physicalDevice, surface);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies = {queueFamilies.graphicsFamily, queueFamilies.presentationFamily};
+	std::set<uint32_t> uniqueQueueFamilies = {queueFamilies.graphicsFamily, queueFamilies.computeFamily, queueFamilies.presentationFamily};
 
-    float queuePriority = 1.0f;
+	float queuePriority = 1.0f;
     for (uint32_t queueFamily : uniqueQueueFamilies)
     {
         VkDeviceQueueCreateInfo queueCreateInfo{};
@@ -206,8 +214,8 @@ void Device::CreateLogicalDevice(VkSurfaceKHR surface)
     }
 
     vkGetDeviceQueue(logicalDevice, queueFamilies.graphicsFamily, 0, &graphicsQueue);
+	vkGetDeviceQueue(logicalDevice, queueFamilies.computeFamily, 0, &computeQueue);
 	vkGetDeviceQueue(logicalDevice, queueFamilies.presentationFamily, 0, &presentationQueue);
-	vkGetDeviceQueue(logicalDevice, queueFamilies.graphicsFamily, 0, &computeQueue);
 
 	queueFamilies = FindQueueFamilies(physicalDevice, surface);
     swapChainSupportDetails = QuerySwapChainSupport(physicalDevice, surface);
@@ -342,16 +350,28 @@ VkFormat Device::FindDepthFormat()
 		VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT));
 }
 
-void Device::CreateCommandPool()
+void Device::CreateCommandPools()
 {
-	if (commandPool) throw std::runtime_error("cannot create command pool because it already exists");
+	if (graphicsCommandPool) throw std::runtime_error("cannot create graphics command pool because it already exists");
 
-	VkCommandPoolCreateInfo poolInfo{};
-	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	poolInfo.queueFamilyIndex = queueFamilies.graphicsFamily;
+	VkCommandPoolCreateInfo graphicsPoolInfo{};
+	graphicsPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	graphicsPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	graphicsPoolInfo.queueFamilyIndex = queueFamilies.graphicsFamily;
 
-	if (vkCreateCommandPool(logicalDevice, &poolInfo, nullptr, &commandPool) != VK_SUCCESS)
+	if (vkCreateCommandPool(logicalDevice, &graphicsPoolInfo, nullptr, &graphicsCommandPool) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create command pool");
+	}
+
+	if (computeCommandPool) throw std::runtime_error("cannot create compute command pool because it already exists");
+
+	VkCommandPoolCreateInfo computePoolInfo{};
+	computePoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	computePoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	computePoolInfo.queueFamilyIndex = queueFamilies.computeFamily;
+
+	if (vkCreateCommandPool(logicalDevice, &computePoolInfo, nullptr, &computeCommandPool) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create command pool");
 	}
@@ -359,28 +379,50 @@ void Device::CreateCommandPool()
 
 void Device::CreateCommandBuffers()
 {
-	if (commandBuffers.size() != 0) throw std::runtime_error("cannot create command buffers because they already exists");
+	if (graphicsCommandBuffers.size() != 0) throw std::runtime_error("cannot create graphics command buffers because they already exists");
 
-	commandBuffers.resize(Manager::settings.maxFramesInFlight);
+	graphicsCommandBuffers.resize(Manager::settings.maxFramesInFlight);
 
-	VkCommandBufferAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.commandPool = commandPool;
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandBufferCount = (uint32_t)Manager::settings.maxFramesInFlight;
+	VkCommandBufferAllocateInfo graphicsAllocInfo{};
+	graphicsAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	graphicsAllocInfo.commandPool = graphicsCommandPool;
+	graphicsAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	graphicsAllocInfo.commandBufferCount = (uint32_t)Manager::settings.maxFramesInFlight;
 
-	if (vkAllocateCommandBuffers(logicalDevice, &allocInfo, commandBuffers.data()) != VK_SUCCESS)
+	if (vkAllocateCommandBuffers(logicalDevice, &graphicsAllocInfo, graphicsCommandBuffers.data()) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to allocate command buffers");
+	}
+
+	if (computeCommandBuffers.size() != 0) throw std::runtime_error("cannot create compute command buffers because they already exists");
+
+	computeCommandBuffers.resize(1);
+
+	VkCommandBufferAllocateInfo computeAllocInfo{};
+	computeAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	computeAllocInfo.commandPool = computeCommandPool;
+	computeAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	computeAllocInfo.commandBufferCount = (uint32_t)computeCommandBuffers.size();
+
+	if (vkAllocateCommandBuffers(logicalDevice, &computeAllocInfo, computeCommandBuffers.data()) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to allocate command buffers");
 	}
 }
 
-void Device::DestroyCommandPool()
+void Device::DestroyCommandPools()
 {
-	if (!commandPool) return;
+	if (graphicsCommandPool)
+	{
+		vkDestroyCommandPool(logicalDevice, graphicsCommandPool, nullptr);
+		graphicsCommandPool = nullptr;
+	}
 
-	vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
-	commandPool = nullptr;
+	if (computeCommandPool)
+	{
+		vkDestroyCommandPool(logicalDevice, computeCommandPool, nullptr);
+		computeCommandPool = nullptr;
+	}
 }
 
 /*
@@ -420,12 +462,12 @@ void Device::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, u
 }
 */
 
-VkCommandBuffer Device::BeginSingleTimeCommands()
+VkCommandBuffer Device::BeginGraphicsCommand()
 {
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool = commandPool;
+	allocInfo.commandPool = graphicsCommandPool;
 	allocInfo.commandBufferCount = 1;
 
 	VkCommandBuffer commandBuffer;
@@ -443,7 +485,30 @@ VkCommandBuffer Device::BeginSingleTimeCommands()
 	return commandBuffer;
 }
 
-void Device::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
+VkCommandBuffer Device::BeginComputeCommand()
+{
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = computeCommandPool;
+	allocInfo.commandBufferCount = 1;
+
+	VkCommandBuffer commandBuffer;
+	vkAllocateCommandBuffers(logicalDevice, &allocInfo, &commandBuffer);
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to begin recording command buffer!");
+	}
+
+	return commandBuffer;
+}
+
+void Device::EndGraphicsCommand(VkCommandBuffer commandBuffer)
 {
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
 	{
@@ -458,10 +523,10 @@ void Device::EndSingleTimeCommands(VkCommandBuffer commandBuffer)
 	vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 	vkQueueWaitIdle(graphicsQueue);
 
-	vkFreeCommandBuffers(logicalDevice, commandPool, 1, &commandBuffer);
+	vkFreeCommandBuffers(logicalDevice, graphicsCommandPool, 1, &commandBuffer);
 }
 
-void Device::EndSingleTimeComputeCommands(VkCommandBuffer commandBuffer)
+void Device::EndComputeCommand(VkCommandBuffer commandBuffer)
 {
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
 	{
@@ -476,7 +541,7 @@ void Device::EndSingleTimeComputeCommands(VkCommandBuffer commandBuffer)
 	vkQueueSubmit(computeQueue, 1, &submitInfo, VK_NULL_HANDLE);
 	vkQueueWaitIdle(computeQueue);
 
-	vkFreeCommandBuffers(logicalDevice, commandPool, 1, &commandBuffer);
+	vkFreeCommandBuffers(logicalDevice, computeCommandPool, 1, &commandBuffer);
 }
 
 VkSampleCountFlagBits Device::MaxSampleCount() 

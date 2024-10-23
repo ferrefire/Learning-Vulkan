@@ -140,7 +140,7 @@ void Buffer::DestroyBuffer()
 
 void Buffer::CopyTo(VkBuffer targetBuffer, VkDeviceSize size)
 {
-	VkCommandBuffer commandBuffer = device.BeginSingleTimeCommands();
+	VkCommandBuffer commandBuffer = device.BeginGraphicsCommand();
 
 	VkBufferCopy copyRegion{};
 	copyRegion.srcOffset = 0;
@@ -149,12 +149,12 @@ void Buffer::CopyTo(VkBuffer targetBuffer, VkDeviceSize size)
 
 	vkCmdCopyBuffer(commandBuffer, buffer, targetBuffer, 1, &copyRegion);
 
-	device.EndSingleTimeCommands(commandBuffer);
+	device.EndGraphicsCommand(commandBuffer);
 }
 
 void Buffer::CopyTo(VkImage targetImage, ImageConfiguration &configuration)
 {
-	VkCommandBuffer commandBuffer = device.BeginSingleTimeCommands();
+	VkCommandBuffer commandBuffer = device.BeginGraphicsCommand();
 
 	VkBufferImageCopy region{};
 	region.bufferOffset = 0;
@@ -171,5 +171,5 @@ void Buffer::CopyTo(VkImage targetImage, ImageConfiguration &configuration)
 
 	vkCmdCopyBufferToImage(commandBuffer, buffer, targetImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-	device.EndSingleTimeCommands(commandBuffer);
+	device.EndGraphicsCommand(commandBuffer);
 }

@@ -22,8 +22,8 @@ ImageConfiguration Texture::ImageStorage(uint32_t width, uint32_t height)
 	ImageConfiguration imageConfig;
 	imageConfig.width = width;
 	imageConfig.height = height;
-	//imageConfig.format = R16;
-	imageConfig.format = R8G8B8A8;
+	imageConfig.format = R16;
+	//imageConfig.format = R8G8B8A8;
 	imageConfig.layout = LAYOUT_GENERAL;
 	imageConfig.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
 	imageConfig.createMipmaps = false;
@@ -85,7 +85,7 @@ void Texture::CreateTextureImage(std::string name, SamplerConfiguration &sampler
 	int texWidth, texHeight, texChannels;
 	VkDeviceSize imageSize;
 	stbi_uc *pixels = Texture::LoadTexture(Utilities::GetPath() + "/textures/" + name, &texWidth, &texHeight, &texChannels);
-	imageSize = texWidth * texHeight * 4;
+	imageSize = texWidth * texHeight * 4; //corrupt image error probably
 
 	ImageConfiguration imageConfig;
 	imageConfig.width = texWidth;
@@ -258,7 +258,7 @@ void Texture::CreateMipmaps(ImageConfiguration &imageConfig)
     	throw std::runtime_error("texture image format does not support linear blitting");
 	}
 
-	VkCommandBuffer commandBuffer = device.BeginSingleTimeCommands();
+	VkCommandBuffer commandBuffer = device.BeginGraphicsCommand();
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -318,14 +318,14 @@ void Texture::CreateMipmaps(ImageConfiguration &imageConfig)
 
     vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-    device.EndSingleTimeCommands(commandBuffer);
+    device.EndGraphicsCommand(commandBuffer);
 
 	imageConfig.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
 
 void Texture::TransitionImageLayout(ImageConfiguration &imageConfig, VkImageLayout newLayout)
 {
-	VkCommandBuffer commandBuffer = device.BeginSingleTimeCommands();
+	VkCommandBuffer commandBuffer = device.BeginGraphicsCommand();
 
 	VkImageMemoryBarrier barrier{};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -368,7 +368,7 @@ void Texture::TransitionImageLayout(ImageConfiguration &imageConfig, VkImageLayo
 
 	vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage ,0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-	device.EndSingleTimeCommands(commandBuffer);
+	device.EndGraphicsCommand(commandBuffer);
 
 	imageConfig.layout = newLayout;
 }

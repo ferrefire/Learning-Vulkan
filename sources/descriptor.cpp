@@ -62,17 +62,18 @@ void Descriptor::CreateDescriptorSetLayout(std::vector<DescriptorConfiguration> 
 
 void Descriptor::CreateDescriptorPool()
 {
-	if (descriptorPool)
-		throw std::runtime_error("cannot create descriptor pool because it already exists");
+	if (descriptorPool) throw std::runtime_error("cannot create descriptor pool because it already exists");
 
 	std::vector<VkDescriptorPoolSize> poolSizes;
 	poolSizes.resize(descriptorConfigs.size());
+
+	uint32_t count = perFrame ? static_cast<uint32_t>(Manager::settings.maxFramesInFlight) : 1;
 
 	int index = 0;
 	for (DescriptorConfiguration &config : descriptorConfigs)
 	{
 		poolSizes[index].type = config.type;
-		poolSizes[index].descriptorCount = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
+		poolSizes[index].descriptorCount = count;
 		index++;
 	}
 
@@ -80,7 +81,7 @@ void Descriptor::CreateDescriptorPool()
 	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 	poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 	poolInfo.pPoolSizes = poolSizes.data();
-	poolInfo.maxSets = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
+	poolInfo.maxSets = count;
 
 	if (vkCreateDescriptorPool(device.logicalDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
 	{
@@ -90,23 +91,24 @@ void Descriptor::CreateDescriptorPool()
 
 void Descriptor::CreateDescriptorSets(VkDescriptorSetLayout descriptorSetLayout)
 {
-	if (descriptorSets.size() != 0)
-		throw std::runtime_error("cannot create descriptor sets because they already exist");
+	if (descriptorSets.size() != 0) throw std::runtime_error("cannot create descriptor sets because they already exist");
 
-	std::vector<VkDescriptorSetLayout> layouts(Manager::settings.maxFramesInFlight, descriptorSetLayout);
+	uint32_t count = perFrame ? static_cast<uint32_t>(Manager::settings.maxFramesInFlight) : 1;
+
+	std::vector<VkDescriptorSetLayout> layouts(count, descriptorSetLayout);
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	allocInfo.descriptorPool = descriptorPool;
-	allocInfo.descriptorSetCount = static_cast<uint32_t>(Manager::settings.maxFramesInFlight);
+	allocInfo.descriptorSetCount = count;
 	allocInfo.pSetLayouts = layouts.data();
 
-	descriptorSets.resize(Manager::settings.maxFramesInFlight);
+	descriptorSets.resize(count);
 	if (vkAllocateDescriptorSets(device.logicalDevice, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to allocate descriptor sets");
 	}
 
-	for (size_t i = 0; i < Manager::settings.maxFramesInFlight; i++)
+	for (size_t i = 0; i < count; i++)
 	{
 		std::vector<VkWriteDescriptorSet> descriptorWrites{};
 		descriptorWrites.resize(descriptorConfigs.size());
@@ -169,5 +171,7 @@ void Descriptor::DestroyDescriptorPool()
 
 void Descriptor::Bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, VkPipelineBindPoint bindPoint)
 {
-	vkCmdBindDescriptorSets(commandBuffer, bindPoint, pipelineLayout, 0, 1, &descriptorSets[Manager::currentFrame], 0, nullptr);
+	uint32_t index = perFrame ? Manager::currentFrame : 0;
+
+	vkCmdBindDescriptorSets(commandBuffer, bindPoint, pipelineLayout, 0, 1, &descriptorSets[index], 0, nullptr);
 }

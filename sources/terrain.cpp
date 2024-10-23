@@ -106,6 +106,8 @@ void Terrain::CreateGraphicsDescriptor()
 
 void Terrain::CreateComputeDescriptor()
 {
+	computeDescriptor.perFrame = false;
+
 	std::vector<DescriptorConfiguration> descriptorConfig(1);
 
 	descriptorConfig[0].type = IMAGE_STORAGE;
@@ -146,14 +148,6 @@ void Terrain::DestroyPipelines()
 {
 	graphicsPipeline.Destroy();
 	computePipeline.Destroy();
-
-    //graphicsPipeline.DestroyGraphicsPipeline();
-	//graphicsPipeline.DestroyDescriptorPool();
-	//graphicsPipeline.DestroyDescriptorSetLayout();
-
-	//computePipeline.DestroyGraphicsPipeline();
-	//computePipeline.DestroyDescriptorPool();
-	//computePipeline.DestroyDescriptorSetLayout();
 }
 
 void Terrain::DestroyDescriptors()
@@ -164,11 +158,11 @@ void Terrain::DestroyDescriptors()
 
 void Terrain::Start()
 {
-	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginSingleTimeCommands();
+	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
 	computePipeline.BindCompute(commandBuffer);
 	computeDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT);
 	vkCmdDispatch(commandBuffer, 512, 512, 1);
-	Manager::currentDevice.EndSingleTimeComputeCommands(commandBuffer);
+	Manager::currentDevice.EndComputeCommand(commandBuffer);
 
 	std::cout << "Computed!" << std::endl;
 }

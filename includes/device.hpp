@@ -10,12 +10,15 @@ struct QueueFamilies
     uint32_t graphicsFamily = 0;
     bool graphicsFamilyFound = false;
 
-    uint32_t presentationFamily = 0;
+	uint32_t computeFamily = 0;
+	bool computeFamilyFound = false;
+
+	uint32_t presentationFamily = 0;
     bool presentationFamilyFound = false;
 
     bool Complete()
     {
-        return (graphicsFamilyFound && presentationFamilyFound);
+        return (graphicsFamilyFound && computeFamilyFound && presentationFamilyFound);
     }
 };
 
@@ -44,10 +47,13 @@ class Device
 		VkQueue computeQueue = nullptr;
 		QueueFamilies queueFamilies;
 
-        VkCommandPool commandPool = nullptr;
-		std::vector<VkCommandBuffer> commandBuffers;
+        VkCommandPool graphicsCommandPool = nullptr;
+		std::vector<VkCommandBuffer> graphicsCommandBuffers;
 
-        std::vector<VkSemaphore> imageAvailableSemaphores;
+		VkCommandPool computeCommandPool = nullptr;
+		std::vector<VkCommandBuffer> computeCommandBuffers;
+
+		std::vector<VkSemaphore> imageAvailableSemaphores;
 		std::vector<VkSemaphore> renderFinishedSemaphores;
 		std::vector<VkFence> inFlightFences;
 
@@ -73,13 +79,15 @@ class Device
         VkFormat FindDepthFormat();
         bool HasStencilComponent(VkFormat format);
 
-        void CreateCommandPool();
+        void CreateCommandPools();
         void CreateCommandBuffers();
-        void DestroyCommandPool();
+        void DestroyCommandPools();
 
-        VkCommandBuffer BeginSingleTimeCommands();
-		void EndSingleTimeCommands(VkCommandBuffer commandBuffer);
-		void EndSingleTimeComputeCommands(VkCommandBuffer commandBuffer);
+		VkCommandBuffer BeginGraphicsCommand();
+		VkCommandBuffer BeginComputeCommand();
+		void EndGraphicsCommand(VkCommandBuffer commandBuffer);
+		void EndComputeCommand(VkCommandBuffer commandBuffer);
+		
 		VkSampleCountFlagBits MaxSampleCount();
 		VkSampleCountFlagBits MaxDeviceSampleCount();
 };

@@ -124,8 +124,8 @@ void Graphics::DrawFrame()
 
 	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
 
-	vkResetCommandBuffer(device.commandBuffers[Manager::currentFrame], 0);
-	RecordCommandBuffer(device.commandBuffers[Manager::currentFrame], imageIndex);
+	vkResetCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], 0);
+	RecordCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], imageIndex);
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -136,7 +136,7 @@ void Graphics::DrawFrame()
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &device.commandBuffers[Manager::currentFrame];
+	submitInfo.pCommandBuffers = &device.graphicsCommandBuffers[Manager::currentFrame];
 
 	VkSemaphore signalSemaphores[] = {device.renderFinishedSemaphores[Manager::currentFrame]};
 	submitInfo.signalSemaphoreCount = 1;
@@ -173,7 +173,7 @@ void Graphics::Create()
 
 	window.CreateResources();
 
-	device.CreateCommandPool();
+	device.CreateCommandPools();
 	device.CreateCommandBuffers();
 	device.CreateSyncObjects();
 
@@ -212,7 +212,7 @@ void Graphics::DestroyInstance()
 void Graphics::Destroy()
 {
 	device.DestroySyncObjects();
-	device.DestroyCommandPool();
+	device.DestroyCommandPools();
 
 	window.DestroyFramebuffers();
 	window.DestroyRenderPass();
