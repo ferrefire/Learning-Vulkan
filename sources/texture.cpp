@@ -27,6 +27,7 @@ ImageConfiguration Texture::ImageStorage(uint32_t width, uint32_t height)
 	imageConfig.layout = LAYOUT_GENERAL;
 	imageConfig.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
 	imageConfig.createMipmaps = false;
+	imageConfig.sharingMode = VK_SHARING_MODE_CONCURRENT;
 
 	return (imageConfig);
 }
@@ -86,8 +87,10 @@ void Texture::CreateTextureImage(std::string name, SamplerConfiguration &sampler
 	VkDeviceSize imageSize;
 	stbi_uc *pixels = Texture::LoadTexture(Utilities::GetPath() + "/textures/" + name, &texWidth, &texHeight, &texChannels);
 	imageSize = texWidth * texHeight * 4; //corrupt image error probably
+	//std::cout << texChannels << std::endl;
 
 	ImageConfiguration imageConfig;
+	imageConfig.createMipmaps = true;
 	imageConfig.width = texWidth;
 	imageConfig.height = texHeight;
 	imageConfig.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -187,6 +190,8 @@ void Texture::CreateImageView(ImageConfiguration &imageConfig, SamplerConfigurat
 	//imageView = Images::CreateImageView(image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, *device);
 
 	//SamplerConfiguration samplerConfiguration;
+	if (imageConfig.createMipmaps) samplerConfig.maxLod = VK_LOD_CLAMP_NONE;
+
 	CreateSampler(samplerConfig);
 }
 

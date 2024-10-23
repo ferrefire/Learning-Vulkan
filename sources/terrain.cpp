@@ -26,8 +26,7 @@ void Terrain::CreateTextures()
 
 	ImageConfiguration heightMapConfig = Texture::ImageStorage(512, 512);
 	SamplerConfiguration heightMapSamplerConfig;
-	heightMapSamplerConfig.maxLod = 0.0f;
-	heightMapSamplerConfig.anisotrophic = VK_FALSE;
+	//heightMapSamplerConfig.anisotrophic = VK_FALSE;
 	heightMapTexture.CreateImage(heightMapConfig, heightMapSamplerConfig);
 }
 

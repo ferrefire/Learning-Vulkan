@@ -10,6 +10,7 @@
 #include <string>
 
 #define IMAGE_2D VK_IMAGE_TYPE_2D
+#define IMAGE_VIEW_2D VK_IMAGE_VIEW_TYPE_2D
 
 #define R8G8B8A8 VK_FORMAT_R8G8B8A8_SRGB
 #define R16 VK_FORMAT_R16_UNORM
@@ -24,7 +25,7 @@
 struct ImageConfiguration
 {
     VkImageType type = IMAGE_2D;
-    VkImageViewType viewType = VK_IMAGE_VIEW_TYPE_2D;
+    VkImageViewType viewType = IMAGE_VIEW_2D;
     uint32_t width = 1;
     uint32_t height = 1;
     uint32_t depth = 1;
@@ -38,7 +39,7 @@ struct ImageConfiguration
     VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
     VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT;
-	bool createMipmaps = true;
+	bool createMipmaps = false;
 };
 
 struct SamplerConfiguration
@@ -54,7 +55,8 @@ struct SamplerConfiguration
     VkSamplerMipmapMode mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     float mipLodBias = 0.0f;
     float minLod = 0.0f;
-    float maxLod = VK_LOD_CLAMP_NONE;
+	float maxLod = 0.0f;
+	//float maxLod = VK_LOD_CLAMP_NONE;
 };
 
 class Texture
