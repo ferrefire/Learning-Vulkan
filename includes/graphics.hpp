@@ -31,4 +31,5 @@ class Graphics
 		void DrawFrame();
 
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		bool CheckValidationLayerSupport();
 };

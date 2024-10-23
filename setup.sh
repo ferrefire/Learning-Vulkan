@@ -40,7 +40,8 @@ run_command () {
 			mkdir build
 		fi
 		cd $path/build
-		cmake $dev $check_found .. $fresh
+		cmake $dev .. $fresh
+		#cmake $dev $check_found .. $fresh
 
 	elif [[ $1 == "clean" ]] || [[ $1 == "cl" ]]; then
 		rm -rf $path/build

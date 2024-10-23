@@ -32,7 +32,12 @@ void Graphics::CreateInstance()
 {
     if (instance) throw std::runtime_error("cannot create instance because it already exists");
 
-    VkApplicationInfo appInfo{};
+	//if (Manager::settings.enableValidationLayers && !CheckValidationLayerSupport())
+	//{
+	//	throw std::runtime_error("validation layers requested, but not available");
+	//}
+
+	VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = "Limitless";
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -161,6 +166,36 @@ void Graphics::DrawFrame()
 	vkQueuePresentKHR(device.presentationQueue, &presentInfo);
 
 	Manager::currentFrame = (Manager::currentFrame + 1) % Manager::settings.maxFramesInFlight;
+}
+
+bool Graphics::CheckValidationLayerSupport()
+{
+	uint32_t layerCount;
+	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+	std::vector<VkLayerProperties> availableLayers(layerCount);
+	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+	for (const char *layerName : Manager::settings.validationLayers)
+	{
+		bool layerFound = false;
+
+		for (const auto &layerProperties : availableLayers)
+		{
+			if (strcmp(layerName, layerProperties.layerName) == 0)
+			{
+				layerFound = true;
+				break;
+			}
+		}
+
+		if (!layerFound)
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 void Graphics::Create()

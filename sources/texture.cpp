@@ -341,7 +341,7 @@ void Texture::TransitionImageLayout(ImageConfiguration &imageConfig, VkImageLayo
 	barrier.image = image;
 	barrier.subresourceRange.aspectMask = imageConfig.aspect;
 	barrier.subresourceRange.baseMipLevel = 0;
-	barrier.subresourceRange.levelCount = imageConfig.mipLevels;
+	barrier.subresourceRange.levelCount = imageConfig.mipLevels; //maybe set to 1
 	barrier.subresourceRange.baseArrayLayer = 0;
 	barrier.subresourceRange.layerCount = imageConfig.arrayLayers;
 	barrier.srcAccessMask = 0; // TODO

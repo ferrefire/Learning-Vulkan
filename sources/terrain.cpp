@@ -20,7 +20,8 @@ void Terrain::CreateTextures()
 {
 	SamplerConfiguration grassSamplerConfig;
 	grassSamplerConfig.repeatMode = REPEAT;
-	grassTexture.CreateTexture("sparse_grass_diff.jpg", grassSamplerConfig);
+	//grassTexture.CreateTexture("sparse_grass_diff.jpg", grassSamplerConfig);
+	grassTexture.CreateTexture("texture.jpg", grassSamplerConfig);
 
 	//heightMapTexture.CreateTexture("perlin_noise_256.jpeg");
 
