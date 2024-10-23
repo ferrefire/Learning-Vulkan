@@ -77,7 +77,7 @@ run_command () {
 	elif [[ $1 == "run" ]] || [[ $1 == "r" ]]; then
 		if [[ $OSTYPE == "linux-gnu" ]]; then
 			if test -f $path/build/limitless; then
-				set_env
+				#set_env
 				cd $path/build
 				./limitless $args
 			else
@@ -86,7 +86,7 @@ run_command () {
 			fi
 		elif [[ $OSTYPE == "msys" ]]; then
 			if test -f $path/build/Release/limitless; then
-				set_env
+				#set_env
 				cd $path/build
 				./Release/limitless $args
 			else
