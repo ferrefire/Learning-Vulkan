@@ -14,7 +14,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC "includes" "build/_deps/stb_im
 set(GLFW_BUILD_WAYLAND False)#check false replace by off
 set(BUILD_WSI_WAYLAND_SUPPORT False)
 set(ENABLE_OPT False)
-#set(UPDATE_DEPS ON)
+set(UPDATE_DEPS OFF)
 set(BUILD_TESTS OFF)
 
 include(FetchContent)
@@ -37,7 +37,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable("glfw")
 target_link_libraries(${PROJECT_NAME} PUBLIC "glfw")
 
-set(UPDATE_DEPS ON)
+FetchContent_Declare(
+    Vulkan-Headers
+    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
+    GIT_TAG 595c8d4794410a4e64b98dc58d27c0310d7ea2fd
+	GIT_SHALLOW 1
+)
+FetchContent_MakeAvailable("Vulkan-Headers")
+target_link_libraries(${PROJECT_NAME} PUBLIC "Vulkan-Headers")
 
 FetchContent_Declare(
     Vulkan-Loader
@@ -47,8 +54,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable("Vulkan-Loader")
 target_link_libraries(${PROJECT_NAME} PUBLIC "vulkan")
-
-set(UPDATE_DEPS OFF)
 
 if(DEV)
 	FetchContent_Declare(
@@ -68,14 +73,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable("stb_image")
 
-FetchContent_Declare(
-    Vulkan_Validation_Layers
-    URL https://github.com/ferrefire/Vulkan_Validation_Layers/archive/refs/heads/main.zip
-	#DOWNLOAD_NO_EXTRACT True
-    SOURCE_DIR VK_Layers
-)
-FetchContent_MakeAvailable("Vulkan_Validation_Layers")
-
+#FetchContent_Declare(
+#    Vulkan_Validation_Layers
+#    URL https://github.com/ferrefire/Vulkan_Validation_Layers/archive/refs/heads/main.zip
+#	#DOWNLOAD_NO_EXTRACT True
+#    SOURCE_DIR VK_Layers
+#)
+#FetchContent_MakeAvailable("Vulkan_Validation_Layers")
+#
 #FetchContent_Declare(
 #    Vulkan-Headers
 #    GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git

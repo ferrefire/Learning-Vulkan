@@ -14,7 +14,7 @@ Texture *Texture::Statue()
 
 void Texture::CreateDefaults()
 {
-	statue->CreateTexture("texture.jpg");
+	//statue->CreateTexture("texture.jpg");
 }
 
 ImageConfiguration Texture::ImageStorage(uint32_t width, uint32_t height)
@@ -23,12 +23,9 @@ ImageConfiguration Texture::ImageStorage(uint32_t width, uint32_t height)
 	imageConfig.width = width;
 	imageConfig.height = height;
 	imageConfig.format = R16;
-	//imageConfig.format = R8G8B8A8;
-	imageConfig.layout = LAYOUT_GENERAL;
-	//imageConfig.layout = LAYOUT_UNDEFINED;
+	imageConfig.transitionLayout = LAYOUT_GENERAL;
 	imageConfig.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
 	imageConfig.createMipmaps = false;
-	imageConfig.sharingMode = VK_SHARING_MODE_CONCURRENT;
 
 	return (imageConfig);
 }
@@ -95,7 +92,8 @@ void Texture::CreateTextureImage(std::string name, SamplerConfiguration &sampler
 	imageConfig.width = texWidth;
 	imageConfig.height = texHeight;
 	imageConfig.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-	imageConfig.layout = VK_IMAGE_LAYOUT_UNDEFINED;
+	//imageConfig.layout = VK_IMAGE_LAYOUT_UNDEFINED;
+	imageConfig.transitionLayout = LAYOUT_TRNSFR_DST;
 	imageConfig.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
 
 	Buffer stagingBuffer;
@@ -105,7 +103,8 @@ void Texture::CreateTextureImage(std::string name, SamplerConfiguration &sampler
 
 	CreateImage(imageConfig);
 
-	TransitionImageLayout(imageConfig, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	//TransitionImageLayout(imageConfig, imageConfig.initialLayout, imageConfig.transitionLayout);
+	TransitionImageLayout(imageConfig);
 
 	stagingBuffer.CopyTo(image, imageConfig);
 	stagingBuffer.Destroy();
@@ -130,7 +129,9 @@ void Texture::CreateImage(ImageConfiguration &imageConfig)
 	imageInfo.arrayLayers = imageConfig.arrayLayers;
 	imageInfo.format = imageConfig.format;
 	imageInfo.tiling = imageConfig.tiling;
-	imageInfo.initialLayout = imageConfig.layout;
+	imageInfo.initialLayout = imageConfig.initialLayout;
+	//imageInfo.initialLayout = imageConfig.layout;
+	//imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	imageInfo.usage = imageConfig.usage;
 	imageInfo.samples = imageConfig.sampleCount;
 	imageInfo.sharingMode = imageConfig.sharingMode;
@@ -154,6 +155,8 @@ void Texture::CreateImage(ImageConfiguration &imageConfig)
 	}
 
 	vkBindImageMemory(device.logicalDevice, image, imageMemory, 0);
+
+	//if (imageConfig.initialLayout != LAYOUT_GENERAL) TransitionImageLayout(imageConfig, imageConfig.initialLayout, imageConfig.transitionLayout);
 }
 
 void Texture::CreateImage(ImageConfiguration &imageConfig, SamplerConfiguration &samplerConfig)
@@ -326,17 +329,17 @@ void Texture::CreateMipmaps(ImageConfiguration &imageConfig)
 
     device.EndGraphicsCommand(commandBuffer);
 
-	imageConfig.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	//imageConfig.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
 
-void Texture::TransitionImageLayout(ImageConfiguration &imageConfig, VkImageLayout newLayout)
+void Texture::TransitionImageLayout(ImageConfiguration &imageConfig)
 {
 	VkCommandBuffer commandBuffer = device.BeginGraphicsCommand();
 
 	VkImageMemoryBarrier barrier{};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-	barrier.oldLayout = imageConfig.layout;
-	barrier.newLayout = newLayout;
+	barrier.oldLayout = imageConfig.initialLayout;
+	barrier.newLayout = imageConfig.transitionLayout;
 	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 	barrier.image = image;
@@ -351,7 +354,7 @@ void Texture::TransitionImageLayout(ImageConfiguration &imageConfig, VkImageLayo
 	VkPipelineStageFlags sourceStage;
 	VkPipelineStageFlags destinationStage;
 
-	if (barrier.oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+	if (barrier.oldLayout == LAYOUT_UNDEFINED && barrier.newLayout == LAYOUT_TRNSFR_DST)
 	{
 		barrier.srcAccessMask = 0;
 		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
@@ -359,13 +362,21 @@ void Texture::TransitionImageLayout(ImageConfiguration &imageConfig, VkImageLayo
 		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 	}
-	else if (barrier.oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+	else if (barrier.oldLayout == LAYOUT_TRNSFR_DST && barrier.newLayout == LAYOUT_READ_ONLY)
 	{
 		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
 		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	}
+	else if (barrier.oldLayout == LAYOUT_UNDEFINED && barrier.newLayout == LAYOUT_GENERAL)
+	{
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		destinationStage = VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
 	}
 	else
 	{
@@ -376,7 +387,7 @@ void Texture::TransitionImageLayout(ImageConfiguration &imageConfig, VkImageLayo
 
 	device.EndGraphicsCommand(commandBuffer);
 
-	imageConfig.layout = newLayout;
+	//imageConfig.layout = newLayout;
 }
 
 /*

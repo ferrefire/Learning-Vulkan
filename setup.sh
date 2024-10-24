@@ -67,7 +67,7 @@ run_command () {
 			mkdir build
 		fi
 		cd $path/build
-		mkdir VK_Layers
+		#mkdir VK_Layers
 		cmake $dev .. $fresh
 		#cmake $dev $check_found .. $fresh
 

@@ -16,6 +16,7 @@
 #define R16 VK_FORMAT_R16_UNORM
 
 #define LAYOUT_READ_ONLY VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+#define LAYOUT_TRNSFR_DST VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL
 #define LAYOUT_GENERAL VK_IMAGE_LAYOUT_GENERAL
 #define LAYOUT_UNDEFINED VK_IMAGE_LAYOUT_UNDEFINED
 
@@ -34,8 +35,9 @@ struct ImageConfiguration
     uint32_t arrayLayers = 1;
     VkFormat format = R8G8B8A8;
     VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-    VkImageLayout layout = LAYOUT_READ_ONLY;
-    //VkImageLayout layout = LAYOUT_UNDEFINED;
+    //VkImageLayout layout = LAYOUT_READ_ONLY;
+    VkImageLayout initialLayout = LAYOUT_UNDEFINED;
+    VkImageLayout transitionLayout = LAYOUT_READ_ONLY;
     VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT;
     VkMemoryPropertyFlags memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
     VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
@@ -99,6 +101,8 @@ class Texture
 		void DestroySampler();
 
         static stbi_uc *LoadTexture(const std::string path, int *texWidth, int *texHeight, int *texChannels);
-		void TransitionImageLayout(ImageConfiguration &imageConfig, VkImageLayout newLayout);
+		//void TransitionImageLayout(ImageConfiguration &imageConfig, VkImageLayout oldLayout, VkImageLayout newLayout);
+		void TransitionImageLayout(ImageConfiguration &imageConfig);
+		//void TransitionImageLayout(ImageConfiguration &imageConfig, VkImageLayout newLayout);
 		//void CopyFrom(VkBuffer buffer, ImageConfiguration &configuration);
 };
