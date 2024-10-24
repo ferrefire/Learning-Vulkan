@@ -67,9 +67,7 @@ run_command () {
 			mkdir build
 		fi
 		cd $path/build
-		#mkdir VK_Layers
 		cmake $dev .. $fresh
-		#cmake $dev $check_found .. $fresh
 
 	elif [[ $1 == "clean" ]] || [[ $1 == "cl" ]]; then
 		rm -rf $path/build
@@ -110,7 +108,7 @@ run_command () {
 			fi
 		elif [[ $OSTYPE == "msys" ]]; then
 			cd $path/build
-			cmake --build . --config Release
+			cmake --build . --parallel --config Release
 		fi
 		if [[ $release == 1 ]]; then
 			if test -d $path/build/_deps; then
