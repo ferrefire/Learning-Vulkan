@@ -131,13 +131,23 @@ void Graphics::DrawFrame()
 	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, UINT64_MAX, device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.framebufferResized)
+	//if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.framebufferResized)
+	//{
+	//	window.framebufferResized = false;
+	//	window.RecreateSwapChain();
+	//	return;
+	//}
+	//else if (result != VK_SUCCESS)
+	//{
+	//	throw std::runtime_error("failed to acquire swap chain image");
+	//}
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
-		window.framebufferResized = false;
 		window.RecreateSwapChain();
 		return;
 	}
-	else if (result != VK_SUCCESS)
+	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
 	{
 		throw std::runtime_error("failed to acquire swap chain image");
 	}
@@ -179,6 +189,16 @@ void Graphics::DrawFrame()
 	presentInfo.pResults = nullptr;
 
 	vkQueuePresentKHR(device.presentationQueue, &presentInfo);
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.framebufferResized)
+	{
+		window.framebufferResized = false;
+		window.RecreateSwapChain();
+	}
+	else if (result != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to present swap chain image!");
+	}
 
 	Manager::currentFrame = (Manager::currentFrame + 1) % Manager::settings.maxFramesInFlight;
 }
