@@ -29,7 +29,8 @@ class Camera
 		float near = 0.1f;
 		float far = 1000.0f;
 		float FOV = 45.0f;
-		float speed = 1.0f;
+		//float speed = 1.0f;
+		float speed = 25.0f;
 
 		bool canMove = true;
 		bool canLook = true;

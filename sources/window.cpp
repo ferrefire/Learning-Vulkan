@@ -245,7 +245,7 @@ void Window::CreateFramebuffers()
 	{
 		std::vector<VkImageView> attachments;
 
-		if (Manager::settings.maxSampleCount == VK_SAMPLE_COUNT_1_BIT)
+		if (!Manager::settings.mssa)
 		{
 			attachments.resize(2);
 			attachments[0] = swapChainTextures[i].imageView;

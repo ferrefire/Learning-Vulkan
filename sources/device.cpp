@@ -483,9 +483,11 @@ void Device::EndComputeCommand(VkCommandBuffer commandBuffer)
 
 VkSampleCountFlagBits Device::MaxSampleCount() 
 {
+	if (!Manager::settings.mssa) return (VK_SAMPLE_COUNT_1_BIT);
+
 	VkSampleCountFlagBits maxDevice = MaxDeviceSampleCount();
 
-	if (Manager::settings.maxSampleCount < maxDevice) return (Manager::settings.maxSampleCount);
+	if (Manager::settings.maxSamples < maxDevice) return (Manager::settings.maxSamples);
 
 	return (maxDevice);
 }
