@@ -198,6 +198,7 @@ void Device::CreateLogicalDevice(VkSurfaceKHR surface)
 
     VkPhysicalDeviceFeatures deviceFeatures{};
 	deviceFeatures.samplerAnisotropy = VK_TRUE;
+	deviceFeatures.tessellationShader = VK_TRUE;
 	if (Manager::settings.wireframe)
 	{
 		deviceFeatures.fillModeNonSolid = VK_TRUE;

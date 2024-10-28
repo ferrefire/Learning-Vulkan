@@ -47,6 +47,7 @@ struct PipelineConfiguration
     VkPipelineDepthStencilStateCreateInfo depthStencil;
     VkRenderPass renderPass = nullptr;
     uint32_t subpass = 0;
+	bool tesselation = false;
 };
 
 struct DescriptorLayoutConfiguration

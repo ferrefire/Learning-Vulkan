@@ -25,7 +25,7 @@ void Terrain::CreateTextures()
 
 	//heightMapTexture.CreateTexture("perlin_noise_256.jpeg");
 
-	ImageConfiguration heightMapConfig = Texture::ImageStorage(512, 512);
+	ImageConfiguration heightMapConfig = Texture::ImageStorage(1024, 1024);
 	SamplerConfiguration heightMapSamplerConfig;
 	heightMapTexture.CreateImage(heightMapConfig, heightMapSamplerConfig);
 	heightMapTexture.TransitionImageLayout(heightMapConfig);
@@ -51,13 +51,14 @@ void Terrain::CreateGraphicsPipeline()
 {
 	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(3);
 	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
-	descriptorLayoutConfig[0].stages = VERTEX_STAGE;
+	descriptorLayoutConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE;
 	descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[1].stages = VERTEX_STAGE | FRAGMENT_STAGE;
+	descriptorLayoutConfig[1].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
 	descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[2].stages = FRAGMENT_STAGE;
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
+	pipelineConfiguration.tesselation = true;
 
     VertexInfo vertexInfo = mesh.MeshVertexInfo();
 
@@ -78,7 +79,7 @@ void Terrain::CreateGraphicsDescriptor()
 	std::vector<DescriptorConfiguration> descriptorConfig(3);
 
 	descriptorConfig[0].type = UNIFORM_BUFFER;
-	descriptorConfig[0].stages = VERTEX_STAGE;
+	descriptorConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE;
 	descriptorConfig[0].buffersInfo.resize(object.uniformBuffers.size());
 	int i = 0;
 	for (Buffer &buffer : object.uniformBuffers)
@@ -90,7 +91,7 @@ void Terrain::CreateGraphicsDescriptor()
 	}
 
 	descriptorConfig[1].type = IMAGE_SAMPLER;
-	descriptorConfig[1].stages = VERTEX_STAGE | FRAGMENT_STAGE;
+	descriptorConfig[1].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
 	descriptorConfig[1].imageInfo.imageLayout = LAYOUT_GENERAL;
 	descriptorConfig[1].imageInfo.imageView = heightMapTexture.imageView;
 	descriptorConfig[1].imageInfo.sampler = heightMapTexture.sampler;
@@ -179,7 +180,7 @@ void Terrain::ComputeHeightMap()
 	Manager::globalDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
 	Manager::UpdateShaderVariables();
 	computeDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
-	vkCmdDispatch(commandBuffer, 512, 512, 1);
+	vkCmdDispatch(commandBuffer, 1024, 1024, 1);
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
 
 	//std::cout << "Computed!" << std::endl;

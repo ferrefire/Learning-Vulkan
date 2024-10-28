@@ -98,10 +98,14 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 
 	std::string currentPath = Utilities::GetPath();
 
-	auto vertexCode = Utilities::FileToBinary((currentPath + "/shaders/" + shader + ".vert.spv").c_str());
-	auto fragmentCode = Utilities::FileToBinary((currentPath + "/shaders/" + shader + ".frag.spv").c_str());
+	std::vector<char> vertexCode = Utilities::FileToBinary((currentPath + "/shaders/" + shader + ".vert.spv").c_str());
+	std::vector<char> tesselationControlCode;
+	std::vector<char> tesselationEvaluationCode;
+	std::vector<char> fragmentCode = Utilities::FileToBinary((currentPath + "/shaders/" + shader + ".frag.spv").c_str());
 
 	VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
+	VkShaderModule tesselationControlShaderModule;
+	VkShaderModule tesselationEvaluationShaderModule;
 	VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode);
 
 	VkPipelineShaderStageCreateInfo vertexShaderStageInfo{};
@@ -110,13 +114,57 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	vertexShaderStageInfo.module = vertexShaderModule;
 	vertexShaderStageInfo.pName = "main";
 
+	VkPipelineShaderStageCreateInfo tesselationControlShaderStageInfo{};
+
+	VkPipelineShaderStageCreateInfo tesselationEvaluationShaderStageInfo{};
+
 	VkPipelineShaderStageCreateInfo fragmentShaderStageInfo{};
 	fragmentShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	fragmentShaderStageInfo.stage = FRAGMENT_STAGE;
 	fragmentShaderStageInfo.module = fragmentShaderModule;
 	fragmentShaderStageInfo.pName = "main";
 
-	VkPipelineShaderStageCreateInfo shaderStages[] = {vertexShaderStageInfo, fragmentShaderStageInfo};
+	//VkPipelineShaderStageCreateInfo shaderStages[] = {vertexShaderStageInfo, fragmentShaderStageInfo};
+
+	VkPipelineTessellationStateCreateInfo tesselationInfo{};
+	tesselationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
+	tesselationInfo.patchControlPoints = 3;
+
+
+	std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+
+	if (!pipelineConfig.tesselation)
+	{
+		shaderStages.resize(2);
+		shaderStages[0] = vertexShaderStageInfo;
+		shaderStages[1] = fragmentShaderStageInfo;
+	}
+	else if (pipelineConfig.tesselation)
+	{
+		pipelineConfig.inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
+
+		tesselationControlCode = Utilities::FileToBinary((currentPath + "/shaders/" + shader + ".tesc.spv").c_str());
+		tesselationEvaluationCode = Utilities::FileToBinary((currentPath + "/shaders/" + shader + ".tese.spv").c_str());
+
+		tesselationControlShaderModule = CreateShaderModule(tesselationControlCode);
+		tesselationEvaluationShaderModule = CreateShaderModule(tesselationEvaluationCode);
+
+		tesselationControlShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		tesselationControlShaderStageInfo.stage = TESSELATION_CONTROL_STAGE;
+		tesselationControlShaderStageInfo.module = tesselationControlShaderModule;
+		tesselationControlShaderStageInfo.pName = "main";
+
+		tesselationEvaluationShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		tesselationEvaluationShaderStageInfo.stage = TESSELATION_EVALUATION_STAGE;
+		tesselationEvaluationShaderStageInfo.module = tesselationEvaluationShaderModule;
+		tesselationEvaluationShaderStageInfo.pName = "main";
+
+		shaderStages.resize(4);
+		shaderStages[0] = vertexShaderStageInfo;
+		shaderStages[1] = tesselationControlShaderStageInfo;
+		shaderStages[2] = tesselationEvaluationShaderStageInfo;
+		shaderStages[3] = fragmentShaderStageInfo;
+	}
 
 	auto bindingDescription = vertexInfo.bindingDescription;
 	auto attributeDescriptions = vertexInfo.attributeDescriptions;
@@ -167,10 +215,11 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 
 	VkGraphicsPipelineCreateInfo graphicsPipelineInfo{};
 	graphicsPipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	graphicsPipelineInfo.stageCount = 2;
-	graphicsPipelineInfo.pStages = shaderStages;
+	graphicsPipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
+	graphicsPipelineInfo.pStages = shaderStages.data();
 	graphicsPipelineInfo.pVertexInputState = &vertexInputInfo;
 	graphicsPipelineInfo.pInputAssemblyState = &pipelineConfig.inputAssembly;
+	if (pipelineConfig.tesselation) graphicsPipelineInfo.pTessellationState = &tesselationInfo;
 	graphicsPipelineInfo.pViewportState = &pipelineConfig.viewportState;
 	graphicsPipelineInfo.pRasterizationState = &pipelineConfig.rasterization;
 	graphicsPipelineInfo.pMultisampleState = &pipelineConfig.multisampling;
@@ -189,6 +238,8 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	}
 
 	vkDestroyShaderModule(device.logicalDevice, vertexShaderModule, nullptr);
+	vkDestroyShaderModule(device.logicalDevice, tesselationControlShaderModule, nullptr);
+	vkDestroyShaderModule(device.logicalDevice, tesselationEvaluationShaderModule, nullptr);
 	vkDestroyShaderModule(device.logicalDevice, fragmentShaderModule, nullptr);
 }
 

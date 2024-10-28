@@ -6,8 +6,8 @@ layout (set = 1, binding = 0, r16) uniform image2D heightMapTexture;
 
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-uint resolution = 512;
-float resolutionMult = 0.001953125;
+uint resolution = 1024;
+float resolutionMult = 0.0009765625;
 
 #include "noise.glsl"
 
