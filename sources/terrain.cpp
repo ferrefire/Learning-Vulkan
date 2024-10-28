@@ -20,13 +20,17 @@ void Terrain::CreateTextures()
 {
 	SamplerConfiguration grassSamplerConfig;
 	grassSamplerConfig.repeatMode = REPEAT;
-	grassTexture.CreateTexture("sparse_grass_diff.jpg", grassSamplerConfig);
+	grassSamplerConfig.mipLodBias = 1.0f;
+	grassTexture.CreateTexture("rocky_grass_diff.jpg", grassSamplerConfig);
 	//grassTexture.CreateTexture("texture.jpg", grassSamplerConfig);
 
 	//heightMapTexture.CreateTexture("perlin_noise_256.jpeg");
 
 	ImageConfiguration heightMapConfig = Texture::ImageStorage(1024, 1024);
 	SamplerConfiguration heightMapSamplerConfig;
+	//heightMapSamplerConfig.minFilter = VK_FILTER_NEAREST;
+	//heightMapSamplerConfig.magFilter = VK_FILTER_NEAREST;
+	//heightMapSamplerConfig.anisotrophic = VK_FALSE;
 	heightMapTexture.CreateImage(heightMapConfig, heightMapSamplerConfig);
 	heightMapTexture.TransitionImageLayout(heightMapConfig);
 }

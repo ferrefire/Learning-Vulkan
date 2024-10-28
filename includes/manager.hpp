@@ -35,7 +35,8 @@ struct Settings
 
 struct ShaderVariables
 {
-	glm::vec3 viewPosition = glm::vec3(0);
+	alignas(16) glm::vec3 viewPosition = glm::vec3(0);
+	alignas(16) glm::vec4 resolution = glm::vec4(0);
 };
 
 class Manager

@@ -5,6 +5,7 @@
 layout(set = 0, binding = 0) uniform Variables 
 {
     vec3 viewPosition;
+	vec4 resolution;
 } variables;
 
 layout(set = 1, binding = 0) uniform ObjectData 
@@ -22,6 +23,7 @@ layout(location = 0) in vec3 inPosition;
 //layout(location = 1) out vec2 outTexCoord;
 
 #include "transformation.glsl"
+#include "heightmap.glsl"
 
 void main()
 {
@@ -34,7 +36,8 @@ void main()
     //gl_Position = objectData.projection * objectData.view * objectData.model * vec4(position, 1.0);
 
 	vec3 worldPosition = ObjectToWorld(inPosition);
-	worldPosition.y += texture(heightMapSampler, vec2(inPosition.xz + 0.5)).r * 5000;
+	//worldPosition.y += texture(heightMapSampler, vec2(inPosition.xz + 0.5)).r * 5000;
+	worldPosition.y += SampleDynamic(worldPosition.xz) * 5000;
 
 	gl_Position = vec4(worldPosition, 1);
 }

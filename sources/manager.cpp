@@ -136,6 +136,7 @@ void Manager::Frame()
 void Manager::UpdateShaderVariables()
 {
 	shaderVariables.viewPosition = currentCamera.Position();
+	shaderVariables.resolution = glm::vec4(window.width, window.height, 1.0 / window.width, 1.0 / window.height);
 	memcpy(shaderVariableBuffers[Manager::currentFrame].mappedBuffer, &shaderVariables, sizeof(shaderVariables));
 }
 

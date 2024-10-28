@@ -3,6 +3,7 @@
 layout(set = 0, binding = 0) uniform Variables 
 {
     vec3 viewPosition;
+    vec4 resolution;
 } variables;
 
 //layout(vertices = 3) in;
@@ -10,14 +11,14 @@ layout(vertices = 3) out;
 
 //uniform float tesselationFactor = 10;
 
-float tesselationFactor = 10;
+float tesselationFactor = 20;
 
 float TessellationFactor (vec3 p0, vec3 p1)
 {
     float edgeLength = distance(p0, p1);
     vec3 edgeCenter = (p0 + p1) * 0.5;
     float viewDistance = distance(edgeCenter, variables.viewPosition);
-    return (edgeLength * 540 * (1.0 / (tesselationFactor * viewDistance)));
+    return (edgeLength * variables.resolution.y * (1.0 / (tesselationFactor * viewDistance)));
 }
 
 void main()
