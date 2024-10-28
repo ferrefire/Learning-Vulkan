@@ -32,7 +32,7 @@ void Graphics::CreateInstance()
 {
     if (instance) throw std::runtime_error("cannot create instance because it already exists");
 
-	if (Manager::settings.enableValidationLayers && !CheckValidationLayerSupport())
+	if (Manager::settings.validationLayersActive && !CheckValidationLayerSupport())
 	{
 		throw std::runtime_error("validation layers requested, but not available");
 	}
@@ -49,13 +49,17 @@ void Graphics::CreateInstance()
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &appInfo;
 
-    uint32_t glfwExtensionCount = 0;
-    const char **glfwExtensions;
-    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-    createInfo.enabledExtensionCount = glfwExtensionCount;
-    createInfo.ppEnabledExtensionNames = glfwExtensions;
+    //uint32_t glfwExtensionCount = 0;
+    //const char **glfwExtensions;
+    //glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    //createInfo.enabledExtensionCount = glfwExtensionCount;
+    //createInfo.ppEnabledExtensionNames = glfwExtensions;
 
-	if (Manager::settings.enableValidationLayers)
+	auto extensions = GetRequiredExtensions();
+	createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+	createInfo.ppEnabledExtensionNames = extensions.data();
+
+	if (Manager::settings.validationLayersActive)
 	{
 		createInfo.enabledLayerCount = static_cast<uint32_t>(Manager::settings.validationLayers.size());
 		createInfo.ppEnabledLayerNames = Manager::settings.validationLayers.data();
@@ -205,6 +209,30 @@ bool Graphics::CheckValidationLayerSupport()
 	}
 
 	return true;
+}
+
+std::vector<const char*> Graphics::GetRequiredExtensions()
+{
+	uint32_t glfwExtensionCount = 0;
+    const char** glfwExtensions;
+    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+    std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+    //if (Manager::settings.validationLayersActive) 
+	//{
+    //    extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    //}
+
+    return extensions;
+}
+
+VKAPI_ATTR VkBool32 VKAPI_CALL Graphics::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, 
+	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+{
+	std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+
+    return VK_FALSE;
 }
 
 void Graphics::Create()

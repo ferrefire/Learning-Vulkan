@@ -148,7 +148,11 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 		throw std::runtime_error("failed to create pipeline layout");
 	}
 
-	if (Manager::settings.wireframe) pipelineConfig.rasterization.polygonMode = VK_POLYGON_MODE_LINE;
+	if (Manager::settings.wireframe)
+	{
+		pipelineConfig.rasterization.polygonMode = VK_POLYGON_MODE_LINE;
+		//pipelineConfig.rasterization.lineWidth = 3.0f;
+	}
 
 	pipelineConfig.multisampling.rasterizationSamples = device.MaxSampleCount();
 

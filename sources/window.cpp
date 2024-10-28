@@ -226,6 +226,7 @@ void Window::CreateImageViews()
 
 	ImageConfiguration configuration;
 	configuration.format = swapChainImageFormat;
+	//configuration.sampleCount = VK_SAMPLE_COUNT_1_BIT; //check
 
 	for (Texture &texture : swapChainTextures)
 	{
@@ -288,6 +289,7 @@ void Window::CreateDepthResources()
 	imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 	imageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
 	imageConfig.sampleCount = device.MaxSampleCount();
+
 
 	SamplerConfiguration samplerConfig;
 
@@ -372,6 +374,7 @@ void Window::CreateRenderPass()
 	//dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 	//dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	//dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
 	//std::array<VkAttachmentDescription, 3> attachments = {colorAttachment, depthAttachment, colorAttachmentResolve};
@@ -382,6 +385,7 @@ void Window::CreateRenderPass()
 	{
 		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 		dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		//dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
 		attachments.resize(2);
 		attachments[0] = colorAttachment;
@@ -392,6 +396,7 @@ void Window::CreateRenderPass()
 		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		subpass.pResolveAttachments = &colorAttachmentResolveRef;
 		dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		//dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
 		attachments.resize(3);
 		attachments[0] = colorAttachment;

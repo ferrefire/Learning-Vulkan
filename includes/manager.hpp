@@ -21,8 +21,9 @@ struct Settings
 	bool wireframe = false;
 	bool discrete = true;
 	VkSampleCountFlagBits maxSampleCount = VK_SAMPLE_COUNT_1_BIT;
+	//VkSampleCountFlagBits maxSampleCount = VK_SAMPLE_COUNT_64_BIT;
 	const std::vector<const char*> validationLayers = {	"VK_LAYER_KHRONOS_validation" };
-	const bool enableValidationLayers = true;
+	const bool validationLayersActive = true;
 };
 
 class Manager
