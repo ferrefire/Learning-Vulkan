@@ -23,8 +23,11 @@
 
 #define VERTEX_STAGE VK_SHADER_STAGE_VERTEX_BIT
 #define FRAGMENT_STAGE VK_SHADER_STAGE_FRAGMENT_BIT
-#define ALL_STAGE VK_SHADER_STAGE_ALL_GRAPHICS
+#define TESSELATION_CONTROL_STAGE VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT
+#define TESSELATION_EVALUATION_STAGE VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT
+#define ALL_GRAPHICS_STAGE VK_SHADER_STAGE_ALL_GRAPHICS
 #define COMPUTE_STAGE VK_SHADER_STAGE_COMPUTE_BIT
+#define ALL_STAGE VK_SHADER_STAGE_ALL_GRAPHICS | VK_SHADER_STAGE_COMPUTE_BIT
 
 #define IMAGE_READ_ONLY VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 
@@ -60,11 +63,14 @@ class Pipeline
 
     public:
         static PipelineConfiguration DefaultConfiguration();
+		static void CreateDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig, VkDescriptorSetLayout *descriptorSetLayout);
 
-        Pipeline(Device &device, Camera &camera);
+		Pipeline(Device &device, Camera &camera);
         ~Pipeline();
 
-		VkDescriptorSetLayout descriptorSetLayout = nullptr;
+		VkDescriptorSetLayout globalDescriptorSetLayout = nullptr;
+		VkDescriptorSetLayout objectDescriptorSetLayout = nullptr;
+		//VkDescriptorSetLayout descriptorSetLayout = nullptr;
 
 		VkPipelineLayout graphicsPipelineLayout = nullptr;
 		VkPipeline graphicsPipeline = nullptr;
@@ -74,7 +80,9 @@ class Pipeline
 
 		void CreateGraphicsPipeline(std::string shader, std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig, PipelineConfiguration &pipelineConfig, VertexInfo &vertexInfo);
 		void CreateComputePipeline(std::string shader, std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig);
-		void CreateDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig);
+		// void CreateDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig, VkDescriptorSetLayout *descriptorSetLayout);
+		// void CreateGlobalDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig);
+		void CreateObjectDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig);
 		VkShaderModule CreateShaderModule(const std::vector<char> &code);
 		void BindGraphics(VkCommandBuffer commandBuffer, Window &window);
 		void BindCompute(VkCommandBuffer commandBuffer);

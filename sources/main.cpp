@@ -43,6 +43,7 @@ int main(int argc, char **argv)
 {
 	Setup(argc, argv);
 
+	Manager::Setup();
 	Manager::Start();
 
 	while (Manager::currentWindow.IsOpen())

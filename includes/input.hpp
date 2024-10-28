@@ -35,5 +35,6 @@ class Input
 		static KeyStatus GetKey(int keyCode, bool mouse);
 		static void SetKeyStatus();
 
+		static void Start();
 		static void Frame();
 };

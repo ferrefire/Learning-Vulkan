@@ -103,6 +103,8 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+	//Manager::UpdateShaderVariables();
+
 	Terrain::RecordCommands(commandBuffer);
 
 	//for (Object *object : Manager::objects)
@@ -249,6 +251,8 @@ void Graphics::Create()
 	device.CreateCommandBuffers();
 	device.CreateSyncObjects();
 
+	Manager::Create();
+
 	Texture::CreateDefaults();
 	Mesh::CreateDefaults();
 
@@ -286,20 +290,24 @@ void Graphics::Destroy()
 	device.DestroySyncObjects();
 	device.DestroyCommandPools();
 
-	window.DestroyFramebuffers();
-	window.DestroyRenderPass();
-	window.DestroyDepthResources();
-	window.DestroyColorResources();
-	window.DestroyImageViews();
-	window.DestroySwapChain();
+	//window.DestroyFramebuffers();
+	//window.DestroyRenderPass();
+	//window.DestroyDepthResources();
+	//window.DestroyColorResources();
+	//window.DestroyImageViews();
+	//window.DestroySwapChain();
+
+	window.DestroyResources();
 	window.DestroySurface(instance);
 
 	Terrain::Destroy();
 
-	Manager::DestroyPipelines();
-	Manager::DestroyTextures();
-	Manager::DestroyMeshes();
-	Manager::DestroyObjects();
+	//Manager::DestroyPipelines();
+	//Manager::DestroyTextures();
+	//Manager::DestroyMeshes();
+	//Manager::DestroyObjects();
+
+	Manager::Clean();
 
 	device.DestroyLogicalDevice();
 	window.DestroySurface(instance);

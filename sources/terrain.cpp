@@ -44,7 +44,7 @@ void Terrain::CreateObjects()
 {
 	object.Create();
 
-	object.Resize(glm::vec3(100));
+	object.Resize(glm::vec3(10000));
 }
 
 void Terrain::CreateGraphicsPipeline()
@@ -101,7 +101,7 @@ void Terrain::CreateGraphicsDescriptor()
 	descriptorConfig[2].imageInfo.imageView = grassTexture.imageView;
 	descriptorConfig[2].imageInfo.sampler = grassTexture.sampler;
 
-	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.descriptorSetLayout);
+	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
 }
 
 void Terrain::CreateComputeDescriptor()
@@ -116,7 +116,7 @@ void Terrain::CreateComputeDescriptor()
 	descriptorConfig[0].imageInfo.imageView = heightMapTexture.imageView;
 	descriptorConfig[0].imageInfo.sampler = heightMapTexture.sampler;
 
-	computeDescriptor.Create(descriptorConfig, computePipeline.descriptorSetLayout);
+	computeDescriptor.Create(descriptorConfig, computePipeline.objectDescriptorSetLayout);
 }
 
 void Terrain::Destroy()
@@ -158,22 +158,31 @@ void Terrain::DestroyDescriptors()
 
 void Terrain::Start()
 {
-	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
-	computePipeline.BindCompute(commandBuffer);
-	computeDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT);
-	vkCmdDispatch(commandBuffer, 512, 512, 1);
-	Manager::currentDevice.EndComputeCommand(commandBuffer);
-
-	std::cout << "Computed!" << std::endl;
+	ComputeHeightMap();
 }
 
 void Terrain::RecordCommands(VkCommandBuffer commandBuffer)
 {
     graphicsPipeline.BindGraphics(commandBuffer, Manager::currentWindow);
-	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT);
+	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+	Manager::UpdateShaderVariables();
+	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
 	object.UpdateUniformBuffer(Manager::currentFrame);
     mesh.Bind(commandBuffer);
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
+}
+
+void Terrain::ComputeHeightMap()
+{
+	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
+	computePipeline.BindCompute(commandBuffer);
+	Manager::globalDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
+	Manager::UpdateShaderVariables();
+	computeDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
+	vkCmdDispatch(commandBuffer, 512, 512, 1);
+	Manager::currentDevice.EndComputeCommand(commandBuffer);
+
+	//std::cout << "Computed!" << std::endl;
 }
 
 Pipeline Terrain::graphicsPipeline{Manager::currentDevice, Manager::currentCamera};

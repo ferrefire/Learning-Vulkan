@@ -448,6 +448,16 @@ void Window::RecreateSwapChain()
 	CreateFramebuffers();
 }
 
+void Window::DestroyResources()
+{
+	DestroyFramebuffers();
+	DestroyRenderPass();
+	DestroyDepthResources();
+	DestroyColorResources();
+	DestroyImageViews();
+	DestroySwapChain();
+}
+
 void Window::DestroySurface(VkInstance instance)
 {
     if (!surface) return;

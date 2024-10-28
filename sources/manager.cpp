@@ -7,14 +7,12 @@
 #include <stdexcept>
 #include <cstdlib>
 
-void Manager::Start()
+void Manager::Setup()
 {
 	try
 	{
 		InitializeGLFW();
 		InitializeVulkan();
-
-		//Terrain::Start();
 	}
 	catch (const std::exception &e)
 	{
@@ -23,14 +21,25 @@ void Manager::Start()
 	}
 }
 
+void Manager::Create()
+{
+	CreateShaderVariableBuffers();
+	CreateDescriptor();
+}
+
 void Manager::Clean()
 {
-	
+	DestroyPipelines();
+	DestroyTextures();
+	DestroyMeshes();
+	DestroyObjects();
+	DestroyShaderVariableBuffers();
+	DestroyDescriptor();
 }
 
 void Manager::Quit(int exitCode)
 {
-	Clean();
+	//Clean();
 
 	graphics.Destroy();
 
@@ -66,17 +75,68 @@ void Manager::InitializeVulkan()
 	std::cout << device.properties.deviceName << std::endl;
 }
 
+void Manager::CreateShaderVariableBuffers()
+{
+	if (shaderVariableBuffers.size() != 0) throw std::runtime_error("cannot create shader variable buffers because they already exist");
+
+	shaderVariableBuffers.resize(settings.maxFramesInFlight);
+
+	BufferConfiguration configuration;
+	configuration.size = sizeof(ShaderVariables);
+	configuration.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	configuration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	configuration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	configuration.mapped = true;
+
+	for (Buffer &buffer : shaderVariableBuffers)
+	{
+		buffer.Create(configuration);
+	}
+}
+
+void Manager::CreateDescriptor()
+{
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(1);
+	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
+	descriptorLayoutConfig[0].stages = ALL_STAGE;
+
+	Pipeline::CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
+
+	std::vector<DescriptorConfiguration> descriptorConfig(1);
+
+	descriptorConfig[0].type = UNIFORM_BUFFER;
+	descriptorConfig[0].stages = ALL_STAGE;
+	descriptorConfig[0].buffersInfo.resize(shaderVariableBuffers.size());
+	int i = 0;
+	for (Buffer &buffer : shaderVariableBuffers)
+	{
+		descriptorConfig[0].buffersInfo[i].buffer = buffer.buffer;
+		descriptorConfig[0].buffersInfo[i].range = sizeof(ShaderVariables);
+		descriptorConfig[0].buffersInfo[i].offset = 0;
+		i++;
+	}
+
+	globalDescriptor.Create(descriptorConfig, globalDescriptorSetLayout);
+}
+
+void Manager::Start()
+{
+	Input::Start();
+	Terrain::Start();
+}
+
 void Manager::Frame()
 {
 	if (Input::GetKey(GLFW_KEY_ESCAPE).pressed)
 	{
 		window.Close();
 	}
-	else if (Input::GetKey(GLFW_KEY_C).pressed)
-	{
-		Terrain::Start();
-	}
-	
+}
+
+void Manager::UpdateShaderVariables()
+{
+	shaderVariables.viewPosition = currentCamera.Position();
+	memcpy(shaderVariableBuffers[Manager::currentFrame].mappedBuffer, &shaderVariables, sizeof(shaderVariables));
 }
 
 void Manager::DestroyPipelines()
@@ -126,6 +186,27 @@ void Manager::DestroyObjects()
 		delete(object);
 	}
 	objects.clear();
+}
+
+void Manager::DestroyShaderVariableBuffers()
+{
+	for (Buffer &buffer : shaderVariableBuffers)
+	{
+		buffer.Destroy();
+	}
+
+	shaderVariableBuffers.clear();
+}
+
+void Manager::DestroyDescriptor()
+{
+	globalDescriptor.Destroy();
+
+	if (globalDescriptorSetLayout)
+	{
+		vkDestroyDescriptorSetLayout(device.logicalDevice, globalDescriptorSetLayout, nullptr);
+		globalDescriptorSetLayout = nullptr;
+	}
 }
 
 Window &Manager::GetWindow()
@@ -186,7 +267,10 @@ Window &Manager::currentWindow = Manager::window;
 Camera &Manager::currentCamera = Manager::camera;
 Graphics &Manager::currentGraphics = Manager::graphics;
 
-//Texture Manager::defaultTexture{Manager::device};
+ShaderVariables Manager::shaderVariables;
+std::vector<Buffer> Manager::shaderVariableBuffers;
+VkDescriptorSetLayout Manager::globalDescriptorSetLayout = nullptr;
+Descriptor Manager::globalDescriptor;
 
 uint32_t Manager::currentFrame = 0;
 

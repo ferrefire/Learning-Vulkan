@@ -8,9 +8,15 @@
 #include "mesh.hpp"
 #include "object.hpp"
 #include "texture.hpp"
+#include "buffer.hpp"
+#include "descriptor.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <vector>
 
@@ -25,6 +31,11 @@ struct Settings
 	//VkSampleCountFlagBits maxSampleCount = VK_SAMPLE_COUNT_64_BIT;
 	const std::vector<const char*> validationLayers = {	"VK_LAYER_KHRONOS_validation" };
 	const bool validationLayersActive = true;
+};
+
+struct ShaderVariables
+{
+	glm::vec3 viewPosition = glm::vec3(0);
 };
 
 class Manager
@@ -43,6 +54,7 @@ class Manager
 
 	public:
 		static Settings settings;
+		static ShaderVariables shaderVariables;
 
 		static Window &currentWindow;
 		static Camera &currentCamera;
@@ -51,21 +63,32 @@ class Manager
 
 		static uint32_t currentFrame;
 
+		static std::vector<Buffer> shaderVariableBuffers;
+		static VkDescriptorSetLayout globalDescriptorSetLayout;
+		static Descriptor globalDescriptor;
+
 		static std::vector<Object *> objects;
 
-		static void Start();
+		static void Setup();
+		static void Create();
 		static void Clean();
 		static void Quit(int exitCode);
 
 		static void InitializeGLFW();
 		static void InitializeVulkan();
+		static void CreateShaderVariableBuffers();
+		static void CreateDescriptor();
 
+		static void Start();
 		static void Frame();
+		static void UpdateShaderVariables();
 
 		static void DestroyPipelines();
 		static void DestroyTextures();
 		static void DestroyMeshes();
 		static void DestroyObjects();
+		static void DestroyShaderVariableBuffers();
+		static void DestroyDescriptor();
 
 		static Window &GetWindow();
 		static Graphics &GetGraphics();

@@ -89,9 +89,12 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 {
     if (graphicsPipeline) throw std::runtime_error("cannot create graphics pipeline because it already exists");
 
-	CreateDescriptorSetLayout(descriptorLayoutConfig);
+	//CreateGlobalDescriptorSetLayout(descriptorsInfo.globalDescriptorLayoutConfig);
+	globalDescriptorSetLayout = Manager::globalDescriptorSetLayout;
+	CreateObjectDescriptorSetLayout(descriptorLayoutConfig);
 
-    if (!descriptorSetLayout) throw std::runtime_error("cannot create graphics pipeline because descriptor set layout does not exist");
+	if (!globalDescriptorSetLayout || !objectDescriptorSetLayout) 
+		throw std::runtime_error("cannot create graphics pipeline because the descriptor set layouts do not exist");
 
 	std::string currentPath = Utilities::GetPath();
 
@@ -136,10 +139,16 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 	dynamicState.pDynamicStates = dynamicStates.data();
 
+	std::vector<VkDescriptorSetLayout> descriptorSetLayouts =
+	{
+		globalDescriptorSetLayout,
+		objectDescriptorSetLayout
+	};
+
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 1;
-	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+	pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
+	pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 	pipelineLayoutInfo.pushConstantRangeCount = 0;
 	pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
@@ -187,9 +196,12 @@ void Pipeline::CreateComputePipeline(std::string shader, std::vector<DescriptorL
 {
 	if (computePipeline) throw std::runtime_error("cannot create compute pipeline because it already exists");
 
-	CreateDescriptorSetLayout(descriptorLayoutConfig);
+	//CreateGlobalDescriptorSetLayout(descriptorsInfo.globalDescriptorLayoutConfig);
+	globalDescriptorSetLayout = Manager::globalDescriptorSetLayout;
+	CreateObjectDescriptorSetLayout(descriptorLayoutConfig);
 
-	if (!descriptorSetLayout) throw std::runtime_error("cannot create compute pipeline because descriptor set layout does not exist");
+	if (!globalDescriptorSetLayout || !objectDescriptorSetLayout)
+		throw std::runtime_error("cannot create graphics pipeline because the descriptor set layouts do not exist");
 
 	std::string currentPath = Utilities::GetPath();
 
@@ -203,10 +215,16 @@ void Pipeline::CreateComputePipeline(std::string shader, std::vector<DescriptorL
 	computeShaderStageInfo.module = computeShaderModule;
 	computeShaderStageInfo.pName = "main";
 
+	std::vector<VkDescriptorSetLayout> descriptorSetLayouts =
+	{
+		globalDescriptorSetLayout,
+		objectDescriptorSetLayout
+	};
+
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipelineLayoutInfo.setLayoutCount = 1;
-	pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+	pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
+	pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
 
 	if (vkCreatePipelineLayout(device.logicalDevice, &pipelineLayoutInfo, nullptr, &computePipelineLayout) != VK_SUCCESS)
 	{
@@ -242,10 +260,23 @@ VkShaderModule Pipeline::CreateShaderModule(const std::vector<char> &code)
 	return (shaderModule);
 }
 
-void Pipeline::CreateDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig)
-{
-    if (descriptorSetLayout) throw std::runtime_error("cannot create descriptor set layout because it already exists");
+//void Pipeline::CreateGlobalDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig)
+//{
+//	if (globalDescriptorSetLayout) throw std::runtime_error("cannot create global descriptor set layout because it already exists");
+//
+//	CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
+//}
 
+void Pipeline::CreateObjectDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig)
+{
+    if (objectDescriptorSetLayout) throw std::runtime_error("cannot create object descriptor set layout because it already exists");
+
+	CreateDescriptorSetLayout(descriptorLayoutConfig, &objectDescriptorSetLayout);
+}
+
+void Pipeline::CreateDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig, 
+	VkDescriptorSetLayout *descriptorSetLayout)
+{
 	std::vector<VkDescriptorSetLayoutBinding> bindings;
 	bindings.resize(descriptorLayoutConfig.size());
 
@@ -265,7 +296,7 @@ void Pipeline::CreateDescriptorSetLayout(std::vector<DescriptorLayoutConfigurati
 	layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 	layoutInfo.pBindings = bindings.data();
 
-	if (vkCreateDescriptorSetLayout(device.logicalDevice, &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+	if (vkCreateDescriptorSetLayout(Manager::currentDevice.logicalDevice, &layoutInfo, nullptr, descriptorSetLayout) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create descriptor set layout");
 	}
@@ -334,8 +365,15 @@ void Pipeline::DestroyComputePipeline()
 
 void Pipeline::DestroyDescriptorSetLayout()
 {
-	if (!descriptorSetLayout) return;
+	if (objectDescriptorSetLayout)
+	{
+		vkDestroyDescriptorSetLayout(device.logicalDevice, objectDescriptorSetLayout, nullptr);
+		objectDescriptorSetLayout = nullptr;
+	}
 
-	vkDestroyDescriptorSetLayout(device.logicalDevice, descriptorSetLayout, nullptr);
-	descriptorSetLayout = nullptr;
+	//if (globalDescriptorSetLayout)
+	//{
+	//	vkDestroyDescriptorSetLayout(device.logicalDevice, globalDescriptorSetLayout, nullptr);
+	//	globalDescriptorSetLayout = nullptr;
+	//}
 }

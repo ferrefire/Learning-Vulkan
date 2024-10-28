@@ -46,4 +46,5 @@ class Terrain
 
 		static void Start();
 		static void RecordCommands(VkCommandBuffer commandBuffer);
+		static void ComputeHeightMap();
 };

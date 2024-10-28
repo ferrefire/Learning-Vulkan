@@ -57,6 +57,7 @@ class Window
 		void CreateDepthResources();
 		void CreateRenderPass();
 
+		void DestroyResources();
 		void DestroySurface(VkInstance instance);
 		void DestroySwapChain();
 		void DestroyImageViews();
