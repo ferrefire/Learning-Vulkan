@@ -61,7 +61,7 @@ void Terrain::CreateGraphicsPipeline()
 {
 	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(6);
 	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
-	descriptorLayoutConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE;
+	descriptorLayoutConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
 	descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[1].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
 	descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
@@ -97,7 +97,7 @@ void Terrain::CreateGraphicsDescriptor()
 	std::vector<DescriptorConfiguration> descriptorConfig(6);
 
 	descriptorConfig[0].type = UNIFORM_BUFFER;
-	descriptorConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE;
+	descriptorConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
 	descriptorConfig[0].buffersInfo.resize(object.uniformBuffers.size());
 	int i = 0;
 	for (Buffer &buffer : object.uniformBuffers)

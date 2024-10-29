@@ -5,6 +5,8 @@
 layout(set = 0, binding = 0) uniform Variables 
 {
     vec3 viewPosition;
+    vec3 viewRight;
+    vec3 viewUp;
     vec4 resolution;
 } variables;
 
@@ -19,6 +21,7 @@ layout(set = 1, binding = 0) uniform ObjectData
 layout(vertices = 3) out;
 
 #include "culling.glsl"
+#include "depth.glsl"
 
 float tesselationFactor = 20;
 
@@ -42,17 +45,12 @@ void main()
 
         vec3 center = (p0 + p1 + p2) * (1.0 / 3.0);
 
-		//float depth = GetWorldDepth(center);
-		//float tolerance = pow(1.0 - depth, 3);
+		float depth = GetWorldDepth(center);
+		float tolerance = pow(1.0 - depth, 3);
 
 		bool cull = false;
-		//if (depth < 0.25) cull = (
-		//	AreaInView(center, vec2(20 * tolerance)) == 0 && 
-        //    AreaInView(p0, vec2(20 * tolerance)) == 0 &&
-        //    AreaInView(p1, vec2(20 * tolerance)) == 0 &&
-        //    AreaInView(p2, vec2(20 * tolerance)) == 0);
-		//else cull = (
-        cull = (InView(center, 0) == 0 && InView(p0, 0) == 0 && InView(p1, 0) == 0 && InView(p2, 0) == 0);
+		if (depth < 0.25) cull = (AreaInView(center, vec2(20 * tolerance)) == 0 && AreaInView(p0, vec2(20 * tolerance)) == 0 && AreaInView(p1, vec2(20 * tolerance)) == 0 && AreaInView(p2, vec2(20 * tolerance)) == 0);
+        else cull = (InView(center, 0) == 0 && InView(p0, 0) == 0 && InView(p1, 0) == 0 && InView(p2, 0) == 0);
 
         if (cull)
         {

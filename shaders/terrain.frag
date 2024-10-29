@@ -5,8 +5,17 @@
 layout(set = 0, binding = 0) uniform Variables 
 {
     vec3 viewPosition;
+	vec3 viewRight;
+    vec3 viewUp;
 	vec4 resolution;
 } variables;
+
+layout(set = 1, binding = 0) uniform ObjectData 
+{
+    mat4 model;
+    mat4 view;
+    mat4 projection;
+} objectData;
 
 //layout(set = 1, binding = 2) uniform sampler2D grassSampler;
 layout(set = 1, binding = 5) uniform sampler2D grassSampler;
@@ -19,6 +28,7 @@ layout(location = 0) out vec4 outColor;
 #include "heightmap.glsl"
 #include "lighting.glsl"
 #include "functions.glsl"
+#include "depth.glsl"
 
 const float textureLod0Distance = 625; //25
 const float textureLod1Distance = 40000; //200
@@ -86,13 +96,14 @@ vec3 blendTexture(float viewDistance)
 void main()
 {
 	float distanceSqrd = SquaredDistance(inPosition, variables.viewPosition);
+	float depth = GetDepth(gl_FragCoord.z);
 
 	vec3 color = blendTexture(distanceSqrd) * 1.5;
 
 	vec3 normal = SampleNormalDynamic(inPosition.xz, 1.0);
 
 	vec3 diffuse = DiffuseLighting(normal, color);
-	vec3 endColor = diffuse;
+	vec3 endColor = Fog(diffuse, depth);
 
 	outColor = vec4(endColor, 1.0);
 }
