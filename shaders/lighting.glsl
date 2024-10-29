@@ -32,4 +32,11 @@ vec3 NormalPower(vec3 normal, float power)
 	return (normalize(normal));
 }
 
+vec3 NormalToTangent(vec3 normal)
+{
+    vec3 t1 = cross(normal, vec3(0, 1, 0));
+    vec3 t2 = cross(normal, vec3(0, 0, 1));
+    return ((dot(t1, t1) > dot(t2, t2)) ? t1 : t2);
+}
+
 #endif

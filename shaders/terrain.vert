@@ -5,6 +5,7 @@
 layout(set = 0, binding = 0) uniform Variables 
 {
     vec3 viewPosition;
+    vec3 viewDirection;
     vec3 viewRight;
     vec3 viewUp;
 	vec4 resolution;

@@ -43,7 +43,9 @@ class Terrain
 
 		static Object object;
 
-		static Texture grassTexture;
+		static Texture grassDiffuseTexture;
+		static Texture grassNormalTexture;
+		static Texture grassSpecularTexture;
 
 		static Texture heightMapTexture;
 		static Texture heightMapLod0Texture;

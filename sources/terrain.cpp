@@ -23,8 +23,13 @@ void Terrain::CreateTextures()
 {
 	SamplerConfiguration grassSamplerConfig;
 	grassSamplerConfig.repeatMode = REPEAT;
-	grassSamplerConfig.mipLodBias = 1.0f;
-	grassTexture.CreateTexture("rocky_grass_diff.jpg", grassSamplerConfig);
+	grassSamplerConfig.mipLodBias = 0.0f;
+
+	grassDiffuseTexture.CreateTexture("rocky_grass_diff.jpg", grassSamplerConfig);
+
+	grassNormalTexture.CreateTexture("rocky_grass_norm.jpg", grassSamplerConfig);
+
+	grassSpecularTexture.CreateTexture("rocky_grass_spec.jpg", grassSamplerConfig);
 
 	SamplerConfiguration heightMapSamplerConfig;
 
@@ -59,7 +64,7 @@ void Terrain::CreateObjects()
 
 void Terrain::CreateGraphicsPipeline()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(6);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(8);
 	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
 	descriptorLayoutConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
 	descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
@@ -72,6 +77,10 @@ void Terrain::CreateGraphicsPipeline()
 	descriptorLayoutConfig[4].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
 	descriptorLayoutConfig[5].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[5].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[6].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[6].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[7].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[7].stages = FRAGMENT_STAGE;
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
 	pipelineConfiguration.tesselation = true;
@@ -94,7 +103,7 @@ void Terrain::CreateComputePipeline()
 
 void Terrain::CreateGraphicsDescriptor()
 {
-	std::vector<DescriptorConfiguration> descriptorConfig(6);
+	std::vector<DescriptorConfiguration> descriptorConfig(8);
 
 	descriptorConfig[0].type = UNIFORM_BUFFER;
 	descriptorConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
@@ -141,8 +150,20 @@ void Terrain::CreateGraphicsDescriptor()
 	descriptorConfig[5].type = IMAGE_SAMPLER;
 	descriptorConfig[5].stages = FRAGMENT_STAGE;
 	descriptorConfig[5].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[5].imageInfo.imageView = grassTexture.imageView;
-	descriptorConfig[5].imageInfo.sampler = grassTexture.sampler;
+	descriptorConfig[5].imageInfo.imageView = grassDiffuseTexture.imageView;
+	descriptorConfig[5].imageInfo.sampler = grassDiffuseTexture.sampler;
+
+	descriptorConfig[6].type = IMAGE_SAMPLER;
+	descriptorConfig[6].stages = FRAGMENT_STAGE;
+	descriptorConfig[6].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	descriptorConfig[6].imageInfo.imageView = grassNormalTexture.imageView;
+	descriptorConfig[6].imageInfo.sampler = grassNormalTexture.sampler;
+
+	descriptorConfig[7].type = IMAGE_SAMPLER;
+	descriptorConfig[7].stages = FRAGMENT_STAGE;
+	descriptorConfig[7].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	descriptorConfig[7].imageInfo.imageView = grassSpecularTexture.imageView;
+	descriptorConfig[7].imageInfo.sampler = grassSpecularTexture.sampler;
 
 	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
 }
@@ -216,7 +237,10 @@ void Terrain::Destroy()
 
 void Terrain::DestroyTextures()
 {
-	grassTexture.Destroy();
+	grassDiffuseTexture.Destroy();
+	grassNormalTexture.Destroy();
+	grassSpecularTexture.Destroy();
+
 	heightMapTexture.Destroy();
 	heightMapLod1Texture.Destroy();
 	heightMapLod0Texture.Destroy();
@@ -341,7 +365,10 @@ void Terrain::UpdateHeightMapVariables()
 Pipeline Terrain::graphicsPipeline{Manager::currentDevice, Manager::currentCamera};
 Pipeline Terrain::computePipeline{Manager::currentDevice, Manager::currentCamera};
 
-Texture Terrain::grassTexture{Manager::currentDevice};
+Texture Terrain::grassDiffuseTexture{Manager::currentDevice};
+Texture Terrain::grassNormalTexture{Manager::currentDevice};
+Texture Terrain::grassSpecularTexture{Manager::currentDevice};
+
 Texture Terrain::heightMapTexture{Manager::currentDevice};
 Texture Terrain::heightMapLod0Texture{Manager::currentDevice};
 Texture Terrain::heightMapLod1Texture{Manager::currentDevice};
