@@ -63,7 +63,7 @@ void Device::PickPhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
 
 bool Device::IsDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
-    QueueFamilies queueFamilies = FindQueueFamilies(device, surface);
+    QueueFamilies tempQueueFamilies = FindQueueFamilies(device, surface);
 
 	bool extensionsSupported = CheckDeviceExtensionSupport(device);
 
@@ -81,7 +81,7 @@ bool Device::IsDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface)
 	VkPhysicalDeviceFeatures supportedFeatures;
 	vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-	return (queueFamilies.Complete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy &&
+	return (tempQueueFamilies.Complete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy &&
 		(!Manager::settings.discrete || isDiscrete));
 }
 
@@ -92,11 +92,11 @@ QueueFamilies Device::FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR su
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
-    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+    std::vector<VkQueueFamilyProperties> tempQueueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, tempQueueFamilies.data());
 
     int i = 0;
-    for (const auto &queueFamily : queueFamilies)
+    for (const auto &queueFamily : tempQueueFamilies)
     {
 		if (!result.graphicsFamilyFound && (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT))
 		{

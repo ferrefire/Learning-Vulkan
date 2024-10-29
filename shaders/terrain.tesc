@@ -1,15 +1,24 @@
 #version 450 core
 
+#extension GL_ARB_shading_language_include : require
+
 layout(set = 0, binding = 0) uniform Variables 
 {
     vec3 viewPosition;
     vec4 resolution;
 } variables;
 
+layout(set = 1, binding = 0) uniform ObjectData 
+{
+    mat4 model;
+    mat4 view;
+    mat4 projection;
+} objectData;
+
 //layout(vertices = 3) in;
 layout(vertices = 3) out;
 
-//uniform float tesselationFactor = 10;
+#include "culling.glsl"
 
 float tesselationFactor = 20;
 
@@ -37,17 +46,13 @@ void main()
 		//float tolerance = pow(1.0 - depth, 3);
 
 		bool cull = false;
-		//bool cull = false;
 		//if (depth < 0.25) cull = (
 		//	AreaInView(center, vec2(20 * tolerance)) == 0 && 
         //    AreaInView(p0, vec2(20 * tolerance)) == 0 &&
         //    AreaInView(p1, vec2(20 * tolerance)) == 0 &&
         //    AreaInView(p2, vec2(20 * tolerance)) == 0);
 		//else cull = (
-		//	InView(center, 0) == 0 && 
-        //    InView(p0, 0) == 0 &&
-        //    InView(p1, 0) == 0 &&
-        //    InView(p2, 0) == 0);
+        cull = (InView(center, 0) == 0 && InView(p0, 0) == 0 && InView(p1, 0) == 0 && InView(p2, 0) == 0);
 
         if (cull)
         {
