@@ -36,6 +36,8 @@ void Graphics::CreateInstance()
 	{
 		throw std::runtime_error("validation layers requested, but not available");
 	}
+	
+	std::cout << "Validation layers: " << (Manager::settings.validationLayersActive ? "enabled" : "disabled") << std::endl;
 
 	VkApplicationInfo appInfo{};
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;

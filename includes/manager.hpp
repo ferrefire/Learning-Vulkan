@@ -30,7 +30,7 @@ struct Settings
 	VkSampleCountFlagBits maxSamples = VK_SAMPLE_COUNT_4_BIT;
 	//VkSampleCountFlagBits maxSampleCount = VK_SAMPLE_COUNT_64_BIT;
 	const std::vector<const char*> validationLayers = {	"VK_LAYER_KHRONOS_validation" };
-	const bool validationLayersActive = true;
+	bool validationLayersActive = true;
 };
 
 struct ShaderVariables

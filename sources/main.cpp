@@ -36,6 +36,10 @@ void Setup(int argc, char **argv)
 		{
 			Manager::settings.mssa = true;
 		}
+		else if (std::string(argv[i]).compare("vl") == 0)
+		{
+			Manager::settings.validationLayersActive = false;
+		}
 	}
 }
 

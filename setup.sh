@@ -73,7 +73,7 @@ run_command () {
 		rm -rf $path/build
 
 	elif [[ $1 == "run" ]] || [[ $1 == "r" ]]; then
-		if [[ $OSTYPE == "linux-gnu" ]]; then
+		if [[ $OSTYPE == "linux-gnu" ]] || [[ $OSTYPE == "darwin" ]]; then
 			if test -f $path/build/limitless; then
 				#set_env
 				cd $path/build
