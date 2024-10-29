@@ -6,10 +6,10 @@
 //uniform float noiseSampleDistance;
 //uniform float noiseSampleDistanceMult;
 
-int noiseLayers = 8;
-float noiseScale = 0.75;
-float noiseSampleDistance = 0.0001;
-float noiseSampleDistanceMult = 1666.666;
+const int noiseLayers = 8;
+const float noiseScale = 0.75;
+const float noiseSampleDistance = 0.0001;
+const float noiseSampleDistanceMult = 1666.666;
 
 float blendDistance = 1.0;
 

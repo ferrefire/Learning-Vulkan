@@ -4,10 +4,16 @@
 
 layout (set = 1, binding = 0, r16) uniform image2D heightMapTexture;
 
+layout(set = 1, binding = 1) uniform HeightMapVariables 
+{
+    float mapScale;
+} heightMapVariables;
+
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-uint resolution = 1024;
-float resolutionMult = 0.0009765625;
+const uint resolution = 1024;
+const float resolutionMult = 0.0009765625;
+//const float mapScale = 1.0;
 
 #include "noise.glsl"
 
@@ -17,6 +23,7 @@ void main()
 
   vec2 index = gl_GlobalInvocationID.xy;
   vec2 uv = index * resolutionMult - 0.5;
+  uv *= heightMapVariables.mapScale;
 
   imageStore(heightMapTexture, ivec2(index), vec4(GenerateNoise(uv, 8), 0, 0, 0));
 }

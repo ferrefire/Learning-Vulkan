@@ -15,8 +15,6 @@ layout(set = 1, binding = 0) uniform ObjectData
     mat4 projection;
 } objectData;
 
-layout(set = 1, binding = 1) uniform sampler2D heightMapSampler;
-
 layout(location = 0) in vec3 inPosition;
 
 //layout(location = 0) out vec3 outPosition;

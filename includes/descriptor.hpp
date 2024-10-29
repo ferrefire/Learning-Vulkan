@@ -45,4 +45,5 @@ class Descriptor
 		void DestroyDescriptorPool();
 
 		void Bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, VkPipelineBindPoint bindPoint, uint32_t index);
+		void Update();
 };

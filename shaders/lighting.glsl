@@ -1,12 +1,12 @@
 #ifndef LIGHTING_INCLUDED
 #define LIGHTING_INCLUDED
 
-vec3 lightColor = vec3(1);
-vec3 lightDirection = vec3(0.25, 0.5, 0.25);
+const vec3 lightColor = vec3(1);
+const vec3 lightDirection = vec3(0.25, 0.5, 0.25);
 
 vec3 DiffuseLighting(vec3 normal, vec3 color)
 {
-	float diffuseStrength = max(dot(normal, lightDirection), 0.0);
+	float diffuseStrength = max(dot(normal, lightDirection), 0.1);
 	vec3 diffuse = color * diffuseStrength;
 
 	return diffuse;

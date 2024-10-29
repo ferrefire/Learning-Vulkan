@@ -108,6 +108,45 @@ void Descriptor::CreateDescriptorSets(VkDescriptorSetLayout descriptorSetLayout)
 		throw std::runtime_error("failed to allocate descriptor sets");
 	}
 
+	Update();
+}
+
+void Descriptor::Destroy()
+{
+	DestroyDescriptorPool();
+	//DestroyDescriptorSetLayout();
+}
+
+/*
+void Descriptor::DestroyDescriptorSetLayout()
+{
+	if (!descriptorSetLayout)
+		return;
+
+	vkDestroyDescriptorSetLayout(device.logicalDevice, descriptorSetLayout, nullptr);
+	descriptorSetLayout = nullptr;
+}
+*/
+
+void Descriptor::DestroyDescriptorPool()
+{
+	if (!descriptorPool) return;
+
+	vkDestroyDescriptorPool(device.logicalDevice, descriptorPool, nullptr);
+	descriptorPool = nullptr;
+}
+
+void Descriptor::Bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, VkPipelineBindPoint bindPoint, uint32_t index)
+{
+	uint32_t setIndex = perFrame ? Manager::currentFrame : 0;
+
+	vkCmdBindDescriptorSets(commandBuffer, bindPoint, pipelineLayout, index, 1, &descriptorSets[setIndex], 0, nullptr);
+}
+
+void Descriptor::Update()
+{
+	uint32_t count = perFrame ? static_cast<uint32_t>(Manager::settings.maxFramesInFlight) : 1;
+
 	for (size_t i = 0; i < count; i++)
 	{
 		std::vector<VkWriteDescriptorSet> descriptorWrites{};
@@ -142,36 +181,4 @@ void Descriptor::CreateDescriptorSets(VkDescriptorSetLayout descriptorSetLayout)
 
 		vkUpdateDescriptorSets(device.logicalDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 	}
-}
-
-void Descriptor::Destroy()
-{
-	DestroyDescriptorPool();
-	//DestroyDescriptorSetLayout();
-}
-
-/*
-void Descriptor::DestroyDescriptorSetLayout()
-{
-	if (!descriptorSetLayout)
-		return;
-
-	vkDestroyDescriptorSetLayout(device.logicalDevice, descriptorSetLayout, nullptr);
-	descriptorSetLayout = nullptr;
-}
-*/
-
-void Descriptor::DestroyDescriptorPool()
-{
-	if (!descriptorPool) return;
-
-	vkDestroyDescriptorPool(device.logicalDevice, descriptorPool, nullptr);
-	descriptorPool = nullptr;
-}
-
-void Descriptor::Bind(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, VkPipelineBindPoint bindPoint, uint32_t index)
-{
-	uint32_t setIndex = perFrame ? Manager::currentFrame : 0;
-
-	vkCmdBindDescriptorSets(commandBuffer, bindPoint, pipelineLayout, index, 1, &descriptorSets[setIndex], 0, nullptr);
 }
