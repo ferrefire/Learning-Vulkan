@@ -24,6 +24,8 @@ class Time
 		static bool newTick;
 		static bool newSubTick;
 		static bool newFrameTick;
+
+		static int currentFPS;
 		
 		static unsigned int GetTime();
 		static void CalculateFPS();

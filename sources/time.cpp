@@ -64,7 +64,11 @@ void Time::CalculateFPS()
 {
 	if (Time::newSubTick)
 	{
-		glfwSetWindowTitle(Manager::currentWindow.data, std::to_string(int(frameCountLastTick / frameTimeLastTick)).c_str());
+		currentFPS = int(frameCountLastTick / frameTimeLastTick);
+		if (!Manager::settings.fullscreen)
+		{
+			glfwSetWindowTitle(Manager::currentWindow.data, std::to_string(currentFPS).c_str());
+		}
 	}
 }
 
@@ -86,3 +90,5 @@ bool Time::newSecond = false;
 bool Time::newTick = false;
 bool Time::newSubTick = false;
 bool Time::newFrameTick = false;
+
+int Time::currentFPS = 0;

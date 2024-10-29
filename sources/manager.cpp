@@ -2,6 +2,7 @@
 
 #include "input.hpp"
 #include "terrain.hpp"
+#include "time.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -136,6 +137,11 @@ void Manager::Frame()
 	{
 		window.Close();
 	}
+
+	//if (settings.fullscreen && Time::newSecond)
+	//{
+	//	std::cout << "FPS: " << Time::currentFPS << std::endl;
+	//}
 
 	Terrain::Frame();
 }

@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <vector>
+#include <iostream>
 
 Window::Window(Device &device) : device{device} , depthTexture{device}, colorTexture{device}
 {
@@ -170,10 +171,12 @@ VkSurfaceFormatKHR Window::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFo
     {
         if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
         {
+			std::cout << "Correct surface format found" << std::endl;
             return availableFormat;
         }
     }
 
+	std::cout << "No correct surface format found, using other format" << std::endl;
     return (availableFormats[0]);
 }
 
@@ -183,10 +186,12 @@ VkPresentModeKHR Window::ChooseSwapPresentMode(const std::vector<VkPresentModeKH
     {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
         {
+			std::cout << "Mailbox present mode found" << std::endl;
             return availablePresentMode;
         }
     }
 
+	std::cout << "No mailbox present mode found, using fifo present mode" << std::endl;
     return (VK_PRESENT_MODE_FIFO_KHR);
 }
 

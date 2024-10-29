@@ -88,4 +88,5 @@ class Terrain
 		static void RecordCommands(VkCommandBuffer commandBuffer);
 		static void ComputeHeightMap(uint32_t lod);
 		static void CheckTerrainOffset();
+		static void UpdateHeightMapVariables();
 };

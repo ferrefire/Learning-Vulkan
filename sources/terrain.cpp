@@ -277,10 +277,7 @@ void Terrain::RecordCommands(VkCommandBuffer commandBuffer)
 	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
 	Manager::UpdateShaderVariables();
 	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
-	heightMapVariables.terrainOffset = terrainOffset;
-	heightMapVariables.terrainLod0Offset = terrainLod0Offset;
-	heightMapVariables.terrainLod1Offset = terrainLod1Offset;
-	memcpy(heightMapVariablesBuffers[Manager::currentFrame].mappedBuffer, &heightMapVariables, sizeof(heightMapVariables));
+	UpdateHeightMapVariables();
 	object.UpdateUniformBuffer(Manager::currentFrame);
     mesh.Bind(commandBuffer);
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
@@ -331,6 +328,14 @@ void Terrain::CheckTerrainOffset()
 
 		ComputeHeightMap(1);
 	}
+}
+
+void Terrain::UpdateHeightMapVariables()
+{
+	heightMapVariables.terrainOffset = terrainOffset;
+	heightMapVariables.terrainLod0Offset = terrainLod0Offset;
+	heightMapVariables.terrainLod1Offset = terrainLod1Offset;
+	memcpy(heightMapVariablesBuffers[Manager::currentFrame].mappedBuffer, &heightMapVariables, sizeof(heightMapVariables));
 }
 
 Pipeline Terrain::graphicsPipeline{Manager::currentDevice, Manager::currentCamera};
