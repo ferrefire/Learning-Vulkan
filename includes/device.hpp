@@ -12,13 +12,19 @@ struct QueueFamilies
 
 	uint32_t computeFamily = 0;
 	bool computeFamilyFound = false;
+	bool seperateComputeFamilyFound = false;
 
 	uint32_t presentationFamily = 0;
     bool presentationFamilyFound = false;
 
-    bool Complete()
+    bool Valid()
     {
         return (graphicsFamilyFound && computeFamilyFound && presentationFamilyFound);
+    }
+
+    bool Complete()
+    {
+        return (graphicsFamilyFound && computeFamilyFound && seperateComputeFamilyFound && presentationFamilyFound);
     }
 };
 

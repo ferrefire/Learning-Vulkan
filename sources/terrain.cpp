@@ -128,10 +128,15 @@ void Terrain::CreateGraphicsDescriptor()
 
 	descriptorConfig[4].type = UNIFORM_BUFFER;
 	descriptorConfig[4].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
-	descriptorConfig[4].buffersInfo.resize(1);
-	descriptorConfig[4].buffersInfo[0].buffer = heightMapVariablesBuffer.buffer;
-	descriptorConfig[4].buffersInfo[0].range = sizeof(HeightMapVariables);
-	descriptorConfig[4].buffersInfo[0].offset = 0;
+	descriptorConfig[4].buffersInfo.resize(heightMapVariablesBuffers.size());
+	i = 0;
+	for (Buffer &buffer : heightMapVariablesBuffers)
+	{
+		descriptorConfig[4].buffersInfo[i].buffer = buffer.buffer;
+		descriptorConfig[4].buffersInfo[i].range = sizeof(HeightMapVariables);
+		descriptorConfig[4].buffersInfo[i].offset = 0;
+		i++;
+	}
 
 	descriptorConfig[5].type = IMAGE_SAMPLER;
 	descriptorConfig[5].stages = FRAGMENT_STAGE;
@@ -155,10 +160,19 @@ void Terrain::CreateComputeDescriptor()
 	descriptorConfig[0].imageInfo.sampler = heightMapTexture.sampler;
 	descriptorConfig[1].type = UNIFORM_BUFFER;
 	descriptorConfig[1].stages = COMPUTE_STAGE;
-	descriptorConfig[1].buffersInfo.resize(1);
-	descriptorConfig[1].buffersInfo[0].buffer = heightMapVariablesBuffer.buffer;
-	descriptorConfig[1].buffersInfo[0].range = sizeof(HeightMapVariables);
+	descriptorConfig[1].buffersInfo.resize(heightMapVariablesBuffers.size());
+	descriptorConfig[1].buffersInfo[0].buffer = heightMapComputeVariablesBuffer.buffer;
+	descriptorConfig[1].buffersInfo[0].range = sizeof(HeightMapComputeVariables);
 	descriptorConfig[1].buffersInfo[0].offset = 0;
+
+	//int i = 0;
+	//for (Buffer &buffer : heightMapVariablesBuffers)
+	//{
+	//	descriptorConfig[1].buffersInfo[i].buffer = buffer.buffer;
+	//	descriptorConfig[1].buffersInfo[i].range = sizeof(HeightMapVariables);
+	//	descriptorConfig[1].buffersInfo[i].offset = 0;
+	//	i++;
+	//}
 
 	computeDescriptor.perFrame = false;
 	computeDescriptor.Create(descriptorConfig, computePipeline.objectDescriptorSetLayout);
@@ -166,6 +180,8 @@ void Terrain::CreateComputeDescriptor()
 
 void Terrain::CreateBuffers()
 {
+	heightMapVariablesBuffers.resize(Manager::settings.maxFramesInFlight);
+
 	BufferConfiguration configuration;
 	configuration.size = sizeof(HeightMapVariables);
 	configuration.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
@@ -173,7 +189,19 @@ void Terrain::CreateBuffers()
 	configuration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	configuration.mapped = true;
 
-	heightMapVariablesBuffer.Create(configuration);
+	for (Buffer &buffer : heightMapVariablesBuffers)
+	{
+		buffer.Create(configuration);
+	}
+
+	BufferConfiguration computeConfiguration;
+	computeConfiguration.size = sizeof(HeightMapComputeVariables);
+	computeConfiguration.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	computeConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	computeConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	computeConfiguration.mapped = true;
+
+	heightMapComputeVariablesBuffer.Create(computeConfiguration);
 }
 
 void Terrain::Destroy()
@@ -218,7 +246,14 @@ void Terrain::DestroyDescriptors()
 
 void Terrain::DestroyBuffers()
 {
-	heightMapVariablesBuffer.Destroy();
+	for (Buffer &buffer : heightMapVariablesBuffers)
+	{
+		buffer.Destroy();
+	}
+
+	heightMapVariablesBuffers.clear();
+
+	heightMapComputeVariablesBuffer.Destroy();
 }
 
 void Terrain::Start()
@@ -242,6 +277,10 @@ void Terrain::RecordCommands(VkCommandBuffer commandBuffer)
 	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
 	Manager::UpdateShaderVariables();
 	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+	heightMapVariables.terrainOffset = terrainOffset;
+	heightMapVariables.terrainLod0Offset = terrainLod0Offset;
+	heightMapVariables.terrainLod1Offset = terrainLod1Offset;
+	memcpy(heightMapVariablesBuffers[Manager::currentFrame].mappedBuffer, &heightMapVariables, sizeof(heightMapVariables));
 	object.UpdateUniformBuffer(Manager::currentFrame);
     mesh.Bind(commandBuffer);
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh.indices.size()), 1, 0, 0, 0);
@@ -249,6 +288,8 @@ void Terrain::RecordCommands(VkCommandBuffer commandBuffer)
 
 void Terrain::ComputeHeightMap(uint32_t lod)
 {
+	vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
+
 	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
 	computePipeline.BindCompute(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
@@ -259,12 +300,9 @@ void Terrain::ComputeHeightMap(uint32_t lod)
 	computeDescriptor.Update();
 
 	computeDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
-	heightMapVariables.mapScale = (lod == 0 ? terrainLod0Size : (lod == 1 ? terrainLod1Size : terrainChunkSize)) / terrainChunkSize;
-	heightMapVariables.mapOffset = (lod == 0 ? terrainLod0Offset / terrainLod0Size : (lod == 1 ? terrainLod1Offset / terrainLod1Size : terrainOffset / terrainChunkSize));
-	heightMapVariables.terrainOffset = terrainOffset;
-	heightMapVariables.terrainLod0Offset = terrainLod0Offset;
-	heightMapVariables.terrainLod1Offset = terrainLod1Offset;
-	memcpy(heightMapVariablesBuffer.mappedBuffer, &heightMapVariables, sizeof(heightMapVariables));
+	heightMapComputeVariables.mapScale = (lod == 0 ? terrainLod0Size : (lod == 1 ? terrainLod1Size : terrainChunkSize)) / terrainChunkSize;
+	heightMapComputeVariables.mapOffset = (lod == 0 ? terrainLod0Offset / terrainLod0Size : (lod == 1 ? terrainLod1Offset / terrainLod1Size : terrainOffset / terrainChunkSize));
+	memcpy(heightMapComputeVariablesBuffer.mappedBuffer, &heightMapComputeVariables, sizeof(heightMapComputeVariables));
 	vkCmdDispatch(commandBuffer, 1024, 1024, 1);
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
@@ -304,7 +342,9 @@ Texture Terrain::heightMapLod0Texture{Manager::currentDevice};
 Texture Terrain::heightMapLod1Texture{Manager::currentDevice};
 
 HeightMapVariables Terrain::heightMapVariables;
-Buffer Terrain::heightMapVariablesBuffer;
+std::vector<Buffer> Terrain::heightMapVariablesBuffers;
+HeightMapComputeVariables Terrain::heightMapComputeVariables;
+Buffer Terrain::heightMapComputeVariablesBuffer;
 
 Descriptor Terrain::graphicsDescriptor{Manager::currentDevice};
 Descriptor Terrain::computeDescriptor{Manager::currentDevice};

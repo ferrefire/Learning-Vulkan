@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <vector>
 #include <set>
+#include <iostream>
 
 Device::Device()
 {
@@ -102,6 +103,12 @@ QueueFamilies Device::FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR su
             result.graphicsFamily = i;
             result.graphicsFamilyFound = true;
         }
+		else if (!result.seperateComputeFamilyFound && (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT))
+		{
+			result.computeFamily = i;
+			result.computeFamilyFound = true;
+			result.seperateComputeFamilyFound = true;
+		}
 
 		if (!result.computeFamilyFound && (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT))
 		{
@@ -125,6 +132,8 @@ QueueFamilies Device::FindQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR su
 
         i++;
     }
+	
+	if (result.Valid()) return (result);
 
 	throw std::runtime_error("failed to find required queue families");
 
@@ -180,7 +189,7 @@ void Device::CreateLogicalDevice(VkSurfaceKHR surface)
 {
     if (logicalDevice) throw std::runtime_error("cannot create logical device because it already exists");
 
-    QueueFamilies queueFamilies = FindQueueFamilies(physicalDevice, surface);
+    queueFamilies = FindQueueFamilies(physicalDevice, surface);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 	std::set<uint32_t> uniqueQueueFamilies = {queueFamilies.graphicsFamily, queueFamilies.computeFamily, queueFamilies.presentationFamily};
@@ -223,8 +232,10 @@ void Device::CreateLogicalDevice(VkSurfaceKHR surface)
 	vkGetDeviceQueue(logicalDevice, queueFamilies.computeFamily, 0, &computeQueue);
 	vkGetDeviceQueue(logicalDevice, queueFamilies.presentationFamily, 0, &presentationQueue);
 
-	queueFamilies = FindQueueFamilies(physicalDevice, surface);
+	//queueFamilies = FindQueueFamilies(physicalDevice, surface);
     swapChainSupportDetails = QuerySwapChainSupport(physicalDevice, surface);
+
+	if (queueFamilies.Complete()) std::cout << "Seperate compute family found" << std::endl;
 }
 
 void Device::CreateSyncObjects()

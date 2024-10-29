@@ -6,8 +6,6 @@ layout(set = 1, binding = 2) uniform sampler2D heightMapLod0Sampler;
 layout(set = 1, binding = 3) uniform sampler2D heightMapLod1Sampler;
 layout(set = 1, binding = 4) uniform HeightMapVariables 
 {
-    float mapScale;
-	vec2 mapOffset;
 	vec2 terrainOffset;
 	vec2 terrainLod0Offset;
 	vec2 terrainLod1Offset;

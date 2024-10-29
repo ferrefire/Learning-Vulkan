@@ -16,12 +16,15 @@
 
 struct HeightMapVariables
 {
-	alignas(4) float mapScale = 1.0f;
-	alignas(8) glm::vec2 mapOffset;
-
 	alignas(8) glm::vec2 terrainOffset;
 	alignas(8) glm::vec2 terrainLod0Offset;
 	alignas(8) glm::vec2 terrainLod1Offset;
+};
+
+struct HeightMapComputeVariables
+{
+	alignas(4) float mapScale = 1.0f;
+	alignas(8) glm::vec2 mapOffset;
 };
 
 class Terrain
@@ -47,7 +50,9 @@ class Terrain
 		static Texture heightMapLod1Texture;
 
 		static HeightMapVariables heightMapVariables;
-		static Buffer heightMapVariablesBuffer;
+		static std::vector<Buffer> heightMapVariablesBuffers;
+		static HeightMapComputeVariables heightMapComputeVariables;
+		static Buffer heightMapComputeVariablesBuffer;
 
 		static float terrainChunkSize;
 		static float terrainLod0Size;
