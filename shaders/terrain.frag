@@ -122,24 +122,18 @@ void main()
 	float distanceSqrd = SquaredDistance(inPosition, variables.viewPosition);
 	float depth = GetDepth(gl_FragCoord.z);
 	vec3 viewDirection = normalize(variables.viewPosition - inPosition);
-
 	vec3 textureColor = blendTexture(grassDiffuseSampler, distanceSqrd, 0, 0.5, defaultColor) * 1.5;
-	//vec3 specular = vec3(0);
-	vec3 textureNormal = blendTexture(grassNormalSampler, distanceSqrd, 0, 0.5, vec3(1));
-	//vec3 specNorm = textureNormal;
-	//specNorm.xz *= -1;
-	textureNormal.xy *= 2.0 - 1.0;
-	textureNormal.xy *= 0.25;
-	//textureNormal = normalize(textureNormal);
-	
-	//vec3 specular = SpecularLighting(normalize(specNorm), viewDirection, 100) * blendTexture(grassSpecularSampler, distanceSqrd, 0, 0.5, vec3(0)).r;
-
 	vec3 terrainNormal = SampleNormalDynamic(inPosition.xz, 1.0);
-	vec3 tangent = NormalToTangent(terrainNormal);
-	mat3 tangentToWorld = mat3(tangent, cross(terrainNormal, tangent) * -1, terrainNormal);
+	vec3 combinedNormal = terrainNormal;
 
-	vec3 combinedNormal = normalize(tangentToWorld * textureNormal);
+	//vec3 textureNormal = blendTexture(grassNormalSampler, distanceSqrd, 0, 0.5, vec3(1));
+	//textureNormal.xy *= 2.0 - 1.0;
+	//textureNormal.xy *= 0.25;
+	//vec3 tangent = NormalToTangent(terrainNormal);
+	//mat3 tangentToWorld = mat3(tangent, cross(terrainNormal, tangent) * -1, terrainNormal);
+	//combinedNormal = normalize(tangentToWorld * textureNormal);
 
+	//vec3 specular = SpecularLighting(normalize(specNorm), viewDirection, 100) * blendTexture(grassSpecularSampler, distanceSqrd, 0, 0.5, vec3(0)).r;
 	vec3 diffuse = DiffuseLighting(combinedNormal, vec3(1));
 	
 	vec3 combinedColor = textureColor * diffuse;
