@@ -125,12 +125,24 @@ void Manager::Start()
 	Terrain::Start();
 }
 
+void Manager::PreFrame()
+{
+	//Terrain::CheckTerrainOffset();
+}
+
 void Manager::Frame()
 {
 	if (Input::GetKey(GLFW_KEY_ESCAPE).pressed)
 	{
 		window.Close();
 	}
+
+	Terrain::Frame();
+}
+
+void Manager::PostFrame()
+{
+	//Terrain::CheckTerrainOffset();
 }
 
 void Manager::UpdateShaderVariables()
@@ -274,6 +286,7 @@ VkDescriptorSetLayout Manager::globalDescriptorSetLayout = nullptr;
 Descriptor Manager::globalDescriptor;
 
 uint32_t Manager::currentFrame = 0;
+//VkCommandBuffer Manager::currentBuffer = nullptr;
 
 std::vector<Object *> Manager::objects;
 Settings Manager::settings;

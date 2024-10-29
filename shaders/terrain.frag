@@ -9,7 +9,7 @@ layout(set = 0, binding = 0) uniform Variables
 } variables;
 
 //layout(set = 1, binding = 2) uniform sampler2D grassSampler;
-layout(set = 1, binding = 4) uniform sampler2D grassSampler;
+layout(set = 1, binding = 5) uniform sampler2D grassSampler;
 
 layout(location = 0) in vec3 inPosition;
 //layout(location = 1) in vec2 inTexCoord;

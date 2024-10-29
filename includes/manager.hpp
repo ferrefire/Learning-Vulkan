@@ -63,6 +63,7 @@ class Manager
 		static Graphics &currentGraphics;
 
 		static uint32_t currentFrame;
+		//static VkCommandBuffer currentBuffer;
 
 		static std::vector<Buffer> shaderVariableBuffers;
 		static VkDescriptorSetLayout globalDescriptorSetLayout;
@@ -81,7 +82,9 @@ class Manager
 		static void CreateDescriptor();
 
 		static void Start();
+		static void PreFrame();
 		static void Frame();
+		static void PostFrame();
 		static void UpdateShaderVariables();
 
 		static void DestroyPipelines();

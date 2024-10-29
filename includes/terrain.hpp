@@ -16,7 +16,12 @@
 
 struct HeightMapVariables
 {
-	float mapScale = 1.0f;
+	alignas(4) float mapScale = 1.0f;
+	alignas(8) glm::vec2 mapOffset;
+
+	alignas(8) glm::vec2 terrainOffset;
+	alignas(8) glm::vec2 terrainLod0Offset;
+	alignas(8) glm::vec2 terrainLod1Offset;
 };
 
 class Terrain
@@ -38,11 +43,22 @@ class Terrain
 		static Texture grassTexture;
 
 		static Texture heightMapTexture;
-		static Texture heightMapLod1Texture;
 		static Texture heightMapLod0Texture;
+		static Texture heightMapLod1Texture;
 
 		static HeightMapVariables heightMapVariables;
 		static Buffer heightMapVariablesBuffer;
+
+		static float terrainChunkSize;
+		static float terrainLod0Size;
+		static float terrainLod1Size;
+
+		static glm::vec2 terrainOffset;
+		static glm::vec2 terrainLod0Offset;
+		static glm::vec2 terrainLod1Offset;
+		static float terrainStep;
+		static float terrainLod0Step;
+		static float terrainLod1Step;
 
 		static void Create();
         static void CreateTextures();
@@ -63,6 +79,8 @@ class Terrain
 		static void DestroyBuffers();
 
 		static void Start();
+		static void Frame();
 		static void RecordCommands(VkCommandBuffer commandBuffer);
-		static void ComputeHeightMap();
+		static void ComputeHeightMap(uint32_t lod);
+		static void CheckTerrainOffset();
 };

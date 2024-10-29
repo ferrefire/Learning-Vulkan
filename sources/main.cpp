@@ -56,6 +56,8 @@ int main(int argc, char **argv)
 
 		Manager::currentGraphics.DrawFrame();
 
+		Manager::PostFrame();
+
 		//Manager::objects[1]->Rotate(glm::vec3(100.0f * Time::deltaTime, 50.0f * Time::deltaTime, 25.0f * Time::deltaTime));
 	}
 

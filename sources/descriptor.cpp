@@ -157,13 +157,15 @@ void Descriptor::Update()
 		{
 			if (config.type == UNIFORM_BUFFER)
 			{
+				int maxIndex = glm::min(i, config.buffersInfo.size() - 1);
+
 				descriptorWrites[index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 				descriptorWrites[index].dstSet = descriptorSets[i];
 				descriptorWrites[index].dstBinding = index;
 				descriptorWrites[index].dstArrayElement = 0;
 				descriptorWrites[index].descriptorType = config.type;
 				descriptorWrites[index].descriptorCount = 1;
-				descriptorWrites[index].pBufferInfo = &config.buffersInfo[i];
+				descriptorWrites[index].pBufferInfo = &config.buffersInfo[maxIndex];
 			}
 			else if (config.type == IMAGE_SAMPLER || config.type == IMAGE_STORAGE)
 			{

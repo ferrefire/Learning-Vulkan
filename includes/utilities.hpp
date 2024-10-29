@@ -13,4 +13,6 @@ class Utilities
 		static std::vector<char> FileToBinary(const char *path);
 		static bool Contains(const std::string &str, const std::string &find);
 		static std::string GetPath();
+		static float SignedFloor(float x);
+		static int Fits(float part, float whole);
 };
