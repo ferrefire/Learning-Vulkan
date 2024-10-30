@@ -26,10 +26,12 @@ void Terrain::CreateTextures()
 	grassSamplerConfig.mipLodBias = 0.0f;
 
 	grassDiffuseTexture.CreateTexture("rocky_grass_diff.jpg", grassSamplerConfig);
+	//grassNormalTexture.CreateTexture("rocky_grass_norm.jpg", grassSamplerConfig);
+	//grassSpecularTexture.CreateTexture("rocky_grass_spec.jpg", grassSamplerConfig);
 
-	grassNormalTexture.CreateTexture("rocky_grass_norm.jpg", grassSamplerConfig);
+	rockDiffuseTexture.CreateTexture("rock_diff.jpg", grassSamplerConfig);
 
-	grassSpecularTexture.CreateTexture("rocky_grass_spec.jpg", grassSamplerConfig);
+	dirtDiffuseTexture.CreateTexture("dirt_diff.jpg", grassSamplerConfig);
 
 	SamplerConfiguration heightMapSamplerConfig;
 
@@ -156,14 +158,14 @@ void Terrain::CreateGraphicsDescriptor()
 	descriptorConfig[6].type = IMAGE_SAMPLER;
 	descriptorConfig[6].stages = FRAGMENT_STAGE;
 	descriptorConfig[6].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[6].imageInfo.imageView = grassNormalTexture.imageView;
-	descriptorConfig[6].imageInfo.sampler = grassNormalTexture.sampler;
+	descriptorConfig[6].imageInfo.imageView = rockDiffuseTexture.imageView;
+	descriptorConfig[6].imageInfo.sampler = rockDiffuseTexture.sampler;
 
 	descriptorConfig[7].type = IMAGE_SAMPLER;
 	descriptorConfig[7].stages = FRAGMENT_STAGE;
 	descriptorConfig[7].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[7].imageInfo.imageView = grassSpecularTexture.imageView;
-	descriptorConfig[7].imageInfo.sampler = grassSpecularTexture.sampler;
+	descriptorConfig[7].imageInfo.imageView = dirtDiffuseTexture.imageView;
+	descriptorConfig[7].imageInfo.sampler = dirtDiffuseTexture.sampler;
 
 	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
 }
@@ -238,8 +240,11 @@ void Terrain::Destroy()
 void Terrain::DestroyTextures()
 {
 	grassDiffuseTexture.Destroy();
-	grassNormalTexture.Destroy();
-	grassSpecularTexture.Destroy();
+	//grassNormalTexture.Destroy();
+	//grassSpecularTexture.Destroy();
+
+	rockDiffuseTexture.Destroy();
+	dirtDiffuseTexture.Destroy();
 
 	heightMapTexture.Destroy();
 	heightMapLod1Texture.Destroy();
@@ -313,7 +318,7 @@ void Terrain::ComputeHeightMap(uint32_t lod)
 	//float startTime = Time::GetCurrentTime();
 	//std::cout << "Start time: " << startTime << std::endl;
 
-	// vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
+	vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
 
 	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
 	computePipeline.BindCompute(commandBuffer);
@@ -378,8 +383,11 @@ Pipeline Terrain::graphicsPipeline{Manager::currentDevice, Manager::currentCamer
 Pipeline Terrain::computePipeline{Manager::currentDevice, Manager::currentCamera};
 
 Texture Terrain::grassDiffuseTexture{Manager::currentDevice};
-Texture Terrain::grassNormalTexture{Manager::currentDevice};
-Texture Terrain::grassSpecularTexture{Manager::currentDevice};
+//Texture Terrain::grassNormalTexture{Manager::currentDevice};
+//Texture Terrain::grassSpecularTexture{Manager::currentDevice};
+
+Texture Terrain::rockDiffuseTexture{Manager::currentDevice};
+Texture Terrain::dirtDiffuseTexture{Manager::currentDevice};
 
 Texture Terrain::heightMapTexture{Manager::currentDevice};
 Texture Terrain::heightMapLod0Texture{Manager::currentDevice};

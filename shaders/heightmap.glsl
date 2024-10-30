@@ -75,10 +75,22 @@ vec3 SampleNormalDynamic(vec2 worldPosition, float power)
     float up = SampleDynamic(worldPosition + vec2(0, worldSampleDistance));
     vec3 normalTS = vec3((left - right) / worldSampleDistanceMult, 1, (down - up) / worldSampleDistanceMult);
 
-	if (power == 1) return (normalTS);
+	//normalTS = normalTS * 2.0 - 1.0;
+
+	if (power == 1) return normalize(normalTS);
 
     normalTS.xz *= power;
     return (normalize(normalTS));
+}
+
+float GetSteepness(vec3 normal)
+{
+    float steepness = dot(normal, vec3(0.0, 1.0, 0.0));
+	steepness = (steepness + 1) * 0.5;
+    //steepness = steepness * steepness;
+    steepness = 1.0 - steepness;
+
+    return steepness;
 }
 
 #endif
