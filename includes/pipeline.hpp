@@ -48,12 +48,15 @@ struct PipelineConfiguration
     VkRenderPass renderPass = nullptr;
     uint32_t subpass = 0;
 	bool tesselation = false;
+	uint32_t pushConstantCount = 0;
+	uint32_t pushConstantSize = 0;
 };
 
 struct DescriptorLayoutConfiguration
 {
     VkDescriptorType type;
     VkShaderStageFlags stages;
+	uint32_t count = 1;
 };
 
 class Pipeline

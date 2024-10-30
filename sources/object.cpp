@@ -51,13 +51,13 @@ void Object::CreateDescriptor()
 
 	std::vector<DescriptorConfiguration> descriptorConfig(1);
 	descriptorConfig[0].type = UNIFORM_BUFFER;
-	descriptorConfig[0].stages = VERTEX_STAGE;
+	descriptorConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
 
 	descriptorConfig[0].buffersInfo.resize(uniformBuffers.size());
 	int i = 0;
 	for (Buffer &buffer : uniformBuffers)
 	{
-		descriptorConfig[0].buffersInfo[i].buffer = uniformBuffers[i].buffer;
+		descriptorConfig[0].buffersInfo[i].buffer = buffer.buffer;
 		descriptorConfig[0].buffersInfo[i].range = sizeof(UniformBufferObject);
 		descriptorConfig[0].buffersInfo[i].offset = 0;
 		i++;
@@ -89,6 +89,21 @@ void Object::DestroyDescriptor()
 	descriptor.Destroy();
 }
 */
+
+glm::vec3 &Object::ModifyPosition()
+{
+	return (position);
+}
+
+glm::vec3 Object::GetPosition()
+{
+	return (position);
+}
+
+void Object::SetPosition(glm::vec3 newPosition)
+{
+	position = newPosition;
+}
 
 void Object::Move(glm::vec3 amount)
 {
@@ -122,7 +137,7 @@ glm::mat4 Object::Translation()
 void Object::UpdateUniformBuffer(uint32_t currentImage)
 {
 	ubo.model = Translation();
-	ubo.view = Manager::currentCamera.View();
-	ubo.projection = Manager::currentCamera.Projection();
+	//ubo.view = Manager::currentCamera.View();
+	//ubo.projection = Manager::currentCamera.Projection();
 	memcpy(uniformBuffers[currentImage].mappedBuffer, &ubo, sizeof(ubo));
 }

@@ -31,10 +31,13 @@ struct Settings
 	//VkSampleCountFlagBits maxSampleCount = VK_SAMPLE_COUNT_64_BIT;
 	const std::vector<const char*> validationLayers = {	"VK_LAYER_KHRONOS_validation" };
 	bool validationLayersActive = true;
+	bool uncappedFPS = false;
 };
 
 struct ShaderVariables
 {
+	alignas(16) glm::mat4 view = glm::mat4(1);
+	alignas(16) glm::mat4 projection = glm::mat4(1);
 	alignas(16) glm::vec3 viewPosition = glm::vec3(0);
 	alignas(16) glm::vec3 viewDirection = glm::vec3(0);
 	alignas(16) glm::vec3 viewRight = glm::vec3(0);

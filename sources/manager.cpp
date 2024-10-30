@@ -153,6 +153,8 @@ void Manager::PostFrame()
 
 void Manager::UpdateShaderVariables()
 {
+	shaderVariables.view = currentCamera.View();
+	shaderVariables.projection = currentCamera.Projection();
 	shaderVariables.viewPosition = currentCamera.Position();
 	shaderVariables.viewDirection = currentCamera.Front();
 	shaderVariables.viewRight = currentCamera.Side();

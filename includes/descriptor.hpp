@@ -16,6 +16,7 @@ struct DescriptorConfiguration
 {
 	VkDescriptorType type;
 	VkShaderStageFlags stages;
+	uint32_t count = 1;
 
 	std::vector<VkDescriptorBufferInfo> buffersInfo;
 

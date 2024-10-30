@@ -24,7 +24,14 @@ struct HeightMapVariables
 struct HeightMapComputeVariables
 {
 	alignas(4) float mapScale = 1.0f;
-	alignas(8) glm::vec2 mapOffset;
+	alignas(8) glm::vec2 mapOffset = glm::vec2(0);
+};
+
+struct HeightMapArrayComputeVariables
+{
+	alignas(4) float mapScale = 1.0f;
+	alignas(4) uint32_t currentChunkIndex = 0;
+	alignas(8) glm::vec2 mapOffset = glm::vec2(0);
 };
 
 class Terrain
@@ -33,15 +40,20 @@ class Terrain
         
 
     public:
-        static Mesh mesh;
+		static Mesh lod0Mesh;
+		static Mesh lod1Mesh;
 
 		static Pipeline graphicsPipeline;
-		static Pipeline computePipeline;
+		static Pipeline heightMapComputePipeline;
+		static Pipeline heightMapArrayComputePipeline;
 
 		static Descriptor graphicsDescriptor;
-		static Descriptor computeDescriptor;
+		static Descriptor heightMapComputeDescriptor;
+		static Descriptor heightMapArrayComputeDescriptor;
 
-		static Object object;
+		static std::vector<Object> terrainChunks;
+
+		//static Object object;
 
 		static Texture grassDiffuseTexture;
 		static Texture rockDiffuseTexture;
@@ -49,18 +61,31 @@ class Terrain
 		//static Texture grassNormalTexture;
 		//static Texture grassSpecularTexture;
 
-		static Texture heightMapTexture;
+		//static Texture heightMapTexture;
+		static Texture heightMapArrayTexture;
 		static Texture heightMapLod0Texture;
 		static Texture heightMapLod1Texture;
 
 		static HeightMapVariables heightMapVariables;
 		static std::vector<Buffer> heightMapVariablesBuffers;
+
 		static HeightMapComputeVariables heightMapComputeVariables;
 		static Buffer heightMapComputeVariablesBuffer;
+
+		static HeightMapArrayComputeVariables heightMapArrayComputeVariables;
+		static Buffer heightMapArrayComputeVariablesBuffer;
 
 		static float terrainChunkSize;
 		static float terrainLod0Size;
 		static float terrainLod1Size;
+
+		static int terrainChunkRadius;
+		static int terrainChunkLength;
+		static int terrainChunkCount;
+
+		static int heightMapRadius;
+		static int heightMapLength;
+		static int heightMapCount;
 
 		static glm::vec2 terrainOffset;
 		static glm::vec2 terrainLod0Offset;
@@ -77,8 +102,8 @@ class Terrain
 		static void CreateObjects();
 		static void CreateGraphicsPipeline();
 		static void CreateGraphicsDescriptor();
-		static void CreateComputePipeline();
-		static void CreateComputeDescriptor();
+		static void CreateComputePipelines();
+		static void CreateComputeDescriptors();
 		static void CreateBuffers();
 
 		static void Destroy();
@@ -93,6 +118,7 @@ class Terrain
 		static void Frame();
 		static void RecordCommands(VkCommandBuffer commandBuffer);
 		static void ComputeHeightMap(uint32_t lod);
+		static void ComputeHeightMapArray(uint32_t index);
 		static void CheckTerrainOffset();
 		static void UpdateHeightMapVariables();
 };

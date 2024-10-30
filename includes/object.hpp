@@ -18,8 +18,6 @@
 struct UniformBufferObject
 {
 	alignas(16) glm::mat4 model = glm::mat4(1);
-	alignas(16) glm::mat4 view;
-	alignas(16) glm::mat4 projection;
 };
 
 class Object
@@ -54,8 +52,11 @@ class Object
 
 		void UpdateUniformBuffer(uint32_t currentImage);
 
+		glm::vec3 &ModifyPosition();
+		glm::vec3 GetPosition();
+		void SetPosition(glm::vec3 newPosition);
 		void Move(glm::vec3 amount);
-        void Rotate(glm::vec3 amount);
+		void Rotate(glm::vec3 amount);
         void Resize(glm::vec3 amount);
 
         glm::mat4 Translation();

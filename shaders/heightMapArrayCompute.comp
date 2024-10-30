@@ -1,0 +1,30 @@
+#version 450
+
+#extension GL_ARB_shading_language_include : require
+
+layout(set = 1, binding = 0, r16) uniform image2DArray heightMapArrayTexture;
+
+layout(set = 1, binding = 1) uniform HeightMapArrayComputeVariables 
+{
+  float mapScale;
+  uint currentChunkIndex;
+  vec2 mapOffset;
+} heightMapArrayComputeVariables;
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+const uint resolution = 1024;
+const float resolutionMult = 0.0009765625;
+
+#include "noise.glsl"
+
+void main()
+{
+  //imageStore(heightMapTexture, ivec2(gl_GlobalInvocationID.xy), vec4(float(gl_GlobalInvocationID.x + gl_GlobalInvocationID.y) / 1024.0, 0, 0, 0));
+
+  vec2 index = gl_GlobalInvocationID.xy;
+  vec2 uv = index * resolutionMult - 0.5 + heightMapArrayComputeVariables.mapOffset;
+  uv *= heightMapArrayComputeVariables.mapScale;
+
+  imageStore(heightMapArrayTexture, ivec3(index, heightMapArrayComputeVariables.currentChunkIndex), vec4(GenerateNoise(uv, 8), 0, 0, 0));
+}

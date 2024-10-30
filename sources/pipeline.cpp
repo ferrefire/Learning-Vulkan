@@ -200,6 +200,16 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	pipelineLayoutInfo.pushConstantRangeCount = 0;
 	pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
+	VkPushConstantRange pushConstantRange{};
+	if (pipelineConfig.pushConstantCount > 0)
+	{
+		pushConstantRange.stageFlags = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = pipelineConfig.pushConstantSize;
+		pipelineLayoutInfo.pushConstantRangeCount = pipelineConfig.pushConstantCount;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+	}
+
 	if (vkCreatePipelineLayout(device.logicalDevice, &pipelineLayoutInfo, nullptr, &graphicsPipelineLayout) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create pipeline layout");
@@ -335,7 +345,7 @@ void Pipeline::CreateDescriptorSetLayout(std::vector<DescriptorLayoutConfigurati
 	for (DescriptorLayoutConfiguration &config : descriptorLayoutConfig)
 	{
 		bindings[index].binding = index;
-		bindings[index].descriptorCount = 1;
+		bindings[index].descriptorCount = config.count;
 		bindings[index].descriptorType = config.type;
 		bindings[index].stageFlags = config.stages;
 		bindings[index].pImmutableSamplers = nullptr;

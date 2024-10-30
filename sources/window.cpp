@@ -182,17 +182,33 @@ VkSurfaceFormatKHR Window::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFo
 
 VkPresentModeKHR Window::ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes)
 {
+	// return (VK_PRESENT_MODE_FIFO_RELAXED_KHR);
+	// return (VK_PRESENT_MODE_IMMEDIATE_KHR);
+	// return (VK_PRESENT_MODE_MAILBOX_KHR);
+
+	bool mailboxAvailable = false;
+	bool fifoRelaxedAvailable = false;
+
 	for (const auto &availablePresentMode : availablePresentModes)
     {
-        if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
-        {
-			std::cout << "Mailbox present mode found" << std::endl;
-            return availablePresentMode;
-        }
-    }
+        if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) mailboxAvailable = true;
+		if (availablePresentMode == VK_PRESENT_MODE_FIFO_RELAXED_KHR) fifoRelaxedAvailable = true;
+	}
 
-	std::cout << "No mailbox present mode found, using fifo present mode" << std::endl;
-    return (VK_PRESENT_MODE_FIFO_KHR);
+	if (mailboxAvailable) std::cout << "Mailbox present mode found" << std::endl;
+	if (fifoRelaxedAvailable) std::cout << "Fifo relaxed present mode found" << std::endl;
+
+	if (mailboxAvailable && Manager::settings.uncappedFPS) return (VK_PRESENT_MODE_MAILBOX_KHR);
+	if (fifoRelaxedAvailable && !Manager::settings.uncappedFPS) return (VK_PRESENT_MODE_FIFO_RELAXED_KHR);
+
+	if (Manager::settings.uncappedFPS)
+	{
+		std::cout << "Resorting to standard immediate present mode" << std::endl;
+		return (VK_PRESENT_MODE_IMMEDIATE_KHR);
+	}
+
+	std::cout << "Resorting to standard fifo present mode" << std::endl;
+	return (VK_PRESENT_MODE_FIFO_KHR);
 }
 
 VkExtent2D Window::ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities)

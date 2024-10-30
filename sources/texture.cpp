@@ -30,6 +30,21 @@ ImageConfiguration Texture::ImageStorage(uint32_t width, uint32_t height)
 	return (imageConfig);
 }
 
+ImageConfiguration Texture::ImageArrayStorage(uint32_t width, uint32_t height, uint32_t layers)
+{
+	ImageConfiguration imageConfig;
+	imageConfig.width = width;
+	imageConfig.height = height;
+	imageConfig.arrayLayers = layers;
+	imageConfig.format = R16;
+	imageConfig.transitionLayout = LAYOUT_GENERAL;
+	imageConfig.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+	imageConfig.createMipmaps = false;
+	imageConfig.viewType = IMAGE_VIEW_2D_ARRAY;
+
+	return (imageConfig);
+}
+
 Texture::Texture() : device{Manager::currentDevice}
 {
 

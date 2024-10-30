@@ -10,7 +10,9 @@
 #include <string>
 
 #define IMAGE_2D VK_IMAGE_TYPE_2D
+
 #define IMAGE_VIEW_2D VK_IMAGE_VIEW_TYPE_2D
+#define IMAGE_VIEW_2D_ARRAY VK_IMAGE_VIEW_TYPE_2D_ARRAY
 
 #define R8G8B8A8 VK_FORMAT_R8G8B8A8_SRGB
 #define R16 VK_FORMAT_R16_UNORM
@@ -76,8 +78,9 @@ class Texture
 		static Texture *Statue();
 
 		static ImageConfiguration ImageStorage(uint32_t width, uint32_t height);
+		static ImageConfiguration ImageArrayStorage(uint32_t width, uint32_t height, uint32_t layers);
 
-        Texture();
+		Texture();
         Texture(Device &device);
         ~Texture();
 

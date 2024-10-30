@@ -40,6 +40,10 @@ void Setup(int argc, char **argv)
 		{
 			Manager::settings.validationLayersActive = false;
 		}
+		else if (std::string(argv[i]).compare("uc") == 0)
+		{
+			Manager::settings.uncappedFPS = true;
+		}
 	}
 }
 

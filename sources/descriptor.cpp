@@ -73,7 +73,7 @@ void Descriptor::CreateDescriptorPool()
 	for (DescriptorConfiguration &config : descriptorConfigs)
 	{
 		poolSizes[index].type = config.type;
-		poolSizes[index].descriptorCount = count;
+		poolSizes[index].descriptorCount = count * config.count;
 		index++;
 	}
 
@@ -155,7 +155,17 @@ void Descriptor::Update()
 		int index = 0;
 		for (DescriptorConfiguration &config : descriptorConfigs)
 		{
-			if (config.type == UNIFORM_BUFFER)
+			if (config.type == UNIFORM_BUFFER && config.count > 1)
+			{
+				descriptorWrites[index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWrites[index].dstSet = descriptorSets[i];
+				descriptorWrites[index].dstBinding = index;
+				descriptorWrites[index].dstArrayElement = 0;
+				descriptorWrites[index].descriptorType = config.type;
+				descriptorWrites[index].descriptorCount = config.count;
+				descriptorWrites[index].pBufferInfo = &config.buffersInfo[i * config.count];
+			}
+			else if (config.type == UNIFORM_BUFFER)
 			{
 				int maxIndex = glm::min(i, config.buffersInfo.size() - 1);
 

@@ -2,27 +2,35 @@
 
 #extension GL_ARB_shading_language_include : require
 
-layout(set = 0, binding = 0) uniform Variables 
-{
-    vec3 viewPosition;
-    vec3 viewDirection;
-    vec3 viewRight;
-    vec3 viewUp;
-	vec4 resolution;
-} variables;
+//layout(set = 0, binding = 0) uniform Variables 
+//{
+//    vec3 viewPosition;
+//    vec3 viewDirection;
+//    vec3 viewRight;
+//    vec3 viewUp;
+//	vec4 resolution;
+//} variables;
 
-layout(set = 1, binding = 0) uniform ObjectData 
+//layout(set = 1, binding = 0) uniform ObjectData 
+//{
+//    mat4 model;
+//} objectData;
+layout(set = 1, binding = 0) uniform ObjectData
 {
     mat4 model;
-    mat4 view;
-    mat4 projection;
-} objectData;
+} objectDatas[1];
+
+layout(push_constant, std430) uniform PushConstants
+{
+    uint chunkIndex;
+} pc;
 
 layout(location = 0) in vec3 inPosition;
 
 //layout(location = 0) out vec3 outPosition;
 //layout(location = 1) out vec2 outTexCoord;
 
+#include "variables.glsl"
 #include "transformation.glsl"
 #include "heightmap.glsl"
 
@@ -36,7 +44,7 @@ void main()
 	////if (distance(outPosition.xz, variables.viewPosition.xz + vec2(0, 1000)) < 100) position.y += 1;
     //gl_Position = objectData.projection * objectData.view * objectData.model * vec4(position, 1.0);
 
-	vec3 worldPosition = ObjectToWorld(inPosition);
+	vec3 worldPosition = ObjectToWorld(inPosition, objectDatas[pc.chunkIndex].model);
 	//worldPosition.y += texture(heightMapSampler, vec2(inPosition.xz + 0.5)).r * 5000;
 	worldPosition.y += SampleDynamic(worldPosition.xz) * 5000;
 

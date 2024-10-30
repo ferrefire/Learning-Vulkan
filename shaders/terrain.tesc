@@ -2,25 +2,33 @@
 
 #extension GL_ARB_shading_language_include : require
 
-layout(set = 0, binding = 0) uniform Variables 
-{
-    vec3 viewPosition;
-    vec3 viewDirection;
-    vec3 viewRight;
-    vec3 viewUp;
-    vec4 resolution;
-} variables;
+//layout(set = 0, binding = 0) uniform Variables 
+//{
+//    vec3 viewPosition;
+//    vec3 viewDirection;
+//    vec3 viewRight;
+//    vec3 viewUp;
+//    vec4 resolution;
+//} variables;
 
-layout(set = 1, binding = 0) uniform ObjectData 
+//layout(set = 1, binding = 0) uniform ObjectData 
+//{
+//    mat4 model;
+//} objectData;
+layout(set = 1, binding = 0) uniform ObjectData
 {
     mat4 model;
-    mat4 view;
-    mat4 projection;
-} objectData;
+} objectDatas[1];
+
+layout(push_constant, std430) uniform PushConstants
+{
+    uint chunkIndex;
+} pc;
 
 //layout(vertices = 3) in;
 layout(vertices = 3) out;
 
+#include "variables.glsl"
 #include "culling.glsl"
 #include "depth.glsl"
 
