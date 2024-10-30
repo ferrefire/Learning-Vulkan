@@ -178,7 +178,7 @@ void Terrain::CreateComputeDescriptor()
 	descriptorConfig[0].stages = COMPUTE_STAGE;
 	descriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
 	descriptorConfig[0].imageInfo.imageView = heightMapTexture.imageView;
-	descriptorConfig[0].imageInfo.sampler = heightMapTexture.sampler;
+	//descriptorConfig[0].imageInfo.sampler = heightMapTexture.sampler;
 	descriptorConfig[1].type = UNIFORM_BUFFER;
 	descriptorConfig[1].stages = COMPUTE_STAGE;
 	descriptorConfig[1].buffersInfo.resize(heightMapVariablesBuffers.size());
@@ -309,23 +309,35 @@ void Terrain::RecordCommands(VkCommandBuffer commandBuffer)
 
 void Terrain::ComputeHeightMap(uint32_t lod)
 {
-	vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
+	//std::cout << "Lod: " << lod << std::endl;
+	//float startTime = Time::GetCurrentTime();
+	//std::cout << "Start time: " << startTime << std::endl;
+
+	// vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
 
 	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
 	computePipeline.BindCompute(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
 	Manager::UpdateShaderVariables();
 
-	computeDescriptor.descriptorConfigs[0].imageInfo.imageView = (lod == 0 ? heightMapLod0Texture.imageView : (lod == 1 ? heightMapLod1Texture.imageView : heightMapTexture.imageView));
-	computeDescriptor.descriptorConfigs[0].imageInfo.sampler = (lod == 0 ? heightMapLod0Texture.sampler : (lod == 1 ? heightMapLod1Texture.sampler : heightMapTexture.sampler)); //check if can be removed
-	computeDescriptor.Update();
+	if (currentBoundHeightMap != lod)
+	{
+		computeDescriptor.descriptorConfigs[0].imageInfo.imageView = (lod == 0 ? heightMapLod0Texture.imageView : (lod == 1 ? heightMapLod1Texture.imageView : heightMapTexture.imageView));
+		computeDescriptor.Update();
+	}
 
 	computeDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
 	heightMapComputeVariables.mapScale = (lod == 0 ? terrainLod0Size : (lod == 1 ? terrainLod1Size : terrainChunkSize)) / terrainChunkSize;
 	heightMapComputeVariables.mapOffset = (lod == 0 ? terrainLod0Offset / terrainLod0Size : (lod == 1 ? terrainLod1Offset / terrainLod1Size : terrainOffset / terrainChunkSize));
 	memcpy(heightMapComputeVariablesBuffer.mappedBuffer, &heightMapComputeVariables, sizeof(heightMapComputeVariables));
-	vkCmdDispatch(commandBuffer, 1024, 1024, 1);
+	vkCmdDispatch(commandBuffer, 128, 128, 1); //Change dispatch count
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
+
+	currentBoundHeightMap = lod;
+
+	//float endTime = Time::GetCurrentTime();
+	//std::cout << "Start time: " << endTime << std::endl;
+	//std::cout << "Duration: " << endTime - startTime << std::endl << std::endl;
 }
 
 void Terrain::CheckTerrainOffset()
@@ -395,3 +407,5 @@ glm::vec2 Terrain::terrainLod1Offset = glm::vec2(0);
 float Terrain::terrainStep = 1.0f;
 float Terrain::terrainLod0Step = 0.125f;
 float Terrain::terrainLod1Step = 0.25f;
+
+uint32_t Terrain::currentBoundHeightMap = -1;

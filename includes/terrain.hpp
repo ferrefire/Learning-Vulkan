@@ -67,6 +67,8 @@ class Terrain
 		static float terrainLod0Step;
 		static float terrainLod1Step;
 
+		static uint32_t currentBoundHeightMap;
+
 		static void Create();
         static void CreateTextures();
 		static void CreateMeshes();

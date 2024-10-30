@@ -60,6 +60,11 @@ unsigned int Time::GetTime()
 	return result;
 }
 
+double Time::GetCurrentTime()
+{
+	return (glfwGetTime());
+}
+
 void Time::CalculateFPS()
 {
 	if (Time::newSubTick)
