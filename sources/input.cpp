@@ -34,18 +34,18 @@ void Input::ProcessInput()
 {
     SetKeyStatus();
 
-	Manager::currentCamera.UpdateMovement();
+	Manager::camera.UpdateMovement();
 }
 
 void Input::mouse_callback(GLFWwindow *window, double xpos, double ypos)
 {
-	Manager::currentCamera.UpdateRotation(xpos, ypos);
+	Manager::camera.UpdateRotation(xpos, ypos);
 }
 
 void Input::scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
-    if ((float)yoffset > 0.0f) Manager::currentCamera.speed *= 1.25f;
-    else if ((float)yoffset < 0.0f) Manager::currentCamera.speed *= 0.8f;
+    if ((float)yoffset > 0.0f) Manager::camera.speed *= 1.25f;
+    else if ((float)yoffset < 0.0f) Manager::camera.speed *= 0.8f;
 }
 
 Input::KeyStatus Input::GetKey(int keyCode)
@@ -66,10 +66,10 @@ Input::KeyStatus Input::GetKey(int keyCode, bool mouse)
 
 void Input::Start()
 {
-	Manager::currentCamera.UpdateProjection();
-	Manager::currentCamera.Move(glm::vec3(0.0, 1000.0, -1000.0));
+	Manager::camera.UpdateProjection();
+	Manager::camera.Move(glm::vec3(0.0, 1000.0, -1000.0));
 	// Rotate(glm::vec3(-25.0, -135.0, 0.0));
-	Manager::currentCamera.Rotate(glm::vec3(-25.0, 45.0, 0.0));
+	Manager::camera.Rotate(glm::vec3(-25.0, 45.0, 0.0));
 }
 
 void Input::Frame()

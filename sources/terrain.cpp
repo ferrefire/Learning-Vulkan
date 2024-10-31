@@ -422,8 +422,8 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 	std::vector<int> lod0Indices;
 	std::vector<int> lod1Indices;
 
-	float xs = Manager::currentCamera.Position().x / float(terrainChunkSize);
-	float zs = Manager::currentCamera.Position().z / float(terrainChunkSize);
+	float xs = Manager::camera.Position().x / float(terrainChunkSize);
+	float zs = Manager::camera.Position().z / float(terrainChunkSize);
 
 	for (int xi = -terrainChunkRadius; xi <= terrainChunkRadius; xi++)
 	{
@@ -436,7 +436,7 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 			float zf = float(zi);
 
 			float distance = glm::clamp(glm::distance(glm::vec2(xf, zf), glm::vec2(xs, zs)), 0.0f, float(terrainChunkLength));
-			bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::currentCamera.Projection(), Manager::currentCamera.View());
+			bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.View());
 			//bool inView = true;
 
 			if ((inView && distance < 1.0) || distance <= 0.75)
@@ -554,8 +554,8 @@ void Terrain::ComputeHeightMapArray(uint32_t index)
 
 void Terrain::CheckTerrainOffset()
 {
-	float xw = Manager::currentCamera.Position().x;
-	float zw = Manager::currentCamera.Position().z;
+	float xw = Manager::camera.Position().x;
+	float zw = Manager::camera.Position().z;
 
 	float x0 = xw - terrainLod0Offset.x;
 	float z0 = zw - terrainLod0Offset.y;
@@ -570,7 +570,7 @@ void Terrain::CheckTerrainOffset()
 		terrainLod0Offset = glm::vec2(0);
 		terrainLod1Offset = glm::vec2(0);
 
-		Manager::currentCamera.Move(-glm::vec3(newOffset.x, 0, newOffset.y));
+		Manager::camera.Move(-glm::vec3(newOffset.x, 0, newOffset.y));
 	}
 	else if (abs(x0) >= terrainLod0Size * terrainLod0Step || abs(z0) >= terrainLod0Size * terrainLod0Step)
 	{
@@ -608,7 +608,7 @@ bool Terrain::InView(const glm::vec3 &position, float tolerance, const glm::mat4
 	clipSpace.y = clipSpace.y * 0.5f + 0.5f;
 	clipSpace.z = viewSpace.w;
 
-	if (clipSpace.z <= 0.0 || clipSpace.z >= Manager::currentCamera.far) return false;
+	if (clipSpace.z <= 0.0 || clipSpace.z >= Manager::camera.far) return false;
 
 	return !(clipSpace.x < -tolerance || clipSpace.x > 1.0f + tolerance || clipSpace.y < -tolerance || clipSpace.y > 1.0f + tolerance);
 }
@@ -628,9 +628,14 @@ bool Terrain::ChunkInView(glm::vec3 position, float tolerance, glm::mat4 project
 	return false;
 }
 
-Pipeline Terrain::graphicsPipeline{Manager::currentDevice, Manager::currentCamera};
-Pipeline Terrain::heightMapComputePipeline{Manager::currentDevice, Manager::currentCamera};
-Pipeline Terrain::heightMapArrayComputePipeline{Manager::currentDevice, Manager::currentCamera};
+bool Terrain::HeightMapsGenerated()
+{
+	return (heightMapArrayLayersGenerated == heightMapCount);
+}
+
+Pipeline Terrain::graphicsPipeline{Manager::currentDevice, Manager::camera};
+Pipeline Terrain::heightMapComputePipeline{Manager::currentDevice, Manager::camera};
+Pipeline Terrain::heightMapArrayComputePipeline{Manager::currentDevice, Manager::camera};
 
 Texture Terrain::grassDiffuseTexture{Manager::currentDevice};
 //Texture Terrain::grassNormalTexture{Manager::currentDevice};

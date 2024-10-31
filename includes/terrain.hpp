@@ -143,4 +143,5 @@ class Terrain
 		static void RenderTerrain(VkCommandBuffer commandBuffer);
 		static bool InView(const glm::vec3 &position, float tolerance, const glm::mat4 &projection, const glm::mat4 &view);
 		static bool ChunkInView(glm::vec3 position, float tolerance, glm::mat4 projection, glm::mat4 view, bool main = true);
+		static bool HeightMapsGenerated();
 };

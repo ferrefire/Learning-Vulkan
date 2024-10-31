@@ -124,6 +124,8 @@ void Manager::Start()
 {
 	Input::Start();
 	Terrain::Start();
+
+	cinematic.Start();
 }
 
 void Manager::PreFrame()
@@ -136,6 +138,11 @@ void Manager::Frame()
 	if (Input::GetKey(GLFW_KEY_ESCAPE).pressed)
 	{
 		window.Close();
+	}
+
+	if (cinematic.running && Terrain::HeightMapsGenerated())
+	{
+		cinematic.Play();
 	}
 
 	//if (settings.fullscreen && Time::newSecond)
@@ -153,14 +160,14 @@ void Manager::PostFrame()
 
 void Manager::UpdateShaderVariables()
 {
-	shaderVariables.view = currentCamera.View();
-	shaderVariables.projection = currentCamera.Projection();
-	shaderVariables.viewPosition = currentCamera.Position();
-	shaderVariables.viewDirection = currentCamera.Front();
-	shaderVariables.viewRight = currentCamera.Side();
-	shaderVariables.viewUp = currentCamera.Up();
+	shaderVariables.view = camera.View();
+	shaderVariables.projection = camera.Projection();
+	shaderVariables.viewPosition = camera.Position();
+	shaderVariables.viewDirection = camera.Front();
+	shaderVariables.viewRight = camera.Side();
+	shaderVariables.viewUp = camera.Up();
 	shaderVariables.resolution = glm::vec4(window.width, window.height, 1.0 / window.width, 1.0 / window.height);
-	memcpy(shaderVariableBuffers[Manager::currentFrame].mappedBuffer, &shaderVariables, sizeof(shaderVariables));
+	memcpy(shaderVariableBuffers[currentFrame].mappedBuffer, &shaderVariables, sizeof(shaderVariables));
 }
 
 void Manager::DestroyPipelines()
@@ -288,7 +295,7 @@ Graphics Manager::graphics{device, window};
 
 Device &Manager::currentDevice = Manager::device;
 Window &Manager::currentWindow = Manager::window;
-Camera &Manager::currentCamera = Manager::camera;
+//Camera &Manager::currentCamera = Manager::camera;
 Graphics &Manager::currentGraphics = Manager::graphics;
 
 ShaderVariables Manager::shaderVariables;
@@ -301,3 +308,5 @@ uint32_t Manager::currentFrame = 0;
 
 std::vector<Object *> Manager::objects;
 Settings Manager::settings;
+
+Cinematic Manager::cinematic;

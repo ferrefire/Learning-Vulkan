@@ -10,6 +10,7 @@
 #include "texture.hpp"
 #include "buffer.hpp"
 #include "descriptor.hpp"
+#include "cinematic.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -52,7 +53,6 @@ class Manager
         static bool vulkanInitialized;
 
 		static Window window;
-		static Camera camera;
 		static Device device;
 		static Graphics graphics;
 		static std::vector<Pipeline *> pipelines;
@@ -64,9 +64,10 @@ class Manager
 		static ShaderVariables shaderVariables;
 
 		static Window &currentWindow;
-		static Camera &currentCamera;
 		static Device &currentDevice;
 		static Graphics &currentGraphics;
+
+		static Camera camera;
 
 		static uint32_t currentFrame;
 		//static VkCommandBuffer currentBuffer;
@@ -76,6 +77,8 @@ class Manager
 		static Descriptor globalDescriptor;
 
 		static std::vector<Object *> objects;
+
+		static Cinematic cinematic;
 
 		static void Setup();
 		static void Create();

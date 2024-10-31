@@ -1,6 +1,7 @@
 #include "manager.hpp"
 #include "time.hpp"
 #include "input.hpp"
+#include "utilities.hpp"
 //#include "mesh.hpp"
 
 #define GLFW_INCLUDE_VULKAN
@@ -43,6 +44,11 @@ void Setup(int argc, char **argv)
 		else if (std::string(argv[i]).compare("uc") == 0)
 		{
 			Manager::settings.uncappedFPS = true;
+		}
+		else if (std::string(argv[i]).compare(0, 4, "cin=") == 0)
+		{
+			std::string arg = argv[i];
+			Manager::cinematic.Load((Utilities::GetPath() + "/cinematics/" + (argv[i] + arg.find('=') + 1) + ".txt").c_str());
 		}
 	}
 }
