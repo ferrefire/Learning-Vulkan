@@ -75,6 +75,9 @@ class Terrain
 		static HeightMapArrayComputeVariables heightMapArrayComputeVariables;
 		static Buffer heightMapArrayComputeVariablesBuffer;
 
+		static float terrainTotalSize;
+		static float terrainHeight;
+
 		static float terrainChunkSize;
 		static float terrainLod0Size;
 		static float terrainLod1Size;
@@ -95,6 +98,8 @@ class Terrain
 		static float terrainLod1Step;
 
 		static uint32_t currentBoundHeightMap;
+
+		static int heightMapArrayLayersGenerated;
 
 		static void Create();
         static void CreateTextures();
@@ -121,4 +126,7 @@ class Terrain
 		static void ComputeHeightMapArray(uint32_t index);
 		static void CheckTerrainOffset();
 		static void UpdateHeightMapVariables();
+		static void RenderTerrain(VkCommandBuffer commandBuffer);
+		static bool InView(const glm::vec3 &position, float tolerance, const glm::mat4 &projection, const glm::mat4 &view);
+		static bool ChunkInView(glm::vec3 position, float tolerance, glm::mat4 projection, glm::mat4 view, bool main = true);
 };

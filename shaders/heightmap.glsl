@@ -14,8 +14,8 @@ layout(set = 1, binding = 4) uniform HeightMapVariables
 const float worldSampleDistance = 1;
 const float worldSampleDistanceMult = 0.0002;
 
-const float terrainTotalSize = 30000;
-const float terrainTotalSizeMult = 1.0 / 30000.0;
+const float terrainTotalSize = 50000;
+const float terrainTotalSizeMult = 1.0 / 50000.0;
 
 const float terrainChunkSize = 10000;
 const float terrainChunkSizeMult = 0.0001;
@@ -25,8 +25,8 @@ const float terrainLod0SizeMult = 0.0004;
 const float terrainLod1Size = 5000;
 const float terrainLod1SizeMult = 0.0002;
 
-const int chunksLength = 3;
-const float chunksLengthMult = 1.0 / 3.0;
+const int chunksLength = 5;
+const float chunksLengthMult = 1.0 / 5.0;
 //const int chunksLength = 1;
 //const float chunksLengthMult = 1.0;
 

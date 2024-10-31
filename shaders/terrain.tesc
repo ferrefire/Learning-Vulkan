@@ -2,28 +2,16 @@
 
 #extension GL_ARB_shading_language_include : require
 
-//layout(set = 0, binding = 0) uniform Variables 
-//{
-//    vec3 viewPosition;
-//    vec3 viewDirection;
-//    vec3 viewRight;
-//    vec3 viewUp;
-//    vec4 resolution;
-//} variables;
-
-//layout(set = 1, binding = 0) uniform ObjectData 
+//#define OBJECT_DATA_COUNT 25
+//layout(set = 1, binding = 0) uniform ObjectData
 //{
 //    mat4 model;
-//} objectData;
-layout(set = 1, binding = 0) uniform ObjectData
-{
-    mat4 model;
-} objectDatas[1];
-
-layout(push_constant, std430) uniform PushConstants
-{
-    uint chunkIndex;
-} pc;
+//} objectDatas[OBJECT_DATA_COUNT];
+//
+//layout(push_constant, std430) uniform PushConstants
+//{
+//    uint chunkIndex;
+//} pc;
 
 //layout(vertices = 3) in;
 layout(vertices = 3) out;
@@ -32,7 +20,7 @@ layout(vertices = 3) out;
 #include "culling.glsl"
 #include "depth.glsl"
 
-float tesselationFactor = 20;
+const float tesselationFactor = 10;
 
 float TessellationFactor (vec3 p0, vec3 p1)
 {

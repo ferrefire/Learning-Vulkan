@@ -2,28 +2,16 @@
 
 #extension GL_ARB_shading_language_include : require
 
-//layout(set = 0, binding = 0) uniform Variables 
-//{
-//    vec3 viewPosition;
-//    vec3 viewDirection;
-//	vec3 viewRight;
-//    vec3 viewUp;
-//	vec4 resolution;
-//} variables;
-
-//layout(set = 1, binding = 0) uniform ObjectData 
+//#define OBJECT_DATA_COUNT 25
+//layout(set = 1, binding = 0) uniform ObjectData
 //{
 //    mat4 model;
-//} objectData;
-layout(set = 1, binding = 0) uniform ObjectData
-{
-    mat4 model;
-} objectDatas[1];
-
-layout(push_constant, std430) uniform PushConstants
-{
-    uint chunkIndex;
-} pc;
+//} objectDatas[OBJECT_DATA_COUNT];
+//
+//layout(push_constant, std430) uniform PushConstants
+//{
+//    uint chunkIndex;
+//} pc;
 
 //layout(set = 1, binding = 2) uniform sampler2D grassSampler;
 layout(set = 1, binding = 5) uniform sampler2D grassDiffuseSampler;
