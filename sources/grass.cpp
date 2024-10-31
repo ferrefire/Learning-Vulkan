@@ -27,6 +27,7 @@ void Grass::CreateGraphicsPipeline()
 	descriptorLayoutConfig[0].stages = VERTEX_STAGE;
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
+	pipelineConfiguration.foliage = true;
 
 	VertexInfo vertexInfo = grassMesh.MeshVertexInfo();
 
@@ -35,9 +36,11 @@ void Grass::CreateGraphicsPipeline()
 
 void Grass::CreateComputePipeline()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(1);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(2);
 	descriptorLayoutConfig[0].type = STORAGE_BUFFER;
 	descriptorLayoutConfig[0].stages = COMPUTE_STAGE;
+	descriptorLayoutConfig[1].type = STORAGE_BUFFER;
+	descriptorLayoutConfig[1].stages = COMPUTE_STAGE;
 
 	computePipeline.CreateComputePipeline("grassCompute", descriptorLayoutConfig);
 }
@@ -46,16 +49,30 @@ void Grass::CreateBuffers()
 {
 	dataBuffers.resize(Manager::settings.maxFramesInFlight);
 
-	BufferConfiguration configuration;
-	configuration.size = sizeof(GrassData) * grassTotalCount;
-	configuration.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-	configuration.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-	configuration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	configuration.mapped = false;
+	BufferConfiguration dataConfiguration;
+	dataConfiguration.size = sizeof(GrassData) * grassTotalCount;
+	dataConfiguration.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+	dataConfiguration.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+	dataConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	dataConfiguration.mapped = false;
 
 	for (Buffer &buffer : dataBuffers)
 	{
-		buffer.Create(configuration);
+		buffer.Create(dataConfiguration);
+	}
+
+	countBuffers.resize(Manager::settings.maxFramesInFlight);
+
+	BufferConfiguration countConfiguration;
+	countConfiguration.size = sizeof(uint32_t);
+	countConfiguration.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+	countConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	countConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	countConfiguration.mapped = true;
+
+	for (Buffer &buffer : countBuffers)
+	{
+		buffer.Create(countConfiguration);
 	}
 }
 
@@ -81,18 +98,29 @@ void Grass::CreateGraphicsDescriptor()
 
 void Grass::CreateComputeDescriptor()
 {
-	std::vector<DescriptorConfiguration> descriptorConfig(1);
+	std::vector<DescriptorConfiguration> descriptorConfig(2);
 
 	descriptorConfig[0].type = STORAGE_BUFFER;
 	descriptorConfig[0].stages = COMPUTE_STAGE;
 	descriptorConfig[0].buffersInfo.resize(dataBuffers.size());
-
 	int index = 0;
 	for (Buffer &buffer : dataBuffers)
 	{
 		descriptorConfig[0].buffersInfo[index].buffer = buffer.buffer;
 		descriptorConfig[0].buffersInfo[index].range = sizeof(GrassData) * grassTotalCount;
 		descriptorConfig[0].buffersInfo[index].offset = 0;
+		index++;
+	}
+
+	descriptorConfig[1].type = STORAGE_BUFFER;
+	descriptorConfig[1].stages = COMPUTE_STAGE;
+	descriptorConfig[1].buffersInfo.resize(countBuffers.size());
+	index = 0;
+	for (Buffer &buffer : countBuffers)
+	{
+		descriptorConfig[1].buffersInfo[index].buffer = buffer.buffer;
+		descriptorConfig[1].buffersInfo[index].range = sizeof(uint32_t);
+		descriptorConfig[1].buffersInfo[index].offset = 0;
 		index++;
 	}
 
@@ -126,6 +154,13 @@ void Grass::DestroyBuffers()
 	}
 
 	dataBuffers.clear();
+
+	for (Buffer &buffer : countBuffers)
+	{
+		buffer.Destroy();
+	}
+
+	countBuffers.clear();
 }
 
 void Grass::DestroyDescriptors()
@@ -136,15 +171,15 @@ void Grass::DestroyDescriptors()
 
 void Grass::Start()
 {
-	
+
 }
 
 void Grass::Frame()
 {
-
+	ComputeGrass();
 }
 
-void Grass::RecordCommandBuffer(VkCommandBuffer commandBuffer)
+void Grass::RecordCommands(VkCommandBuffer commandBuffer)
 {
 	graphicsPipeline.BindGraphics(commandBuffer, Manager::currentWindow);
 
@@ -160,7 +195,8 @@ void Grass::RenderGrass(VkCommandBuffer commandBuffer)
 {
 	grassMesh.Bind(commandBuffer);
 
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), grassTotalCount, 0, 0, 0);
+	int renderCount = *(int *)countBuffers[Manager::currentFrame].mappedBuffer;
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), renderCount, 0, 0, 0);
 }
 
 void Grass::ComputeGrass()
@@ -194,3 +230,4 @@ Descriptor Grass::graphicsDescriptor{Manager::currentDevice};
 Descriptor Grass::computeDescriptor{Manager::currentDevice};
 
 std::vector<Buffer> Grass::dataBuffers;
+std::vector<Buffer> Grass::countBuffers;

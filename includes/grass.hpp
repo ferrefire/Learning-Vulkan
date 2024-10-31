@@ -40,6 +40,7 @@ class Grass
 		static Descriptor computeDescriptor;
 
 		static std::vector<Buffer> dataBuffers;
+		static std::vector<Buffer> countBuffers;
 
 		static void Create();
 		static void CreateMeshes();
@@ -57,7 +58,7 @@ class Grass
 
 		static void Start();
 		static void Frame();
-		static void RecordCommandBuffer(VkCommandBuffer commandBuffer);
+		static void RecordCommands(VkCommandBuffer commandBuffer);
 		static void RenderGrass(VkCommandBuffer commandBuffer);
 		static void ComputeGrass();
 };

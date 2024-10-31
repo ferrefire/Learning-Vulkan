@@ -26,6 +26,7 @@ void Manager::Setup()
 void Manager::Create()
 {
 	CreateShaderVariableBuffers();
+	CreateDescriptorSetLayout();
 	CreateDescriptor();
 }
 
@@ -37,6 +38,7 @@ void Manager::Clean()
 	DestroyObjects();
 	DestroyShaderVariableBuffers();
 	DestroyDescriptor();
+	DestroyDescriptorSetLayout();
 }
 
 void Manager::Quit(int exitCode)
@@ -96,15 +98,35 @@ void Manager::CreateShaderVariableBuffers()
 	}
 }
 
-void Manager::CreateDescriptor()
+void Manager::CreateDescriptorSetLayout()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(1);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(4);
 	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
 	descriptorLayoutConfig[0].stages = ALL_STAGE;
+	descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[1].stages = ALL_STAGE;
+	descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[2].stages = ALL_STAGE;
+	descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[3].stages = ALL_STAGE;
 
 	Pipeline::CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
+}
 
-	std::vector<DescriptorConfiguration> descriptorConfig(1);
+void Manager::CreateDescriptor()
+{
+	//std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(4);
+	//descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
+	//descriptorLayoutConfig[0].stages = ALL_STAGE;
+	//descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
+	//descriptorLayoutConfig[1].stages = ALL_STAGE;
+	//descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
+	//descriptorLayoutConfig[2].stages = ALL_STAGE;
+	//descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
+	//descriptorLayoutConfig[3].stages = ALL_STAGE;
+	//Pipeline::CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
+
+	std::vector<DescriptorConfiguration> descriptorConfig(4);
 
 	descriptorConfig[0].type = UNIFORM_BUFFER;
 	descriptorConfig[0].stages = ALL_STAGE;
@@ -117,6 +139,24 @@ void Manager::CreateDescriptor()
 		descriptorConfig[0].buffersInfo[i].offset = 0;
 		i++;
 	}
+
+	descriptorConfig[1].type = IMAGE_SAMPLER;
+	descriptorConfig[1].stages = ALL_STAGE;
+	descriptorConfig[1].imageInfo.imageLayout = LAYOUT_GENERAL;
+	descriptorConfig[1].imageInfo.imageView = Terrain::heightMapArrayTexture.imageView;
+	descriptorConfig[1].imageInfo.sampler = Terrain::heightMapArrayTexture.sampler;
+
+	descriptorConfig[2].type = IMAGE_SAMPLER;
+	descriptorConfig[2].stages = ALL_STAGE;
+	descriptorConfig[2].imageInfo.imageLayout = LAYOUT_GENERAL;
+	descriptorConfig[2].imageInfo.imageView = Terrain::heightMapLod0Texture.imageView;
+	descriptorConfig[2].imageInfo.sampler = Terrain::heightMapLod0Texture.sampler;
+
+	descriptorConfig[3].type = IMAGE_SAMPLER;
+	descriptorConfig[3].stages = ALL_STAGE;
+	descriptorConfig[3].imageInfo.imageLayout = LAYOUT_GENERAL;
+	descriptorConfig[3].imageInfo.imageView = Terrain::heightMapLod1Texture.imageView;
+	descriptorConfig[3].imageInfo.sampler = Terrain::heightMapLod1Texture.sampler;
 
 	globalDescriptor.Create(descriptorConfig, globalDescriptorSetLayout);
 }
@@ -176,6 +216,8 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.terrainOffset = Terrain::terrainOffset;
 	shaderVariables.terrainLod0Offset = Terrain::terrainLod0Offset;
 	shaderVariables.terrainLod1Offset = Terrain::terrainLod1Offset;
+
+	shaderVariables.time = Time::GetCurrentTime();
 
 	memcpy(shaderVariableBuffers[currentFrame].mappedBuffer, &shaderVariables, sizeof(shaderVariables));
 }
@@ -243,6 +285,15 @@ void Manager::DestroyDescriptor()
 {
 	globalDescriptor.Destroy();
 
+	//if (globalDescriptorSetLayout)
+	//{
+	//	vkDestroyDescriptorSetLayout(device.logicalDevice, globalDescriptorSetLayout, nullptr);
+	//	globalDescriptorSetLayout = nullptr;
+	//}
+}
+
+void Manager::DestroyDescriptorSetLayout()
+{
 	if (globalDescriptorSetLayout)
 	{
 		vkDestroyDescriptorSetLayout(device.logicalDevice, globalDescriptorSetLayout, nullptr);

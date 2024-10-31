@@ -109,6 +109,7 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	//Manager::UpdateShaderVariables();
 
 	Terrain::RecordCommands(commandBuffer);
+	Grass::RecordCommands(commandBuffer);
 
 	//for (Object *object : Manager::objects)
 	//{
@@ -274,14 +275,18 @@ void Graphics::Create()
 	device.CreateCommandBuffers();
 	device.CreateSyncObjects();
 
-	Manager::Create();
+	//Manager::Create();
+	Manager::CreateShaderVariableBuffers();
+	Manager::CreateDescriptorSetLayout();
 
 	Texture::CreateDefaults();
 	Mesh::CreateDefaults();
 
 	Terrain::Create();
 
-	//Grass::Create();
+	Manager::CreateDescriptor();
+
+	Grass::Create();
 
 	/*
 	Object *obj1 = Manager::NewObject();
@@ -327,7 +332,7 @@ void Graphics::Destroy()
 
 	Terrain::Destroy();
 
-	//Grass::Destroy();
+	Grass::Destroy();
 
 	//Manager::DestroyPipelines();
 	//Manager::DestroyTextures();

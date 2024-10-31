@@ -52,6 +52,8 @@ struct ShaderVariables
 	alignas(4) float terrainTotalSizeMult;
 	alignas(4) int terrainChunksLength;
 	alignas(4) float terrainChunksLengthMult;
+
+	alignas(4) float time;
 };
 
 class Manager
@@ -96,6 +98,7 @@ class Manager
 		static void InitializeGLFW();
 		static void InitializeVulkan();
 		static void CreateShaderVariableBuffers();
+		static void CreateDescriptorSetLayout();
 		static void CreateDescriptor();
 
 		static void Start();
@@ -109,6 +112,7 @@ class Manager
 		static void DestroyMeshes();
 		static void DestroyObjects();
 		static void DestroyShaderVariableBuffers();
+		static void DestroyDescriptorSetLayout();
 		static void DestroyDescriptor();
 
 		static Window &GetWindow();

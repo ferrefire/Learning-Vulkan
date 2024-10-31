@@ -14,20 +14,39 @@ layout(std430, set = 1, binding = 0) buffer DataBuffer
 	GrassData data[];
 };
 
+layout(std430, set = 1, binding = 1) buffer RenderCount
+{
+    uint renderCount;
+};
+
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 const uint grassCount = 128;
+const float grassCountMult = 1.0 / 128.0;
 const uint grassTotalCount = 128 * 128;
 
 const float spacing = 0.25;
 const float spacingMult = 4;
 
+const float windStrength = 0.225;
+const float windFrequency = 2.75;
+
 #include "variables.glsl"
+#include "functions.glsl"
 #include "heightmap.glsl"
+
+float random(vec2 st)
+{
+    return fract(sin(dot(st.xy * 0.001, vec2(12.9898,78.233))) * 43758.5453123);
+}
 
 void main()
 {
-	uint index = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y * grassCount;
+	//uint index = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y * grassCount;
+	if (gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.y == 0)
+	{
+		atomicExchange(renderCount, 0);
+	}
 
 	float x = float(gl_GlobalInvocationID.x) - grassCount * 0.5;
     float z = float(gl_GlobalInvocationID.y) - grassCount * 0.5;
@@ -40,7 +59,38 @@ void main()
 
 	vec3 position = vec3(x, y, z);
 
+	float squaredDistance = SquaredDistance(position, variables.viewPosition);
+	float maxDistance = pow(grassCount * spacing, 2);
+	float maxDistanceMult = pow(grassCountMult * spacingMult, 2);
+
+	float falloff = clamp(clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult, 0.0, 1.0);
+	falloff = 1.0 - pow(1.0 - falloff, 16);
+
+	float ranMult = 1.0 - (abs(position.x) + abs(position.z)) * variables.terrainTotalSizeMult * 0.5;
+    float ran = random(position.xz * ranMult);
+
+	if (falloff > ran) return ;
+
+	ran = random(vec2(ran * 100, ran * 200));
+	position.x += ran - 0.5;
+    ran = random(vec2(ran * 200, ran * 100));
+	position.z += ran - 0.5;
+	position.y = SampleDynamic(position.xz) * 5000;
+
+	vec3 rotations = vec3(0);
+    float wave = 0;
+	if (windStrength > 0.0) wave = (sin(variables.time * 2 + (x + z) * 0.1 * windFrequency) * 0.5 + 0.5) * windStrength;
+    ran = random(position.xz * ranMult + vec2(position.y, -position.y) * 0.01);
+    rotations.x = mix(0.25, 1.0, ran);
+	rotations.x = mix(rotations.x, 1.0 + (ran - 0.5) * 0.25, wave);
+    ran = random(vec2(position.xz * ranMult + vec2(position.y + ran * 10, -position.y + ran * 10) * 0.01));
+    rotations.y = mix(ran, (ran * 0.5 + 1.8) * 0.5, wave);
+    rotations.x *= 60.0;
+    rotations.y *= 360.0;
+
+	uint index = atomicAdd(renderCount, 1);
+
 	data[index].position = position - variables.viewPosition;
-	data[index].rotation = vec3(0);
+	data[index].rotation = rotations;
 	data[index].normal = SampleNormalDynamic(vec2(x, z), 1.0);
 }

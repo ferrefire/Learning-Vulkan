@@ -51,6 +51,14 @@ void Terrain::CreateTextures()
 	ImageConfiguration heightMapLod0Config = Texture::ImageStorage(1024, 1024);
 	heightMapLod0Texture.CreateImage(heightMapLod0Config, heightMapSamplerConfig);
 	heightMapLod0Texture.TransitionImageLayout(heightMapLod0Config);
+
+	//Manager::globalDescriptor.descriptorConfigs[1].imageInfo.imageView = heightMapArrayTexture.imageView;
+	//Manager::globalDescriptor.descriptorConfigs[1].imageInfo.sampler = heightMapArrayTexture.sampler;
+	//Manager::globalDescriptor.descriptorConfigs[2].imageInfo.imageView = heightMapLod0Texture.imageView;
+	//Manager::globalDescriptor.descriptorConfigs[2].imageInfo.sampler = heightMapLod0Texture.sampler;
+	//Manager::globalDescriptor.descriptorConfigs[3].imageInfo.imageView = heightMapLod1Texture.imageView;
+	//Manager::globalDescriptor.descriptorConfigs[3].imageInfo.sampler = heightMapLod1Texture.sampler;
+	//Manager::globalDescriptor.Update();
 }
 
 void Terrain::CreateMeshes()
@@ -87,24 +95,27 @@ void Terrain::CreateObjects()
 
 void Terrain::CreateGraphicsPipeline()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(7);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(4);
 	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
 	descriptorLayoutConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
 	descriptorLayoutConfig[0].count = terrainChunkCount;
-	descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[1].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
-	descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[2].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
-	descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[3].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+
+	//descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
+	//descriptorLayoutConfig[1].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+	//descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
+	//descriptorLayoutConfig[2].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+	//descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
+	//descriptorLayoutConfig[3].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+
 	//descriptorLayoutConfig[4].type = UNIFORM_BUFFER;
 	//descriptorLayoutConfig[4].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
-	descriptorLayoutConfig[4].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[4].stages = FRAGMENT_STAGE;
-	descriptorLayoutConfig[5].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[5].stages = FRAGMENT_STAGE;
-	descriptorLayoutConfig[6].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[6].stages = FRAGMENT_STAGE;
+
+	descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[1].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[2].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[3].stages = FRAGMENT_STAGE;
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
 	pipelineConfiguration.tesselation = true;
@@ -137,7 +148,7 @@ void Terrain::CreateComputePipelines()
 
 void Terrain::CreateGraphicsDescriptor()
 {
-	std::vector<DescriptorConfiguration> descriptorConfig(7);
+	std::vector<DescriptorConfiguration> descriptorConfig(4);
 
 	int bufferCount = terrainChunks[0].uniformBuffers.size();
 	int objectCount = terrainChunks.size();
@@ -145,16 +156,6 @@ void Terrain::CreateGraphicsDescriptor()
 	descriptorConfig[0].type = UNIFORM_BUFFER;
 	descriptorConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
 	descriptorConfig[0].count = objectCount;
-	//descriptorConfig[0].buffersInfo.resize(terrainChunks[0].uniformBuffers.size());
-	//int i = 0;
-	//for (Buffer &buffer : terrainChunks[0].uniformBuffers)
-	//{
-	//	descriptorConfig[0].buffersInfo[i].buffer = buffer.buffer;
-	//	descriptorConfig[0].buffersInfo[i].range = sizeof(UniformBufferObject);
-	//	descriptorConfig[0].buffersInfo[i].offset = 0;
-	//	i++;
-	//}
-	
 	descriptorConfig[0].buffersInfo.resize(bufferCount * objectCount);
 	
 	for (int i = 0; i < bufferCount; i++)
@@ -169,23 +170,21 @@ void Terrain::CreateGraphicsDescriptor()
 		}
 	}
 
-	descriptorConfig[1].type = IMAGE_SAMPLER;
-	descriptorConfig[1].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
-	descriptorConfig[1].imageInfo.imageLayout = LAYOUT_GENERAL;
-	descriptorConfig[1].imageInfo.imageView = heightMapArrayTexture.imageView;
-	descriptorConfig[1].imageInfo.sampler = heightMapArrayTexture.sampler;
-
-	descriptorConfig[2].type = IMAGE_SAMPLER;
-	descriptorConfig[2].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
-	descriptorConfig[2].imageInfo.imageLayout = LAYOUT_GENERAL;
-	descriptorConfig[2].imageInfo.imageView = heightMapLod0Texture.imageView;
-	descriptorConfig[2].imageInfo.sampler = heightMapLod0Texture.sampler;
-
-	descriptorConfig[3].type = IMAGE_SAMPLER;
-	descriptorConfig[3].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
-	descriptorConfig[3].imageInfo.imageLayout = LAYOUT_GENERAL;
-	descriptorConfig[3].imageInfo.imageView = heightMapLod1Texture.imageView;
-	descriptorConfig[3].imageInfo.sampler = heightMapLod1Texture.sampler;
+	//descriptorConfig[1].type = IMAGE_SAMPLER;
+	//descriptorConfig[1].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+	//descriptorConfig[1].imageInfo.imageLayout = LAYOUT_GENERAL;
+	//descriptorConfig[1].imageInfo.imageView = heightMapArrayTexture.imageView;
+	//descriptorConfig[1].imageInfo.sampler = heightMapArrayTexture.sampler;
+	//descriptorConfig[2].type = IMAGE_SAMPLER;
+	//descriptorConfig[2].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+	//descriptorConfig[2].imageInfo.imageLayout = LAYOUT_GENERAL;
+	//descriptorConfig[2].imageInfo.imageView = heightMapLod0Texture.imageView;
+	//descriptorConfig[2].imageInfo.sampler = heightMapLod0Texture.sampler;
+	//descriptorConfig[3].type = IMAGE_SAMPLER;
+	//descriptorConfig[3].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+	//descriptorConfig[3].imageInfo.imageLayout = LAYOUT_GENERAL;
+	//descriptorConfig[3].imageInfo.imageView = heightMapLod1Texture.imageView;
+	//descriptorConfig[3].imageInfo.sampler = heightMapLod1Texture.sampler;
 
 	//descriptorConfig[4].type = UNIFORM_BUFFER;
 	//descriptorConfig[4].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
@@ -199,23 +198,23 @@ void Terrain::CreateGraphicsDescriptor()
 	//	i++;
 	//}
 
-	descriptorConfig[4].type = IMAGE_SAMPLER;
-	descriptorConfig[4].stages = FRAGMENT_STAGE;
-	descriptorConfig[4].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[4].imageInfo.imageView = grassDiffuseTexture.imageView;
-	descriptorConfig[4].imageInfo.sampler = grassDiffuseTexture.sampler;
+	descriptorConfig[1].type = IMAGE_SAMPLER;
+	descriptorConfig[1].stages = FRAGMENT_STAGE;
+	descriptorConfig[1].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	descriptorConfig[1].imageInfo.imageView = grassDiffuseTexture.imageView;
+	descriptorConfig[1].imageInfo.sampler = grassDiffuseTexture.sampler;
 
-	descriptorConfig[5].type = IMAGE_SAMPLER;
-	descriptorConfig[5].stages = FRAGMENT_STAGE;
-	descriptorConfig[5].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[5].imageInfo.imageView = rockDiffuseTexture.imageView;
-	descriptorConfig[5].imageInfo.sampler = rockDiffuseTexture.sampler;
+	descriptorConfig[2].type = IMAGE_SAMPLER;
+	descriptorConfig[2].stages = FRAGMENT_STAGE;
+	descriptorConfig[2].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	descriptorConfig[2].imageInfo.imageView = rockDiffuseTexture.imageView;
+	descriptorConfig[2].imageInfo.sampler = rockDiffuseTexture.sampler;
 
-	descriptorConfig[6].type = IMAGE_SAMPLER;
-	descriptorConfig[6].stages = FRAGMENT_STAGE;
-	descriptorConfig[6].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[6].imageInfo.imageView = dirtDiffuseTexture.imageView;
-	descriptorConfig[6].imageInfo.sampler = dirtDiffuseTexture.sampler;
+	descriptorConfig[3].type = IMAGE_SAMPLER;
+	descriptorConfig[3].stages = FRAGMENT_STAGE;
+	descriptorConfig[3].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	descriptorConfig[3].imageInfo.imageView = dirtDiffuseTexture.imageView;
+	descriptorConfig[3].imageInfo.sampler = dirtDiffuseTexture.sampler;
 
 	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
 }
@@ -572,19 +571,19 @@ void Terrain::CheckTerrainOffset()
 
 		Manager::camera.Move(-glm::vec3(newOffset.x, 0, newOffset.y));
 	}
-	else if (abs(x0) >= terrainLod0Size * terrainLod0Step || abs(z0) >= terrainLod0Size * terrainLod0Step)
-	{
-		glm::vec2 newOffset = glm::vec2(Utilities::Fits(terrainLod0Size * terrainLod0Step, x0), Utilities::Fits(terrainLod0Size * terrainLod0Step, z0)) * terrainLod0Size * terrainLod0Step;
-		terrainLod0Offset += newOffset;
-
-		ComputeHeightMap(0);
-	}
 	else if (abs(x1) >= terrainLod1Size * terrainLod1Step || abs(z1) >= terrainLod1Size * terrainLod1Step)
 	{
 		glm::vec2 newOffset = glm::vec2(Utilities::Fits(terrainLod1Size * terrainLod1Step, x1), Utilities::Fits(terrainLod1Size * terrainLod1Step, z1)) * terrainLod1Size * terrainLod1Step;
 		terrainLod1Offset += newOffset;
 
 		ComputeHeightMap(1);
+	}
+	else if (abs(x0) >= terrainLod0Size * terrainLod0Step || abs(z0) >= terrainLod0Size * terrainLod0Step)
+	{
+		glm::vec2 newOffset = glm::vec2(Utilities::Fits(terrainLod0Size * terrainLod0Step, x0), Utilities::Fits(terrainLod0Size * terrainLod0Step, z0)) * terrainLod0Size * terrainLod0Step;
+		terrainLod0Offset += newOffset;
+
+		ComputeHeightMap(0);
 	}
 }
 

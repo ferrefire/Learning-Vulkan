@@ -1,9 +1,10 @@
 #ifndef HEIGHTMAP_INCLUDED
 #define HEIGHTMAP_INCLUDED
 
-layout(set = 1, binding = 1) uniform sampler2DArray heightMapArraySampler;
-layout(set = 1, binding = 2) uniform sampler2D heightMapLod0Sampler;
-layout(set = 1, binding = 3) uniform sampler2D heightMapLod1Sampler;
+//layout(set = 1, binding = 1) uniform sampler2DArray heightMapArraySampler;
+//layout(set = 1, binding = 2) uniform sampler2D heightMapLod0Sampler;
+//layout(set = 1, binding = 3) uniform sampler2D heightMapLod1Sampler;
+
 //layout(set = 1, binding = 4) uniform HeightMapVariables
 //{
 //	vec2 terrainOffset;
@@ -14,6 +15,10 @@ layout(set = 1, binding = 3) uniform sampler2D heightMapLod1Sampler;
 //	int terrainChunksLength;
 //	float terrainChunksLengthMult;
 //} heightMapVariables;
+
+layout(set = 0, binding = 1) uniform sampler2DArray heightMapArraySampler;
+layout(set = 0, binding = 2) uniform sampler2D heightMapLod0Sampler;
+layout(set = 0, binding = 3) uniform sampler2D heightMapLod1Sampler;
 
 const float worldSampleDistance = 1;
 const float worldSampleDistanceMult = 0.0002;
