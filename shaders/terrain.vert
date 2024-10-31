@@ -2,7 +2,7 @@
 
 #extension GL_ARB_shading_language_include : require
 
-#define OBJECT_DATA_COUNT 25
+#define OBJECT_DATA_COUNT 49
 layout(set = 1, binding = 0) uniform ObjectData
 {
     mat4 model;

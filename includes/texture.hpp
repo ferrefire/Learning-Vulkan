@@ -52,8 +52,8 @@ struct SamplerConfiguration
 {
     VkFilter magFilter = VK_FILTER_LINEAR;
     VkFilter minFilter = VK_FILTER_LINEAR;
-    //VkSamplerAddressMode repeatMode = CLAMP_TO_EDGE;
-    VkSamplerAddressMode repeatMode = MIRRORED_REPEAT;
+    VkSamplerAddressMode repeatMode = CLAMP_TO_EDGE;
+    //VkSamplerAddressMode repeatMode = MIRRORED_REPEAT;
     VkBool32 anisotrophic = VK_TRUE;
     VkBorderColor borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
     VkBool32 unnormalizedCoordinates = VK_FALSE;

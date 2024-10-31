@@ -362,6 +362,12 @@ void Terrain::DestroyBuffers()
 
 void Terrain::Start()
 {
+	heightMapVariables.terrainTotalSize = terrainTotalSize;
+	heightMapVariables.terrainTotalSizeMult = 1.0 / terrainTotalSize;
+
+	heightMapVariables.terrainChunksLength = heightMapLength;
+	heightMapVariables.terrainChunksLengthMult = 1.0 / float(heightMapLength);
+
 	//ComputeHeightMapArray(0);
 
 	//for (int i = 0; i < heightMapCount; i++)
@@ -498,7 +504,7 @@ void Terrain::ComputeHeightMap(uint32_t lod)
 
 	heightMapComputeDescriptor.Bind(commandBuffer, heightMapComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
 	heightMapComputeVariables.mapScale = (lod == 0 ? terrainLod0Size : (lod == 1 ? terrainLod1Size : terrainChunkSize)) / terrainChunkSize;
-	heightMapComputeVariables.mapOffset = (lod == 0 ? (terrainLod0Offset / terrainLod0Size) : (terrainLod1Offset / terrainLod1Size));
+	heightMapComputeVariables.mapOffset = (lod == 0 ? ((terrainLod0Offset + terrainOffset) / terrainLod0Size) : ((terrainLod1Offset + terrainOffset) / terrainLod1Size));
 	memcpy(heightMapComputeVariablesBuffer.mappedBuffer, &heightMapComputeVariables, sizeof(heightMapComputeVariables));
 	vkCmdDispatch(commandBuffer, 128, 128, 1); //Change dispatch count
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
@@ -556,7 +562,17 @@ void Terrain::CheckTerrainOffset()
 	float x1 = xw - terrainLod1Offset.x;
 	float z1 = zw - terrainLod1Offset.y;
 
-	if (abs(x0) >= terrainLod0Size * terrainLod0Step || abs(z0) >= terrainLod0Size * terrainLod0Step)
+	if (abs(xw) >= terrainChunkSize * terrainStep || abs(zw) >= terrainChunkSize * terrainStep)
+	{
+		glm::vec2 newOffset = glm::vec2(Utilities::Fits(terrainChunkSize * terrainStep, xw), Utilities::Fits(terrainChunkSize * terrainStep, zw)) * terrainChunkSize * terrainStep;
+		terrainOffset += newOffset;
+
+		terrainLod0Offset = glm::vec2(0);
+		terrainLod1Offset = glm::vec2(0);
+
+		Manager::currentCamera.Move(-glm::vec3(newOffset.x, 0, newOffset.y));
+	}
+	else if (abs(x0) >= terrainLod0Size * terrainLod0Step || abs(z0) >= terrainLod0Size * terrainLod0Step)
 	{
 		glm::vec2 newOffset = glm::vec2(Utilities::Fits(terrainLod0Size * terrainLod0Step, x0), Utilities::Fits(terrainLod0Size * terrainLod0Step, z0)) * terrainLod0Size * terrainLod0Step;
 		terrainLod0Offset += newOffset;
@@ -577,6 +593,7 @@ void Terrain::UpdateHeightMapVariables()
 	heightMapVariables.terrainOffset = terrainOffset;
 	heightMapVariables.terrainLod0Offset = terrainLod0Offset;
 	heightMapVariables.terrainLod1Offset = terrainLod1Offset;
+
 	memcpy(heightMapVariablesBuffers[Manager::currentFrame].mappedBuffer, &heightMapVariables, sizeof(heightMapVariables));
 }
 
@@ -650,11 +667,11 @@ float Terrain::terrainChunkSize = 10000;
 float Terrain::terrainLod0Size = 2500;
 float Terrain::terrainLod1Size = 5000;
 
-int Terrain::terrainChunkRadius = 2;
+int Terrain::terrainChunkRadius = 3;
 int Terrain::terrainChunkLength = Terrain::terrainChunkRadius * 2 + 1;
 int Terrain::terrainChunkCount = Terrain::terrainChunkLength * Terrain::terrainChunkLength;
 
-int Terrain::heightMapRadius = 2;
+int Terrain::heightMapRadius = 4;
 int Terrain::heightMapLength = Terrain::heightMapRadius * 2 + 1;
 int Terrain::heightMapCount = Terrain::heightMapLength * Terrain::heightMapLength;
 
@@ -671,3 +688,6 @@ float Terrain::terrainLod1Step = 0.25f;
 uint32_t Terrain::currentBoundHeightMap = -1;
 
 int Terrain::heightMapArrayLayersGenerated = 0;
+
+//bool Terrain::terrainLod0OffsetReset = false;
+//bool Terrain::terrainLod1OffsetReset = false;

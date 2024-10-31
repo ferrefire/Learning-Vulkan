@@ -19,6 +19,19 @@ struct HeightMapVariables
 	alignas(8) glm::vec2 terrainOffset;
 	alignas(8) glm::vec2 terrainLod0Offset;
 	alignas(8) glm::vec2 terrainLod1Offset;
+
+	alignas(4) float terrainTotalSize;
+	alignas(4) float terrainTotalSizeMult;
+
+	alignas(4) int terrainChunksLength;
+	alignas(4) float terrainChunksLengthMult;
+
+	//alignas(4) float terrainHeight;
+	//alignas(4) float terrainHeightMult;
+	//alignas(4) float terrainLod0Size;
+	//alignas(4) float terrainLod0SizeMult;
+	//alignas(4) float terrainLod1Size;
+	//alignas(4) float terrainLod1SizeMult;
 };
 
 struct HeightMapComputeVariables
@@ -37,9 +50,10 @@ struct HeightMapArrayComputeVariables
 class Terrain
 {
     private:
-        
+		//static bool terrainLod0OffsetReset;
+		//static bool terrainLod1OffsetReset;
 
-    public:
+	public:
 		static Mesh lod0Mesh;
 		static Mesh lod1Mesh;
 

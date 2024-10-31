@@ -34,15 +34,15 @@ layout(location = 0) out vec4 outColor;
 
 const float[] textureBlendDistances = {0.5, 0.5};
 
-const float[] textureLod0Distances = {25 * 25, 35 * 35};
-const float[] textureLod1Distances = {200 * 200, 150 * 150};
-const float[] textureLod2Distances = {1000 * 1000, 500 * 500};
-const float[] textureLod3Distances = {5000 * 5000, 5000 * 5000};
+const float[] textureLod0Distances = {25 * 25, 50 * 50};
+const float[] textureLod1Distances = {200 * 200, 375 * 375};
+const float[] textureLod2Distances = {1000 * 1000, 1000 * 1000};
+const float[] textureLod3Distances = {5000 * 5000, 10000 * 10000};
 
 const float[] textureLod0Scales = {0.25, 0.1};
-const float[] textureLod1Scales = {0.05, 0.025};
-const float[] textureLod2Scales = {0.01, 0.005};
-const float[] textureLod3Scales = {0.002, 0.0025};
+const float[] textureLod1Scales = {0.05, 0.01};
+const float[] textureLod2Scales = {0.01, 0.00375};
+const float[] textureLod3Scales = {0.002, 0.001};
 
 const vec3[] defaultColors = {vec3(0.0916, 0.0866, 0.0125), vec3(0.3, 0.175, 0.15)};
 

@@ -9,13 +9,17 @@ layout(set = 1, binding = 4) uniform HeightMapVariables
 	vec2 terrainOffset;
 	vec2 terrainLod0Offset;
 	vec2 terrainLod1Offset;
+	float terrainTotalSize;
+	float terrainTotalSizeMult;
+	int terrainChunksLength;
+	float terrainChunksLengthMult;
 } heightMapVariables;
 
 const float worldSampleDistance = 1;
 const float worldSampleDistanceMult = 0.0002;
 
-const float terrainTotalSize = 50000;
-const float terrainTotalSizeMult = 1.0 / 50000.0;
+//const float terrainTotalSize = 50000;
+//const float terrainTotalSizeMult = 1.0 / 50000.0;
 
 const float terrainChunkSize = 10000;
 const float terrainChunkSizeMult = 0.0001;
@@ -25,22 +29,22 @@ const float terrainLod0SizeMult = 0.0004;
 const float terrainLod1Size = 5000;
 const float terrainLod1SizeMult = 0.0002;
 
-const int chunksLength = 5;
-const float chunksLengthMult = 1.0 / 5.0;
+//const int chunksLength = 5;
+//const float chunksLengthMult = 1.0 / 5.0;
 //const int chunksLength = 1;
 //const float chunksLengthMult = 1.0;
 
 float SampleArray(vec2 uvPosition)
 {
-	vec2 chunkUV = vec2(ceil(uvPosition.x * chunksLength), ceil(uvPosition.y * chunksLength));
-	chunkUV = chunkUV * chunksLengthMult - chunksLengthMult * 0.5;
+	vec2 chunkUV = vec2(ceil(uvPosition.x * heightMapVariables.terrainChunksLength), ceil(uvPosition.y * heightMapVariables.terrainChunksLength));
+	chunkUV = chunkUV * heightMapVariables.terrainChunksLengthMult - heightMapVariables.terrainChunksLengthMult * 0.5;
 
-	vec2 indexUV = vec2(floor(chunkUV.x * chunksLength), floor(chunkUV.y * chunksLength));
+	vec2 indexUV = vec2(floor(chunkUV.x * heightMapVariables.terrainChunksLength), floor(chunkUV.y * heightMapVariables.terrainChunksLength));
 
 	uvPosition -= chunkUV;
-	uvPosition = (uvPosition * chunksLength * 2.0) * 0.5 + 0.5; //+ uv offset
+	uvPosition = (uvPosition * heightMapVariables.terrainChunksLength * 2.0) * 0.5 + 0.5; //+ uv offset
 
-	return textureLod(heightMapArraySampler, vec3(uvPosition, indexUV.x * chunksLength + indexUV.y), 0).r;
+	return textureLod(heightMapArraySampler, vec3(uvPosition, indexUV.x * heightMapVariables.terrainChunksLength + indexUV.y), 0).r;
 	
 	//return textureLod(heightMapSampler, uvPosition, 0).r;
 }
@@ -49,7 +53,7 @@ float SampleDynamic(vec2 worldPosition)
 {
 	//vec2 worldUV = (worldPosition + terrainWorldOffset) * terrainSizeMult;
 	//vec2 worldUV = (worldPosition + heightMapVariables.terrainOffset) * terrainChunkSizeMult;
-	vec2 worldUV = (worldPosition + heightMapVariables.terrainOffset) * terrainTotalSizeMult;
+	vec2 worldUV = (worldPosition + heightMapVariables.terrainOffset) * heightMapVariables.terrainTotalSizeMult;
 	if (abs(worldUV.x) > 0.5 || abs(worldUV.y) > 0.5) return 0;
 	if (abs(worldPosition.x - heightMapVariables.terrainLod0Offset.x) < terrainLod0Size * 0.5 && abs(worldPosition.y - heightMapVariables.terrainLod0Offset.y) < terrainLod0Size * 0.5)
 	{
