@@ -99,7 +99,55 @@ void Shape::SetShape(int type, int resolution)
             }
         }
     }
-    
+	else if (type == BLADE)
+	{
+		positionsOnly = true;
+
+		int layer = 1;
+		int subLayers = resolution;
+		const float BLADE_WIDTH = 0.05f;
+		const float BLADE_HEIGHT = 1.0 / (subLayers + 2);
+
+		positions.push_back(glm::vec3(-BLADE_WIDTH, layer * BLADE_HEIGHT, 0.0f));
+		positions.push_back(glm::vec3(BLADE_WIDTH, 0, 0.0f));
+		positions.push_back(glm::vec3(-BLADE_WIDTH, 0, 0.0f));
+		positions.push_back(glm::vec3(BLADE_WIDTH, layer * BLADE_HEIGHT, 0.0f));
+
+		for (int i = 0; i < subLayers; i++)
+		{
+			layer++;
+			positions.push_back(glm::vec3(-BLADE_WIDTH, layer * BLADE_HEIGHT, 0.0f));
+			positions.push_back(glm::vec3(BLADE_WIDTH, layer * BLADE_HEIGHT, 0.0f));
+		}
+
+		layer++;
+		positions.push_back(glm::vec3(0.0f, layer * BLADE_HEIGHT, 0.0f));
+
+		indices.push_back(0);
+		indices.push_back(1);
+		indices.push_back(2);
+		indices.push_back(0);
+		indices.push_back(3);
+		indices.push_back(1);
+
+		int max = 3;
+		int top = 0;
+		for (int i = 0; i < subLayers; i++)
+		{
+			indices.push_back(max + 1);
+			indices.push_back(max);
+			indices.push_back(top);
+			indices.push_back(max + 1);
+			indices.push_back(max + 2);
+			indices.push_back(max);
+			top = max + 1;
+			max = max + 2;
+		}
+
+		indices.push_back(max + 1);
+		indices.push_back(max);
+		indices.push_back(top);
+	}
 }
 
 void Shape::AddPosition(glm::vec3 pos)

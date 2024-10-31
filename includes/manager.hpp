@@ -44,6 +44,14 @@ struct ShaderVariables
 	alignas(16) glm::vec3 viewRight = glm::vec3(0);
 	alignas(16) glm::vec3 viewUp = glm::vec3(0);
 	alignas(16) glm::vec4 resolution = glm::vec4(0);
+
+	alignas(8) glm::vec2 terrainOffset;
+	alignas(8) glm::vec2 terrainLod0Offset;
+	alignas(8) glm::vec2 terrainLod1Offset;
+	alignas(4) float terrainTotalSize;
+	alignas(4) float terrainTotalSizeMult;
+	alignas(4) int terrainChunksLength;
+	alignas(4) float terrainChunksLengthMult;
 };
 
 class Manager

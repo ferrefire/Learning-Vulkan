@@ -80,8 +80,8 @@ class Terrain
 		static Texture heightMapLod0Texture;
 		static Texture heightMapLod1Texture;
 
-		static HeightMapVariables heightMapVariables;
-		static std::vector<Buffer> heightMapVariablesBuffers;
+		//static HeightMapVariables heightMapVariables;
+		//static std::vector<Buffer> heightMapVariablesBuffers;
 
 		static HeightMapComputeVariables heightMapComputeVariables;
 		static Buffer heightMapComputeVariablesBuffer;
@@ -139,7 +139,7 @@ class Terrain
 		static void ComputeHeightMap(uint32_t lod);
 		static void ComputeHeightMapArray(uint32_t index);
 		static void CheckTerrainOffset();
-		static void UpdateHeightMapVariables();
+		//static void UpdateHeightMapVariables();
 		static void RenderTerrain(VkCommandBuffer commandBuffer);
 		static bool InView(const glm::vec3 &position, float tolerance, const glm::mat4 &projection, const glm::mat4 &view);
 		static bool ChunkInView(glm::vec3 position, float tolerance, glm::mat4 projection, glm::mat4 view, bool main = true);

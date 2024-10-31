@@ -1,0 +1,46 @@
+#version 450
+
+#extension GL_ARB_shading_language_include : require
+
+struct GrassData
+{
+    vec3 position;
+    vec3 rotation;
+    vec3 normal;
+};
+
+layout(std430, set = 1, binding = 0) buffer DataBuffer
+{
+	GrassData data[];
+};
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+const uint grassCount = 128;
+const uint grassTotalCount = 128 * 128;
+
+const float spacing = 0.25;
+const float spacingMult = 4;
+
+#include "variables.glsl"
+#include "heightmap.glsl"
+
+void main()
+{
+	uint index = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y * grassCount;
+
+	float x = float(gl_GlobalInvocationID.x) - grassCount * 0.5;
+    float z = float(gl_GlobalInvocationID.y) - grassCount * 0.5;
+	float y = 0;
+
+	vec2 flooredViewPosition = vec2(floor(variables.viewPosition.x * spacingMult) * spacing, floor(variables.viewPosition.z * spacingMult) * spacing);
+    x = x * spacing + flooredViewPosition.x;
+    z = z * spacing + flooredViewPosition.y;
+    y = SampleDynamic(vec2(x, z)) * 5000;
+
+	vec3 position = vec3(x, y, z);
+
+	data[index].position = position - variables.viewPosition;
+	data[index].rotation = vec3(0);
+	data[index].normal = SampleNormalDynamic(vec2(x, z), 1.0);
+}

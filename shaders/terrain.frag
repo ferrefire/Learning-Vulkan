@@ -14,11 +14,11 @@
 //} pc;
 
 //layout(set = 1, binding = 2) uniform sampler2D grassSampler;
-layout(set = 1, binding = 5) uniform sampler2D grassDiffuseSampler;
+layout(set = 1, binding = 4) uniform sampler2D grassDiffuseSampler;
 //layout(set = 1, binding = 6) uniform sampler2D grassNormalSampler;
 //layout(set = 1, binding = 7) uniform sampler2D grassSpecularSampler;
-layout(set = 1, binding = 6) uniform sampler2D rockDiffuseSampler;
-layout(set = 1, binding = 7) uniform sampler2D dirtDiffuseSampler;
+layout(set = 1, binding = 5) uniform sampler2D rockDiffuseSampler;
+layout(set = 1, binding = 6) uniform sampler2D dirtDiffuseSampler;
 
 layout(location = 0) in vec3 inPosition;
 //layout(location = 1) in mat3 tbn;

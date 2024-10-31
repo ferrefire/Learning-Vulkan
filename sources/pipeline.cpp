@@ -248,8 +248,11 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	}
 
 	vkDestroyShaderModule(device.logicalDevice, vertexShaderModule, nullptr);
-	vkDestroyShaderModule(device.logicalDevice, tesselationControlShaderModule, nullptr);
-	vkDestroyShaderModule(device.logicalDevice, tesselationEvaluationShaderModule, nullptr);
+	if (pipelineConfig.tesselation)
+	{
+		vkDestroyShaderModule(device.logicalDevice, tesselationControlShaderModule, nullptr);
+		vkDestroyShaderModule(device.logicalDevice, tesselationEvaluationShaderModule, nullptr);
+	}
 	vkDestroyShaderModule(device.logicalDevice, fragmentShaderModule, nullptr);
 }
 

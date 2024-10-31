@@ -9,6 +9,7 @@
 #define QUAD 1
 #define CUBE 2
 #define PLANE 3
+#define BLADE 4
 
 #define INDEX_TYPE VK_INDEX_TYPE_UINT16
 

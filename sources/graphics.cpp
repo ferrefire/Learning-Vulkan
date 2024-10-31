@@ -4,6 +4,7 @@
 #include "utilities.hpp"
 #include "time.hpp"
 #include "terrain.hpp"
+#include "grass.hpp"
 #include "texture.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -280,6 +281,8 @@ void Graphics::Create()
 
 	Terrain::Create();
 
+	//Grass::Create();
+
 	/*
 	Object *obj1 = Manager::NewObject();
 	obj1->mesh = Mesh::Cube();
@@ -323,6 +326,8 @@ void Graphics::Destroy()
 	window.DestroySurface(instance);
 
 	Terrain::Destroy();
+
+	//Grass::Destroy();
 
 	//Manager::DestroyPipelines();
 	//Manager::DestroyTextures();

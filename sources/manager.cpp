@@ -2,6 +2,7 @@
 
 #include "input.hpp"
 #include "terrain.hpp"
+#include "grass.hpp"
 #include "time.hpp"
 
 #include <iostream>
@@ -124,6 +125,7 @@ void Manager::Start()
 {
 	Input::Start();
 	Terrain::Start();
+	Grass::Start();
 
 	cinematic.Start();
 }
@@ -151,6 +153,7 @@ void Manager::Frame()
 	//}
 
 	Terrain::Frame();
+	Grass::Frame();
 }
 
 void Manager::PostFrame()
@@ -162,11 +165,18 @@ void Manager::UpdateShaderVariables()
 {
 	shaderVariables.view = camera.View();
 	shaderVariables.projection = camera.Projection();
+
 	shaderVariables.viewPosition = camera.Position();
 	shaderVariables.viewDirection = camera.Front();
 	shaderVariables.viewRight = camera.Side();
 	shaderVariables.viewUp = camera.Up();
+
 	shaderVariables.resolution = glm::vec4(window.width, window.height, 1.0 / window.width, 1.0 / window.height);
+
+	shaderVariables.terrainOffset = Terrain::terrainOffset;
+	shaderVariables.terrainLod0Offset = Terrain::terrainLod0Offset;
+	shaderVariables.terrainLod1Offset = Terrain::terrainLod1Offset;
+
 	memcpy(shaderVariableBuffers[currentFrame].mappedBuffer, &shaderVariables, sizeof(shaderVariables));
 }
 
