@@ -14,7 +14,7 @@ vec3 DiffuseLighting(vec3 normal, vec3 color)
 
 vec3 SpecularLighting(vec3 normal, vec3 viewDirection, float shininess)
 {
-	vec3 halfwayDirection = normalize(lightDirection + viewDirection);
+	vec3 halfwayDirection = normalize(normalize(lightDirection) + viewDirection);
 	float specular = pow(max(dot(normal, halfwayDirection), 0.0), shininess);
 	vec3 specularColor = lightColor * specular;
 

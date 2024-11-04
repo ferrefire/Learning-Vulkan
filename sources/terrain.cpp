@@ -381,7 +381,7 @@ void Terrain::Start()
 
 void Terrain::Frame()
 {
-	if (Time::newTick)
+	if (Time::newFrameTick)
 	{
 		if (heightMapArrayLayersGenerated < heightMapCount)
 		{

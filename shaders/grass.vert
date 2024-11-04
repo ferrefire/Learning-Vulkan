@@ -22,12 +22,14 @@ layout(location = 2) out vec3 terrainNormal;
 layout(location = 3) out vec3 grassColor;
 layout(location = 4) out vec2 uv;
 
-const uint grassCount = 128;
-const float grassCountMult = 1.0 / 128.0;
-const uint grassTotalCount = 128 * 128;
+#define COUNT 2048
 
-const float spacing = 0.25;
-const float spacingMult = 4;
+const uint grassCount = COUNT;
+const float grassCountMult = 1.0 / COUNT;
+const uint grassTotalCount = COUNT * COUNT;
+
+const float spacing = 0.125;
+const float spacingMult = 8;
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -45,7 +47,7 @@ void main()
 	float scale = clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult;
 	scale = 1.0 - pow(1.0 - scale, 4);
 	scale = 1.0 + scale * 2;
-	vec3 scaledPosition = inPosition * scale;
+	vec3 scaledPosition = inPosition * scale * 0.5;
 
 	vec3 normal = vec3(0, 0, 1);
 
@@ -66,6 +68,10 @@ void main()
 	terrainNormal = data[gl_InstanceIndex].normal;
     gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
 
-	grassColor = vec3(0.25, 0.6, 0.1);
+	//grassColor = vec3(0.25, 0.6, 0.1);
+	//grassColor = vec3(0.0916, 0.0866, 0.0125) * 1.5;
+	//grassColor = vec3(0.1375, 0.13, 0.01875);
+	grassColor = vec3(0.1375, 0.15, 0.01875);
+
 	uv = vec2(inPosition.x * 10 + 0.5, inPosition.y);
 }

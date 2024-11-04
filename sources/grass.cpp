@@ -212,12 +212,14 @@ void Grass::ComputeGrass()
 
 	computeDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
 	
-	vkCmdDispatch(commandBuffer, 16, 16, 1); // Change dispatch count
+	int computeCount = ceil((float)grassCount / 8.0);
+
+	vkCmdDispatch(commandBuffer, computeCount, computeCount, 1); // Change dispatch count
 
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
 
-int Grass::grassCount = 128;
+int Grass::grassCount = 2048;
 int Grass::grassTotalCount = Grass::grassCount * Grass::grassCount;
 int Grass::grassRenderCount = 0;
 

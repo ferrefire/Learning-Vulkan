@@ -16,12 +16,17 @@ layout(location = 0) out vec4 outColor;
 void main()
 {
 	vec3 normal = normalize(objectNormal);
+	vec3 terrainNormal = normalize(terrainNormal);
 	if (!gl_FrontFacing) normal *= -1;
 
 	vec3 bladeColor = mix(grassColor.xyz * 0.5, grassColor.xyz, uv.y);
 
+	vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
+
 	vec3 diffuse = DiffuseLighting(terrainNormal, vec3(1));
-	vec3 combinedColor = diffuse * bladeColor;
+	vec3 bladeSpecular = SpecularLighting(normal, viewDirection, 8);
+	vec3 terrainSpecular = SpecularLighting(terrainNormal, viewDirection, 16);
+	vec3 combinedColor = (diffuse * bladeColor) + (bladeSpecular * terrainSpecular);
 
 	outColor = vec4(combinedColor, 1.0);
 }

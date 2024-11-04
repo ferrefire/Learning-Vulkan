@@ -21,12 +21,14 @@ layout(std430, set = 1, binding = 1) buffer RenderCount
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-const uint grassCount = 128;
-const float grassCountMult = 1.0 / 128.0;
-const uint grassTotalCount = 128 * 128;
+#define COUNT 2048
 
-const float spacing = 0.25;
-const float spacingMult = 4;
+const uint grassCount = COUNT;
+const float grassCountMult = 1.0 / COUNT;
+const uint grassTotalCount = COUNT * COUNT;
+
+const float spacing = 0.125;
+const float spacingMult = 8;
 
 const float windStrength = 0.225;
 const float windFrequency = 2.75;
@@ -92,5 +94,6 @@ void main()
 
 	data[index].position = position - variables.viewPosition;
 	data[index].rotation = rotations;
-	data[index].normal = SampleNormalDynamic(vec2(x, z), 1.0);
+	//data[index].normal = SampleNormalDynamic(vec2(x, z), 1.0);
+	data[index].normal = SampleNormalDynamic(vec2(x, z), 0.5);
 }
