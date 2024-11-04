@@ -203,7 +203,7 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	VkPushConstantRange pushConstantRange{};
 	if (pipelineConfig.pushConstantCount > 0)
 	{
-		pushConstantRange.stageFlags = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+		pushConstantRange.stageFlags = pipelineConfig.pushConstantStage;
 		pushConstantRange.offset = 0;
 		pushConstantRange.size = pipelineConfig.pushConstantSize;
 		pipelineLayoutInfo.pushConstantRangeCount = pipelineConfig.pushConstantCount;

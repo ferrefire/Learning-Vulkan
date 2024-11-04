@@ -120,6 +120,7 @@ void Terrain::CreateGraphicsPipeline()
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
 	pipelineConfiguration.tesselation = true;
 	pipelineConfiguration.pushConstantCount = 1;
+	pipelineConfiguration.pushConstantStage = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
 	pipelineConfiguration.pushConstantSize = sizeof(uint32_t);
 
     VertexInfo vertexInfo = lod0Mesh.MeshVertexInfo();

@@ -4,9 +4,13 @@
 
 struct GrassData
 {
-    vec3 position;
-    vec3 rotation;
-    vec3 normal;
+    //vec3 position;
+    //vec3 rotation;
+    //vec3 normal;
+	uint posxz;
+	uint normxz;
+	uint posynormy;
+	uint rot;
 };
 
 layout(std430, set = 1, binding = 0) buffer DataBuffer
@@ -14,56 +18,100 @@ layout(std430, set = 1, binding = 0) buffer DataBuffer
 	GrassData data[];
 };
 
-layout(std430, set = 1, binding = 1) buffer RenderCount
+layout(std430, set = 1, binding = 1) buffer LodDataBuffer
+{
+	GrassData lodData[];
+};
+
+layout(std430, set = 1, binding = 2) buffer RenderCount
 {
     uint renderCount;
 };
 
+layout(std430, set = 1, binding = 3) buffer LodRenderCount
+{
+    uint lodRenderCount;
+};
+
+layout(set = 1, binding = 4) uniform GrassVariables
+{
+	uint grassBase;
+	float grassBaseMult;
+	uint grassCount;
+	uint grassLodBase;
+	float grassLodBaseMult;
+	uint grassLodCount;
+	uint grassTotalBase;
+	float grassTotalBaseMult;
+	uint grassTotalCount;
+	float spacing;
+	float spacingMult;
+	float windStrength;
+	float windFrequency;
+} grassVariables;
+
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-#define COUNT 2048
-
-const uint grassCount = COUNT;
-const float grassCountMult = 1.0 / COUNT;
-const uint grassTotalCount = COUNT * COUNT;
-
-const float spacing = 0.125;
-const float spacingMult = 8;
-
-const float windStrength = 0.225;
-const float windFrequency = 2.75;
+//#define COUNT 2048
+//
+//const uint grassCount = COUNT;
+//const float grassCountMult = 1.0 / COUNT;
+//const uint grassTotalCount = COUNT * COUNT;
+//
+//const float spacing = 0.125;
+//const float spacingMult = 8;
+//
+//const float windStrength = 0.225;
+//const float windFrequency = 2.75;
 
 #include "variables.glsl"
 #include "functions.glsl"
 #include "heightmap.glsl"
+#include "culling.glsl"
 
 float random(vec2 st)
 {
     return fract(sin(dot(st.xy * 0.001, vec2(12.9898,78.233))) * 43758.5453123);
 }
 
+int Inside(vec2 pos)
+{
+	float dis = SquaredDistanceVec2(pos, vec2(0));
+	if (dis > pow(grassVariables.grassTotalBase * 0.5, 2)) return (-1);
+	else if (dis > pow(grassVariables.grassBase * 0.5, 2)) return (1);
+	else return (0);
+}
+
 void main()
 {
+	//if (gl_GlobalInvocationID.x >= grassVariables.grassTotalBase || gl_GlobalInvocationID.y >= grassVariables.grassTotalBase) return ;
 	//uint index = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y * grassCount;
 	if (gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.y == 0)
 	{
 		atomicExchange(renderCount, 0);
+		atomicExchange(lodRenderCount, 0);
 	}
 
-	float x = float(gl_GlobalInvocationID.x) - grassCount * 0.5;
-    float z = float(gl_GlobalInvocationID.y) - grassCount * 0.5;
+	float x = float(gl_GlobalInvocationID.x) - grassVariables.grassTotalBase * 0.5;
+    float z = float(gl_GlobalInvocationID.y) - grassVariables.grassTotalBase * 0.5;
 	float y = 0;
 
-	vec2 flooredViewPosition = vec2(floor(variables.viewPosition.x * spacingMult) * spacing, floor(variables.viewPosition.z * spacingMult) * spacing);
-    x = x * spacing + flooredViewPosition.x;
-    z = z * spacing + flooredViewPosition.y;
+	int lod = Inside(vec2(x, z));
+
+	if (lod == -1) return ;
+
+	vec2 flooredViewPosition = vec2(floor(variables.viewPosition.x * grassVariables.spacingMult) * grassVariables.spacing, floor(variables.viewPosition.z * grassVariables.spacingMult) * grassVariables.spacing);
+    x = x * grassVariables.spacing + flooredViewPosition.x;
+    z = z * grassVariables.spacing + flooredViewPosition.y;
     y = SampleDynamic(vec2(x, z)) * 5000;
 
 	vec3 position = vec3(x, y, z);
 
+	if (lod == 1 && InView(position + vec3(0, 0.25, 0), 0) == 0) return ;
+
 	float squaredDistance = SquaredDistance(position, variables.viewPosition);
-	float maxDistance = pow(grassCount * spacing, 2);
-	float maxDistanceMult = pow(grassCountMult * spacingMult, 2);
+	float maxDistance = pow(grassVariables.grassTotalBase * grassVariables.spacing, 2);
+	float maxDistanceMult = pow(grassVariables.grassTotalBaseMult * grassVariables.spacingMult, 2);
 
 	float falloff = clamp(clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult, 0.0, 1.0);
 	falloff = 1.0 - pow(1.0 - falloff, 16);
@@ -79,9 +127,21 @@ void main()
 	position.z += ran - 0.5;
 	position.y = SampleDynamic(position.xz) * 5000;
 
+	if (lod == 0 && InView(position + vec3(0, 0.5, 0), 0) == 0 && InView(position, 0) == 0) return ;
+
+	vec3 terrainNormal = SampleNormalDynamic(position.xz, 0.5);
+
+	//float steepness = GetSteepness(terrainNormal);
+    //steepness = 1.0 - pow(1.0 - steepness, 15);
+    //if (steepness > 0.5 + (ran - 0.5) * 0.25) return ;
+
+	float steepness = 1.0 - pow(1.0 - GetSteepness(terrainNormal), 15);
+    //steepness = 1.0 - pow(1.0 - steepness, 15);
+    if (steepness > 0.5 + (ran - 0.5) * 0.25) return ;
+
 	vec3 rotations = vec3(0);
     float wave = 0;
-	if (windStrength > 0.0) wave = (sin(variables.time * 2 + (x + z) * 0.1 * windFrequency) * 0.5 + 0.5) * windStrength;
+	if (grassVariables.windStrength > 0.0) wave = (sin(variables.time * 2 + (x + z) * 0.1 * grassVariables.windFrequency) * 0.5 + 0.5) * grassVariables.windStrength;
     ran = random(position.xz * ranMult + vec2(position.y, -position.y) * 0.01);
     rotations.x = mix(0.25, 1.0, ran);
 	rotations.x = mix(rotations.x, 1.0 + (ran - 0.5) * 0.25, wave);
@@ -90,10 +150,28 @@ void main()
     rotations.x *= 60.0;
     rotations.y *= 360.0;
 
-	uint index = atomicAdd(renderCount, 1);
+	if (lod == 0)
+	{
+		uint index = atomicAdd(renderCount, 1);
+		//data[index].position = position - variables.viewPosition;
+		//data[index].rotation = rotations;
+		//data[index].normal = terrainNormal;
+		data[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
+		data[index].normxz = packHalf2x16(terrainNormal.xz);
+		data[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
+		data[index].rot = packHalf2x16(rotations.xy);
+	}
+	else if (lod == 1)
+	{
+		uint index = atomicAdd(lodRenderCount, 1);
+		//lodData[index].position = position - variables.viewPosition;
+		//lodData[index].rotation = rotations;
+		//lodData[index].normal = terrainNormal;
+		lodData[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
+		lodData[index].normxz = packHalf2x16(terrainNormal.xz);
+		lodData[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
+		lodData[index].rot = packHalf2x16(rotations.xy);
+	}
 
-	data[index].position = position - variables.viewPosition;
-	data[index].rotation = rotations;
-	//data[index].normal = SampleNormalDynamic(vec2(x, z), 1.0);
-	data[index].normal = SampleNormalDynamic(vec2(x, z), 0.5);
+	
 }

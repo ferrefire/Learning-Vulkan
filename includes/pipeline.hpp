@@ -51,6 +51,7 @@ struct PipelineConfiguration
 	bool tesselation = false;
 	uint32_t pushConstantCount = 0;
 	uint32_t pushConstantSize = 0;
+	VkShaderStageFlags pushConstantStage = ALL_STAGE;
 	bool foliage = false;
 };
 

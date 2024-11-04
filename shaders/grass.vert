@@ -4,15 +4,46 @@
 
 struct GrassData
 {
-    vec3 position;
-    vec3 rotation;
-    vec3 normal;
+    //vec3 position;
+    //vec3 rotation;
+    //vec3 normal;
+	uint posxz;
+	uint normxz;
+	uint posynormy;
+	uint rot;
 };
 
 layout(std430, set = 1, binding = 0) buffer DataBuffer
 {
 	GrassData data[];
 };
+
+layout(std430, set = 1, binding = 1) buffer LodDataBuffer
+{
+	GrassData lodData[];
+};
+
+layout(set = 1, binding = 2) uniform GrassVariables
+{
+	uint grassBase;
+	float grassBaseMult;
+	uint grassCount;
+	uint grassLodBase;
+	float grassLodBaseMult;
+	uint grassLodCount;
+	uint grassTotalBase;
+	float grassTotalBaseMult;
+	uint grassTotalCount;
+	float spacing;
+	float spacingMult;
+	float windStrength;
+	float windFrequency;
+} grassVariables;
+
+layout(push_constant, std430) uniform PushConstants
+{
+    uint grassLod;
+} pc;
 
 layout(location = 0) in vec3 inPosition;
 
@@ -22,40 +53,75 @@ layout(location = 2) out vec3 terrainNormal;
 layout(location = 3) out vec3 grassColor;
 layout(location = 4) out vec2 uv;
 
-#define COUNT 2048
-
-const uint grassCount = COUNT;
-const float grassCountMult = 1.0 / COUNT;
-const uint grassTotalCount = COUNT * COUNT;
-
-const float spacing = 0.125;
-const float spacingMult = 8;
+//#define COUNT 2048
+//
+//const uint grassCount = COUNT;
+//const float grassCountMult = 1.0 / COUNT;
+//const uint grassTotalCount = COUNT * COUNT;
+//
+//const float spacing = 0.125;
+//const float spacingMult = 8;
 
 #include "variables.glsl"
 #include "functions.glsl"
 #include "transformation.glsl"
 
+float random(vec2 st)
+{
+    return fract(sin(dot(st.xy * 0.001, vec2(12.9898,78.233))) * 43758.5453123);
+}
+
 void main()
 {
 	vec3 normal = normalize(mix(vec3(0, 0, -1), vec3(sign(inPosition.x) * 0.5, 0, 0), clamp(abs(inPosition.x) * 10, 0.0, 1.0)));
 
-	vec3 position = data[gl_InstanceIndex].position + variables.viewPosition;
-	float ran = data[gl_InstanceIndex].rotation.x;
+	vec3 position = vec3(0);
+	vec3 rotation = vec3(0);
+	terrainNormal = vec3(0);
+
+	if (pc.grassLod == 0)
+	{
+		//position = data[gl_InstanceIndex].position;
+		//rotation = data[gl_InstanceIndex].rotation;
+		//terrainNormal = data[gl_InstanceIndex].normal;
+		position.xz = unpackHalf2x16(data[gl_InstanceIndex].posxz);
+		terrainNormal.xz = unpackHalf2x16(data[gl_InstanceIndex].normxz);
+		vec2 yy = unpackHalf2x16(data[gl_InstanceIndex].posynormy);
+		position.y = yy.x;
+		terrainNormal.y = yy.y;
+		rotation.xy = unpackHalf2x16(data[gl_InstanceIndex].rot);
+	}
+	else if (pc.grassLod == 1)
+	{
+		//position = lodData[gl_InstanceIndex].position;
+		//rotation = lodData[gl_InstanceIndex].rotation;
+		//terrainNormal = lodData[gl_InstanceIndex].normal;
+		position.xz = unpackHalf2x16(lodData[gl_InstanceIndex].posxz);
+		terrainNormal.xz = unpackHalf2x16(lodData[gl_InstanceIndex].normxz);
+		vec2 yy = unpackHalf2x16(lodData[gl_InstanceIndex].posynormy);
+		position.y = yy.x;
+		terrainNormal.y = yy.y;
+		rotation.xy = unpackHalf2x16(lodData[gl_InstanceIndex].rot);
+	}
+
+	position += variables.viewPosition;
+	float ran = rotation.x;
 
 	float squaredDistance = SquaredDistance(position, variables.viewPosition);
-	float maxDistance = pow(grassCount * spacing, 2);
-	float maxDistanceMult = pow(grassCountMult * spacingMult, 2);
+	float maxDistance = pow(grassVariables.grassTotalBase * grassVariables.spacing, 2);
+	float maxDistanceMult = pow(grassVariables.grassTotalBaseMult * grassVariables.spacingMult, 2);
 
 	float scale = clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult;
 	scale = 1.0 - pow(1.0 - scale, 4);
 	scale = 1.0 + scale * 2;
+	//float scaleRan = (random(position.xz) * 0.2 - 0.1) + 0.5;
 	vec3 scaledPosition = inPosition * scale * 0.5;
 
 	float angle = radians(ran * (inPosition.y + 0.25));
 	scaledPosition = Rotate(scaledPosition, angle, vec3(1, 0, 0));
 	normal = Rotate(normal, angle, vec3(1, 0, 0));
 
-	ran = data[gl_InstanceIndex].rotation.y;
+	ran = rotation.y;
 
 	angle = radians(ran);
 	scaledPosition = Rotate(scaledPosition, angle, vec3(0, 1, 0));
@@ -65,7 +131,6 @@ void main()
 
 	worldPosition = ObjectToWorld(scaledPosition, mat4(1)) + position;
 
-	terrainNormal = data[gl_InstanceIndex].normal;
     gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
 
 	//grassColor = vec3(0.25, 0.6, 0.1);
