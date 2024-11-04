@@ -135,17 +135,6 @@ void Graphics::DrawFrame()
 	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, UINT64_MAX, device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-	//if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.framebufferResized)
-	//{
-	//	window.framebufferResized = false;
-	//	window.RecreateSwapChain();
-	//	return;
-	//}
-	//else if (result != VK_SUCCESS)
-	//{
-	//	throw std::runtime_error("failed to acquire swap chain image");
-	//}
-
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
 		window.RecreateSwapChain();
@@ -155,6 +144,11 @@ void Graphics::DrawFrame()
 	{
 		throw std::runtime_error("failed to acquire swap chain image");
 	}
+
+	Manager::UpdateShaderVariables();
+	Terrain::PostFrame();
+	Manager::UpdateShaderVariables();
+	Grass::PostFrame();
 
 	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
 

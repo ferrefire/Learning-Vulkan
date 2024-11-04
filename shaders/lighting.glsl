@@ -2,11 +2,11 @@
 #define LIGHTING_INCLUDED
 
 const vec3 lightColor = vec3(1);
-const vec3 lightDirection = vec3(0.25, 0.5, 0.25);
+//const vec3 lightDirection = vec3(0.25, 0.5, 0.25);
 
 vec3 DiffuseLighting(vec3 normal, vec3 color)
 {
-	float diffuseStrength = max(dot(normal, normalize(lightDirection)), 0.1);
+	float diffuseStrength = max(dot(normal, variables.lightDirection), 0.1);
 	vec3 diffuse = color * diffuseStrength;
 
 	return diffuse;
@@ -14,7 +14,7 @@ vec3 DiffuseLighting(vec3 normal, vec3 color)
 
 vec3 SpecularLighting(vec3 normal, vec3 viewDirection, float shininess)
 {
-	vec3 halfwayDirection = normalize(normalize(lightDirection) + viewDirection);
+	vec3 halfwayDirection = normalize(variables.lightDirection + viewDirection);
 	float specular = pow(max(dot(normal, halfwayDirection), 0.0), shininess);
 	vec3 specularColor = lightColor * specular;
 
@@ -41,7 +41,7 @@ vec3 NormalToTangent(vec3 normal)
 
 float LightDot(vec3 normal)
 {
-	return max(dot(normal, lightDirection), 0.0);
+	return max(dot(normal, variables.lightDirection), 0.0);
 }
 
 #endif

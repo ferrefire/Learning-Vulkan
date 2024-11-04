@@ -37,6 +37,8 @@ const float spacingMult = 8;
 
 void main()
 {
+	vec3 normal = normalize(mix(vec3(0, 0, -1), vec3(sign(inPosition.x) * 0.5, 0, 0), clamp(abs(inPosition.x) * 10, 0.0, 1.0)));
+
 	vec3 position = data[gl_InstanceIndex].position + variables.viewPosition;
 	float ran = data[gl_InstanceIndex].rotation.x;
 
@@ -48,8 +50,6 @@ void main()
 	scale = 1.0 - pow(1.0 - scale, 4);
 	scale = 1.0 + scale * 2;
 	vec3 scaledPosition = inPosition * scale * 0.5;
-
-	vec3 normal = vec3(0, 0, 1);
 
 	float angle = radians(ran * (inPosition.y + 0.25));
 	scaledPosition = Rotate(scaledPosition, angle, vec3(1, 0, 0));

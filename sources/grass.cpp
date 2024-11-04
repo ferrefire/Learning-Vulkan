@@ -176,6 +176,11 @@ void Grass::Start()
 
 void Grass::Frame()
 {
+	//ComputeGrass();
+}
+
+void Grass::PostFrame()
+{
 	ComputeGrass();
 }
 
@@ -184,7 +189,7 @@ void Grass::RecordCommands(VkCommandBuffer commandBuffer)
 	graphicsPipeline.BindGraphics(commandBuffer, Manager::currentWindow);
 
 	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
-	Manager::UpdateShaderVariables();
+	//Manager::UpdateShaderVariables();
 
 	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
 
@@ -208,7 +213,7 @@ void Grass::ComputeGrass()
 	computePipeline.BindCompute(commandBuffer);
 
 	Manager::globalDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
-	Manager::UpdateShaderVariables();
+	//Manager::UpdateShaderVariables();
 
 	computeDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
 	

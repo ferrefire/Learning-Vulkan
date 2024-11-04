@@ -135,6 +135,7 @@ class Terrain
 
 		static void Start();
 		static void Frame();
+		static void PostFrame();
 		static void RecordCommands(VkCommandBuffer commandBuffer);
 		static void ComputeHeightMap(uint32_t lod);
 		static void ComputeHeightMapArray(uint32_t index);

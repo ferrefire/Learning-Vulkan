@@ -392,6 +392,14 @@ void Terrain::Frame()
 		}
 	}
 
+	//if (Time::newSubTick)
+	//{
+	//	CheckTerrainOffset();
+	//}
+}
+
+void Terrain::PostFrame()
+{
 	if (Time::newSubTick)
 	{
 		CheckTerrainOffset();
@@ -403,7 +411,7 @@ void Terrain::RecordCommands(VkCommandBuffer commandBuffer)
     graphicsPipeline.BindGraphics(commandBuffer, Manager::currentWindow);
 
 	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
-	Manager::UpdateShaderVariables();
+	//Manager::UpdateShaderVariables();
 
 	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
 
@@ -493,7 +501,7 @@ void Terrain::ComputeHeightMap(uint32_t lod)
 	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
 	heightMapComputePipeline.BindCompute(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, heightMapComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
-	Manager::UpdateShaderVariables();
+	//Manager::UpdateShaderVariables();
 
 	if (currentBoundHeightMap != lod)
 	{
@@ -523,12 +531,12 @@ void Terrain::ComputeHeightMapArray(uint32_t index)
 	int x = (index % heightMapLength) - heightMapRadius;
 	int y = (index / heightMapLength) - heightMapRadius;
 
-	vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
+	//vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
 
 	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
 	heightMapArrayComputePipeline.BindCompute(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, heightMapArrayComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
-	Manager::UpdateShaderVariables();
+	//Manager::UpdateShaderVariables();
 
 	//if (currentBoundHeightMap != lod)
 	//{

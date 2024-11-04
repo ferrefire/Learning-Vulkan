@@ -58,6 +58,7 @@ class Grass
 
 		static void Start();
 		static void Frame();
+		static void PostFrame();
 		static void RecordCommands(VkCommandBuffer commandBuffer);
 		static void RenderGrass(VkCommandBuffer commandBuffer);
 		static void ComputeGrass();

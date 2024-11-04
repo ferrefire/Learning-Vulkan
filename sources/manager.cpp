@@ -213,6 +213,8 @@ void Manager::UpdateShaderVariables()
 
 	shaderVariables.resolution = glm::vec4(window.width, window.height, 1.0 / window.width, 1.0 / window.height);
 
+	shaderVariables.lightDirection = glm::normalize(glm::vec3(0.25, 0.5, 0.25));
+
 	shaderVariables.terrainOffset = Terrain::terrainOffset;
 	shaderVariables.terrainLod0Offset = Terrain::terrainLod0Offset;
 	shaderVariables.terrainLod1Offset = Terrain::terrainLod1Offset;
