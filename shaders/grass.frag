@@ -25,7 +25,7 @@ void main()
 	vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
 
 	vec3 diffuse = DiffuseLighting(terrainNormal, vec3(1));
-	vec3 bladeSpecular = SpecularLighting(normal, viewDirection, 8);
+	vec3 bladeSpecular = SpecularLighting(normal, viewDirection, 16);
 	vec3 terrainSpecular = SpecularLighting(terrainNormal, viewDirection, 32);
 	vec3 combinedColor = (diffuse * bladeColor) + (bladeSpecular * terrainSpecular);
 

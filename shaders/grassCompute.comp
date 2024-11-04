@@ -11,6 +11,7 @@ struct GrassData
 	uint normxz;
 	uint posynormy;
 	uint rot;
+	uint scaxcoly;
 };
 
 layout(std430, set = 1, binding = 0) buffer DataBuffer
@@ -68,6 +69,7 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 #include "functions.glsl"
 #include "heightmap.glsl"
 #include "culling.glsl"
+#include "noise.glsl"
 
 float random(vec2 st)
 {
@@ -125,6 +127,9 @@ void main()
 	position.x += ran - 0.5;
     ran = random(vec2(ran * 200, ran * 100));
 	position.z += ran - 0.5;
+	//position.y -= snoise(position.xz * 0.375);
+	vec3 clumping = GetDerivative(position.xz * 0.375, 2, 0.001);
+	position.xz += clumping.xz;
 	position.y = SampleDynamic(position.xz) * 5000;
 
 	if (lod == 0 && InView(position + vec3(0, 0.5, 0), 0) == 0 && InView(position, 0) == 0) return ;
@@ -150,6 +155,9 @@ void main()
     rotations.x *= 60.0;
     rotations.y *= 360.0;
 
+	float scale = pow(1.0 - GenerateNoise(position.xz * 0.375, 2), 0.5);
+	float colorVal = random(position.xz * ranMult);
+
 	if (lod == 0)
 	{
 		uint index = atomicAdd(renderCount, 1);
@@ -160,6 +168,7 @@ void main()
 		data[index].normxz = packHalf2x16(terrainNormal.xz);
 		data[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
 		data[index].rot = packHalf2x16(rotations.xy);
+		data[index].scaxcoly = packHalf2x16(vec2(scale, colorVal));
 	}
 	else if (lod == 1)
 	{
@@ -171,6 +180,7 @@ void main()
 		lodData[index].normxz = packHalf2x16(terrainNormal.xz);
 		lodData[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
 		lodData[index].rot = packHalf2x16(rotations.xy);
+		lodData[index].scaxcoly = packHalf2x16(vec2(scale, colorVal));
 	}
 
 	

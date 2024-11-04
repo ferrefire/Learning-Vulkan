@@ -11,6 +11,7 @@ struct GrassData
 	uint normxz;
 	uint posynormy;
 	uint rot;
+	uint scaxcoly;
 };
 
 layout(std430, set = 1, binding = 0) buffer DataBuffer
@@ -75,9 +76,12 @@ void main()
 {
 	vec3 normal = normalize(mix(vec3(0, 0, -1), vec3(sign(inPosition.x) * 0.5, 0, 0), clamp(abs(inPosition.x) * 10, 0.0, 1.0)));
 
+	//vec3 samplePos = vec3(0);
 	vec3 position = vec3(0);
 	vec3 rotation = vec3(0);
 	terrainNormal = vec3(0);
+	float clumpScale = 1;
+	float colorVal = 1;
 
 	if (pc.grassLod == 0)
 	{
@@ -90,6 +94,9 @@ void main()
 		position.y = yy.x;
 		terrainNormal.y = yy.y;
 		rotation.xy = unpackHalf2x16(data[gl_InstanceIndex].rot);
+		vec2 xx = unpackHalf2x16(data[gl_InstanceIndex].scaxcoly);
+		clumpScale = xx.x;
+		colorVal = xx.y;
 	}
 	else if (pc.grassLod == 1)
 	{
@@ -102,8 +109,12 @@ void main()
 		position.y = yy.x;
 		terrainNormal.y = yy.y;
 		rotation.xy = unpackHalf2x16(lodData[gl_InstanceIndex].rot);
+		vec2 xx = unpackHalf2x16(lodData[gl_InstanceIndex].scaxcoly);
+		clumpScale = xx.x;
+		colorVal = xx.y;
 	}
 
+	//samplePos = position;
 	position += variables.viewPosition;
 	float ran = rotation.x;
 
@@ -116,6 +127,7 @@ void main()
 	scale = 1.0 + scale * 2;
 	//float scaleRan = (random(position.xz) * 0.2 - 0.1) + 0.5;
 	vec3 scaledPosition = inPosition * scale * 0.5;
+	scaledPosition.x *= 0.5 * scale;
 
 	float angle = radians(ran * (inPosition.y + 0.25));
 	scaledPosition = Rotate(scaledPosition, angle, vec3(1, 0, 0));
@@ -135,8 +147,9 @@ void main()
 
 	//grassColor = vec3(0.25, 0.6, 0.1);
 	//grassColor = vec3(0.0916, 0.0866, 0.0125) * 1.5;
+	grassColor = vec3(0.0916, 0.1, 0.0125) * (1.0 + (colorVal * 0.35 - 0.175));
 	//grassColor = vec3(0.1375, 0.13, 0.01875);
-	grassColor = vec3(0.1375, 0.15, 0.01875);
+	//grassColor = vec3(0.1375, 0.15, 0.01875);
 
 	uv = vec2(inPosition.x * 10 + 0.5, inPosition.y);
 }

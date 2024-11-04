@@ -28,6 +28,7 @@ struct GrassData
 	uint32_t normxz;
 	uint32_t posynormy;
 	uint32_t rot;
+	uint32_t scaxcoly;
 };
 
 struct GrassVariables

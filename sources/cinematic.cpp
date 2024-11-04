@@ -138,8 +138,8 @@ void Cinematic::Play()
 	if (positionIndex + 1 < keyPositions.size())
 	{
 		Manager::camera.SetPosition(glm::mix(keyPositions[positionIndex].value, keyPositions[positionIndex + 1].value,
-											 positionDuration / keyPositions[positionIndex + 1].duration) -
-									glm::vec3(Terrain::terrainOffset.x, 0, Terrain::terrainOffset.y));
+			positionDuration / keyPositions[positionIndex + 1].duration) -
+			glm::vec3(Terrain::terrainOffset.x, 0, Terrain::terrainOffset.y));
 
 		positionDuration += Time::deltaTime * speed;
 
@@ -155,7 +155,7 @@ void Cinematic::Play()
 	if (rotationIndex + 1 < keyRotations.size())
 	{
 		Manager::camera.SetRotation(glm::mix(keyRotations[rotationIndex].value, keyRotations[rotationIndex + 1].value,
-											 rotationDuration / keyRotations[rotationIndex + 1].duration));
+			rotationDuration / keyRotations[rotationIndex + 1].duration));
 
 		rotationDuration += Time::deltaTime * speed;
 

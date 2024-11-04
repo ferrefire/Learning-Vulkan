@@ -195,32 +195,9 @@ void main()
 	//vec3 viewDirection = normalize(variables.viewPosition - inPosition);
 	vec3 terrainNormal = SampleNormalDynamic(inPosition.xz, 1.0);
 	float steepness = 1.0 - pow(1.0 - GetSteepness(terrainNormal), 1.5);
-	vec3 textureColor = BlendSteepness(steepness, distanceSqrd) * 1.5;
+	//vec3 textureColor = BlendSteepness(steepness, distanceSqrd) * 1.5;
+	vec3 textureColor = BlendSteepness(steepness, distanceSqrd);
 
-	//if (steepness < 0.25) textureColor = BlendTexture(grassDiffuseSampler, distanceSqrd, -1, 0.5, defaultGrassColor) * 1.5;
-	//else textureColor = BlendTexture(rockDiffuseSampler, distanceSqrd, -1, 0.5, defaultRockColor) * 1.5;
-
-	//vec3 grassTextureColor = BlendTexture(grassDiffuseSampler, distanceSqrd, -1, 0.5, defaultGrassColor) * 1.5;
-	//vec3 rockTextureColor = BlendTexture(rockDiffuseSampler, distanceSqrd, -1, 0.5, defaultRockColor) * 1.5;
-	//textureColor = mix(grassTextureColor, rockTextureColor, steepness);
-
-	//if (distanceSqrd <= maxNormalDistance + normalBlendDistance)
-	//{
-	//	vec3 textureNormal = BlendTexture(grassNormalSampler, distanceSqrd, maxNormalLod, 0.5, vec3(0));
-	//	textureNormal.xyz *= 2.0 - 1.0;
-	//	//textureNormal.xy *= 0.25;
-	//	vec3 tangent = NormalToTangent(terrainNormal);
-	//	mat3 tangentToWorld = mat3(tangent, cross(terrainNormal, tangent) * -1, terrainNormal);
-	//	combinedNormal = normalize(tangentToWorld * textureNormal);
-	//	combinedNormal = mix(combinedNormal, terrainNormal, 1.0 - LightDot(terrainNormal));
-	//	if (distanceSqrd > maxNormalDistance - normalBlendDistance) 
-	//	{
-	//		float power = (distanceSqrd - (maxNormalDistance - normalBlendDistance)) / (normalBlendDistance * 2);
-	//		combinedNormal = mix(combinedNormal, terrainNormal, power);
-	//	}
-	//}
-
-	//vec3 specular = SpecularLighting(normalize(specNorm), viewDirection, 100) * blendTexture(grassSpecularSampler, distanceSqrd, 0, 0.5, vec3(0)).r;
 	vec3 diffuse = DiffuseLighting(terrainNormal, vec3(1));
 	
 	vec3 combinedColor = textureColor * diffuse;

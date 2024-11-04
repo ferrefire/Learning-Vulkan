@@ -84,15 +84,21 @@ float GenerateNoise(vec2 uv, int layers)
     for (int i = 0; i < layers; i++)
     {
         float center = snoise(uv * noiseScale * scale);
-		float left = snoise((uv + vec2(-noiseSampleDistance, 0)) * noiseScale * scale);
-        float right = snoise((uv + vec2(noiseSampleDistance, 0)) * noiseScale * scale);
-        float down = snoise((uv + vec2(0, -noiseSampleDistance)) * noiseScale * scale);
-        float up = snoise((uv + vec2(0, noiseSampleDistance)) * noiseScale * scale);
-		vec3 derivative = vec3((left - right) / (noiseSampleDistance * 2), 1.0, (down - up) / (noiseSampleDistance * 2));
-		derivative = normalize(derivative);
-		float steepness = 1.0 - (dot(derivative, vec3(0, 1, 0)) * 0.5 + 0.5);
-		erosion += steepness * erosionWeight;
-        float erodeSum = 1.0 / (1.0 + erosion * 1.5);
+        float erodeSum = 1.0;
+
+		if (layers > 1)
+        {
+            float left = snoise((uv + vec2(-noiseSampleDistance, 0)) * noiseScale * scale);
+            float right = snoise((uv + vec2(noiseSampleDistance, 0)) * noiseScale * scale);
+            float down = snoise((uv + vec2(0, -noiseSampleDistance)) * noiseScale * scale);
+            float up = snoise((uv + vec2(0, noiseSampleDistance)) * noiseScale * scale);
+		    vec3 derivative = vec3((left - right) / (noiseSampleDistance * 2), 1.0, (down - up) / (noiseSampleDistance * 2));
+		    derivative = normalize(derivative);
+		    float steepness = 1.0 - (dot(derivative, vec3(0, 1, 0)) * 0.5 + 0.5);
+		    erosion += steepness * erosionWeight;
+            erodeSum = 1.0 / (1.0 + erosion * 1.5);
+        }
+
 		noise += center * weight * erodeSum;
 
 		//float center = snoise(uv * noiseScale * scale);
@@ -111,6 +117,8 @@ float GenerateNoise(vec2 uv, int layers)
         scale *= 2.5;
     }
 
+    if (layers <= 1) return (noise);
+
 	//noise = pow(noise, 0.5);
 	//maxNoise = pow(maxNoise, 0.5);
     noise = InvLerp(0.0, maxNoise, noise);
@@ -127,6 +135,30 @@ float GenerateNoise(vec2 uv, int layers)
     //}
 
     return (noise);
+}
+
+vec3 GetDerivative(vec2 uv, int layers, float sampleDis)
+{
+    float center = GenerateNoise(uv, layers);
+	float left = GenerateNoise((uv + vec2(-sampleDis, 0)), layers);
+    float right = GenerateNoise((uv + vec2(sampleDis, 0)), layers);
+    float down = GenerateNoise((uv + vec2(0, -sampleDis)), layers);
+    float up = GenerateNoise((uv + vec2(0, sampleDis)), layers);
+    
+	vec3 derivative = vec3((left - right) / (sampleDis * 2), 0.0, (down - up) / (sampleDis * 2));
+	derivative = normalize(derivative);
+
+    return (derivative);
+}
+
+vec3 GetDerivative(vec2 uv, int layers)
+{
+    return (GetDerivative(uv, layers, noiseSampleDistance));
+}
+
+vec3 GetDerivative(vec2 uv)
+{
+    return (GetDerivative(uv, 1, noiseSampleDistance));
 }
 
 #endif
