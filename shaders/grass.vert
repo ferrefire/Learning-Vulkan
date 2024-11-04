@@ -128,6 +128,7 @@ void main()
 	//float scaleRan = (random(position.xz) * 0.2 - 0.1) + 0.5;
 	vec3 scaledPosition = inPosition * scale * 0.5;
 	scaledPosition.x *= 0.5 * scale;
+	scaledPosition.y *= pow(clumpScale + 0.25, 2);
 
 	float angle = radians(ran * (inPosition.y + 0.25));
 	scaledPosition = Rotate(scaledPosition, angle, vec3(1, 0, 0));

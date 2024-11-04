@@ -45,8 +45,8 @@ struct GrassVariables
 	alignas(4) float grassTotalBaseMult = 0;
 	alignas(4) uint32_t grassTotalCount = 0;
 
-	alignas(4) float spacing = 0.125;
-	alignas(4) float spacingMult = 8;
+	alignas(4) float spacing = 0.1;
+	alignas(4) float spacingMult = 10;
 
 	alignas(4) float windStrength = 0.225;
 	alignas(4) float windFrequency = 2.75;

@@ -365,7 +365,7 @@ void Grass::ComputeGrass()
 uint32_t Grass::grassBase = 512;
 uint32_t Grass::grassCount = Grass::grassBase * Grass::grassBase;
 
-uint32_t Grass::grassLodBase = 2048;
+uint32_t Grass::grassLodBase = 4096;
 uint32_t Grass::grassLodCount = Grass::grassLodBase * Grass::grassLodBase;
 
 uint32_t Grass::grassTotalBase = Grass::grassBase + Grass::grassLodBase;
