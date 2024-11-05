@@ -8,10 +8,25 @@ void Grass::Create()
 {
 	CreateMeshes();
 	CreateGraphicsPipeline();
-	CreateComputePipeline();
+	CreateComputePipelines();
+	CreateTextures();
 	CreateBuffers();
 	CreateGraphicsDescriptor();
-	CreateComputeDescriptor();
+	CreateComputeDescriptors();
+}
+
+void Grass::CreateTextures()
+{
+	ImageConfiguration clumpingConfig = Texture::ImageStorage(1024, 1024);
+	clumpingConfig.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+
+	SamplerConfiguration clumpingSamplerConfig;
+	clumpingSamplerConfig.repeatMode = REPEAT;
+	//clumpingSamplerConfig.minFilter = VK_FILTER_NEAREST;
+	//clumpingSamplerConfig.magFilter = VK_FILTER_NEAREST;
+
+	clumpingTexture.CreateImage(clumpingConfig, clumpingSamplerConfig);
+	clumpingTexture.TransitionImageLayout(clumpingConfig);
 }
 
 void Grass::CreateMeshes()
@@ -46,9 +61,9 @@ void Grass::CreateGraphicsPipeline()
 	graphicsPipeline.CreateGraphicsPipeline("grass", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
 }
 
-void Grass::CreateComputePipeline()
+void Grass::CreateComputePipelines()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(5);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(6);
 	descriptorLayoutConfig[0].type = STORAGE_BUFFER;
 	descriptorLayoutConfig[0].stages = COMPUTE_STAGE;
 	descriptorLayoutConfig[1].type = STORAGE_BUFFER;
@@ -59,8 +74,16 @@ void Grass::CreateComputePipeline()
 	descriptorLayoutConfig[3].stages = COMPUTE_STAGE;
 	descriptorLayoutConfig[4].type = UNIFORM_BUFFER;
 	descriptorLayoutConfig[4].stages = COMPUTE_STAGE;
+	descriptorLayoutConfig[5].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[5].stages = COMPUTE_STAGE;
 
 	computePipeline.CreateComputePipeline("grassCompute", descriptorLayoutConfig);
+
+	std::vector<DescriptorLayoutConfiguration> clumpingDescriptorLayoutConfig(1);
+	clumpingDescriptorLayoutConfig[0].type = IMAGE_STORAGE;
+	clumpingDescriptorLayoutConfig[0].stages = COMPUTE_STAGE;
+
+	clumpingComputePipeline.CreateComputePipeline("clumpingCompute", clumpingDescriptorLayoutConfig);
 }
 
 void Grass::CreateBuffers()
@@ -179,9 +202,9 @@ void Grass::CreateGraphicsDescriptor()
 	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
 }
 
-void Grass::CreateComputeDescriptor()
+void Grass::CreateComputeDescriptors()
 {
-	std::vector<DescriptorConfiguration> descriptorConfig(5);
+	std::vector<DescriptorConfiguration> descriptorConfig(6);
 
 	descriptorConfig[0].type = STORAGE_BUFFER;
 	descriptorConfig[0].stages = COMPUTE_STAGE;
@@ -243,13 +266,30 @@ void Grass::CreateComputeDescriptor()
 		index++;
 	}
 
+	descriptorConfig[5].type = IMAGE_SAMPLER;
+	descriptorConfig[5].stages = COMPUTE_STAGE;
+	descriptorConfig[5].imageInfo.imageLayout = LAYOUT_GENERAL;
+	descriptorConfig[5].imageInfo.imageView = clumpingTexture.imageView;
+	descriptorConfig[5].imageInfo.sampler = clumpingTexture.sampler;
+
 	computeDescriptor.Create(descriptorConfig, computePipeline.objectDescriptorSetLayout);
+
+	std::vector<DescriptorConfiguration> clumpingDescriptorConfig(1);
+
+	clumpingDescriptorConfig[0].type = IMAGE_STORAGE;
+	clumpingDescriptorConfig[0].stages = COMPUTE_STAGE;
+	clumpingDescriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
+	clumpingDescriptorConfig[0].imageInfo.imageView = clumpingTexture.imageView;
+
+	clumpingComputeDescriptor.perFrame = false;
+	clumpingComputeDescriptor.Create(clumpingDescriptorConfig, clumpingComputePipeline.objectDescriptorSetLayout);
 }
 
 void Grass::Destroy()
 {
 	DestroyPipelines();
 	DestroyMeshes();
+	DestroyTextures();
 	DestroyDescriptors();
 	DestroyBuffers();
 }
@@ -264,6 +304,12 @@ void Grass::DestroyPipelines()
 {
 	graphicsPipeline.Destroy();
 	computePipeline.Destroy();
+	clumpingComputePipeline.Destroy();
+}
+
+void Grass::DestroyTextures()
+{
+	clumpingTexture.Destroy();
 }
 
 void Grass::DestroyBuffers()
@@ -288,6 +334,7 @@ void Grass::DestroyDescriptors()
 {
 	graphicsDescriptor.Destroy();
 	computeDescriptor.Destroy();
+	clumpingComputeDescriptor.Destroy();
 }
 
 void Grass::Start()
@@ -311,6 +358,8 @@ void Grass::Start()
 	{
 		memcpy(buffer.mappedBuffer, &grassVariables, sizeof(grassVariables));
 	}
+
+	ComputeClumping();
 }
 
 void Grass::Frame()
@@ -374,6 +423,19 @@ void Grass::ComputeGrass()
 	grassLodRenderCounts[Manager::currentFrame] = *(uint32_t *)lodCountBuffers[Manager::currentFrame].mappedBuffer;
 }
 
+void Grass::ComputeClumping()
+{
+	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
+
+	clumpingComputePipeline.BindCompute(commandBuffer);
+	Manager::globalDescriptor.Bind(commandBuffer, clumpingComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
+	clumpingComputeDescriptor.Bind(commandBuffer, clumpingComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
+
+	vkCmdDispatch(commandBuffer, 128, 128, 1);
+
+	Manager::currentDevice.EndComputeCommand(commandBuffer);
+}
+
 uint32_t Grass::grassBase = 512;
 uint32_t Grass::grassCount = Grass::grassBase * Grass::grassBase;
 std::vector<uint32_t> Grass::grassRenderCounts;
@@ -390,14 +452,18 @@ Mesh Grass::grassLodMesh;
 
 Pipeline Grass::graphicsPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Grass::computePipeline{Manager::currentDevice, Manager::camera};
+Pipeline Grass::clumpingComputePipeline{Manager::currentDevice, Manager::camera};
 
 Descriptor Grass::graphicsDescriptor{Manager::currentDevice};
 Descriptor Grass::computeDescriptor{Manager::currentDevice};
+Descriptor Grass::clumpingComputeDescriptor{Manager::currentDevice};
 
 std::vector<Buffer> Grass::dataBuffers;
 std::vector<Buffer> Grass::lodDataBuffers;
 std::vector<Buffer> Grass::countBuffers;
 std::vector<Buffer> Grass::lodCountBuffers;
 std::vector<Buffer> Grass::variableBuffers;
+
+Texture Grass::clumpingTexture;
 
 GrassVariables Grass::grassVariables;

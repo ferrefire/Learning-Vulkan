@@ -389,3 +389,4 @@ Settings Manager::settings;
 Cinematic Manager::cinematic;
 
 Object Manager::screenQuad;
+Descriptor Manager::screenQuadDescriptor;

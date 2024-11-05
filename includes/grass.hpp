@@ -4,6 +4,7 @@
 #include "buffer.hpp"
 #include "pipeline.hpp"
 #include "descriptor.hpp"
+#include "texture.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -74,9 +75,11 @@ class Grass
 
 		static Pipeline graphicsPipeline;
 		static Pipeline computePipeline;
+		static Pipeline clumpingComputePipeline;
 
 		static Descriptor graphicsDescriptor;
 		static Descriptor computeDescriptor;
+		static Descriptor clumpingComputeDescriptor;
 
 		static std::vector<Buffer> dataBuffers;
 		static std::vector<Buffer> lodDataBuffers;
@@ -84,19 +87,23 @@ class Grass
 		static std::vector<Buffer> lodCountBuffers;
 		static std::vector<Buffer> variableBuffers;
 
+		static Texture clumpingTexture;
+
 		static GrassVariables grassVariables;
 
 		static void Create();
 		static void CreateMeshes();
 		static void CreateGraphicsPipeline();
-		static void CreateComputePipeline();
+		static void CreateComputePipelines();
+		static void CreateTextures();
 		static void CreateBuffers();
 		static void CreateGraphicsDescriptor();
-		static void CreateComputeDescriptor();
+		static void CreateComputeDescriptors();
 
 		static void Destroy();
 		static void DestroyMeshes();
 		static void DestroyPipelines();
+		static void DestroyTextures();
 		static void DestroyBuffers();
 		static void DestroyDescriptors();
 
@@ -106,4 +113,5 @@ class Grass
 		static void RecordCommands(VkCommandBuffer commandBuffer);
 		static void RenderGrass(VkCommandBuffer commandBuffer);
 		static void ComputeGrass();
+		static void ComputeClumping();
 };

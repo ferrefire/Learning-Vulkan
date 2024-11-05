@@ -112,10 +112,14 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 	Grass::RecordCommands(commandBuffer);
 
-	//Manager::screenQuad.pipeline->BindGraphics(commandBuffer, window);
-	//Manager::globalDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
-	//Manager::screenQuad.mesh->Bind(commandBuffer);
-	//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Manager::screenQuad.mesh->indices.size()), 1, 0, 0, 0);
+	if (Manager::settings.screenQuad)
+	{
+		Manager::screenQuad.pipeline->BindGraphics(commandBuffer, window);
+		Manager::globalDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+		Manager::screenQuadDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+		Manager::screenQuad.mesh->Bind(commandBuffer);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Manager::screenQuad.mesh->indices.size()), 1, 0, 0, 0);
+	}
 
 	//for (Object *object : Manager::objects)
 	//{
@@ -288,16 +292,34 @@ void Graphics::Create()
 
 	Grass::Create();
 
-	//Manager::screenQuad.mesh = Manager::NewMesh();
-	//Manager::screenQuad.mesh->shape.positionsOnly = true;
-	//Manager::screenQuad.mesh->shape.SetShape(QUAD);
-	//Manager::screenQuad.mesh->RecalculateVertices();
-	//Manager::screenQuad.mesh->Create();
-	//Manager::screenQuad.pipeline = Manager::NewPipeline();
-	//PipelineConfiguration pipelineConfig = Pipeline::DefaultConfiguration();
-	//std::vector<DescriptorLayoutConfiguration> descriptorConfig;
-	//VertexInfo vertexInfo = Manager::screenQuad.mesh->MeshVertexInfo();
-	//Manager::screenQuad.pipeline->CreateGraphicsPipeline("screenQuad", descriptorConfig, pipelineConfig, vertexInfo);
+	if (Manager::settings.screenQuad)
+	{
+		Manager::screenQuad.mesh = Manager::NewMesh();
+		Manager::screenQuad.mesh->shape.positionsOnly = true;
+		Manager::screenQuad.mesh->shape.SetShape(QUAD);
+		Manager::screenQuad.mesh->RecalculateVertices();
+		Manager::screenQuad.mesh->Create();
+
+		Manager::screenQuad.pipeline = Manager::NewPipeline();
+		PipelineConfiguration pipelineConfig = Pipeline::DefaultConfiguration();
+
+		std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(1);
+		descriptorLayoutConfig[0].type = IMAGE_SAMPLER;
+		descriptorLayoutConfig[0].stages = FRAGMENT_STAGE;
+
+		VertexInfo vertexInfo = Manager::screenQuad.mesh->MeshVertexInfo();
+
+		Manager::screenQuad.pipeline->CreateGraphicsPipeline("screenQuad", descriptorLayoutConfig, pipelineConfig, vertexInfo);
+
+		std::vector<DescriptorConfiguration> descriptorConfig(1);
+		descriptorConfig[0].type = IMAGE_SAMPLER;
+		descriptorConfig[0].stages = FRAGMENT_STAGE;
+		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
+		descriptorConfig[0].imageInfo.imageView = Grass::clumpingTexture.imageView;
+		descriptorConfig[0].imageInfo.sampler = Grass::clumpingTexture.sampler;
+
+		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
+	}
 
 	/*
 	Object *obj1 = Manager::NewObject();
@@ -349,6 +371,8 @@ void Graphics::Destroy()
 	//Manager::DestroyTextures();
 	//Manager::DestroyMeshes();
 	//Manager::DestroyObjects();
+
+	Manager::screenQuadDescriptor.Destroy();
 
 	Manager::Clean();
 

@@ -33,6 +33,7 @@ struct Settings
 	const std::vector<const char*> validationLayers = {	"VK_LAYER_KHRONOS_validation" };
 	bool validationLayersActive = true;
 	bool uncappedFPS = false;
+	bool screenQuad = false;
 };
 
 struct ShaderVariables
@@ -93,6 +94,7 @@ class Manager
 		static Cinematic cinematic;
 
 		static Object screenQuad;
+		static Descriptor screenQuadDescriptor;
 
 		static void Setup();
 		static void Create();

@@ -51,6 +51,8 @@ layout(set = 1, binding = 4) uniform GrassVariables
 	float windFrequency;
 } grassVariables;
 
+layout(set = 1, binding = 5) uniform sampler2D clumpingSampler;
+
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 //#define COUNT 2048
@@ -86,7 +88,7 @@ int Inside(vec2 pos)
 
 void main()
 {
-	//if (gl_GlobalInvocationID.x >= grassVariables.grassTotalBase || gl_GlobalInvocationID.y >= grassVariables.grassTotalBase) return ;
+	if (gl_GlobalInvocationID.x >= grassVariables.grassTotalBase || gl_GlobalInvocationID.y >= grassVariables.grassTotalBase) return ;
 	//uint index = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y * grassCount;
 	if (gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.y == 0)
 	{
@@ -127,9 +129,12 @@ void main()
 	position.x += ran - 0.5;
     ran = random(vec2(ran * 200, ran * 100));
 	position.z += ran - 0.5;
-	//position.y -= snoise(position.xz * 0.375);
-	vec3 clumping = GetDerivative(position.xz * 0.375, 2, 0.001);
-	position.xz += clumping.xz;
+
+	//vec3 clumping = GetDerivative(position.xz * 0.375, 2, 0.001);
+	//position.xz += clumping.xz;
+	vec3 clumping = textureLod(clumpingSampler, position.xz * 0.1, 0).xyz;
+	position.xz += clumping.xy;
+
 	position.y = SampleDynamic(position.xz) * 5000;
 
 	if (lod == 0 && InView(position + vec3(0, 0.5, 0), 0) == 0 && InView(position, 0) == 0) return ;
@@ -155,7 +160,10 @@ void main()
     rotations.x *= 60.0;
     rotations.y *= 360.0;
 
-	float scale = pow(1.0 - GenerateNoise(position.xz * 0.375, 2), 0.5);
+	//clumping.w = textureLod(clumpingSampler, position.xz * 0.01 * 0.375, 0).w;
+	//float scale = pow(1.0 - GenerateNoise(position.xz * 0.375, 2), 0.5);
+	float scale = pow(1.0 - clumping.z, 0.5);
+	//float scale = 1;
 	float colorVal = random(position.xz * ranMult);
 
 	if (lod == 0)
