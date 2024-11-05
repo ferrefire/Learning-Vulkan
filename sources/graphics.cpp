@@ -109,7 +109,13 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	//Manager::UpdateShaderVariables();
 
 	Terrain::RecordCommands(commandBuffer);
+
 	Grass::RecordCommands(commandBuffer);
+
+	//Manager::screenQuad.pipeline->BindGraphics(commandBuffer, window);
+	//Manager::globalDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+	//Manager::screenQuad.mesh->Bind(commandBuffer);
+	//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Manager::screenQuad.mesh->indices.size()), 1, 0, 0, 0);
 
 	//for (Object *object : Manager::objects)
 	//{
@@ -281,6 +287,17 @@ void Graphics::Create()
 	Manager::CreateDescriptor();
 
 	Grass::Create();
+
+	//Manager::screenQuad.mesh = Manager::NewMesh();
+	//Manager::screenQuad.mesh->shape.positionsOnly = true;
+	//Manager::screenQuad.mesh->shape.SetShape(QUAD);
+	//Manager::screenQuad.mesh->RecalculateVertices();
+	//Manager::screenQuad.mesh->Create();
+	//Manager::screenQuad.pipeline = Manager::NewPipeline();
+	//PipelineConfiguration pipelineConfig = Pipeline::DefaultConfiguration();
+	//std::vector<DescriptorLayoutConfiguration> descriptorConfig;
+	//VertexInfo vertexInfo = Manager::screenQuad.mesh->MeshVertexInfo();
+	//Manager::screenQuad.pipeline->CreateGraphicsPipeline("screenQuad", descriptorConfig, pipelineConfig, vertexInfo);
 
 	/*
 	Object *obj1 = Manager::NewObject();

@@ -1,6 +1,8 @@
 #ifndef DEPTH_INCLUDED
 #define DEPTH_INCLUDED
 
+//layout(set = 0, binding = 4) uniform sampler2D depthSampler;
+
 #include "transformation.glsl"
 
 float GetDepth(float z, float near, float far)

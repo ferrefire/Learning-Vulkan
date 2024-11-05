@@ -92,6 +92,8 @@ class Manager
 
 		static Cinematic cinematic;
 
+		static Object screenQuad;
+
 		static void Setup();
 		static void Create();
 		static void Clean();

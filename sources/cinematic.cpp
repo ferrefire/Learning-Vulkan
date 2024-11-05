@@ -5,16 +5,17 @@
 #include "utilities.hpp"
 #include "input.hpp"
 
-#include <string>
 #include <fstream>
 #include <iostream>
 
 Cinematic::Cinematic()
 {
+
 }
 
 Cinematic::~Cinematic()
 {
+
 }
 
 void Cinematic::Load(const char *path)
@@ -85,14 +86,12 @@ void Cinematic::Create(const char *path)
 	ps.append("#key_positions\n");
 	for (CinematicKey &key : keyPositions)
 	{
-		ps.append("<" + std::to_string(key.value.x) + "," + std::to_string(key.value.y) + "," + std::to_string(key.value.z) + "," +
-				  std::to_string(key.duration) + ">" + "\n");
+		ps.append("<" + std::to_string(key.value.x) + "," + std::to_string(key.value.y) + "," + std::to_string(key.value.z) + "," + std::to_string(key.duration) + ">" + "\n");
 	}
 	ps.append("#key_rotations\n");
 	for (CinematicKey &key : keyRotations)
 	{
-		ps.append("<" + std::to_string(key.value.x) + "," + std::to_string(key.value.y) + "," + std::to_string(key.value.z) + "," +
-				  std::to_string(key.duration) + ">" + "\n");
+		ps.append("<" + std::to_string(key.value.x) + "," + std::to_string(key.value.y) + "," + std::to_string(key.value.z) + "," + std::to_string(key.duration) + ">" + "\n");
 	}
 	ps.append("#end\n");
 
@@ -117,6 +116,18 @@ void Cinematic::AddKeyRotation(glm::vec3 value, float duration)
 	key.duration = duration;
 
 	keyRotations.push_back(key);
+}
+
+void Cinematic::AddKey(glm::vec3 position, glm::vec3 rotation, float duration)
+{
+	float currentTime = Time::GetCurrentTime();
+	if (duration == -1) duration = currentTime - lastKeyTime;
+	lastKeyTime = currentTime;
+
+	if (keyPositions.size() == 0 || keyRotations.size() == 0) duration = 0;
+
+	AddKeyPosition(position, duration);
+	AddKeyRotation(rotation, duration);
 }
 
 void Cinematic::Start()

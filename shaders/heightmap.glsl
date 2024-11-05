@@ -93,8 +93,6 @@ vec3 SampleNormalDynamic(vec2 worldPosition, float power)
     float up = SampleDynamic(worldPosition + vec2(0, worldSampleDistance));
     vec3 normalTS = vec3((left - right) / worldSampleDistanceMult, 1, (down - up) / worldSampleDistanceMult);
 
-	//normalTS = normalTS * 2.0 - 1.0;
-
 	if (power == 1) return normalize(normalTS);
 
     normalTS.xz *= power;

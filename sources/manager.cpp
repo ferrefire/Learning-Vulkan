@@ -109,6 +109,8 @@ void Manager::CreateDescriptorSetLayout()
 	descriptorLayoutConfig[2].stages = ALL_STAGE;
 	descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[3].stages = ALL_STAGE;
+	//descriptorLayoutConfig[4].type = IMAGE_SAMPLER;
+	//descriptorLayoutConfig[4].stages = ALL_STAGE;
 
 	Pipeline::CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
 }
@@ -158,6 +160,12 @@ void Manager::CreateDescriptor()
 	descriptorConfig[3].imageInfo.imageView = Terrain::heightMapLod1Texture.imageView;
 	descriptorConfig[3].imageInfo.sampler = Terrain::heightMapLod1Texture.sampler;
 
+	//descriptorConfig[4].type = IMAGE_SAMPLER;
+	//descriptorConfig[4].stages = ALL_STAGE;
+	//descriptorConfig[4].imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+	//descriptorConfig[4].imageInfo.imageView = window.depthTexture.imageView;
+	//descriptorConfig[4].imageInfo.sampler = window.depthTexture.sampler;
+
 	globalDescriptor.Create(descriptorConfig, globalDescriptorSetLayout);
 }
 
@@ -179,12 +187,18 @@ void Manager::Frame()
 {
 	if (Input::GetKey(GLFW_KEY_ESCAPE).pressed)
 	{
+		if (cinematic.creating) cinematic.Create(cinematic.name.c_str());
 		window.Close();
 	}
 
 	if (cinematic.running && Terrain::HeightMapsGenerated())
 	{
 		cinematic.Play();
+	}
+
+	if (cinematic.creating && Input::GetKey(GLFW_MOUSE_BUTTON_LEFT, true).pressed)
+	{
+		cinematic.AddKey(camera.Position(), camera.Angles());
 	}
 
 	//if (settings.fullscreen && Time::newSecond)
@@ -373,3 +387,5 @@ std::vector<Object *> Manager::objects;
 Settings Manager::settings;
 
 Cinematic Manager::cinematic;
+
+Object Manager::screenQuad;

@@ -108,7 +108,7 @@ run_command () {
 			fi
 		elif [[ $OSTYPE == "msys" ]]; then
 			cd $path/build
-			cmake --build . --parallel --config Release
+			cmake --build . -j --config Release
 		fi
 		if [[ $release == 1 ]]; then
 			if test -d $path/build/_deps; then

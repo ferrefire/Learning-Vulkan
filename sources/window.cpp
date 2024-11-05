@@ -308,9 +308,9 @@ void Window::CreateDepthResources()
 	imageConfig.height = swapChainExtent.height;
 	imageConfig.format = device.FindDepthFormat();
 	imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	//imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	imageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
 	imageConfig.sampleCount = device.MaxSampleCount();
-
 
 	SamplerConfiguration samplerConfig;
 
@@ -358,6 +358,7 @@ void Window::CreateRenderPass()
 	depthAttachment.samples = device.MaxSampleCount();
 	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	//depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 	depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;

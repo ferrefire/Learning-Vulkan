@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <vector>
+#include <string>
 
 class Cinematic
 {
@@ -18,6 +19,8 @@ private:
 	float totalFrameTime = 0;
 	int totalFrames = 0;
 
+	float lastKeyTime = 0;
+
 public:
 	struct CinematicKey
 	{
@@ -29,7 +32,10 @@ public:
 	~Cinematic();
 
 	bool running = false;
+	bool creating = false;
 	float speed = 1;
+
+	std::string name = "";
 
 	std::vector<CinematicKey> keyPositions = std::vector<CinematicKey>();
 	std::vector<CinematicKey> keyRotations = std::vector<CinematicKey>();
@@ -39,6 +45,7 @@ public:
 
 	void AddKeyPosition(glm::vec3 value, float duration);
 	void AddKeyRotation(glm::vec3 value, float duration);
+	void AddKey(glm::vec3 position, glm::vec3 rotation, float duration = -1);
 
 	void Start();
 	void Play();

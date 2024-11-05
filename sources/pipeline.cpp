@@ -93,7 +93,8 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	globalDescriptorSetLayout = Manager::globalDescriptorSetLayout;
 	CreateObjectDescriptorSetLayout(descriptorLayoutConfig);
 
-	if (!globalDescriptorSetLayout || !objectDescriptorSetLayout) 
+	//if (!globalDescriptorSetLayout || !objectDescriptorSetLayout) throw std::runtime_error("cannot create graphics pipeline because the descriptor set layouts do not exist");
+	if (!globalDescriptorSetLayout || (descriptorLayoutConfig.size() > 0 && !objectDescriptorSetLayout)) 
 		throw std::runtime_error("cannot create graphics pipeline because the descriptor set layouts do not exist");
 
 	std::string currentPath = Utilities::GetPath();
@@ -187,11 +188,15 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 	dynamicState.pDynamicStates = dynamicStates.data();
 
-	std::vector<VkDescriptorSetLayout> descriptorSetLayouts =
-	{
-		globalDescriptorSetLayout,
-		objectDescriptorSetLayout
-	};
+	//std::vector<VkDescriptorSetLayout> descriptorSetLayouts =
+	//{
+	//	globalDescriptorSetLayout,
+	//	objectDescriptorSetLayout
+	//};
+
+	std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+	if (globalDescriptorSetLayout) descriptorSetLayouts.push_back(globalDescriptorSetLayout);
+	if (objectDescriptorSetLayout) descriptorSetLayouts.push_back(objectDescriptorSetLayout);
 
 	VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -269,8 +274,7 @@ void Pipeline::CreateComputePipeline(std::string shader, std::vector<DescriptorL
 	globalDescriptorSetLayout = Manager::globalDescriptorSetLayout;
 	CreateObjectDescriptorSetLayout(descriptorLayoutConfig);
 
-	if (!globalDescriptorSetLayout || !objectDescriptorSetLayout)
-		throw std::runtime_error("cannot create graphics pipeline because the descriptor set layouts do not exist");
+	if (!globalDescriptorSetLayout || !objectDescriptorSetLayout) throw std::runtime_error("cannot create graphics pipeline because the descriptor set layouts do not exist");
 
 	std::string currentPath = Utilities::GetPath();
 
@@ -343,9 +347,10 @@ void Pipeline::CreateObjectDescriptorSetLayout(std::vector<DescriptorLayoutConfi
 	CreateDescriptorSetLayout(descriptorLayoutConfig, &objectDescriptorSetLayout);
 }
 
-void Pipeline::CreateDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig, 
-	VkDescriptorSetLayout *descriptorSetLayout)
+void Pipeline::CreateDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig, VkDescriptorSetLayout *descriptorSetLayout)
 {
+	if (descriptorLayoutConfig.size() == 0) return;
+
 	std::vector<VkDescriptorSetLayoutBinding> bindings;
 	bindings.resize(descriptorLayoutConfig.size());
 

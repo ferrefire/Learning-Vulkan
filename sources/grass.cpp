@@ -2,6 +2,7 @@
 
 #include "manager.hpp"
 #include "shape.hpp"
+#include "time.hpp"
 
 void Grass::Create()
 {
@@ -303,7 +304,13 @@ void Grass::Start()
 	grassVariables.grassTotalBaseMult = 1.0 / grassTotalBase;
 	grassVariables.grassTotalCount = grassTotalCount;
 
-	memcpy(variableBuffers[Manager::currentFrame].mappedBuffer, &grassVariables, sizeof(grassVariables));
+	grassRenderCounts.resize(Manager::settings.maxFramesInFlight);
+	grassLodRenderCounts.resize(Manager::settings.maxFramesInFlight);
+
+	for (Buffer &buffer : variableBuffers)
+	{
+		memcpy(buffer.mappedBuffer, &grassVariables, sizeof(grassVariables));
+	}
 }
 
 void Grass::Frame()
@@ -314,6 +321,8 @@ void Grass::Frame()
 void Grass::PostFrame()
 {
 	ComputeGrass();
+
+	//if (Time::newFrameTick) ComputeGrass();
 }
 
 void Grass::RecordCommands(VkCommandBuffer commandBuffer)
@@ -323,7 +332,7 @@ void Grass::RecordCommands(VkCommandBuffer commandBuffer)
 	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
 	//Manager::UpdateShaderVariables();
 	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
-	memcpy(variableBuffers[Manager::currentFrame].mappedBuffer, &grassVariables, sizeof(grassVariables));
+	//memcpy(variableBuffers[Manager::currentFrame].mappedBuffer, &grassVariables, sizeof(grassVariables));
 
 	RenderGrass(commandBuffer);
 }
@@ -332,16 +341,16 @@ void Grass::RenderGrass(VkCommandBuffer commandBuffer)
 {
 	uint32_t lod0 = 0;
 	uint32_t lod1 = 1;
-	int renderCount = *(int *)countBuffers[Manager::currentFrame].mappedBuffer;
-	int lodRenderCount = *(int *)lodCountBuffers[Manager::currentFrame].mappedBuffer;
+	//int renderCount = *(int *)countBuffers[Manager::currentFrame].mappedBuffer;
+	//int lodRenderCount = *(int *)lodCountBuffers[Manager::currentFrame].mappedBuffer;
 
 	grassMesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), renderCount, 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), grassRenderCounts[Manager::currentFrame], 0, 0, 0);
 
 	grassLodMesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), lodRenderCount, 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassLodRenderCounts[Manager::currentFrame], 0, 0, 0);
 }
 
 void Grass::ComputeGrass()
@@ -355,18 +364,23 @@ void Grass::ComputeGrass()
 	computePipeline.BindCompute(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
 	computeDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
-	memcpy(variableBuffers[Manager::currentFrame].mappedBuffer, &grassVariables, sizeof(grassVariables));
+	//memcpy(variableBuffers[Manager::currentFrame].mappedBuffer, &grassVariables, sizeof(grassVariables));
 	
 	vkCmdDispatch(commandBuffer, computeCount, computeCount, 1);
 
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
+
+	grassRenderCounts[Manager::currentFrame] = *(uint32_t *)countBuffers[Manager::currentFrame].mappedBuffer;
+	grassLodRenderCounts[Manager::currentFrame] = *(uint32_t *)lodCountBuffers[Manager::currentFrame].mappedBuffer;
 }
 
 uint32_t Grass::grassBase = 512;
 uint32_t Grass::grassCount = Grass::grassBase * Grass::grassBase;
+std::vector<uint32_t> Grass::grassRenderCounts;
 
 uint32_t Grass::grassLodBase = 4096;
 uint32_t Grass::grassLodCount = Grass::grassLodBase * Grass::grassLodBase;
+std::vector<uint32_t> Grass::grassLodRenderCounts;
 
 uint32_t Grass::grassTotalBase = Grass::grassBase + Grass::grassLodBase;
 uint32_t Grass::grassTotalCount = Grass::grassTotalBase * Grass::grassTotalBase;
