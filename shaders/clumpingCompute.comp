@@ -23,7 +23,7 @@ void main()
     vec3 derivative = GetDerivative(uv, 2, 0.00001);//change map scale
     clumping.xy = derivative.xz;
     //clumping.w = pow(1.0 - GenerateNoise(uv, 2), 0.5);//modify uv with clump derivative
-    clumping.z = GenerateNoise(uv + clumping.xy * scale, 2);//modify uv with clump derivative
+    clumping.z = GenerateNoise(uv + clumping.xy * 0.375, 2);//modify uv with clump derivative
 
     imageStore(clumpingTexture, ivec2(index), vec4(clumping, 0));
 }

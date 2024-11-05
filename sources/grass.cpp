@@ -21,7 +21,7 @@ void Grass::CreateTextures()
 	clumpingConfig.format = VK_FORMAT_R16G16B16A16_SFLOAT;
 
 	SamplerConfiguration clumpingSamplerConfig;
-	clumpingSamplerConfig.repeatMode = REPEAT;
+	clumpingSamplerConfig.repeatMode = MIRRORED_REPEAT;
 	//clumpingSamplerConfig.minFilter = VK_FILTER_NEAREST;
 	//clumpingSamplerConfig.magFilter = VK_FILTER_NEAREST;
 
