@@ -440,7 +440,7 @@ uint32_t Grass::grassBase = 512;
 uint32_t Grass::grassCount = Grass::grassBase * Grass::grassBase;
 std::vector<uint32_t> Grass::grassRenderCounts;
 
-uint32_t Grass::grassLodBase = 4096;
+uint32_t Grass::grassLodBase = 2048;
 uint32_t Grass::grassLodCount = Grass::grassLodBase * Grass::grassLodBase;
 std::vector<uint32_t> Grass::grassLodRenderCounts;
 

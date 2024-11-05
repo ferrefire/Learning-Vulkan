@@ -105,11 +105,14 @@ void Window::CreateSwapChain()
     VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
     VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
 
-    uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+    uint32_t imageCount = Manager::settings.targetFramesInFlight;
     if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
     {
         imageCount = swapChainSupport.capabilities.maxImageCount;
     }
+
+	Manager::settings.maxFramesInFlight = imageCount;
+	std::cout << "max frames in flight: " << imageCount << std::endl;
 
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -127,12 +130,13 @@ void Window::CreateSwapChain()
 
     if (indices.graphicsFamily != indices.presentationFamily)
     {
-        createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-        createInfo.queueFamilyIndexCount = 2;
-        createInfo.pQueueFamilyIndices = queueFamilyIndices;
-    }
+		createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+		createInfo.queueFamilyIndexCount = 2;
+		createInfo.pQueueFamilyIndices = queueFamilyIndices;
+	}
     else
     {
+		std::cout << "no concurrent image sharing" << std::endl;
         createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         createInfo.queueFamilyIndexCount = 0;     // Optional
         createInfo.pQueueFamilyIndices = nullptr; // Optional
@@ -319,6 +323,8 @@ void Window::CreateDepthResources()
 
 void Window::CreateColorResources()
 {
+	if (!Manager::settings.mssa) return;
+
 	if (colorTexture.image != nullptr || colorTexture.imageMemory != nullptr || colorTexture.imageView != nullptr)
 		throw std::runtime_error("cannot create color resources because they already exist");
 
@@ -444,6 +450,8 @@ void Window::CreateRenderPass()
 
 void Window::RecreateSwapChain()
 {
+	std::cout << "recreating swap chain" << std::endl;
+
 	int tempWidth = 0, tempHeight = 0;
 	glfwGetFramebufferSize(data, &tempWidth, &tempHeight);
 	while (tempWidth == 0 || tempHeight == 0)
@@ -496,11 +504,17 @@ void Window::DestroySwapChain()
     	swapChain = nullptr;
 	}
 
-    for (Texture &texture : swapChainTextures)
+    //for (Texture &texture : swapChainTextures)
+	//{
+	//	texture.image = nullptr;
+	//}
+	//swapChainTextures.clear();
+
+	for (Texture &texture : swapChainTextures)
 	{
 		texture.image = nullptr;
+		texture.Destroy();
 	}
-
 	swapChainTextures.clear();
 }
 
@@ -512,10 +526,10 @@ void Window::DestroyImageViews()
 	//}
 	//swapChainImageViews.clear();
 
-	for (Texture &texture : swapChainTextures)
-	{
-		texture.DestroyImageView();
-	}
+	//for (Texture &texture : swapChainTextures)
+	//{
+	//	texture.DestroyImageView();
+	//}
 }
 
 void Window::DestroyRenderPass()

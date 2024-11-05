@@ -47,11 +47,8 @@ void Manager::Quit(int exitCode)
 
 	graphics.Destroy();
 
-	if (glfwInitialized)
-    {
-        window.Destroy();
-        glfwTerminate();
-    }
+	window.Destroy();
+	glfwTerminate();
 
 	exit(exitCode);
 }
@@ -254,8 +251,7 @@ void Manager::DestroyTextures()
 {
 	for (Texture *texture : textures)
 	{
-		if (!texture)
-			continue;
+		if (!texture) continue;
 
 		texture->Destroy();
 		delete (texture);

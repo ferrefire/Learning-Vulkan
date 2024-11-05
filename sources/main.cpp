@@ -72,11 +72,11 @@ int main(int argc, char **argv)
 		Input::Frame();
 		Manager::Frame();
 
-		glfwPollEvents();
-
 		Manager::currentGraphics.DrawFrame();
 
 		Manager::PostFrame();
+
+		glfwPollEvents();
 
 		//Manager::objects[1]->Rotate(glm::vec3(100.0f * Time::deltaTime, 50.0f * Time::deltaTime, 25.0f * Time::deltaTime));
 	}

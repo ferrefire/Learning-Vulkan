@@ -128,10 +128,10 @@ void Mesh::Bind(VkCommandBuffer commandBuffer)
 		return ;
 	}
 
-	VkBuffer vertexBuffers[] = {vertexBuffer.buffer};
+	//VkBuffer vertexBuffers[] = {vertexBuffer.buffer};
 	VkDeviceSize offsets[] = {0};
 
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer.buffer, offsets);
 	vkCmdBindIndexBuffer(commandBuffer, indexBuffer.buffer, 0, INDEX_TYPE);
 }
 

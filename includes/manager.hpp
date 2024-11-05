@@ -23,6 +23,7 @@
 
 struct Settings
 {
+	uint32_t targetFramesInFlight = 3;
 	uint32_t maxFramesInFlight = 3;
 	bool fullscreen = false;
 	bool wireframe = false;

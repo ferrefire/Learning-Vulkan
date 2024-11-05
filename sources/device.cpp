@@ -234,6 +234,7 @@ void Device::CreateLogicalDevice(VkSurfaceKHR surface)
 	vkGetDeviceQueue(logicalDevice, queueFamilies.presentationFamily, 0, &presentationQueue);
 
 	//queueFamilies = FindQueueFamilies(physicalDevice, surface);
+	vkGetPhysicalDeviceProperties(physicalDevice, &properties);
     swapChainSupportDetails = QuerySwapChainSupport(physicalDevice, surface);
 
 	if (queueFamilies.Complete()) std::cout << "Seperate compute family found" << std::endl;
@@ -293,14 +294,14 @@ void Device::WaitForIdle()
     vkDeviceWaitIdle(logicalDevice);
 }
 
-uint32_t Device::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+uint32_t Device::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags memPropertiesFlags)
 {
     VkPhysicalDeviceMemoryProperties memProperties;
 	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 
 	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
 	{
-		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & memPropertiesFlags) == memPropertiesFlags)
 		{
 			return i;
 		}

@@ -451,6 +451,7 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 			{
 				lod0Indices.push_back(index);
 				terrainChunks[index].ModifyPosition().y = 0;
+				terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
 			}
 			else if (inView)
 			{
@@ -458,6 +459,7 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 
 				lod1Indices.push_back(index);
 				terrainChunks[index].ModifyPosition().y = factor * -10.0;
+				terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
 			}
 		}
 	}
@@ -469,7 +471,7 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 		chunkIndex = index;
 		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | 
 			TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
-		terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
+		//terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod0Mesh.indices.size()), 1, 0, 0, 0);
 	}
 
@@ -480,7 +482,7 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 		chunkIndex = index;
 		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | 
 			TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
-		terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
+		//terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod1Mesh.indices.size()), 1, 0, 0, 0);
 	}
 
@@ -496,6 +498,8 @@ void Terrain::ComputeHeightMap(uint32_t lod)
 	//std::cout << "Lod: " << lod << std::endl;
 	//float startTime = Time::GetCurrentTime();
 	//std::cout << "Start time: " << startTime << std::endl;
+
+	//std::cout << "computing heightmap lod: " << lod << std::endl;
 
 	vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
 
@@ -529,6 +533,9 @@ void Terrain::ComputeHeightMapArray(uint32_t index)
 	// std::cout << "Lod: " << lod << std::endl;
 	// float startTime = Time::GetCurrentTime();
 	// std::cout << "Start time: " << startTime << std::endl;
+
+	//std::cout << "computing heightmap array index: " << index << std::endl;
+
 	int x = (index % heightMapLength) - heightMapRadius;
 	int y = (index / heightMapLength) - heightMapRadius;
 

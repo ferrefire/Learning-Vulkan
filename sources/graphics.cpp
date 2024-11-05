@@ -97,7 +97,7 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	renderPassInfo.renderArea.offset = {0, 0};
 	renderPassInfo.renderArea.extent = window.swapChainExtent;
 
-	std::array<VkClearValue, 2> clearValues{};
+	std::vector<VkClearValue> clearValues(2);
 	clearValues[0].color = {{1.0f, 1.0f, 1.0f, 1.0f}};
 	clearValues[1].depthStencil = {1.0f, 0};
 
@@ -155,14 +155,15 @@ void Graphics::DrawFrame()
 		throw std::runtime_error("failed to acquire swap chain image");
 	}
 
+	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
+
+	vkResetCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], 0);
+
 	Manager::UpdateShaderVariables();
 	Terrain::PostFrame();
 	Manager::UpdateShaderVariables();
 	Grass::PostFrame();
 
-	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
-
-	vkResetCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], 0);
 	RecordCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], imageIndex);
 
 	VkSubmitInfo submitInfo{};
@@ -170,6 +171,7 @@ void Graphics::DrawFrame()
 
 	VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame]};
 	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
 	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
