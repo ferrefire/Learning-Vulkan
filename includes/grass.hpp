@@ -51,6 +51,8 @@ struct GrassVariables
 
 	alignas(4) float windStrength = 0.225;
 	alignas(4) float windFrequency = 2.75;
+
+	alignas(16) glm::vec3 flooredViewPosition = glm::vec3(0);
 };
 
 class Grass

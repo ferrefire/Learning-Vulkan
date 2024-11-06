@@ -49,6 +49,7 @@ layout(set = 1, binding = 4) uniform GrassVariables
 	float spacingMult;
 	float windStrength;
 	float windFrequency;
+	vec3 flooredViewPosition;
 } grassVariables;
 
 layout(set = 1, binding = 5) uniform sampler2D clumpingSampler;
@@ -104,9 +105,9 @@ void main()
 
 	if (lod == -1) return ;
 
-	vec2 flooredViewPosition = vec2(floor(variables.viewPosition.x * grassVariables.spacingMult) * grassVariables.spacing, floor(variables.viewPosition.z * grassVariables.spacingMult) * grassVariables.spacing);
-    x = x * grassVariables.spacing + flooredViewPosition.x;
-    z = z * grassVariables.spacing + flooredViewPosition.y;
+	//vec2 flooredViewPosition = vec2(floor(variables.viewPosition.x * grassVariables.spacingMult) * grassVariables.spacing, floor(variables.viewPosition.z * grassVariables.spacingMult) * grassVariables.spacing);
+    x = x * grassVariables.spacing + grassVariables.flooredViewPosition.x;
+    z = z * grassVariables.spacing + grassVariables.flooredViewPosition.z;
     y = SampleDynamic(vec2(x, z)) * 5000;
 
 	vec3 position = vec3(x, y, z);

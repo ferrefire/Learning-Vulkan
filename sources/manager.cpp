@@ -25,6 +25,7 @@ void Manager::Setup()
 
 void Manager::Create()
 {
+	CreateOcclusionTexture();
 	CreateShaderVariableBuffers();
 	CreateDescriptorSetLayout();
 	CreateDescriptor();
@@ -34,6 +35,7 @@ void Manager::Clean()
 {
 	DestroyPipelines();
 	DestroyTextures();
+	DestroyOcclusionTexture();
 	DestroyMeshes();
 	DestroyObjects();
 	DestroyShaderVariableBuffers();
@@ -159,11 +161,29 @@ void Manager::CreateDescriptor()
 
 	//descriptorConfig[4].type = IMAGE_SAMPLER;
 	//descriptorConfig[4].stages = ALL_STAGE;
-	//descriptorConfig[4].imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-	//descriptorConfig[4].imageInfo.imageView = window.depthTexture.imageView;
-	//descriptorConfig[4].imageInfo.sampler = window.depthTexture.sampler;
+	////descriptorConfig[4].imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+	//descriptorConfig[4].imageInfo.imageLayout = LAYOUT_GENERAL;
+	//descriptorConfig[4].imageInfo.imageView = occlusionTexture.imageView;
+	//descriptorConfig[4].imageInfo.sampler = occlusionTexture.sampler;
 
 	globalDescriptor.Create(descriptorConfig, globalDescriptorSetLayout);
+}
+
+void Manager::CreateOcclusionTexture()
+{
+	ImageConfiguration occlusionConfig;
+	occlusionConfig.width = window.width;
+	occlusionConfig.height = window.height;
+	occlusionConfig.format = device.FindDepthFormat();
+	occlusionConfig.transitionLayout = LAYOUT_GENERAL;
+	occlusionConfig.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	occlusionConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+	SamplerConfiguration occlusionSamplerConfig;
+	occlusionSamplerConfig.anisotrophic = VK_FALSE;
+
+	occlusionTexture.CreateImage(occlusionConfig, occlusionSamplerConfig);
+	occlusionTexture.TransitionImageLayout(occlusionConfig);
 }
 
 void Manager::Start()
@@ -313,6 +333,11 @@ void Manager::DestroyDescriptorSetLayout()
 	}
 }
 
+void Manager::DestroyOcclusionTexture()
+{
+	occlusionTexture.Destroy();
+}
+
 Window &Manager::GetWindow()
 {
 	return (window);
@@ -386,3 +411,5 @@ Cinematic Manager::cinematic;
 
 Object Manager::screenQuad;
 Descriptor Manager::screenQuadDescriptor;
+
+Texture Manager::occlusionTexture;

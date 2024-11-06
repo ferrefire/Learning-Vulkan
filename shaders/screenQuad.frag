@@ -13,7 +13,7 @@ layout(location = 0) out vec4 outColor;
 void main()
 {
     vec4 val = texture(textureSampler, inCoordinates);
-    outColor = vec4(val.zzz, 1.0);
+    outColor = vec4(val.xyz, 1.0);
 
     //outColor = vec4(1);
 }

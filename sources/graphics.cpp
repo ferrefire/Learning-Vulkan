@@ -82,7 +82,7 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = 0;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 	beginInfo.pInheritanceInfo = nullptr;
 
 	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
@@ -131,6 +131,18 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	//}
 
 	vkCmdEndRenderPass(commandBuffer);
+
+	//ImageConfiguration transitionConfig;
+	//transitionConfig.width = window.width;
+	//transitionConfig.height = window.height;
+	//transitionConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
+	//transitionConfig.initialLayout = LAYOUT_GENERAL;
+	//transitionConfig.transitionLayout = LAYOUT_TRNSFR_DST;
+	//Manager::occlusionTexture.TransitionImageLayout(commandBuffer, transitionConfig);
+	//Manager::occlusionTexture.CopyFromImage(commandBuffer, window.depthTexture.image, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, transitionConfig);
+	//transitionConfig.initialLayout = LAYOUT_TRNSFR_DST;
+	//transitionConfig.transitionLayout = LAYOUT_GENERAL;
+	//Manager::occlusionTexture.TransitionImageLayout(commandBuffer, transitionConfig);
 
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
 	{
@@ -285,6 +297,8 @@ void Graphics::Create()
 	Manager::CreateShaderVariableBuffers();
 	Manager::CreateDescriptorSetLayout();
 
+	//Manager::CreateOcclusionTexture();
+
 	Texture::CreateDefaults();
 	Mesh::CreateDefaults();
 
@@ -317,8 +331,8 @@ void Graphics::Create()
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
 		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
-		descriptorConfig[0].imageInfo.imageView = Grass::clumpingTexture.imageView;
-		descriptorConfig[0].imageInfo.sampler = Grass::clumpingTexture.sampler;
+		descriptorConfig[0].imageInfo.imageView = Manager::occlusionTexture.imageView;
+		descriptorConfig[0].imageInfo.sampler = Manager::occlusionTexture.sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}

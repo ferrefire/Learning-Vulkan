@@ -347,9 +347,9 @@ void Texture::CreateMipmaps(ImageConfiguration &imageConfig)
 	//imageConfig.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
 
-void Texture::TransitionImageLayout(ImageConfiguration &imageConfig)
+void Texture::TransitionImageLayout(VkCommandBuffer commandBuffer, ImageConfiguration &imageConfig)
 {
-	VkCommandBuffer commandBuffer = device.BeginGraphicsCommand();
+	//VkCommandBuffer commandBuffer = device.BeginGraphicsCommand();
 
 	VkImageMemoryBarrier barrier{};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -385,6 +385,24 @@ void Texture::TransitionImageLayout(ImageConfiguration &imageConfig)
 		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 	}
+	else if (barrier.oldLayout == LAYOUT_TRNSFR_DST && barrier.newLayout == LAYOUT_GENERAL)
+	{
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		//destinationStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	}
+	else if (barrier.oldLayout == LAYOUT_GENERAL && barrier.newLayout == LAYOUT_TRNSFR_DST)
+	{
+		barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		// destinationStage = VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+	}
 	else if (barrier.oldLayout == LAYOUT_UNDEFINED && barrier.newLayout == LAYOUT_GENERAL)
 	{
 		barrier.srcAccessMask = 0;
@@ -400,9 +418,38 @@ void Texture::TransitionImageLayout(ImageConfiguration &imageConfig)
 
 	vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage ,0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-	device.EndGraphicsCommand(commandBuffer);
+	//device.EndGraphicsCommand(commandBuffer);
 
 	//imageConfig.layout = newLayout;
+}
+
+void Texture::TransitionImageLayout(ImageConfiguration &imageConfig)
+{
+	VkCommandBuffer commandBuffer = device.BeginGraphicsCommand();
+
+	TransitionImageLayout(commandBuffer, imageConfig);
+
+	device.EndGraphicsCommand(commandBuffer);
+
+	// imageConfig.layout = newLayout;
+}
+
+void Texture::CopyFromImage(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout layout, ImageConfiguration &config)
+{
+	VkImageCopy region;
+	region.srcOffset = VkOffset3D{0, 0, 0};
+	region.dstOffset = VkOffset3D{0, 0, 0};
+	region.srcSubresource.aspectMask = config.aspect;
+	region.srcSubresource.mipLevel = 0;
+	region.srcSubresource.baseArrayLayer = 0;
+	region.srcSubresource.layerCount = 0;
+	region.dstSubresource.aspectMask = config.aspect;
+	region.dstSubresource.mipLevel = 0;
+	region.dstSubresource.baseArrayLayer = 0;
+	region.dstSubresource.layerCount = 0;
+	region.extent = VkExtent3D{config.width, config.height, 1};
+
+	vkCmdCopyImage(commandBuffer, srcImage, layout, image, LAYOUT_TRNSFR_DST, 1, &region);
 }
 
 /*

@@ -97,6 +97,8 @@ class Manager
 		static Object screenQuad;
 		static Descriptor screenQuadDescriptor;
 
+		static Texture occlusionTexture;
+
 		static void Setup();
 		static void Create();
 		static void Clean();
@@ -107,12 +109,7 @@ class Manager
 		static void CreateShaderVariableBuffers();
 		static void CreateDescriptorSetLayout();
 		static void CreateDescriptor();
-
-		static void Start();
-		static void PreFrame();
-		static void Frame();
-		static void PostFrame();
-		static void UpdateShaderVariables();
+		static void CreateOcclusionTexture();
 
 		static void DestroyPipelines();
 		static void DestroyTextures();
@@ -121,6 +118,13 @@ class Manager
 		static void DestroyShaderVariableBuffers();
 		static void DestroyDescriptorSetLayout();
 		static void DestroyDescriptor();
+		static void DestroyOcclusionTexture();
+
+		static void Start();
+		static void PreFrame();
+		static void Frame();
+		static void PostFrame();
+		static void UpdateShaderVariables();
 
 		static Window &GetWindow();
 		static Graphics &GetGraphics();
