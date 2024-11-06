@@ -9,11 +9,12 @@ layout(location = 0) in vec2 inCoordinates;
 layout(location = 0) out vec4 outColor;
 
 #include "variables.glsl"
+#include "depth.glsl"
 
 void main()
 {
-    vec4 val = texture(textureSampler, inCoordinates);
-    outColor = vec4(val.xyz, 1.0);
+    float val = texture(textureSampler, inCoordinates).r;
+    outColor = vec4(GetDepth(val));
 
     //outColor = vec4(1);
 }

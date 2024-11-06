@@ -11,11 +11,13 @@ void Terrain::Create()
 {
     CreateMeshes();
 	CreateGraphicsPipeline();
+	CreateShadowPipeline();
 	CreateComputePipelines();
 	CreateTextures();
 	CreateObjects();
 	CreateBuffers();
 	CreateGraphicsDescriptor();
+	CreateShadowDescriptor();
 	CreateComputeDescriptors();
 }
 
@@ -26,8 +28,6 @@ void Terrain::CreateTextures()
 	grassSamplerConfig.mipLodBias = 0.0f;
 
 	grassDiffuseTexture.CreateTexture("rocky_grass_diff.jpg", grassSamplerConfig);
-	//grassNormalTexture.CreateTexture("rocky_grass_norm.jpg", grassSamplerConfig);
-	//grassSpecularTexture.CreateTexture("rocky_grass_spec.jpg", grassSamplerConfig);
 
 	rockDiffuseTexture.CreateTexture("rock_diff.jpg", grassSamplerConfig);
 
@@ -35,10 +35,6 @@ void Terrain::CreateTextures()
 
 	SamplerConfiguration heightMapSamplerConfig;
 	SamplerConfiguration heightMapArraySamplerConfig;
-
-	//ImageConfiguration heightMapConfig = Texture::ImageStorage(1024, 1024);
-	//heightMapTexture.CreateImage(heightMapConfig, heightMapSamplerConfig);
-	//heightMapTexture.TransitionImageLayout(heightMapConfig);
 
 	ImageConfiguration heightMapArrayConfig = Texture::ImageArrayStorage(1024, 1024, heightMapCount);
 	heightMapArrayTexture.CreateImage(heightMapArrayConfig, heightMapArraySamplerConfig);
@@ -51,14 +47,6 @@ void Terrain::CreateTextures()
 	ImageConfiguration heightMapLod0Config = Texture::ImageStorage(1024, 1024);
 	heightMapLod0Texture.CreateImage(heightMapLod0Config, heightMapSamplerConfig);
 	heightMapLod0Texture.TransitionImageLayout(heightMapLod0Config);
-
-	//Manager::globalDescriptor.descriptorConfigs[1].imageInfo.imageView = heightMapArrayTexture.imageView;
-	//Manager::globalDescriptor.descriptorConfigs[1].imageInfo.sampler = heightMapArrayTexture.sampler;
-	//Manager::globalDescriptor.descriptorConfigs[2].imageInfo.imageView = heightMapLod0Texture.imageView;
-	//Manager::globalDescriptor.descriptorConfigs[2].imageInfo.sampler = heightMapLod0Texture.sampler;
-	//Manager::globalDescriptor.descriptorConfigs[3].imageInfo.imageView = heightMapLod1Texture.imageView;
-	//Manager::globalDescriptor.descriptorConfigs[3].imageInfo.sampler = heightMapLod1Texture.sampler;
-	//Manager::globalDescriptor.Update();
 }
 
 void Terrain::CreateMeshes()
@@ -74,9 +62,6 @@ void Terrain::CreateMeshes()
 
 void Terrain::CreateObjects()
 {
-	//object.Create();
-	//object.Resize(glm::vec3(10000));
-
 	terrainChunks.resize(terrainChunkCount);
 
 	for (int x = -terrainChunkRadius; x <= terrainChunkRadius; x++)
@@ -100,16 +85,6 @@ void Terrain::CreateGraphicsPipeline()
 	descriptorLayoutConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
 	descriptorLayoutConfig[0].count = terrainChunkCount;
 
-	//descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
-	//descriptorLayoutConfig[1].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
-	//descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
-	//descriptorLayoutConfig[2].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
-	//descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
-	//descriptorLayoutConfig[3].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
-
-	//descriptorLayoutConfig[4].type = UNIFORM_BUFFER;
-	//descriptorLayoutConfig[4].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
-
 	descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[1].stages = FRAGMENT_STAGE;
 	descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
@@ -126,6 +101,24 @@ void Terrain::CreateGraphicsPipeline()
     VertexInfo vertexInfo = lod0Mesh.MeshVertexInfo();
 
     graphicsPipeline.CreateGraphicsPipeline("terrain", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
+}
+
+void Terrain::CreateShadowPipeline()
+{
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(1);
+	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
+	descriptorLayoutConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+	descriptorLayoutConfig[0].count = terrainChunkCount;
+
+	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
+	pipelineConfiguration.shadow = true;
+	pipelineConfiguration.pushConstantCount = 1;
+	pipelineConfiguration.pushConstantStage = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+	pipelineConfiguration.pushConstantSize = sizeof(uint32_t);
+
+	VertexInfo vertexInfo = lod0Mesh.MeshVertexInfo();
+
+	shadowPipeline.CreateGraphicsPipeline("terrainShadow", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
 }
 
 void Terrain::CreateComputePipelines()
@@ -171,34 +164,6 @@ void Terrain::CreateGraphicsDescriptor()
 		}
 	}
 
-	//descriptorConfig[1].type = IMAGE_SAMPLER;
-	//descriptorConfig[1].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
-	//descriptorConfig[1].imageInfo.imageLayout = LAYOUT_GENERAL;
-	//descriptorConfig[1].imageInfo.imageView = heightMapArrayTexture.imageView;
-	//descriptorConfig[1].imageInfo.sampler = heightMapArrayTexture.sampler;
-	//descriptorConfig[2].type = IMAGE_SAMPLER;
-	//descriptorConfig[2].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
-	//descriptorConfig[2].imageInfo.imageLayout = LAYOUT_GENERAL;
-	//descriptorConfig[2].imageInfo.imageView = heightMapLod0Texture.imageView;
-	//descriptorConfig[2].imageInfo.sampler = heightMapLod0Texture.sampler;
-	//descriptorConfig[3].type = IMAGE_SAMPLER;
-	//descriptorConfig[3].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
-	//descriptorConfig[3].imageInfo.imageLayout = LAYOUT_GENERAL;
-	//descriptorConfig[3].imageInfo.imageView = heightMapLod1Texture.imageView;
-	//descriptorConfig[3].imageInfo.sampler = heightMapLod1Texture.sampler;
-
-	//descriptorConfig[4].type = UNIFORM_BUFFER;
-	//descriptorConfig[4].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
-	//descriptorConfig[4].buffersInfo.resize(heightMapVariablesBuffers.size());
-	//int i = 0;
-	//for (Buffer &buffer : heightMapVariablesBuffers)
-	//{
-	//	descriptorConfig[4].buffersInfo[i].buffer = buffer.buffer;
-	//	descriptorConfig[4].buffersInfo[i].range = sizeof(HeightMapVariables);
-	//	descriptorConfig[4].buffersInfo[i].offset = 0;
-	//	i++;
-	//}
-
 	descriptorConfig[1].type = IMAGE_SAMPLER;
 	descriptorConfig[1].stages = FRAGMENT_STAGE;
 	descriptorConfig[1].imageInfo.imageLayout = LAYOUT_READ_ONLY;
@@ -218,6 +183,33 @@ void Terrain::CreateGraphicsDescriptor()
 	descriptorConfig[3].imageInfo.sampler = dirtDiffuseTexture.sampler;
 
 	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
+}
+
+void Terrain::CreateShadowDescriptor()
+{
+	std::vector<DescriptorConfiguration> descriptorConfig(1);
+
+	int bufferCount = terrainChunks[0].uniformBuffers.size();
+	int objectCount = terrainChunks.size();
+
+	descriptorConfig[0].type = UNIFORM_BUFFER;
+	descriptorConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+	descriptorConfig[0].count = objectCount;
+	descriptorConfig[0].buffersInfo.resize(bufferCount * objectCount);
+
+	for (int i = 0; i < bufferCount; i++)
+	{
+		int j = 0;
+		for (Object &object : terrainChunks)
+		{
+			descriptorConfig[0].buffersInfo[i * objectCount + j].buffer = object.uniformBuffers[i].buffer;
+			descriptorConfig[0].buffersInfo[i * objectCount + j].range = sizeof(UniformBufferObject);
+			descriptorConfig[0].buffersInfo[i * objectCount + j].offset = 0;
+			j++;
+		}
+	}
+
+	shadowDescriptor.Create(descriptorConfig, shadowPipeline.objectDescriptorSetLayout);
 }
 
 void Terrain::CreateComputeDescriptors()
@@ -259,22 +251,6 @@ void Terrain::CreateComputeDescriptors()
 
 void Terrain::CreateBuffers()
 {
-	/*
-	heightMapVariablesBuffers.resize(Manager::settings.maxFramesInFlight);
-
-	BufferConfiguration configuration;
-	configuration.size = sizeof(HeightMapVariables);
-	configuration.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-	configuration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-	configuration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	configuration.mapped = true;
-
-	for (Buffer &buffer : heightMapVariablesBuffers)
-	{
-		buffer.Create(configuration);
-	}
-	*/
-
 	BufferConfiguration computeConfiguration;
 	computeConfiguration.size = sizeof(HeightMapComputeVariables);
 	computeConfiguration.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
@@ -307,9 +283,6 @@ void Terrain::Destroy()
 void Terrain::DestroyTextures()
 {
 	grassDiffuseTexture.Destroy();
-	//grassNormalTexture.Destroy();
-	//grassSpecularTexture.Destroy();
-
 	rockDiffuseTexture.Destroy();
 	dirtDiffuseTexture.Destroy();
 
@@ -337,6 +310,7 @@ void Terrain::DestroyObjects()
 void Terrain::DestroyPipelines()
 {
 	graphicsPipeline.Destroy();
+	shadowPipeline.Destroy();
 	heightMapComputePipeline.Destroy();
 	heightMapArrayComputePipeline.Destroy();
 }
@@ -344,6 +318,7 @@ void Terrain::DestroyPipelines()
 void Terrain::DestroyDescriptors()
 {
 	graphicsDescriptor.Destroy();
+	shadowDescriptor.Destroy();
 	heightMapComputeDescriptor.Destroy();
 	heightMapArrayComputeDescriptor.Destroy();
 }
@@ -407,21 +382,25 @@ void Terrain::PostFrame()
 	}
 }
 
-void Terrain::RecordCommands(VkCommandBuffer commandBuffer)
+void Terrain::RecordCommands(VkCommandBuffer commandBuffer, bool shadows)
 {
-    graphicsPipeline.BindGraphics(commandBuffer, Manager::currentWindow);
-
-	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
-	//Manager::UpdateShaderVariables();
-
-	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
-
-	//UpdateHeightMapVariables();
-
-	RenderTerrain(commandBuffer);
+    if (!shadows)
+	{
+		graphicsPipeline.BindGraphics(commandBuffer);
+		Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+		graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+		RenderTerrain(commandBuffer, graphicsPipeline, shadows);
+	}
+	else
+	{
+		shadowPipeline.BindGraphics(commandBuffer);
+		Manager::globalDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+		shadowDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+		RenderTerrain(commandBuffer, shadowPipeline, shadows);
+	}
 }
 
-void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
+void Terrain::RenderTerrain(VkCommandBuffer commandBuffer, Pipeline &pipeline, bool shadows)
 {
 	int chunksRendered = 0;
 
@@ -444,8 +423,10 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 			float zf = float(zi);
 
 			float distance = glm::clamp(glm::distance(glm::vec2(xf, zf), glm::vec2(xs, zs)), 0.0f, float(terrainChunkLength));
-			bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.View());
-			//bool inView = true;
+			//bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.View());
+			bool inView = true;
+			if (!shadows)
+				inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.View());
 
 			if ((inView && distance < 1.0) || distance <= 0.75)
 			{
@@ -453,7 +434,7 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 				terrainChunks[index].ModifyPosition().y = 0;
 				terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
 			}
-			else if (inView)
+			else if (inView && !shadows)
 			{
 				float factor = pow(1.0 - (distance - 1.0) / float(terrainChunkLength - 1), 0.5);
 
@@ -469,21 +450,22 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 	for (int index : lod0Indices)
 	{
 		chunkIndex = index;
-		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | 
+		vkCmdPushConstants(commandBuffer, pipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | 
 			TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
-		//terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod0Mesh.indices.size()), 1, 0, 0, 0);
 	}
 
-	lod1Mesh.Bind(commandBuffer);
-
-	for (int index : lod1Indices)
+	if (!shadows)
 	{
-		chunkIndex = index;
-		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | 
-			TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
-		//terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod1Mesh.indices.size()), 1, 0, 0, 0);
+		lod1Mesh.Bind(commandBuffer);
+
+		for (int index : lod1Indices)
+		{
+			chunkIndex = index;
+			vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | 
+				TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
+			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod1Mesh.indices.size()), 1, 0, 0, 0);
+		}
 	}
 
 	//if (Time::newSecond)
@@ -651,23 +633,17 @@ bool Terrain::HeightMapsGenerated()
 }
 
 Pipeline Terrain::graphicsPipeline{Manager::currentDevice, Manager::camera};
+Pipeline Terrain::shadowPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Terrain::heightMapComputePipeline{Manager::currentDevice, Manager::camera};
 Pipeline Terrain::heightMapArrayComputePipeline{Manager::currentDevice, Manager::camera};
 
 Texture Terrain::grassDiffuseTexture{Manager::currentDevice};
-//Texture Terrain::grassNormalTexture{Manager::currentDevice};
-//Texture Terrain::grassSpecularTexture{Manager::currentDevice};
-
 Texture Terrain::rockDiffuseTexture{Manager::currentDevice};
 Texture Terrain::dirtDiffuseTexture{Manager::currentDevice};
 
-//Texture Terrain::heightMapTexture{Manager::currentDevice};
 Texture Terrain::heightMapArrayTexture{Manager::currentDevice};
 Texture Terrain::heightMapLod0Texture{Manager::currentDevice};
 Texture Terrain::heightMapLod1Texture{Manager::currentDevice};
-
-//HeightMapVariables Terrain::heightMapVariables;
-//std::vector<Buffer> Terrain::heightMapVariablesBuffers;
 
 HeightMapComputeVariables Terrain::heightMapComputeVariables;
 Buffer Terrain::heightMapComputeVariablesBuffer;
@@ -676,13 +652,13 @@ HeightMapArrayComputeVariables Terrain::heightMapArrayComputeVariables;
 Buffer Terrain::heightMapArrayComputeVariablesBuffer;
 
 Descriptor Terrain::graphicsDescriptor{Manager::currentDevice};
+Descriptor Terrain::shadowDescriptor{Manager::currentDevice};
 Descriptor Terrain::heightMapComputeDescriptor{Manager::currentDevice};
 Descriptor Terrain::heightMapArrayComputeDescriptor{Manager::currentDevice};
 
 Mesh Terrain::lod0Mesh{};
 Mesh Terrain::lod1Mesh{};
 
-//Object Terrain::object{&Terrain::mesh, &Terrain::graphicsPipeline};
 std::vector<Object> Terrain::terrainChunks;
 
 float Terrain::terrainChunkSize = 10000;

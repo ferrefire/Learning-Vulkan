@@ -80,8 +80,10 @@ void Window::CreateResources()
 	CreateSwapChain();
 	CreateImageViews();
 	CreateRenderPass();
+	//CreateShadowPass();
 	CreateColorResources();
 	CreateDepthResources();
+	//CreateShadowResources();
 	CreateFramebuffers();
 }
 
@@ -105,13 +107,13 @@ void Window::CreateSwapChain()
     VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
     VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
 
-    uint32_t imageCount = Manager::settings.targetFramesInFlight;
+    uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
     if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
     {
         imageCount = swapChainSupport.capabilities.maxImageCount;
     }
 
-	Manager::settings.maxFramesInFlight = imageCount;
+	//Manager::settings.maxFramesInFlight = imageCount;
 	std::cout << "max frames in flight: " << imageCount << std::endl;
 
     VkSwapchainCreateInfoKHR createInfo{};
@@ -340,6 +342,43 @@ void Window::CreateColorResources()
 	colorTexture.CreateImage(imageConfig, samplerConfig);
 }
 
+/*
+void Window::CreateShadowResources()
+{
+	if (shadowTexture.image != nullptr || shadowTexture.imageMemory != nullptr || shadowTexture.imageView != nullptr)
+		throw std::runtime_error("cannot create shadow resources because they already exist");
+
+	ImageConfiguration imageConfig;
+	//imageConfig.width = swapChainExtent.width;
+	//imageConfig.height = swapChainExtent.height;
+	imageConfig.width = 1024;
+	imageConfig.height = 1024;
+	imageConfig.format = device.FindDepthFormat();
+	//imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	imageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
+	//imageConfig.sampleCount = device.MaxSampleCount();
+
+	SamplerConfiguration samplerConfig;
+
+	shadowTexture.CreateImage(imageConfig, samplerConfig);
+
+	VkFramebufferCreateInfo framebufferInfo{};
+	framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+	framebufferInfo.renderPass = shadowPass;
+	framebufferInfo.attachmentCount = 1;
+	framebufferInfo.pAttachments = &shadowTexture.imageView;
+	framebufferInfo.width = 1024;
+	framebufferInfo.height = 1024;
+	framebufferInfo.layers = 1;
+
+	if (vkCreateFramebuffer(device.logicalDevice, &framebufferInfo, nullptr, &shadowFrameBuffer) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create shadow framebuffer");
+	}
+}
+*/
+
 void Window::CreateRenderPass()
 {
 	if (renderPass) throw std::runtime_error("cannot create render pass because it already exists");
@@ -448,6 +487,46 @@ void Window::CreateRenderPass()
 	}
 }
 
+/*
+void Window::CreateShadowPass()
+{
+	VkAttachmentDescription depthAttachment{};
+	depthAttachment.format = device.FindDepthFormat();
+	depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	depthAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	VkAttachmentReference depthAttachmentRef{};
+	depthAttachmentRef.attachment = 0;
+	depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+	std::vector<VkAttachmentDescription> attachments(1);
+	attachments[0] = depthAttachment;
+
+	VkSubpassDescription subpass{};
+	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+	VkRenderPassCreateInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+	renderPassInfo.pAttachments = attachments.data();
+	renderPassInfo.subpassCount = 1;
+	renderPassInfo.pSubpasses = &subpass;
+	//renderPassInfo.dependencyCount = 1;
+	//renderPassInfo.pDependencies = &dependency;
+
+	if (vkCreateRenderPass(device.logicalDevice, &renderPassInfo, nullptr, &shadowPass) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create shadow pass");
+	}
+}
+*/
+
 void Window::RecreateSwapChain()
 {
 	std::cout << "recreating swap chain" << std::endl;
@@ -482,8 +561,10 @@ void Window::DestroyResources()
 {
 	DestroyFramebuffers();
 	DestroyRenderPass();
+	//DestroyShadowPass();
 	DestroyDepthResources();
 	DestroyColorResources();
+	//DestroyShadowResources();
 	DestroyImageViews();
 	DestroySwapChain();
 }
@@ -540,6 +621,16 @@ void Window::DestroyRenderPass()
 	renderPass = nullptr;
 }
 
+/*
+void Window::DestroyShadowPass()
+{
+	if (!shadowPass) return;
+
+	vkDestroyRenderPass(device.logicalDevice, shadowPass, nullptr);
+	shadowPass = nullptr;
+}
+*/
+
 void Window::DestroyFramebuffers()
 {
 	for (auto framebuffer : swapChainFramebuffers)
@@ -575,6 +666,15 @@ void Window::DestroyColorResources()
 {
 	colorTexture.Destroy();
 }
+
+/*
+void Window::DestroyShadowResources()
+{
+	if (shadowFrameBuffer) vkDestroyFramebuffer(device.logicalDevice, shadowFrameBuffer, nullptr);
+
+	shadowTexture.Destroy();
+}
+*/
 
 void Window::SetMouseVisibility(bool visible)
 {

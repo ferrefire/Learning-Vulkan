@@ -6,6 +6,7 @@
 #include "terrain.hpp"
 #include "grass.hpp"
 #include "texture.hpp"
+#include "shadow.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -78,18 +79,8 @@ void Graphics::CreateInstance()
     }
 }
 
-void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
-	VkCommandBufferBeginInfo beginInfo{};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-	beginInfo.pInheritanceInfo = nullptr;
-
-	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to begin recording command buffer");
-	}
-
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = window.renderPass;
@@ -106,31 +97,88 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	//Manager::UpdateShaderVariables();
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = static_cast<float>(window.swapChainExtent.width);
+	viewport.height = static_cast<float>(window.swapChainExtent.height);
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-	Terrain::RecordCommands(commandBuffer);
+	VkRect2D scissor{};
+	scissor.offset = {0, 0};
+	scissor.extent = window.swapChainExtent;
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
+	Terrain::RecordCommands(commandBuffer, false);
 	Grass::RecordCommands(commandBuffer);
 
 	if (Manager::settings.screenQuad)
 	{
-		Manager::screenQuad.pipeline->BindGraphics(commandBuffer, window);
+		Manager::screenQuad.pipeline->BindGraphics(commandBuffer);
 		Manager::globalDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
 		Manager::screenQuadDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
 		Manager::screenQuad.mesh->Bind(commandBuffer);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Manager::screenQuad.mesh->indices.size()), 1, 0, 0, 0);
 	}
 
-	//for (Object *object : Manager::objects)
-	//{
-	//	object->pipeline->Bind(commandBuffer, Manager::currentWindow);
-	//	//object->pipeline->UpdateUniformBuffer(object->Translation(), Manager::currentFrame);
-	//	object->UpdateUniformBuffer(Manager::currentFrame);
-	//	object->mesh->Bind(commandBuffer);
-	//	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(object->mesh->indices.size()), 1, 0, 0, 0);
-	//}
+	vkCmdEndRenderPass(commandBuffer);
+}
+
+void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+{
+	VkRenderPassBeginInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassInfo.renderPass = Shadow::shadowPass;
+	renderPassInfo.framebuffer = Shadow::shadowFrameBuffer;
+	renderPassInfo.renderArea.offset = {0, 0};
+	renderPassInfo.renderArea.extent.width = 1024;
+	renderPassInfo.renderArea.extent.height = 1024;
+
+	std::vector<VkClearValue> clearValues(1);
+	clearValues[0].depthStencil = {1.0f, 0};
+
+	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+	renderPassInfo.pClearValues = clearValues.data();
+
+	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = 1024;
+	viewport.height = 1024;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+	VkRect2D scissor{};
+	scissor.offset = {0, 0};
+	scissor.extent.width = 1024;
+	scissor.extent.height = 1024;
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+	Terrain::RecordCommands(commandBuffer, true);
+	//Grass::RecordCommands(commandBuffer);
 
 	vkCmdEndRenderPass(commandBuffer);
+}
+
+void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+{
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	beginInfo.pInheritanceInfo = nullptr;
+
+	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to begin recording command buffer");
+	}
+
+	RenderShadows(commandBuffer, imageIndex);
+	RenderGraphics(commandBuffer, imageIndex);
 
 	//ImageConfiguration transitionConfig;
 	//transitionConfig.width = window.width;
@@ -181,18 +229,18 @@ void Graphics::DrawFrame()
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-	VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame]};
+	//VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame]};
 	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
 	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = waitSemaphores;
+	submitInfo.pWaitSemaphores = &device.imageAvailableSemaphores[Manager::currentFrame];
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &device.graphicsCommandBuffers[Manager::currentFrame];
 
-	VkSemaphore signalSemaphores[] = {device.renderFinishedSemaphores[Manager::currentFrame]};
+	//VkSemaphore signalSemaphores[] = {device.renderFinishedSemaphores[Manager::currentFrame]};
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = signalSemaphores;
+	submitInfo.pSignalSemaphores = &device.renderFinishedSemaphores[Manager::currentFrame];
 
 	if (vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, device.inFlightFences[Manager::currentFrame]) != VK_SUCCESS)
 	{
@@ -202,11 +250,11 @@ void Graphics::DrawFrame()
 	VkPresentInfoKHR presentInfo{};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = signalSemaphores;
+	presentInfo.pWaitSemaphores = &device.renderFinishedSemaphores[Manager::currentFrame];
 
-	VkSwapchainKHR swapChains[] = {window.swapChain};
+	//VkSwapchainKHR swapChains[] = {window.swapChain};
 	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = swapChains;
+	presentInfo.pSwapchains = &window.swapChain;
 	presentInfo.pImageIndices = &imageIndex;
 	presentInfo.pResults = nullptr;
 
@@ -284,10 +332,10 @@ void Graphics::Create()
 	CreateInstance();
 
 	window.CreateSurface(instance);
-
 	device.Create(instance, window.surface);
-
 	window.CreateResources();
+	Shadow::CreateShadowPass();
+	Shadow::CreateShadowResources();
 
 	device.CreateCommandPools();
 	device.CreateCommandBuffers();
@@ -297,15 +345,11 @@ void Graphics::Create()
 	Manager::CreateShaderVariableBuffers();
 	Manager::CreateDescriptorSetLayout();
 
-	//Manager::CreateOcclusionTexture();
-
 	Texture::CreateDefaults();
 	Mesh::CreateDefaults();
 
 	Terrain::Create();
-
 	Manager::CreateDescriptor();
-
 	Grass::Create();
 
 	if (Manager::settings.screenQuad)
@@ -330,9 +374,9 @@ void Graphics::Create()
 		std::vector<DescriptorConfiguration> descriptorConfig(1);
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
-		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
-		descriptorConfig[0].imageInfo.imageView = Manager::occlusionTexture.imageView;
-		descriptorConfig[0].imageInfo.sampler = Manager::occlusionTexture.sampler;
+		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+		descriptorConfig[0].imageInfo.imageView = Shadow::shadowTexture.imageView;
+		descriptorConfig[0].imageInfo.sampler = Shadow::shadowTexture.sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}
@@ -369,27 +413,14 @@ void Graphics::Destroy()
 	device.DestroySyncObjects();
 	device.DestroyCommandPools();
 
-	//window.DestroyFramebuffers();
-	//window.DestroyRenderPass();
-	//window.DestroyDepthResources();
-	//window.DestroyColorResources();
-	//window.DestroyImageViews();
-	//window.DestroySwapChain();
-
 	window.DestroyResources();
-	window.DestroySurface(instance);
+	Shadow::DestroyShadowPass();
+	Shadow::DestroyShadowResources();
+	//window.DestroySurface(instance);
 
 	Terrain::Destroy();
-
 	Grass::Destroy();
-
-	//Manager::DestroyPipelines();
-	//Manager::DestroyTextures();
-	//Manager::DestroyMeshes();
-	//Manager::DestroyObjects();
-
 	Manager::screenQuadDescriptor.Destroy();
-
 	Manager::Clean();
 
 	device.DestroyLogicalDevice();

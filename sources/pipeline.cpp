@@ -5,6 +5,7 @@
 #include "time.hpp"
 #include "shape.hpp"
 #include "texture.hpp"
+#include "shadow.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -70,8 +71,6 @@ PipelineConfiguration Pipeline::DefaultConfiguration()
 	configuration.depthStencil.front = {}; // Optional
 	configuration.depthStencil.back = {}; // Optional
 
-	configuration.renderPass = Manager::currentWindow.renderPass;
-
 	return (configuration);
 }
 
@@ -89,6 +88,9 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 {
     if (graphicsPipeline) throw std::runtime_error("cannot create graphics pipeline because it already exists");
 
+	if (!pipelineConfig.shadow) pipelineConfig.renderPass = Manager::currentWindow.renderPass;
+	else if (pipelineConfig.shadow) pipelineConfig.renderPass = Shadow::shadowPass;
+
 	//CreateGlobalDescriptorSetLayout(descriptorsInfo.globalDescriptorLayoutConfig);
 	globalDescriptorSetLayout = Manager::globalDescriptorSetLayout;
 	CreateObjectDescriptorSetLayout(descriptorLayoutConfig);
@@ -102,12 +104,14 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	std::vector<char> vertexCode = Utilities::FileToBinary((currentPath + "/shaders/" + shader + ".vert.spv").c_str());
 	std::vector<char> tesselationControlCode;
 	std::vector<char> tesselationEvaluationCode;
-	std::vector<char> fragmentCode = Utilities::FileToBinary((currentPath + "/shaders/" + shader + ".frag.spv").c_str());
+	//std::vector<char> fragmentCode = Utilities::FileToBinary((currentPath + "/shaders/" + shader + ".frag.spv").c_str());
+	std::vector<char> fragmentCode;
 
 	VkShaderModule vertexShaderModule = CreateShaderModule(vertexCode);
 	VkShaderModule tesselationControlShaderModule;
 	VkShaderModule tesselationEvaluationShaderModule;
-	VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode);
+	//VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentCode);
+	VkShaderModule fragmentShaderModule;
 
 	VkPipelineShaderStageCreateInfo vertexShaderStageInfo{};
 	vertexShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -119,11 +123,12 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 
 	VkPipelineShaderStageCreateInfo tesselationEvaluationShaderStageInfo{};
 
+	//VkPipelineShaderStageCreateInfo fragmentShaderStageInfo{};
+	//fragmentShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	//fragmentShaderStageInfo.stage = FRAGMENT_STAGE;
+	//fragmentShaderStageInfo.module = fragmentShaderModule;
+	//fragmentShaderStageInfo.pName = "main";
 	VkPipelineShaderStageCreateInfo fragmentShaderStageInfo{};
-	fragmentShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	fragmentShaderStageInfo.stage = FRAGMENT_STAGE;
-	fragmentShaderStageInfo.module = fragmentShaderModule;
-	fragmentShaderStageInfo.pName = "main";
 
 	//VkPipelineShaderStageCreateInfo shaderStages[] = {vertexShaderStageInfo, fragmentShaderStageInfo};
 
@@ -131,16 +136,13 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	tesselationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
 	tesselationInfo.patchControlPoints = 3;
 
+	int stageCount = 1 + (pipelineConfig.tesselation ? 2 : 0) + (pipelineConfig.shadow ? 0 : 1);
+	int currentStage = 0;
+	std::vector<VkPipelineShaderStageCreateInfo> shaderStages(stageCount);
 
-	std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+	shaderStages[currentStage++] = vertexShaderStageInfo;
 
-	if (!pipelineConfig.tesselation)
-	{
-		shaderStages.resize(2);
-		shaderStages[0] = vertexShaderStageInfo;
-		shaderStages[1] = fragmentShaderStageInfo;
-	}
-	else if (pipelineConfig.tesselation)
+	if (pipelineConfig.tesselation)
 	{
 		pipelineConfig.inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
 
@@ -160,11 +162,22 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 		tesselationEvaluationShaderStageInfo.module = tesselationEvaluationShaderModule;
 		tesselationEvaluationShaderStageInfo.pName = "main";
 
-		shaderStages.resize(4);
-		shaderStages[0] = vertexShaderStageInfo;
-		shaderStages[1] = tesselationControlShaderStageInfo;
-		shaderStages[2] = tesselationEvaluationShaderStageInfo;
-		shaderStages[3] = fragmentShaderStageInfo;
+		shaderStages[currentStage++] = tesselationControlShaderStageInfo;
+		shaderStages[currentStage++] = tesselationEvaluationShaderStageInfo;
+	}
+
+	if (!pipelineConfig.shadow)
+	{
+		fragmentCode = Utilities::FileToBinary((currentPath + "/shaders/" + shader + ".frag.spv").c_str());
+
+		fragmentShaderModule = CreateShaderModule(fragmentCode);
+
+		fragmentShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		fragmentShaderStageInfo.stage = FRAGMENT_STAGE;
+		fragmentShaderStageInfo.module = fragmentShaderModule;
+		fragmentShaderStageInfo.pName = "main";
+
+		shaderStages[currentStage++] = fragmentShaderStageInfo;
 	}
 
 	auto bindingDescription = vertexInfo.bindingDescription;
@@ -263,7 +276,10 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 		vkDestroyShaderModule(device.logicalDevice, tesselationControlShaderModule, nullptr);
 		vkDestroyShaderModule(device.logicalDevice, tesselationEvaluationShaderModule, nullptr);
 	}
-	vkDestroyShaderModule(device.logicalDevice, fragmentShaderModule, nullptr);
+	if (!pipelineConfig.shadow)
+	{
+		vkDestroyShaderModule(device.logicalDevice, fragmentShaderModule, nullptr);
+	}
 }
 
 void Pipeline::CreateComputePipeline(std::string shader, std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig)
@@ -376,10 +392,11 @@ void Pipeline::CreateDescriptorSetLayout(std::vector<DescriptorLayoutConfigurati
 	}
 }
 
-void Pipeline::BindGraphics(VkCommandBuffer commandBuffer, Window &window)
+void Pipeline::BindGraphics(VkCommandBuffer commandBuffer)
 {
 	vkCmdBindPipeline(commandBuffer, GRAPHICS_BIND_POINT, graphicsPipeline);
 
+	/*
 	VkViewport viewport{};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
@@ -393,6 +410,7 @@ void Pipeline::BindGraphics(VkCommandBuffer commandBuffer, Window &window)
 	scissor.offset = {0, 0};
 	scissor.extent = window.swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+	*/
 }
 
 void Pipeline::BindCompute(VkCommandBuffer commandBuffer)

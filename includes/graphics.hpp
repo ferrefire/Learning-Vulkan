@@ -31,6 +31,8 @@ class Graphics
 		void DrawFrame();
 
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		void RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		void RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		bool CheckValidationLayerSupport();
 		std::vector<const char*> GetRequiredExtensions();
 		static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, 

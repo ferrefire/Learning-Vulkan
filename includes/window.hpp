@@ -23,22 +23,21 @@ class Window
 		GLFWwindow *data = nullptr;
 
 		VkSurfaceKHR surface = nullptr;
-		VkRenderPass renderPass = nullptr;
 
-        VkSwapchainKHR swapChain = nullptr;
-		//std::vector<VkImage> swapChainImages;
-		//std::vector<VkImageView> swapChainImageViews;
+		VkRenderPass renderPass = nullptr;
+		//VkRenderPass shadowPass = nullptr;
+
+		VkSwapchainKHR swapChain = nullptr;
 		std::vector<Texture> swapChainTextures;
 		std::vector<VkFramebuffer> swapChainFramebuffers;
 		VkFormat swapChainImageFormat;
 		VkExtent2D swapChainExtent;
 
-		//VkImage depthImage = nullptr;
-		//VkDeviceMemory depthImageMemory = nullptr;
-		//VkImageView depthImageView = nullptr;
+		//VkFramebuffer shadowFrameBuffer = nullptr;
 
 		Texture depthTexture;
 		Texture colorTexture;
+		//Texture shadowTexture;
 
 		bool framebufferResized = false;
 		bool isResizeable = true;
@@ -55,7 +54,9 @@ class Window
 		void CreateFramebuffers();
 		void CreateColorResources();
 		void CreateDepthResources();
+		//void CreateShadowResources();
 		void CreateRenderPass();
+		//void CreateShadowPass();
 
 		void DestroyResources();
 		void DestroySurface(VkInstance instance);
@@ -64,7 +65,9 @@ class Window
 		void DestroyFramebuffers();
 		void DestroyDepthResources();
 		void DestroyColorResources();
+		//void DestroyShadowResources();
 		void DestroyRenderPass();
+		//void DestroyShadowPass();
 
 		bool IsOpen();
 		static void framebufferResizeCallback(GLFWwindow *window, int width, int height);

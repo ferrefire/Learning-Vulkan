@@ -23,8 +23,8 @@
 
 struct Settings
 {
-	uint32_t targetFramesInFlight = 3;
-	uint32_t maxFramesInFlight = 3;
+	uint32_t targetFramesInFlight = 1;
+	uint32_t maxFramesInFlight = 1;
 	bool fullscreen = false;
 	bool wireframe = false;
 	bool discrete = true;
@@ -34,7 +34,7 @@ struct Settings
 	const std::vector<const char*> validationLayers = {	"VK_LAYER_KHRONOS_validation" };
 	bool validationLayersActive = true;
 	bool uncappedFPS = false;
-	bool screenQuad = false;
+	bool screenQuad = true;
 };
 
 struct ShaderVariables

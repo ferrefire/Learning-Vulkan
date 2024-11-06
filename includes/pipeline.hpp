@@ -53,6 +53,7 @@ struct PipelineConfiguration
 	uint32_t pushConstantSize = 0;
 	VkShaderStageFlags pushConstantStage = ALL_STAGE;
 	bool foliage = false;
+	bool shadow = false;
 };
 
 struct DescriptorLayoutConfiguration
@@ -91,7 +92,7 @@ class Pipeline
 		// void CreateGlobalDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig);
 		void CreateObjectDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig);
 		VkShaderModule CreateShaderModule(const std::vector<char> &code);
-		void BindGraphics(VkCommandBuffer commandBuffer, Window &window);
+		void BindGraphics(VkCommandBuffer commandBuffer);
 		void BindCompute(VkCommandBuffer commandBuffer);
 
 		void Destroy();
