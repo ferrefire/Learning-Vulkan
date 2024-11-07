@@ -58,12 +58,12 @@ class Terrain
 		static Mesh lod1Mesh;
 
 		static Pipeline graphicsPipeline;
-		static Pipeline shadowPipeline;
+		static Pipeline cullPipeline;
 		static Pipeline heightMapComputePipeline;
 		static Pipeline heightMapArrayComputePipeline;
 
 		static Descriptor graphicsDescriptor;
-		static Descriptor shadowDescriptor;
+		static Descriptor cullDescriptor;
 		static Descriptor heightMapComputeDescriptor;
 		static Descriptor heightMapArrayComputeDescriptor;
 
@@ -115,8 +115,8 @@ class Terrain
 		static void CreateObjects();
 		static void CreateGraphicsPipeline();
 		static void CreateGraphicsDescriptor();
-		static void CreateShadowPipeline();
-		static void CreateShadowDescriptor();
+		static void CreateCullPipeline();
+		static void CreateCullDescriptor();
 		static void CreateComputePipelines();
 		static void CreateComputeDescriptors();
 		static void CreateBuffers();
@@ -132,11 +132,13 @@ class Terrain
 		static void Start();
 		static void Frame();
 		static void PostFrame();
-		static void RecordCommands(VkCommandBuffer commandBuffer);
+		static void RecordGraphicsCommands(VkCommandBuffer commandBuffer);
+		static void RecordCullCommands(VkCommandBuffer commandBuffer);
 		static void ComputeHeightMap(uint32_t lod);
 		static void ComputeHeightMapArray(uint32_t index);
 		static void CheckTerrainOffset();
 		static void RenderTerrain(VkCommandBuffer commandBuffer);
+		static void RenderCulling(VkCommandBuffer commandBuffer);
 		static bool InView(const glm::vec3 &position, float tolerance, const glm::mat4 &projection, const glm::mat4 &view);
 		static bool ChunkInView(glm::vec3 position, float tolerance, glm::mat4 projection, glm::mat4 view, bool main = true);
 		static bool HeightMapsGenerated();

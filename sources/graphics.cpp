@@ -7,6 +7,7 @@
 #include "grass.hpp"
 #include "texture.hpp"
 #include "shadow.hpp"
+#include "culling.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -111,7 +112,7 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	scissor.extent = window.swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	Terrain::RecordCommands(commandBuffer);
+	Terrain::RecordGraphicsCommands(commandBuffer);
 	Grass::RecordGraphicsCommands(commandBuffer);
 
 	if (Manager::settings.screenQuad)
@@ -165,6 +166,45 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	vkCmdEndRenderPass(commandBuffer);
 }
 
+void Graphics::RenderCulling(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+{
+	VkRenderPassBeginInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassInfo.renderPass = Culling::cullPass;
+	renderPassInfo.framebuffer = Culling::cullFrameBuffer;
+	renderPassInfo.renderArea.offset = {0, 0};
+	renderPassInfo.renderArea.extent.width = Culling::cullResolutionWidth;
+	renderPassInfo.renderArea.extent.height = Culling::cullResolutionHeight;
+
+	std::vector<VkClearValue> clearValues(1);
+	clearValues[0].depthStencil = {1.0f, 0};
+
+	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+	renderPassInfo.pClearValues = clearValues.data();
+
+	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = Culling::cullResolutionWidth;
+	viewport.height = Culling::cullResolutionHeight;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+	VkRect2D scissor{};
+	scissor.offset = {0, 0};
+	scissor.extent.width = Culling::cullResolutionWidth;
+	scissor.extent.height = Culling::cullResolutionHeight;
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+	Terrain::RecordCullCommands(commandBuffer);
+	//Grass::RecordCullingCommands(commandBuffer);
+
+	vkCmdEndRenderPass(commandBuffer);
+}
+
 void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
 	VkCommandBufferBeginInfo beginInfo{};
@@ -179,6 +219,7 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 	RenderShadows(commandBuffer, imageIndex);
 	RenderGraphics(commandBuffer, imageIndex);
+	RenderCulling(commandBuffer, imageIndex);
 
 	//ImageConfiguration transitionConfig;
 	//transitionConfig.width = window.width;
@@ -334,6 +375,10 @@ void Graphics::Create()
 	window.CreateSurface(instance);
 	device.Create(instance, window.surface);
 	window.CreateResources();
+
+	Culling::CreateCullPass();
+	Culling::CreateCullResources();
+
 	Shadow::CreateShadowPass();
 	Shadow::CreateShadowResources();
 
@@ -375,8 +420,8 @@ void Graphics::Create()
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
 		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[0].imageInfo.imageView = Shadow::shadowTexture.imageView;
-		descriptorConfig[0].imageInfo.sampler = Shadow::shadowTexture.sampler;
+		descriptorConfig[0].imageInfo.imageView = Culling::cullTexture.imageView;
+		descriptorConfig[0].imageInfo.sampler = Culling::cullTexture.sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}
@@ -414,6 +459,10 @@ void Graphics::Destroy()
 	device.DestroyCommandPools();
 
 	window.DestroyResources();
+
+	Culling::DestroyCullPass();
+	Culling::DestroyCullResources();
+
 	Shadow::DestroyShadowPass();
 	Shadow::DestroyShadowResources();
 	//window.DestroySurface(instance);

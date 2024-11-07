@@ -5,6 +5,7 @@
 #include "grass.hpp"
 #include "time.hpp"
 #include "shadow.hpp"
+#include "culling.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -100,7 +101,7 @@ void Manager::CreateShaderVariableBuffers()
 
 void Manager::CreateDescriptorSetLayout()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(5);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(6);
 	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
 	descriptorLayoutConfig[0].stages = ALL_STAGE;
 	descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
@@ -111,6 +112,8 @@ void Manager::CreateDescriptorSetLayout()
 	descriptorLayoutConfig[3].stages = ALL_STAGE;
 	descriptorLayoutConfig[4].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[4].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[5].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[5].stages = ALL_STAGE;
 
 	Pipeline::CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
 }
@@ -128,7 +131,7 @@ void Manager::CreateDescriptor()
 	//descriptorLayoutConfig[3].stages = ALL_STAGE;
 	//Pipeline::CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
 
-	std::vector<DescriptorConfiguration> descriptorConfig(5);
+	std::vector<DescriptorConfiguration> descriptorConfig(6);
 
 	descriptorConfig[0].type = UNIFORM_BUFFER;
 	descriptorConfig[0].stages = ALL_STAGE;
@@ -165,6 +168,12 @@ void Manager::CreateDescriptor()
 	descriptorConfig[4].imageInfo.imageLayout = LAYOUT_READ_ONLY;
 	descriptorConfig[4].imageInfo.imageView = Shadow::shadowTexture.imageView;
 	descriptorConfig[4].imageInfo.sampler = Shadow::shadowTexture.sampler;
+
+	descriptorConfig[5].type = IMAGE_SAMPLER;
+	descriptorConfig[5].stages = ALL_STAGE;
+	descriptorConfig[5].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	descriptorConfig[5].imageInfo.imageView = Culling::cullTexture.imageView;
+	descriptorConfig[5].imageInfo.sampler = Culling::cullTexture.sampler;
 
 	globalDescriptor.Create(descriptorConfig, globalDescriptorSetLayout);
 }

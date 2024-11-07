@@ -11,13 +11,13 @@ void Terrain::Create()
 {
     CreateMeshes();
 	CreateGraphicsPipeline();
-	//CreateShadowPipeline();
+	CreateCullPipeline();
 	CreateComputePipelines();
 	CreateTextures();
 	CreateObjects();
 	CreateBuffers();
 	CreateGraphicsDescriptor();
-	//CreateShadowDescriptor();
+	CreateCullDescriptor();
 	CreateComputeDescriptors();
 }
 
@@ -103,7 +103,7 @@ void Terrain::CreateGraphicsPipeline()
     graphicsPipeline.CreateGraphicsPipeline("terrain", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
 }
 
-void Terrain::CreateShadowPipeline()
+void Terrain::CreateCullPipeline()
 {
 	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(1);
 	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
@@ -111,14 +111,15 @@ void Terrain::CreateShadowPipeline()
 	descriptorLayoutConfig[0].count = terrainChunkCount;
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
-	pipelineConfiguration.shadow = true;
+	pipelineConfiguration.cull = true;
+	pipelineConfiguration.tesselation = true;
 	pipelineConfiguration.pushConstantCount = 1;
 	pipelineConfiguration.pushConstantStage = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
 	pipelineConfiguration.pushConstantSize = sizeof(uint32_t);
 
 	VertexInfo vertexInfo = lod0Mesh.MeshVertexInfo();
 
-	shadowPipeline.CreateGraphicsPipeline("terrainShadow", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
+	cullPipeline.CreateGraphicsPipeline("terrainCull", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
 }
 
 void Terrain::CreateComputePipelines()
@@ -185,7 +186,7 @@ void Terrain::CreateGraphicsDescriptor()
 	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
 }
 
-void Terrain::CreateShadowDescriptor()
+void Terrain::CreateCullDescriptor()
 {
 	std::vector<DescriptorConfiguration> descriptorConfig(1);
 
@@ -209,7 +210,7 @@ void Terrain::CreateShadowDescriptor()
 		}
 	}
 
-	shadowDescriptor.Create(descriptorConfig, shadowPipeline.objectDescriptorSetLayout);
+	cullDescriptor.Create(descriptorConfig, cullPipeline.objectDescriptorSetLayout);
 }
 
 void Terrain::CreateComputeDescriptors()
@@ -310,7 +311,7 @@ void Terrain::DestroyObjects()
 void Terrain::DestroyPipelines()
 {
 	graphicsPipeline.Destroy();
-	//shadowPipeline.Destroy();
+	cullPipeline.Destroy();
 	heightMapComputePipeline.Destroy();
 	heightMapArrayComputePipeline.Destroy();
 }
@@ -318,7 +319,7 @@ void Terrain::DestroyPipelines()
 void Terrain::DestroyDescriptors()
 {
 	graphicsDescriptor.Destroy();
-	//shadowDescriptor.Destroy();
+	cullDescriptor.Destroy();
 	heightMapComputeDescriptor.Destroy();
 	heightMapArrayComputeDescriptor.Destroy();
 }
@@ -382,12 +383,20 @@ void Terrain::PostFrame()
 	}
 }
 
-void Terrain::RecordCommands(VkCommandBuffer commandBuffer)
+void Terrain::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 {
 	graphicsPipeline.BindGraphics(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
 	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
 	RenderTerrain(commandBuffer);
+}
+
+void Terrain::RecordCullCommands(VkCommandBuffer commandBuffer)
+{
+	cullPipeline.BindGraphics(commandBuffer);
+	Manager::globalDescriptor.Bind(commandBuffer, cullPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+	cullDescriptor.Bind(commandBuffer, cullPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+	RenderCulling(commandBuffer);
 }
 
 void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
@@ -451,12 +460,68 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod1Mesh.indices.size()), 1, 0, 0, 0);
 	}
+}
 
-	//if (Time::newSecond)
-	//{
-	//	std::cout << "Lod 0 chunks rendered: " << lod0Indices.size() << std::endl;
-	//	std::cout << "Lod 1 chunks rendered: " << lod1Indices.size() << std::endl << std::endl;
-	//}
+void Terrain::RenderCulling(VkCommandBuffer commandBuffer)
+{
+	int chunksRendered = 0;
+
+	uint32_t chunkIndex = 0;
+
+	std::vector<int> lod0Indices;
+	//std::vector<int> lod1Indices;
+
+	float xs = Manager::camera.Position().x / float(terrainChunkSize);
+	float zs = Manager::camera.Position().z / float(terrainChunkSize);
+
+	for (int xi = -terrainChunkRadius; xi <= terrainChunkRadius; xi++)
+	{
+		for (int zi = -terrainChunkRadius; zi <= terrainChunkRadius; zi++)
+		{
+			int xIndex = xi + terrainChunkRadius;
+			int zIndex = zi + terrainChunkRadius;
+			int index = xIndex * terrainChunkLength + zIndex;
+			float xf = float(xi);
+			float zf = float(zi);
+
+			float distance = glm::clamp(glm::distance(glm::vec2(xf, zf), glm::vec2(xs, zs)), 0.0f, float(terrainChunkLength));
+			// bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.View());
+			bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.View());
+
+			if ((inView && distance < 1.0) || distance <= 0.75)
+			{
+				lod0Indices.push_back(index);
+				terrainChunks[index].ModifyPosition().y = 0;
+				terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
+			}
+			/*else if (inView)
+			{
+				float factor = pow(1.0 - (distance - 1.0) / float(terrainChunkLength - 1), 0.5);
+
+				lod1Indices.push_back(index);
+				terrainChunks[index].ModifyPosition().y = factor * -10.0;
+				terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
+			}*/
+		}
+	}
+
+	lod0Mesh.Bind(commandBuffer);
+
+	for (int index : lod0Indices)
+	{
+		chunkIndex = index;
+		vkCmdPushConstants(commandBuffer, cullPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod0Mesh.indices.size()), 1, 0, 0, 0);
+	}
+
+	/*lod1Mesh.Bind(commandBuffer);
+
+	for (int index : lod1Indices)
+	{
+		chunkIndex = index;
+		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod1Mesh.indices.size()), 1, 0, 0, 0);
+	}*/
 }
 
 void Terrain::ComputeHeightMap(uint32_t lod)
@@ -617,7 +682,7 @@ bool Terrain::HeightMapsGenerated()
 }
 
 Pipeline Terrain::graphicsPipeline{Manager::currentDevice, Manager::camera};
-Pipeline Terrain::shadowPipeline{Manager::currentDevice, Manager::camera};
+Pipeline Terrain::cullPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Terrain::heightMapComputePipeline{Manager::currentDevice, Manager::camera};
 Pipeline Terrain::heightMapArrayComputePipeline{Manager::currentDevice, Manager::camera};
 
@@ -636,7 +701,7 @@ HeightMapArrayComputeVariables Terrain::heightMapArrayComputeVariables;
 Buffer Terrain::heightMapArrayComputeVariablesBuffer;
 
 Descriptor Terrain::graphicsDescriptor{Manager::currentDevice};
-Descriptor Terrain::shadowDescriptor{Manager::currentDevice};
+Descriptor Terrain::cullDescriptor{Manager::currentDevice};
 Descriptor Terrain::heightMapComputeDescriptor{Manager::currentDevice};
 Descriptor Terrain::heightMapArrayComputeDescriptor{Manager::currentDevice};
 

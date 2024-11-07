@@ -55,6 +55,7 @@ struct PipelineConfiguration
 	bool foliage = false;
 	bool cullFront = false;
 	bool shadow = false;
+	bool cull = false;
 };
 
 struct DescriptorLayoutConfiguration

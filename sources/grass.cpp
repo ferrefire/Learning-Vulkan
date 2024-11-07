@@ -4,6 +4,8 @@
 #include "shape.hpp"
 #include "time.hpp"
 
+#include <iostream>
+
 void Grass::Create()
 {
 	CreateMeshes();
@@ -514,6 +516,9 @@ void Grass::ComputeGrass()
 
 	grassRenderCounts[Manager::currentFrame] = *(uint32_t *)countBuffers[Manager::currentFrame].mappedBuffer;
 	grassLodRenderCounts[Manager::currentFrame] = *(uint32_t *)lodCountBuffers[Manager::currentFrame].mappedBuffer;
+
+	//if (Time::newSecond) std::cout << "Total count: " << grassRenderCounts[Manager::currentFrame] + 
+	//	grassLodRenderCounts[Manager::currentFrame] << std::endl;
 }
 
 void Grass::ComputeClumping()

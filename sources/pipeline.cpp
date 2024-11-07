@@ -6,6 +6,7 @@
 #include "shape.hpp"
 #include "texture.hpp"
 #include "shadow.hpp"
+#include "culling.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -88,8 +89,9 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 {
     if (graphicsPipeline) throw std::runtime_error("cannot create graphics pipeline because it already exists");
 
-	if (!pipelineConfig.shadow) pipelineConfig.renderPass = Manager::currentWindow.renderPass;
-	else if (pipelineConfig.shadow) pipelineConfig.renderPass = Shadow::shadowPass;
+	if (pipelineConfig.shadow) pipelineConfig.renderPass = Shadow::shadowPass;
+	else if (pipelineConfig.cull) pipelineConfig.renderPass = Culling::cullPass;
+	else pipelineConfig.renderPass = Manager::currentWindow.renderPass;
 
 	//CreateGlobalDescriptorSetLayout(descriptorsInfo.globalDescriptorLayoutConfig);
 	globalDescriptorSetLayout = Manager::globalDescriptorSetLayout;
@@ -136,7 +138,7 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	tesselationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
 	tesselationInfo.patchControlPoints = 3;
 
-	int stageCount = 1 + (pipelineConfig.tesselation ? 2 : 0) + (pipelineConfig.shadow ? 0 : 1);
+	int stageCount = 1 + (pipelineConfig.tesselation ? 2 : 0) + ((pipelineConfig.shadow || pipelineConfig.cull) ? 0 : 1);
 	int currentStage = 0;
 	std::vector<VkPipelineShaderStageCreateInfo> shaderStages(stageCount);
 
@@ -166,7 +168,7 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 		shaderStages[currentStage++] = tesselationEvaluationShaderStageInfo;
 	}
 
-	if (!pipelineConfig.shadow)
+	if (!pipelineConfig.shadow && !pipelineConfig.cull)
 	{
 		fragmentCode = Utilities::FileToBinary((currentPath + "/shaders/" + shader + ".frag.spv").c_str());
 
@@ -281,7 +283,7 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 		vkDestroyShaderModule(device.logicalDevice, tesselationControlShaderModule, nullptr);
 		vkDestroyShaderModule(device.logicalDevice, tesselationEvaluationShaderModule, nullptr);
 	}
-	if (!pipelineConfig.shadow)
+	if (!pipelineConfig.shadow && !pipelineConfig.cull)
 	{
 		vkDestroyShaderModule(device.logicalDevice, fragmentShaderModule, nullptr);
 	}

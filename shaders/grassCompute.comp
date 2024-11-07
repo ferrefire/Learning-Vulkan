@@ -140,6 +140,10 @@ void main()
 
 	if (lod == 0 && InView(position + vec3(0, 0.5, 0), 0) == 0 && InView(position, 0) == 0) return ;
 
+	//vec4 clipPosition = variables.projection * variables.view * vec4(position + vec3(0, 1, 0), 1.0);
+	vec3 clipPosition = WorldToClip(position);
+	if (Occluded(clipPosition) == 1) return ;
+
 	vec3 terrainNormal = SampleNormalDynamic(position.xz, 0.5);
 
 	//float steepness = GetSteepness(terrainNormal);
