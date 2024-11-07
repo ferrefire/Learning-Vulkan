@@ -76,10 +76,12 @@ class Grass
 		static Mesh grassLodMesh;
 
 		static Pipeline graphicsPipeline;
+		static Pipeline shadowPipeline;
 		static Pipeline computePipeline;
 		static Pipeline clumpingComputePipeline;
 
 		static Descriptor graphicsDescriptor;
+		static Descriptor shadowDescriptor;
 		static Descriptor computeDescriptor;
 		static Descriptor clumpingComputeDescriptor;
 
@@ -96,10 +98,12 @@ class Grass
 		static void Create();
 		static void CreateMeshes();
 		static void CreateGraphicsPipeline();
+		static void CreateShadowPipeline();
 		static void CreateComputePipelines();
 		static void CreateTextures();
 		static void CreateBuffers();
 		static void CreateGraphicsDescriptor();
+		static void CreateShadowDescriptor();
 		static void CreateComputeDescriptors();
 
 		static void Destroy();
@@ -112,8 +116,10 @@ class Grass
 		static void Start();
 		static void Frame();
 		static void PostFrame();
-		static void RecordCommands(VkCommandBuffer commandBuffer);
+		static void RecordGraphicsCommands(VkCommandBuffer commandBuffer);
+		static void RecordShadowCommands(VkCommandBuffer commandBuffer);
 		static void RenderGrass(VkCommandBuffer commandBuffer);
+		static void RenderShadows(VkCommandBuffer commandBuffer);
 		static void ComputeGrass();
 		static void ComputeClumping();
 };

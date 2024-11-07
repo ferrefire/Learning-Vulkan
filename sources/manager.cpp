@@ -4,6 +4,7 @@
 #include "terrain.hpp"
 #include "grass.hpp"
 #include "time.hpp"
+#include "shadow.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -25,7 +26,7 @@ void Manager::Setup()
 
 void Manager::Create()
 {
-	CreateOcclusionTexture();
+	//CreateOcclusionTexture();
 	CreateShaderVariableBuffers();
 	CreateDescriptorSetLayout();
 	CreateDescriptor();
@@ -35,7 +36,7 @@ void Manager::Clean()
 {
 	DestroyPipelines();
 	DestroyTextures();
-	DestroyOcclusionTexture();
+	//DestroyOcclusionTexture();
 	DestroyMeshes();
 	DestroyObjects();
 	DestroyShaderVariableBuffers();
@@ -99,7 +100,7 @@ void Manager::CreateShaderVariableBuffers()
 
 void Manager::CreateDescriptorSetLayout()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(4);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(5);
 	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
 	descriptorLayoutConfig[0].stages = ALL_STAGE;
 	descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
@@ -108,8 +109,8 @@ void Manager::CreateDescriptorSetLayout()
 	descriptorLayoutConfig[2].stages = ALL_STAGE;
 	descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[3].stages = ALL_STAGE;
-	//descriptorLayoutConfig[4].type = IMAGE_SAMPLER;
-	//descriptorLayoutConfig[4].stages = ALL_STAGE;
+	descriptorLayoutConfig[4].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[4].stages = FRAGMENT_STAGE;
 
 	Pipeline::CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
 }
@@ -127,7 +128,7 @@ void Manager::CreateDescriptor()
 	//descriptorLayoutConfig[3].stages = ALL_STAGE;
 	//Pipeline::CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
 
-	std::vector<DescriptorConfiguration> descriptorConfig(4);
+	std::vector<DescriptorConfiguration> descriptorConfig(5);
 
 	descriptorConfig[0].type = UNIFORM_BUFFER;
 	descriptorConfig[0].stages = ALL_STAGE;
@@ -159,12 +160,11 @@ void Manager::CreateDescriptor()
 	descriptorConfig[3].imageInfo.imageView = Terrain::heightMapLod1Texture.imageView;
 	descriptorConfig[3].imageInfo.sampler = Terrain::heightMapLod1Texture.sampler;
 
-	//descriptorConfig[4].type = IMAGE_SAMPLER;
-	//descriptorConfig[4].stages = ALL_STAGE;
-	////descriptorConfig[4].imageInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-	//descriptorConfig[4].imageInfo.imageLayout = LAYOUT_GENERAL;
-	//descriptorConfig[4].imageInfo.imageView = occlusionTexture.imageView;
-	//descriptorConfig[4].imageInfo.sampler = occlusionTexture.sampler;
+	descriptorConfig[4].type = IMAGE_SAMPLER;
+	descriptorConfig[4].stages = FRAGMENT_STAGE;
+	descriptorConfig[4].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	descriptorConfig[4].imageInfo.imageView = Shadow::shadowTexture.imageView;
+	descriptorConfig[4].imageInfo.sampler = Shadow::shadowTexture.sampler;
 
 	globalDescriptor.Create(descriptorConfig, globalDescriptorSetLayout);
 }
@@ -234,8 +234,13 @@ void Manager::PostFrame()
 
 void Manager::UpdateShaderVariables()
 {
+	shaderVariables.lightDirection = glm::normalize(glm::vec3(0.25, 0.5, 0.25));
+	//shaderVariables.lightDirection = glm::normalize(glm::vec3(1, 1, 1));
+
 	shaderVariables.view = camera.View();
+	shaderVariables.shadowView = Shadow::GetShadowView();
 	shaderVariables.projection = camera.Projection();
+	shaderVariables.shadowProjection = Shadow::GetShadowProjection();
 
 	shaderVariables.viewPosition = camera.Position();
 	shaderVariables.viewDirection = camera.Front();
@@ -243,8 +248,6 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.viewUp = camera.Up();
 
 	shaderVariables.resolution = glm::vec4(window.width, window.height, 1.0 / window.width, 1.0 / window.height);
-
-	shaderVariables.lightDirection = glm::normalize(glm::vec3(0.25, 0.5, 0.25));
 
 	shaderVariables.terrainOffset = Terrain::terrainOffset;
 	shaderVariables.terrainLod0Offset = Terrain::terrainLod0Offset;

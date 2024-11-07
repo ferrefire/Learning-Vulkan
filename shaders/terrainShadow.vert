@@ -27,5 +27,5 @@ void main()
 	vec3 worldPosition = ObjectToWorld(inPosition, objectDatas[pc.chunkIndex].model);
 	worldPosition.y += SampleDynamic(worldPosition.xz) * 5000;
 
-	gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
+	gl_Position = variables.shadowProjection * variables.shadowView * vec4(worldPosition, 1.0);
 }

@@ -4,7 +4,9 @@
 layout(set = 0, binding = 0) uniform Variables 
 {
 	mat4 view;
+	mat4 shadowView;
 	mat4 projection;
+	mat4 shadowProjection;
     vec3 viewPosition;
     vec3 viewDirection;
     vec3 viewRight;

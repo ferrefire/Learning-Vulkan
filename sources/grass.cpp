@@ -8,10 +8,12 @@ void Grass::Create()
 {
 	CreateMeshes();
 	CreateGraphicsPipeline();
+	CreateShadowPipeline();
 	CreateComputePipelines();
 	CreateTextures();
 	CreateBuffers();
 	CreateGraphicsDescriptor();
+	CreateShadowDescriptor();
 	CreateComputeDescriptors();
 }
 
@@ -59,6 +61,28 @@ void Grass::CreateGraphicsPipeline()
 	VertexInfo vertexInfo = grassMesh.MeshVertexInfo();
 
 	graphicsPipeline.CreateGraphicsPipeline("grass", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
+}
+
+void Grass::CreateShadowPipeline()
+{
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(3);
+	descriptorLayoutConfig[0].type = STORAGE_BUFFER;
+	descriptorLayoutConfig[0].stages = VERTEX_STAGE;
+	descriptorLayoutConfig[1].type = STORAGE_BUFFER;
+	descriptorLayoutConfig[1].stages = VERTEX_STAGE;
+	descriptorLayoutConfig[2].type = UNIFORM_BUFFER;
+	descriptorLayoutConfig[2].stages = VERTEX_STAGE;
+
+	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
+	pipelineConfiguration.foliage = true;
+	pipelineConfiguration.shadow = true;
+	pipelineConfiguration.pushConstantCount = 1;
+	pipelineConfiguration.pushConstantStage = VERTEX_STAGE;
+	pipelineConfiguration.pushConstantSize = sizeof(uint32_t);
+
+	VertexInfo vertexInfo = grassMesh.MeshVertexInfo();
+
+	shadowPipeline.CreateGraphicsPipeline("grassShadow", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
 }
 
 void Grass::CreateComputePipelines()
@@ -202,6 +226,49 @@ void Grass::CreateGraphicsDescriptor()
 	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
 }
 
+void Grass::CreateShadowDescriptor()
+{
+	std::vector<DescriptorConfiguration> descriptorConfig(3);
+
+	descriptorConfig[0].type = STORAGE_BUFFER;
+	descriptorConfig[0].stages = VERTEX_STAGE;
+	descriptorConfig[0].buffersInfo.resize(dataBuffers.size());
+	int index = 0;
+	for (Buffer &buffer : dataBuffers)
+	{
+		descriptorConfig[0].buffersInfo[index].buffer = buffer.buffer;
+		descriptorConfig[0].buffersInfo[index].range = sizeof(GrassData) * grassCount;
+		descriptorConfig[0].buffersInfo[index].offset = 0;
+		index++;
+	}
+
+	descriptorConfig[1].type = STORAGE_BUFFER;
+	descriptorConfig[1].stages = VERTEX_STAGE;
+	descriptorConfig[1].buffersInfo.resize(lodDataBuffers.size());
+	index = 0;
+	for (Buffer &buffer : lodDataBuffers)
+	{
+		descriptorConfig[1].buffersInfo[index].buffer = buffer.buffer;
+		descriptorConfig[1].buffersInfo[index].range = sizeof(GrassData) * grassLodCount;
+		descriptorConfig[1].buffersInfo[index].offset = 0;
+		index++;
+	}
+
+	descriptorConfig[2].type = UNIFORM_BUFFER;
+	descriptorConfig[2].stages = VERTEX_STAGE;
+	descriptorConfig[2].buffersInfo.resize(variableBuffers.size());
+	index = 0;
+	for (Buffer &buffer : variableBuffers)
+	{
+		descriptorConfig[2].buffersInfo[index].buffer = buffer.buffer;
+		descriptorConfig[2].buffersInfo[index].range = sizeof(GrassVariables);
+		descriptorConfig[2].buffersInfo[index].offset = 0;
+		index++;
+	}
+
+	shadowDescriptor.Create(descriptorConfig, shadowPipeline.objectDescriptorSetLayout);
+}
+
 void Grass::CreateComputeDescriptors()
 {
 	std::vector<DescriptorConfiguration> descriptorConfig(6);
@@ -303,6 +370,7 @@ void Grass::DestroyMeshes()
 void Grass::DestroyPipelines()
 {
 	graphicsPipeline.Destroy();
+	shadowPipeline.Destroy();
 	computePipeline.Destroy();
 	clumpingComputePipeline.Destroy();
 }
@@ -333,6 +401,7 @@ void Grass::DestroyBuffers()
 void Grass::DestroyDescriptors()
 {
 	graphicsDescriptor.Destroy();
+	shadowDescriptor.Destroy();
 	computeDescriptor.Destroy();
 	clumpingComputeDescriptor.Destroy();
 }
@@ -374,24 +443,30 @@ void Grass::PostFrame()
 	//if (Time::newFrameTick) ComputeGrass();
 }
 
-void Grass::RecordCommands(VkCommandBuffer commandBuffer)
+void Grass::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 {
 	graphicsPipeline.BindGraphics(commandBuffer);
 
 	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
-	//Manager::UpdateShaderVariables();
 	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
-	//memcpy(variableBuffers[Manager::currentFrame].mappedBuffer, &grassVariables, sizeof(grassVariables));
 
 	RenderGrass(commandBuffer);
+}
+
+void Grass::RecordShadowCommands(VkCommandBuffer commandBuffer)
+{
+	shadowPipeline.BindGraphics(commandBuffer);
+
+	Manager::globalDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+	shadowDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+
+	RenderShadows(commandBuffer);
 }
 
 void Grass::RenderGrass(VkCommandBuffer commandBuffer)
 {
 	uint32_t lod0 = 0;
 	uint32_t lod1 = 1;
-	//int renderCount = *(int *)countBuffers[Manager::currentFrame].mappedBuffer;
-	//int lodRenderCount = *(int *)lodCountBuffers[Manager::currentFrame].mappedBuffer;
 
 	grassMesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
@@ -399,6 +474,20 @@ void Grass::RenderGrass(VkCommandBuffer commandBuffer)
 
 	grassLodMesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassLodRenderCounts[Manager::currentFrame], 0, 0, 0);
+}
+
+void Grass::RenderShadows(VkCommandBuffer commandBuffer)
+{
+	uint32_t lod0 = 0;
+	uint32_t lod1 = 1;
+
+	grassMesh.Bind(commandBuffer);
+	vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), grassRenderCounts[Manager::currentFrame], 0, 0, 0);
+
+	grassLodMesh.Bind(commandBuffer);
+	vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassLodRenderCounts[Manager::currentFrame], 0, 0, 0);
 }
 
@@ -454,10 +543,12 @@ Mesh Grass::grassMesh;
 Mesh Grass::grassLodMesh;
 
 Pipeline Grass::graphicsPipeline{Manager::currentDevice, Manager::camera};
+Pipeline Grass::shadowPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Grass::computePipeline{Manager::currentDevice, Manager::camera};
 Pipeline Grass::clumpingComputePipeline{Manager::currentDevice, Manager::camera};
 
 Descriptor Grass::graphicsDescriptor{Manager::currentDevice};
+Descriptor Grass::shadowDescriptor{Manager::currentDevice};
 Descriptor Grass::computeDescriptor{Manager::currentDevice};
 Descriptor Grass::clumpingComputeDescriptor{Manager::currentDevice};
 

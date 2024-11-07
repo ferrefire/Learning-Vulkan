@@ -21,6 +21,8 @@ void Shadow::CreateShadowResources()
 	// imageConfig.sampleCount = device.MaxSampleCount();
 
 	SamplerConfiguration samplerConfig;
+	samplerConfig.repeatMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+	samplerConfig.borderColor = VK_BORDER_COLOR_INT_OPAQUE_WHITE;
 
 	shadowTexture.CreateImage(imageConfig, samplerConfig);
 
@@ -96,6 +98,45 @@ void Shadow::DestroyShadowPass()
 	shadowPass = nullptr;
 }
 
+glm::mat4 Shadow::GetShadowView()
+{
+	glm::vec3 direction = Manager::shaderVariables.lightDirection;
+	glm::vec3 cameraFront = Manager::camera.Front();
+	
+	cameraFront = (cameraFront + 1.0f) * 0.5f;
+	cameraFront.y = 0;
+	//glm::vec3 focus = (Manager::camera.Position() + Manager::camera.Front() * 10.0f);
+	glm::vec3 focus = Manager::camera.Position();
+	//glm::vec3 position = focus + glm::vec3(0, shadowDistance * 2, 0) + glm::vec3(cameraFront.x, 0, cameraFront.z) * shadowDistance;
+	glm::vec3 position = focus + glm::vec3(0, shadowDistance * 2, 0);
+	position += cameraFront * shadowDistance * 2.0f;
+
+	glm::vec3 front = glm::normalize(-direction);
+	glm::vec3 side = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
+	glm::vec3 up = glm::normalize(glm::cross(side, front));
+	shadowView = glm::lookAt(position, position + front, up);
+
+	//shadowView = glm::lookAt(position, Manager::camera.Position(), glm::vec3(0, 1, 0));
+
+	return (shadowView);
+}
+
+glm::mat4 Shadow::GetShadowProjection()
+{
+	//shadowProjection = glm::perspective(glm::radians(45.0f), 1024.0f / 1024.0f, 0.1f, 25000.0f);
+
+	shadowProjection = glm::ortho(-shadowDistance, shadowDistance, -shadowDistance, shadowDistance, 1.0f, 50.0f);
+
+	shadowProjection[1][1] *= -1;
+
+	return (shadowProjection);
+}
+
 VkRenderPass Shadow::shadowPass = nullptr;
 VkFramebuffer Shadow::shadowFrameBuffer = nullptr;
 Texture Shadow::shadowTexture;
+
+glm::mat4 Shadow::shadowView = glm::mat4(1);
+glm::mat4 Shadow::shadowProjection = glm::mat4(1);
+
+float Shadow::shadowDistance = 5;

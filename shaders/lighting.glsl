@@ -1,8 +1,12 @@
 #ifndef LIGHTING_INCLUDED
 #define LIGHTING_INCLUDED
 
+layout(set = 0, binding = 4) uniform sampler2D shadowSampler;
+
 const vec3 lightColor = vec3(1);
 //const vec3 lightDirection = vec3(0.25, 0.5, 0.25);
+
+#include "depth.glsl"
 
 vec3 DiffuseLighting(vec3 normal, vec3 color)
 {
@@ -42,6 +46,21 @@ vec3 NormalToTangent(vec3 normal)
 float LightDot(vec3 normal)
 {
 	return max(dot(normal, variables.lightDirection), 0.0);
+}
+
+float GetShadow(vec4 shadowSpace)
+{
+	vec3 projectionCoordinates = shadowSpace.xyz / shadowSpace.w;
+	projectionCoordinates = projectionCoordinates * 0.5 + 0.5;
+
+	if (projectionCoordinates.z > 1.0) return (1.0);
+
+	float closestDepth = textureLod(shadowSampler, projectionCoordinates.xy, 0).r;
+	float currentDepth = projectionCoordinates.z;
+
+	float shadow = currentDepth > closestDepth  ? 0.0 : 1.0;
+
+	return (shadow);
 }
 
 #endif

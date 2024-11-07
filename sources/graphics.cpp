@@ -112,7 +112,7 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 	Terrain::RecordCommands(commandBuffer, false);
-	Grass::RecordCommands(commandBuffer);
+	Grass::RecordGraphicsCommands(commandBuffer);
 
 	if (Manager::settings.screenQuad)
 	{
@@ -159,8 +159,8 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	scissor.extent.height = 1024;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	Terrain::RecordCommands(commandBuffer, true);
-	//Grass::RecordCommands(commandBuffer);
+	//Terrain::RecordCommands(commandBuffer, true);
+	Grass::RecordShadowCommands(commandBuffer);
 
 	vkCmdEndRenderPass(commandBuffer);
 }
