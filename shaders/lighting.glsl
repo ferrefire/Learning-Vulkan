@@ -53,14 +53,33 @@ float GetShadow(vec4 shadowSpace)
 	vec3 projectionCoordinates = shadowSpace.xyz / shadowSpace.w;
 	projectionCoordinates = projectionCoordinates * 0.5 + 0.5;
 
-	if (projectionCoordinates.z > 1.0) return (1.0);
+	if (projectionCoordinates.z > 1.0 || projectionCoordinates.x > 1.0 || projectionCoordinates.x < 0.0 || 
+		projectionCoordinates.y > 1.0 || projectionCoordinates.y < 0.0) return (1.0);
 
 	float closestDepth = textureLod(shadowSampler, projectionCoordinates.xy, 0).r;
 	float currentDepth = projectionCoordinates.z;
 
-	float shadow = currentDepth > closestDepth  ? 0.0 : 1.0;
+	float diff = currentDepth - closestDepth;
 
-	return (shadow);
+	if (diff > 0.0)
+	{
+		float centerX = (projectionCoordinates.x - 0.5) * 2.0;
+		centerX = abs(centerX);
+		float centerY = (projectionCoordinates.y - 0.5) * 2.0;
+		centerY = abs(centerY);
+		float center = max(centerX, centerY);
+		center = pow(center, 1.5);
+
+		float blend = max(closestDepth, center);
+
+		float shadow = mix(0.4, 1.0, pow(blend, 4));
+
+		return (shadow);
+	}
+	else
+	{
+		return (1.0);
+	}
 }
 
 #endif

@@ -132,11 +132,11 @@ class Terrain
 		static void Start();
 		static void Frame();
 		static void PostFrame();
-		static void RecordCommands(VkCommandBuffer commandBuffer, bool shadows);
+		static void RecordCommands(VkCommandBuffer commandBuffer);
 		static void ComputeHeightMap(uint32_t lod);
 		static void ComputeHeightMapArray(uint32_t index);
 		static void CheckTerrainOffset();
-		static void RenderTerrain(VkCommandBuffer commandBuffer, Pipeline &pipeline, bool shadows);
+		static void RenderTerrain(VkCommandBuffer commandBuffer);
 		static bool InView(const glm::vec3 &position, float tolerance, const glm::mat4 &projection, const glm::mat4 &view);
 		static bool ChunkInView(glm::vec3 position, float tolerance, glm::mat4 projection, glm::mat4 view, bool main = true);
 		static bool HeightMapsGenerated();

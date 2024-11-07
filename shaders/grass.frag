@@ -7,6 +7,7 @@ layout(location = 1) in vec3 objectNormal;
 layout(location = 2) in vec3 terrainNormal;
 layout(location = 3) in vec3 grassColor;
 layout(location = 4) in vec2 uv;
+//layout(location = 5) in vec4 shadowPosition;
 
 layout(location = 0) out vec4 outColor;
 
@@ -18,7 +19,17 @@ void main()
 	vec3 normal = normalize(objectNormal);
 	vec3 terrainNormal = normalize(terrainNormal);
 	//vec3 diffuseNormal = NormalPower(terrainNormal, 0.5);
-	if (!gl_FrontFacing) normal *= -1;
+	//float shadow = GetShadow(shadowPosition);
+	//float shadow = 1.0;
+	if (!gl_FrontFacing)
+	{
+		normal *= -1;
+		//shadow = GetShadow(shadowPosition);
+	}
+	//else
+	//{
+	//	shadow = GetShadow(shadowPosition);
+	//}
 
 	vec3 bladeColor = mix(grassColor.xyz * 0.5, grassColor.xyz, uv.y);
 
@@ -28,6 +39,7 @@ void main()
 	vec3 bladeSpecular = SpecularLighting(normal, viewDirection, 16);
 	vec3 terrainSpecular = SpecularLighting(terrainNormal, viewDirection, 32);
 	vec3 combinedColor = (diffuse * bladeColor) + (bladeSpecular * terrainSpecular);
+	//combinedColor *= shadow;
 
 	outColor = vec4(combinedColor, 1.0);
 }

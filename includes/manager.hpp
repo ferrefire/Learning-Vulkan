@@ -34,7 +34,7 @@ struct Settings
 	const std::vector<const char*> validationLayers = {	"VK_LAYER_KHRONOS_validation" };
 	bool validationLayersActive = true;
 	bool uncappedFPS = false;
-	bool screenQuad = true;
+	bool screenQuad = false;
 };
 
 struct ShaderVariables

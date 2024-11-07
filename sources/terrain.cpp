@@ -11,13 +11,13 @@ void Terrain::Create()
 {
     CreateMeshes();
 	CreateGraphicsPipeline();
-	CreateShadowPipeline();
+	//CreateShadowPipeline();
 	CreateComputePipelines();
 	CreateTextures();
 	CreateObjects();
 	CreateBuffers();
 	CreateGraphicsDescriptor();
-	CreateShadowDescriptor();
+	//CreateShadowDescriptor();
 	CreateComputeDescriptors();
 }
 
@@ -310,7 +310,7 @@ void Terrain::DestroyObjects()
 void Terrain::DestroyPipelines()
 {
 	graphicsPipeline.Destroy();
-	shadowPipeline.Destroy();
+	//shadowPipeline.Destroy();
 	heightMapComputePipeline.Destroy();
 	heightMapArrayComputePipeline.Destroy();
 }
@@ -318,7 +318,7 @@ void Terrain::DestroyPipelines()
 void Terrain::DestroyDescriptors()
 {
 	graphicsDescriptor.Destroy();
-	shadowDescriptor.Destroy();
+	//shadowDescriptor.Destroy();
 	heightMapComputeDescriptor.Destroy();
 	heightMapArrayComputeDescriptor.Destroy();
 }
@@ -382,25 +382,15 @@ void Terrain::PostFrame()
 	}
 }
 
-void Terrain::RecordCommands(VkCommandBuffer commandBuffer, bool shadows)
+void Terrain::RecordCommands(VkCommandBuffer commandBuffer)
 {
-    if (!shadows)
-	{
-		graphicsPipeline.BindGraphics(commandBuffer);
-		Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
-		graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
-		RenderTerrain(commandBuffer, graphicsPipeline, shadows);
-	}
-	else
-	{
-		shadowPipeline.BindGraphics(commandBuffer);
-		Manager::globalDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
-		shadowDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
-		RenderTerrain(commandBuffer, shadowPipeline, shadows);
-	}
+	graphicsPipeline.BindGraphics(commandBuffer);
+	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+	RenderTerrain(commandBuffer);
 }
 
-void Terrain::RenderTerrain(VkCommandBuffer commandBuffer, Pipeline &pipeline, bool shadows)
+void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 {
 	int chunksRendered = 0;
 
@@ -424,9 +414,7 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer, Pipeline &pipeline, b
 
 			float distance = glm::clamp(glm::distance(glm::vec2(xf, zf), glm::vec2(xs, zs)), 0.0f, float(terrainChunkLength));
 			//bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.View());
-			bool inView = true;
-			if (!shadows)
-				inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.View());
+			bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.View());
 
 			if ((inView && distance < 1.0) || distance <= 0.75)
 			{
@@ -434,7 +422,7 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer, Pipeline &pipeline, b
 				terrainChunks[index].ModifyPosition().y = 0;
 				terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
 			}
-			else if (inView && !shadows)
+			else if (inView)
 			{
 				float factor = pow(1.0 - (distance - 1.0) / float(terrainChunkLength - 1), 0.5);
 
@@ -450,22 +438,18 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer, Pipeline &pipeline, b
 	for (int index : lod0Indices)
 	{
 		chunkIndex = index;
-		vkCmdPushConstants(commandBuffer, pipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | 
+		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | 
 			TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod0Mesh.indices.size()), 1, 0, 0, 0);
 	}
 
-	if (!shadows)
-	{
-		lod1Mesh.Bind(commandBuffer);
+	lod1Mesh.Bind(commandBuffer);
 
-		for (int index : lod1Indices)
-		{
-			chunkIndex = index;
-			vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | 
-				TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
-			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod1Mesh.indices.size()), 1, 0, 0, 0);
-		}
+	for (int index : lod1Indices)
+	{
+		chunkIndex = index;
+		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod1Mesh.indices.size()), 1, 0, 0, 0);
 	}
 
 	//if (Time::newSecond)

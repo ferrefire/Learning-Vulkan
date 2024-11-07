@@ -75,6 +75,7 @@ void Grass::CreateShadowPipeline()
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
 	pipelineConfiguration.foliage = true;
+	//pipelineConfiguration.cullFront = true;
 	pipelineConfiguration.shadow = true;
 	pipelineConfiguration.pushConstantCount = 1;
 	pipelineConfiguration.pushConstantStage = VERTEX_STAGE;
@@ -486,9 +487,9 @@ void Grass::RenderShadows(VkCommandBuffer commandBuffer)
 	vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), grassRenderCounts[Manager::currentFrame], 0, 0, 0);
 
-	grassLodMesh.Bind(commandBuffer);
-	vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassLodRenderCounts[Manager::currentFrame], 0, 0, 0);
+	//grassLodMesh.Bind(commandBuffer);
+	//vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
+	//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassLodRenderCounts[Manager::currentFrame], 0, 0, 0);
 }
 
 void Grass::ComputeGrass()

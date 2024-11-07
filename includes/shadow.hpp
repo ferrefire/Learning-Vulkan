@@ -25,6 +25,7 @@ class Shadow
 		static glm::mat4 shadowView;
 		static glm::mat4 shadowProjection;
 
+		static int shadowResolution;
 		static float shadowDistance;
 
 		static void CreateShadowResources();

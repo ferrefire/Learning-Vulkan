@@ -111,7 +111,7 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	scissor.extent = window.swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	Terrain::RecordCommands(commandBuffer, false);
+	Terrain::RecordCommands(commandBuffer);
 	Grass::RecordGraphicsCommands(commandBuffer);
 
 	if (Manager::settings.screenQuad)
@@ -133,8 +133,8 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	renderPassInfo.renderPass = Shadow::shadowPass;
 	renderPassInfo.framebuffer = Shadow::shadowFrameBuffer;
 	renderPassInfo.renderArea.offset = {0, 0};
-	renderPassInfo.renderArea.extent.width = 1024;
-	renderPassInfo.renderArea.extent.height = 1024;
+	renderPassInfo.renderArea.extent.width = Shadow::shadowResolution;
+	renderPassInfo.renderArea.extent.height = Shadow::shadowResolution;
 
 	std::vector<VkClearValue> clearValues(1);
 	clearValues[0].depthStencil = {1.0f, 0};
@@ -147,16 +147,16 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	VkViewport viewport{};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
-	viewport.width = 1024;
-	viewport.height = 1024;
+	viewport.width = Shadow::shadowResolution;
+	viewport.height = Shadow::shadowResolution;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
 	VkRect2D scissor{};
 	scissor.offset = {0, 0};
-	scissor.extent.width = 1024;
-	scissor.extent.height = 1024;
+	scissor.extent.width = Shadow::shadowResolution;
+	scissor.extent.height = Shadow::shadowResolution;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 	//Terrain::RecordCommands(commandBuffer, true);

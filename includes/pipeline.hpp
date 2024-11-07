@@ -53,6 +53,7 @@ struct PipelineConfiguration
 	uint32_t pushConstantSize = 0;
 	VkShaderStageFlags pushConstantStage = ALL_STAGE;
 	bool foliage = false;
+	bool cullFront = false;
 	bool shadow = false;
 };
 
