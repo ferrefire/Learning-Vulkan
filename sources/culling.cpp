@@ -4,13 +4,23 @@
 
 #include <stdexcept>
 
+void Culling::Create()
+{
+	cullProjection = glm::perspective(glm::radians(Manager::camera.FOV), (float)cullResolutionWidth / 
+		(float)cullResolutionHeight, Manager::camera.near, Manager::camera.far);
+	cullProjection[1][1] *= -1;
+
+	CreateCullPass();
+	CreateCullResources();
+}
+
 void Culling::CreateCullResources()
 {
 	if (cullTexture.image != nullptr || cullTexture.imageMemory != nullptr || cullTexture.imageView != nullptr)
 		throw std::runtime_error("cannot create cull resources because they already exist");
 
-	cullResolutionWidth = Manager::currentWindow.width;
-	cullResolutionHeight = Manager::currentWindow.height;
+	//cullResolutionWidth = Manager::currentWindow.width;
+	//cullResolutionHeight = Manager::currentWindow.height;
 
 	ImageConfiguration imageConfig;
 	// imageConfig.width = swapChainExtent.width;
@@ -21,6 +31,7 @@ void Culling::CreateCullResources()
 	// imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 	imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	imageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
+	imageConfig.transitionLayout = LAYOUT_READ_ONLY;
 	// imageConfig.sampleCount = device.MaxSampleCount();
 
 	SamplerConfiguration samplerConfig;
@@ -29,6 +40,7 @@ void Culling::CreateCullResources()
 	samplerConfig.anisotrophic = VK_FALSE;
 
 	cullTexture.CreateImage(imageConfig, samplerConfig);
+	cullTexture.TransitionImageLayout(imageConfig);
 
 	VkFramebufferCreateInfo framebufferInfo{};
 	framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -47,8 +59,8 @@ void Culling::CreateCullResources()
 
 void Culling::CreateCullPass()
 {
-	cullResolutionWidth = Manager::currentWindow.width;
-	cullResolutionHeight = Manager::currentWindow.height;
+	//cullResolutionWidth = Manager::currentWindow.width;
+	//cullResolutionHeight = Manager::currentWindow.height;
 
 	VkAttachmentDescription depthAttachment{};
 	depthAttachment.format = Manager::currentDevice.FindDepthFormat();
@@ -86,6 +98,12 @@ void Culling::CreateCullPass()
 	}
 }
 
+void Culling::Destroy()
+{
+	DestroyCullPass();
+	DestroyCullResources();
+}
+
 void Culling::DestroyCullResources()
 {
 	if (cullFrameBuffer)
@@ -110,6 +128,8 @@ VkRenderPass Culling::cullPass = nullptr;
 VkFramebuffer Culling::cullFrameBuffer = nullptr;
 Texture Culling::cullTexture;
 
-int Culling::cullResolutionWidth = 0;
-int Culling::cullResolutionHeight = 0;
+int Culling::cullResolutionWidth = 960;
+int Culling::cullResolutionHeight = 540;
 float Culling::cullDistance = 20;
+
+glm::mat4 Culling::cullProjection = glm::mat4(1);

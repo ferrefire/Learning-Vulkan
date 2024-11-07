@@ -23,15 +23,17 @@ class Culling
 		static Texture cullTexture;
 
 		//static glm::mat4 cullView;
-		//static glm::mat4 cullProjection;
+		static glm::mat4 cullProjection;
 
 		static int cullResolutionWidth;
 		static int cullResolutionHeight;
 		static float cullDistance;
 
+		static void Create();
 		static void CreateCullResources();
 		static void CreateCullPass();
 
+		static void Destroy();
 		static void DestroyCullResources();
 		static void DestroyCullPass();
 };

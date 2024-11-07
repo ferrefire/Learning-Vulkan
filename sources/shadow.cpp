@@ -4,6 +4,13 @@
 
 #include <stdexcept>
 
+void Shadow::Create()
+{
+	GetShadowProjection();
+	CreateShadowPass();
+	CreateShadowResources();
+}
+
 void Shadow::CreateShadowResources()
 {
 	if (shadowTexture.image != nullptr || shadowTexture.imageMemory != nullptr || shadowTexture.imageView != nullptr)
@@ -78,6 +85,12 @@ void Shadow::CreateShadowPass()
 	{
 		throw std::runtime_error("failed to create shadow pass");
 	}
+}
+
+void Shadow::Destroy()
+{
+	DestroyShadowPass();
+	DestroyShadowResources();
 }
 
 void Shadow::DestroyShadowResources()

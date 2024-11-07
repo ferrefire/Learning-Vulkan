@@ -257,7 +257,8 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.view = camera.View();
 	shaderVariables.shadowView = Shadow::GetShadowView();
 	shaderVariables.projection = camera.Projection();
-	shaderVariables.shadowProjection = Shadow::GetShadowProjection();
+	shaderVariables.shadowProjection = Shadow::shadowProjection;
+	shaderVariables.cullProjection = Culling::cullProjection;
 
 	shaderVariables.viewPosition = camera.Position();
 	shaderVariables.viewDirection = camera.Front();

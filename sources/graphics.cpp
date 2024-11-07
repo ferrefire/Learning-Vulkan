@@ -376,15 +376,12 @@ void Graphics::Create()
 	device.Create(instance, window.surface);
 	window.CreateResources();
 
-	Culling::CreateCullPass();
-	Culling::CreateCullResources();
-
-	Shadow::CreateShadowPass();
-	Shadow::CreateShadowResources();
-
 	device.CreateCommandPools();
 	device.CreateCommandBuffers();
 	device.CreateSyncObjects();
+
+	Culling::Create();
+	Shadow::Create();
 
 	//Manager::Create();
 	Manager::CreateShaderVariableBuffers();
@@ -460,12 +457,9 @@ void Graphics::Destroy()
 
 	window.DestroyResources();
 
-	Culling::DestroyCullPass();
-	Culling::DestroyCullResources();
+	Culling::Destroy();
 
-	Shadow::DestroyShadowPass();
-	Shadow::DestroyShadowResources();
-	//window.DestroySurface(instance);
+	Shadow::Destroy();
 
 	Terrain::Destroy();
 	Grass::Destroy();

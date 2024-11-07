@@ -377,6 +377,14 @@ void Texture::TransitionImageLayout(VkCommandBuffer commandBuffer, ImageConfigur
 		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 	}
+	else if (barrier.oldLayout == LAYOUT_UNDEFINED && barrier.newLayout == LAYOUT_READ_ONLY)
+	{
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	}
 	else if (barrier.oldLayout == LAYOUT_TRNSFR_DST && barrier.newLayout == LAYOUT_READ_ONLY)
 	{
 		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;

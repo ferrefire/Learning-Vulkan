@@ -28,9 +28,11 @@ class Shadow
 		static int shadowResolution;
 		static float shadowDistance;
 
+		static void Create();
 		static void CreateShadowResources();
 		static void CreateShadowPass();
 
+		static void Destroy();
 		static void DestroyShadowResources();
 		static void DestroyShadowPass();
 
