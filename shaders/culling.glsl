@@ -64,7 +64,7 @@ int Occluded(vec3 clipSpace)
 
 	float diff = currentDepth - closestDepth;
 
-	if (diff > 0.0001)
+	if (diff > 0.00025)
 	{
 		return (1);
 	}

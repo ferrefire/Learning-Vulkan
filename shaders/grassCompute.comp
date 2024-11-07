@@ -4,9 +4,6 @@
 
 struct GrassData
 {
-    //vec3 position;
-    //vec3 rotation;
-    //vec3 normal;
 	uint posxz;
 	uint normxz;
 	uint posynormy;
@@ -176,9 +173,6 @@ void main()
 	if (lod == 0)
 	{
 		uint index = atomicAdd(renderCount, 1);
-		//data[index].position = position - variables.viewPosition;
-		//data[index].rotation = rotations;
-		//data[index].normal = terrainNormal;
 		data[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
 		data[index].normxz = packHalf2x16(terrainNormal.xz);
 		data[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
@@ -188,9 +182,6 @@ void main()
 	else if (lod == 1)
 	{
 		uint index = atomicAdd(lodRenderCount, 1);
-		//lodData[index].position = position - variables.viewPosition;
-		//lodData[index].rotation = rotations;
-		//lodData[index].normal = terrainNormal;
 		lodData[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
 		lodData[index].normxz = packHalf2x16(terrainNormal.xz);
 		lodData[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));

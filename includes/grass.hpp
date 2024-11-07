@@ -17,14 +17,6 @@
 
 struct GrassData
 {
-	//alignas(16) glm::vec3 position;
-	//alignas(16) glm::vec3 rotation;
-	//alignas(16) glm::vec3 normal;
-
-	//glm::vec3 position;
-	//glm::vec3 rotation;
-	//glm::vec3 normal;
-
 	uint32_t posxz;
 	uint32_t normxz;
 	uint32_t posynormy;

@@ -1,0 +1,76 @@
+#version 450
+
+#extension GL_ARB_shading_language_include : require
+
+struct TreeData
+{
+	uint posxz;
+	uint posyroty;
+	uint scaxcoly;
+};
+
+struct TreeRenderData
+{
+	uint posxz;
+	uint posyroty;
+	uint scaxcoly;
+};
+
+layout(std430, set = 1, binding = 0) buffer DataBuffer
+{
+	TreeData data[];
+};
+
+layout(std430, set = 1, binding = 1) buffer RenderBuffer
+{
+	TreeRenderData renderData[];
+};
+
+layout(std430, set = 1, binding = 2) buffer CountBuffer
+{
+    uint renderCount;
+};
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+const int treeBase = 128;
+const int treeRenderBase = 16;
+const float spacing = 20;
+const float spacingMult = 0.05;
+
+#include "variables.glsl"
+#include "functions.glsl"
+#include "heightmap.glsl"
+
+void main()
+{
+	if (gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.y == 0)
+	{
+		atomicExchange(renderCount, 0);
+	}
+
+	vec2 flooredViewPosition = vec2(0);
+	flooredViewPosition.x = floor(variables.viewPosition.x * spacingMult);
+	flooredViewPosition.y = floor(variables.viewPosition.z * spacingMult);
+
+	//Continue from here with calculating the correct tree buffer index;
+
+	uint index = gl_GlobalInvocationID.x * treeBase + gl_GlobalInvocationID.y;
+
+	float x = (float(gl_GlobalInvocationID.x) - float(treeBase) * 0.5) * spacing;
+	float z = (float(gl_GlobalInvocationID.y) - float(treeBase) * 0.5) * spacing;
+	float y = SampleDynamic(vec2(x, z));
+	vec3 worldPosition = vec3(x, y, z);
+
+	vec3 position = vec3(0);
+	//vec3 normal = SampleNormalDynamic(position.xz, 1.0);
+
+	float scale = 1.0;
+	float color = 1.0;
+	float rotation = 0.0;
+	//float life = 1.0;
+
+	data[index].posxz = packHalf2x16(position.xz);
+	data[index].posyroty = packHalf2x16(vec2(position.y, rotation));
+	data[index].scaxcoly = packHalf2x16(vec2(scale, color));
+}
