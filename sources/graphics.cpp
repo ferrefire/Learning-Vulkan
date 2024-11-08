@@ -218,8 +218,8 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	}
 
 	RenderShadows(commandBuffer, imageIndex);
-	RenderGraphics(commandBuffer, imageIndex);
 	RenderCulling(commandBuffer, imageIndex);
+	RenderGraphics(commandBuffer, imageIndex);
 
 	//ImageConfiguration transitionConfig;
 	//transitionConfig.width = window.width;
@@ -241,6 +241,11 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 void Graphics::DrawFrame()
 {
+	Manager::UpdateShaderVariables();
+	Terrain::PostFrame();
+	Manager::UpdateShaderVariables();
+	Grass::PostFrame();
+
 	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
 
 	uint32_t imageIndex;
@@ -259,12 +264,6 @@ void Graphics::DrawFrame()
 	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
 
 	vkResetCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], 0);
-
-	Manager::UpdateShaderVariables();
-	Terrain::PostFrame();
-	Manager::UpdateShaderVariables();
-	Grass::PostFrame();
-
 	RecordCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], imageIndex);
 
 	VkSubmitInfo submitInfo{};

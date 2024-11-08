@@ -139,8 +139,9 @@ void main()
 
 	if (squaredDistance > 100)
 	{
-		vec3 clipPosition = WorldToClip(position);
-		if (Occluded(clipPosition) == 1) return ;
+		//vec3 clipPosition = WorldToClip(position);
+		vec3 clipPosition = WorldToCull(position);
+		if (Occluded(clipPosition, 0.00025) == 1) return ;
 	}
 
 	vec3 terrainNormal = SampleNormalDynamic(position.xz, 0.5);

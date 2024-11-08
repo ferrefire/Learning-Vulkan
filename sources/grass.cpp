@@ -483,7 +483,7 @@ void Grass::RenderGrass(VkCommandBuffer commandBuffer)
 void Grass::RenderShadows(VkCommandBuffer commandBuffer)
 {
 	uint32_t lod0 = 0;
-	uint32_t lod1 = 1;
+	//uint32_t lod1 = 1;
 
 	grassMesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);

@@ -1,6 +1,9 @@
 #ifndef TRANSFORMATION_INCLUDED
 #define TRANSFORMATION_INCLUDED
 
+const float far = 25000;
+const float farMult = 0.00004;
+
 vec3 ObjectToWorld(vec3 objectSpace, mat4 model)
 {
     vec3 worldSpace = (model * vec4(objectSpace, 1.0)).xyz;
@@ -24,7 +27,21 @@ vec3 WorldToClip(vec3 worldSpace)
 
     clipSpace.x = clipSpace.x * 0.5 + 0.5;
     clipSpace.y = clipSpace.y * 0.5 + 0.5;
-    clipSpace.z = viewSpace.w;
+    clipSpace.z = viewSpace.w * farMult;
+
+    return (clipSpace);
+}
+
+vec3 WorldToCull(vec3 worldSpace)
+{
+    vec4 viewSpace = variables.cullProjection * WorldToView(worldSpace);
+
+    vec3 clipSpace = viewSpace.xyz;
+    clipSpace /= viewSpace.w;
+
+    clipSpace.x = clipSpace.x * 0.5 + 0.5;
+    clipSpace.y = clipSpace.y * 0.5 + 0.5;
+    clipSpace.z = viewSpace.w * farMult;
 
     return (clipSpace);
 }

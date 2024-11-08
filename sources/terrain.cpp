@@ -82,7 +82,7 @@ void Terrain::CreateGraphicsPipeline()
 {
 	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(4);
 	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
-	descriptorLayoutConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+	descriptorLayoutConfig[0].stages = VERTEX_STAGE | TESSELATION_EVALUATION_STAGE;
 	descriptorLayoutConfig[0].count = terrainChunkCount;
 
 	descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
@@ -95,7 +95,7 @@ void Terrain::CreateGraphicsPipeline()
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
 	pipelineConfiguration.tesselation = true;
 	pipelineConfiguration.pushConstantCount = 1;
-	pipelineConfiguration.pushConstantStage = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+	pipelineConfiguration.pushConstantStage = VERTEX_STAGE | TESSELATION_EVALUATION_STAGE;
 	pipelineConfiguration.pushConstantSize = sizeof(uint32_t);
 
     VertexInfo vertexInfo = lod0Mesh.MeshVertexInfo();
@@ -107,14 +107,14 @@ void Terrain::CreateCullPipeline()
 {
 	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(1);
 	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
-	descriptorLayoutConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+	descriptorLayoutConfig[0].stages = VERTEX_STAGE | TESSELATION_EVALUATION_STAGE;
 	descriptorLayoutConfig[0].count = terrainChunkCount;
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
 	pipelineConfiguration.cull = true;
 	pipelineConfiguration.tesselation = true;
 	pipelineConfiguration.pushConstantCount = 1;
-	pipelineConfiguration.pushConstantStage = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+	pipelineConfiguration.pushConstantStage = VERTEX_STAGE | TESSELATION_EVALUATION_STAGE;
 	pipelineConfiguration.pushConstantSize = sizeof(uint32_t);
 
 	VertexInfo vertexInfo = lod0Mesh.MeshVertexInfo();
@@ -149,7 +149,7 @@ void Terrain::CreateGraphicsDescriptor()
 	int objectCount = terrainChunks.size();
 
 	descriptorConfig[0].type = UNIFORM_BUFFER;
-	descriptorConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+	descriptorConfig[0].stages = VERTEX_STAGE | TESSELATION_EVALUATION_STAGE;
 	descriptorConfig[0].count = objectCount;
 	descriptorConfig[0].buffersInfo.resize(bufferCount * objectCount);
 	
@@ -194,7 +194,7 @@ void Terrain::CreateCullDescriptor()
 	int objectCount = terrainChunks.size();
 
 	descriptorConfig[0].type = UNIFORM_BUFFER;
-	descriptorConfig[0].stages = VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE;
+	descriptorConfig[0].stages = VERTEX_STAGE | TESSELATION_EVALUATION_STAGE;
 	descriptorConfig[0].count = objectCount;
 	descriptorConfig[0].buffersInfo.resize(bufferCount * objectCount);
 
@@ -447,8 +447,7 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 	for (int index : lod0Indices)
 	{
 		chunkIndex = index;
-		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | 
-			TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
+		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_EVALUATION_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod0Mesh.indices.size()), 1, 0, 0, 0);
 	}
 
@@ -457,7 +456,7 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 	for (int index : lod1Indices)
 	{
 		chunkIndex = index;
-		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
+		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_EVALUATION_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod1Mesh.indices.size()), 1, 0, 0, 0);
 	}
 }
@@ -491,8 +490,8 @@ void Terrain::RenderCulling(VkCommandBuffer commandBuffer)
 			if ((inView && distance < 1.0) || distance <= 0.75)
 			{
 				lod0Indices.push_back(index);
-				terrainChunks[index].ModifyPosition().y = 0;
-				terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
+				//terrainChunks[index].ModifyPosition().y = 0;
+				//terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
 			}
 			/*else if (inView)
 			{
@@ -510,7 +509,7 @@ void Terrain::RenderCulling(VkCommandBuffer commandBuffer)
 	for (int index : lod0Indices)
 	{
 		chunkIndex = index;
-		vkCmdPushConstants(commandBuffer, cullPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_CONTROL_STAGE | TESSELATION_EVALUATION_STAGE | FRAGMENT_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
+		vkCmdPushConstants(commandBuffer, cullPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_EVALUATION_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod0Mesh.indices.size()), 1, 0, 0, 0);
 	}
 

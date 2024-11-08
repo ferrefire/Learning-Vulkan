@@ -3,8 +3,6 @@
 
 layout(set = 0, binding = 5) uniform sampler2D cullSampler;
 
-const float far = 25000;
-
 #include "transformation.glsl"
 #include "functions.glsl"
 #include "depth.glsl"
@@ -13,9 +11,9 @@ int InView(vec3 worldSpace, vec3 tolerance)
 {
     vec3 clipSpacePosition = WorldToClip(worldSpace);
 
-	bool xInView = clipSpacePosition.x > 0.0 - tolerance.x && clipSpacePosition.x < 1.0 + tolerance.x;
-	bool yInView = clipSpacePosition.y > 0.0 - tolerance.y && clipSpacePosition.y < 1.0 + tolerance.y;
-	bool zInView = clipSpacePosition.z > 0.0 && clipSpacePosition.z < far;
+	bool xInView = clipSpacePosition.x >= 0.0 - tolerance.x && clipSpacePosition.x <= 1.0 + tolerance.x;
+	bool yInView = clipSpacePosition.y >= 0.0 - tolerance.y && clipSpacePosition.y <= 1.0 + tolerance.y;
+	bool zInView = clipSpacePosition.z >= 0.0 && clipSpacePosition.z <= 1.0;
 
 	return ((xInView && yInView && zInView) ? 1 : 0);
 }
@@ -48,23 +46,15 @@ int AreaInView(vec3 worldSpace, vec2 areaSize)
 	return (0);
 }
 
-int Occluded(vec3 clipSpace)
+int Occluded(vec3 clipSpace, float tolerance)
 {
-	//vec3 projectionCoordinates = clipSpace.xyz / clipSpace.w;
-	//projectionCoordinates = projectionCoordinates * 0.5 + 0.5;
+	//if (clipSpace.z > 1.0 || clipSpace.z < 0.0 || clipSpace.x > 1.0 || clipSpace.x < 0.0 || clipSpace.y > 1.0 || clipSpace.y < 0.0) return (1);
 
-	vec3 projectionCoordinates = clipSpace;
+	float closestDepth = GetDepth(textureLod(cullSampler, clipSpace.xy, 0).r);
 
-	float currentDepth = (projectionCoordinates.z * 0.00004);
+	float diff = clipSpace.z - closestDepth;
 
-	//if (currentDepth > 1.0 || projectionCoordinates.x > 1.0 || projectionCoordinates.x < 0.0 || 
-	//	projectionCoordinates.y > 1.0 || projectionCoordinates.y < 0.0) return (1);
-
-	float closestDepth = GetDepth(textureLod(cullSampler, projectionCoordinates.xy, 0).r);
-
-	float diff = currentDepth - closestDepth;
-
-	if (diff > 0.00025)
+	if (diff > tolerance)
 	{
 		return (1);
 	}
