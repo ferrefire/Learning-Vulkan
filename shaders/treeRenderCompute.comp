@@ -33,8 +33,8 @@ layout(std430, set = 1, binding = 2) buffer CountBuffer
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-const int treeBase = 128;
-const int treeRenderBase = 16;
+const int treeBase = 512;
+const int treeRenderBase = 128;
 const float spacing = 20;
 const float spacingMult = 0.05;
 
@@ -53,24 +53,34 @@ void main()
 	flooredViewPosition.x = floor(variables.viewPosition.x * spacingMult);
 	flooredViewPosition.y = floor(variables.viewPosition.z * spacingMult);
 
-	//Continue from here with calculating the correct tree buffer index;
+	//uint index = gl_GlobalInvocationID.x * treeBase + gl_GlobalInvocationID.y;
 
-	uint index = gl_GlobalInvocationID.x * treeBase + gl_GlobalInvocationID.y;
+	int ix = int(gl_GlobalInvocationID.x) - int(treeRenderBase * 0.5);
+	int iz = int(gl_GlobalInvocationID.y) - int(treeRenderBase * 0.5);
 
-	float x = (float(gl_GlobalInvocationID.x) - float(treeBase) * 0.5) * spacing;
-	float z = (float(gl_GlobalInvocationID.y) - float(treeBase) * 0.5) * spacing;
-	float y = SampleDynamic(vec2(x, z));
+	ix += int(flooredViewPosition.x);
+	iz += int(flooredViewPosition.y);
+
+	float x = ix * spacing;
+	float z = iz * spacing;
+	float y = SampleDynamic(vec2(x, z)) * 5000;
 	vec3 worldPosition = vec3(x, y, z);
 
-	vec3 position = vec3(0);
+	
+
+	//ix += int(flooredViewPosition.x + treeBase * 0.5);
+	//iz += int(flooredViewPosition.y + treeBase * 0.5);
+
+	//vec3 position = vec3(0);
 	//vec3 normal = SampleNormalDynamic(position.xz, 1.0);
 
 	float scale = 1.0;
 	float color = 1.0;
 	float rotation = 0.0;
-	//float life = 1.0;
 
-	data[index].posxz = packHalf2x16(position.xz);
-	data[index].posyroty = packHalf2x16(vec2(position.y, rotation));
-	data[index].scaxcoly = packHalf2x16(vec2(scale, color));
+	uint index = atomicAdd(renderCount, 1);
+
+	renderData[index].posxz = packHalf2x16(worldPosition.xz - variables.viewPosition.xz);
+	renderData[index].posyroty = packHalf2x16(vec2(worldPosition.y - variables.viewPosition.y, rotation));
+	renderData[index].scaxcoly = packHalf2x16(vec2(scale, color));
 }

@@ -4,9 +4,6 @@
 
 struct GrassData
 {
-    //vec3 position;
-    //vec3 rotation;
-    //vec3 normal;
 	uint posxz;
 	uint normxz;
 	uint posynormy;
@@ -53,16 +50,6 @@ layout(location = 1) out vec3 objectNormal;
 layout(location = 2) out vec3 terrainNormal;
 layout(location = 3) out vec3 grassColor;
 layout(location = 4) out vec2 uv;
-//layout(location = 5) out vec4 shadowPosition;
-
-//#define COUNT 2048
-//
-//const uint grassCount = COUNT;
-//const float grassCountMult = 1.0 / COUNT;
-//const uint grassTotalCount = COUNT * COUNT;
-//
-//const float spacing = 0.125;
-//const float spacingMult = 8;
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -86,9 +73,6 @@ void main()
 
 	if (pc.grassLod == 0)
 	{
-		//position = data[gl_InstanceIndex].position;
-		//rotation = data[gl_InstanceIndex].rotation;
-		//terrainNormal = data[gl_InstanceIndex].normal;
 		position.xz = unpackHalf2x16(data[gl_InstanceIndex].posxz);
 		terrainNormal.xz = unpackHalf2x16(data[gl_InstanceIndex].normxz);
 		vec2 yy = unpackHalf2x16(data[gl_InstanceIndex].posynormy);
@@ -101,9 +85,6 @@ void main()
 	}
 	else if (pc.grassLod == 1)
 	{
-		//position = lodData[gl_InstanceIndex].position;
-		//rotation = lodData[gl_InstanceIndex].rotation;
-		//terrainNormal = lodData[gl_InstanceIndex].normal;
 		position.xz = unpackHalf2x16(lodData[gl_InstanceIndex].posxz);
 		terrainNormal.xz = unpackHalf2x16(lodData[gl_InstanceIndex].normxz);
 		vec2 yy = unpackHalf2x16(lodData[gl_InstanceIndex].posynormy);

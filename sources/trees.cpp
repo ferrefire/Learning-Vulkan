@@ -2,24 +2,33 @@
 
 #include "manager.hpp"
 
+#include <iostream>
+
 void Trees::Create()
 {
+	return;
+
 	CreateMeshes();
+	//std::cout << "meshes" << std::endl;
 	CreateGraphicsPipeline();
-	CreateShadowPipeline();
-	CreateCullPipeline();
+	//CreateShadowPipeline();
+	//CreateCullPipeline();
 	CreateComputeSetupPipeline();
 	CreateComputeRenderPipeline();
+	//std::cout << "pipelines" << std::endl;
 	CreateBuffers();
+	//std::cout << "buffers" << std::endl;
 	CreateGraphicsDescriptor();
-	CreateShadowDescriptor();
-	CreateCullDescriptor();
+	//CreateShadowDescriptor();
+	//CreateCullDescriptor();
 	CreateComputeSetupDescriptor();
 	CreateComputeRenderDescriptor();
+	//std::cout << "descriptors" << std::endl;
 }
 
 void Trees::CreateMeshes()
 {
+	treeMesh.coordinate = false;
 	treeMesh.shape.positionsOnly = true;
 	treeMesh.shape.SetShape(CUBE, 0);
 	treeMesh.RecalculateVertices();
@@ -33,6 +42,7 @@ void Trees::CreateGraphicsPipeline()
 	descriptorLayoutConfig[0].stages = VERTEX_STAGE;
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
+	pipelineConfiguration.foliage = true;
 
 	VertexInfo vertexInfo = treeMesh.MeshVertexInfo();
 
@@ -78,7 +88,7 @@ void Trees::CreateComputeSetupPipeline()
 
 void Trees::CreateComputeRenderPipeline()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(1);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(3);
 	descriptorLayoutConfig[0].type = STORAGE_BUFFER;
 	descriptorLayoutConfig[0].stages = COMPUTE_STAGE;
 	descriptorLayoutConfig[1].type = STORAGE_BUFFER;
@@ -241,6 +251,8 @@ void Trees::CreateComputeRenderDescriptor()
 
 void Trees::Destroy()
 {
+	return;
+
 	DestroyPipelines();
 	DestroyMeshes();
 	DestroyDescriptors();
@@ -255,8 +267,8 @@ void Trees::DestroyMeshes()
 void Trees::DestroyPipelines()
 {
 	graphicsPipeline.Destroy();
-	shadowPipeline.Destroy();
-	cullPipeline.Destroy();
+	//shadowPipeline.Destroy();
+	//cullPipeline.Destroy();
 	computeSetupPipeline.Destroy();
 	computeRenderPipeline.Destroy();
 }
@@ -281,15 +293,19 @@ void Trees::DestroyBuffers()
 void Trees::DestroyDescriptors()
 {
 	graphicsDescriptor.Destroy();
-	shadowDescriptor.Destroy();
-	cullDescriptor.Destroy();
+	//shadowDescriptor.Destroy();
+	//cullDescriptor.Destroy();
 	computeSetupDescriptor.Destroy();
 	computeRenderDescriptor.Destroy();
 }
 
 void Trees::Start()
 {
+	return;
 
+	treeRenderCounts.resize(Manager::settings.maxFramesInFlight);
+
+	ComputeTreeSetup();
 }
 
 void Trees::Frame()
@@ -299,11 +315,15 @@ void Trees::Frame()
 
 void Trees::PostFrame()
 {
+	return;
 
+	ComputeTreeRender();
 }
 
 void Trees::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 {
+	return;
+
 	graphicsPipeline.BindGraphics(commandBuffer);
 
 	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
@@ -367,25 +387,34 @@ void Trees::ComputeTreeSetup()
 
 void Trees::ComputeTreeRender()
 {
+	//std::cout << "start" << std::endl;
+
 	uint32_t computeCount = ceil(float(treeRenderBase) / 8.0f);
 
 	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
 
+	//std::cout << "begin" << std::endl;
+
 	computeRenderPipeline.BindCompute(commandBuffer);
+	//std::cout << "pipe" << std::endl;
 	Manager::globalDescriptor.Bind(commandBuffer, computeRenderPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
 	computeRenderDescriptor.Bind(commandBuffer, computeRenderPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
+	//std::cout << "des" << std::endl;
 
 	vkCmdDispatch(commandBuffer, computeCount, computeCount, 1);
+	//std::cout << "dis" << std::endl;
 
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
+	//std::cout << "end" << std::endl;
 
 	treeRenderCounts[Manager::currentFrame] = *(uint32_t *)countBuffers[Manager::currentFrame].mappedBuffer;
+	//std::cout << "count" << std::endl;
 }
 
-uint32_t Trees::treeBase = 128;
+uint32_t Trees::treeBase = 512;
 uint32_t Trees::treeCount = Trees::treeBase * Trees::treeBase;
 
-uint32_t Trees::treeRenderBase = 16;
+uint32_t Trees::treeRenderBase = 128;
 uint32_t Trees::treeRenderCount = Trees::treeRenderBase * Trees::treeRenderBase;
 std::vector<uint32_t> Trees::treeRenderCounts;
 

@@ -67,6 +67,7 @@ Input::KeyStatus Input::GetKey(int keyCode, bool mouse)
 void Input::Start()
 {
 	Manager::camera.UpdateProjection();
+	//Manager::camera.Move(glm::vec3(0.0, 1000.0, -1000.0));
 	Manager::camera.Move(glm::vec3(0.0, 1000.0, -1000.0));
 	// Rotate(glm::vec3(-25.0, -135.0, 0.0));
 	Manager::camera.Rotate(glm::vec3(-25.0, 45.0, 0.0));

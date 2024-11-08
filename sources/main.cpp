@@ -49,7 +49,7 @@ void Setup(int argc, char **argv)
 		{
 			std::string arg = argv[i];
 			Manager::cinematic.Load((Utilities::GetPath() + "/cinematics/" + (argv[i] + arg.find('=') + 1) + ".txt").c_str());
-			Manager::cinematic.speed = 4;
+			Manager::cinematic.speed = 1;
 		}
 		else if (std::string(argv[i]).compare(0, 7, "newcin=") == 0)
 		{

@@ -8,6 +8,7 @@
 #include "texture.hpp"
 #include "shadow.hpp"
 #include "culling.hpp"
+#include "trees.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -113,6 +114,8 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 	Terrain::RecordGraphicsCommands(commandBuffer);
+	Trees::RecordGraphicsCommands(commandBuffer);
+	//std::cout << "trees render" << std::endl;
 	Grass::RecordGraphicsCommands(commandBuffer);
 
 	if (Manager::settings.screenQuad)
@@ -244,6 +247,8 @@ void Graphics::DrawFrame()
 	Manager::UpdateShaderVariables();
 	Terrain::PostFrame();
 	Manager::UpdateShaderVariables();
+	Trees::PostFrame();
+	//std::cout << "trees compute" << std::endl;
 	Grass::PostFrame();
 
 	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
@@ -392,6 +397,7 @@ void Graphics::Create()
 	Terrain::Create();
 	Manager::CreateDescriptor();
 	Grass::Create();
+	Trees::Create();
 
 	if (Manager::settings.screenQuad)
 	{
@@ -462,6 +468,7 @@ void Graphics::Destroy()
 
 	Terrain::Destroy();
 	Grass::Destroy();
+	Trees::Destroy();
 	Manager::screenQuadDescriptor.Destroy();
 	Manager::Clean();
 

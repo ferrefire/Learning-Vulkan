@@ -6,6 +6,7 @@
 #include "time.hpp"
 #include "shadow.hpp"
 #include "culling.hpp"
+#include "trees.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -199,6 +200,7 @@ void Manager::Start()
 {
 	Input::Start();
 	Terrain::Start();
+	Trees::Start();
 	Grass::Start();
 
 	cinematic.Start();
