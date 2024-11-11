@@ -11,13 +11,13 @@ void Terrain::Create()
 {
     CreateMeshes();
 	CreateGraphicsPipeline();
-	CreateCullPipeline();
+	if (Manager::settings.occlussionCulling) CreateCullPipeline();
 	CreateComputePipelines();
 	CreateTextures();
 	CreateObjects();
 	CreateBuffers();
 	CreateGraphicsDescriptor();
-	CreateCullDescriptor();
+	if (Manager::settings.occlussionCulling) CreateCullDescriptor();
 	CreateComputeDescriptors();
 }
 
@@ -380,6 +380,7 @@ void Terrain::PostFrame()
 	if (Time::newSubTick)
 	{
 		CheckTerrainOffset();
+		Manager::UpdateShaderVariables();
 	}
 }
 

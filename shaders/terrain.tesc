@@ -63,7 +63,7 @@ void main()
 		if (depth < 0.25) cull = (AreaInView(center, vec2(20 * tolerance)) == 0 && AreaInView(p0, vec2(20 * tolerance)) == 0 && AreaInView(p1, vec2(20 * tolerance)) == 0 && AreaInView(p2, vec2(20 * tolerance)) == 0);
         else cull = (InView(center, 0) == 0 && InView(p0, 0) == 0 && InView(p1, 0) == 0 && InView(p2, 0) == 0);
 
-		//if (!cull) cull = PatchOccluded(p0, p1, p2, center) == 1;
+		if (variables.occlusionCulling == 1 && !cull) cull = PatchOccluded(p0, p1, p2, center) == 1;
 
         //if (!cull)
         //{

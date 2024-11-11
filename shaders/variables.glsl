@@ -22,6 +22,7 @@ layout(set = 0, binding = 0) uniform Variables
 	int terrainChunksLength;
 	float terrainChunksLengthMult;
 	float time;
+	uint occlusionCulling;
 } variables;
 
 #endif

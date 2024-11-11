@@ -275,6 +275,8 @@ void Manager::UpdateShaderVariables()
 
 	shaderVariables.time = Time::GetCurrentTime();
 
+	shaderVariables.occlusionCulling = settings.occlussionCulling ? 1 : 0;
+
 	memcpy(shaderVariableBuffers[currentFrame].mappedBuffer, &shaderVariables, sizeof(shaderVariables));
 }
 

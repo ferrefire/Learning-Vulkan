@@ -221,7 +221,7 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	}
 
 	RenderShadows(commandBuffer, imageIndex);
-	//RenderCulling(commandBuffer, imageIndex);
+	if (Manager::settings.occlussionCulling) RenderCulling(commandBuffer, imageIndex);
 	RenderGraphics(commandBuffer, imageIndex);
 
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
@@ -234,9 +234,7 @@ void Graphics::DrawFrame()
 {
 	Manager::UpdateShaderVariables();
 	Terrain::PostFrame();
-	Manager::UpdateShaderVariables();
 	Trees::PostFrame();
-	//std::cout << "trees compute" << std::endl;
 	Grass::PostFrame();
 
 	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);

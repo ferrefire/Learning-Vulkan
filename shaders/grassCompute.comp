@@ -137,12 +137,12 @@ void main()
 
 	if (lod == 0 && InView(position + vec3(0, 0.5, 0), 0) == 0 && InView(position, 0) == 0) return ;
 
-	//if (squaredDistance > 100)
-	//{
-	//	//vec3 clipPosition = WorldToClip(position);
-	//	vec3 clipPosition = WorldToCull(position);
-	//	if (Occluded(clipPosition, 0.00025) == 1) return ;
-	//}
+	if (variables.occlusionCulling == 1 && squaredDistance > 100)
+	{
+		//vec3 clipPosition = WorldToClip(position);
+		vec3 clipPosition = WorldToCull(position);
+		if (Occluded(clipPosition, 0.00025) == 1) return ;
+	}
 
 	vec3 terrainNormal = SampleNormalDynamic(position.xz, 0.5);
 

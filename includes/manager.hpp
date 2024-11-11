@@ -35,6 +35,7 @@ struct Settings
 	bool validationLayersActive = true;
 	bool uncappedFPS = false;
 	bool screenQuad = false;
+	bool occlussionCulling = false;
 };
 
 struct ShaderVariables
@@ -61,6 +62,8 @@ struct ShaderVariables
 	alignas(4) float terrainChunksLengthMult;
 
 	alignas(4) float time;
+
+	alignas(4) uint32_t occlusionCulling;
 };
 
 class Manager
