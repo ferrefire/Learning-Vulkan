@@ -221,20 +221,8 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	}
 
 	RenderShadows(commandBuffer, imageIndex);
-	RenderCulling(commandBuffer, imageIndex);
+	//RenderCulling(commandBuffer, imageIndex);
 	RenderGraphics(commandBuffer, imageIndex);
-
-	//ImageConfiguration transitionConfig;
-	//transitionConfig.width = window.width;
-	//transitionConfig.height = window.height;
-	//transitionConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
-	//transitionConfig.initialLayout = LAYOUT_GENERAL;
-	//transitionConfig.transitionLayout = LAYOUT_TRNSFR_DST;
-	//Manager::occlusionTexture.TransitionImageLayout(commandBuffer, transitionConfig);
-	//Manager::occlusionTexture.CopyFromImage(commandBuffer, window.depthTexture.image, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, transitionConfig);
-	//transitionConfig.initialLayout = LAYOUT_TRNSFR_DST;
-	//transitionConfig.transitionLayout = LAYOUT_GENERAL;
-	//Manager::occlusionTexture.TransitionImageLayout(commandBuffer, transitionConfig);
 
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
 	{

@@ -27,6 +27,16 @@ const float tesselationFactor = 10;
 const float toleranceFactor = 0.025;
 const float cullFactor = 0.0025;
 
+int PatchOccluded(vec3 p0, vec3 p1, vec3 p2, vec3 center)
+{
+	if (Occluded(WorldToCull(center), 0.01) == 0) return (0);
+	else if (Occluded(WorldToCull(p0), 0.01) == 0) return (0);
+	else if (Occluded(WorldToCull(p1), 0.01) == 0) return (0);
+	else if (Occluded(WorldToCull(p2), 0.01) == 0) return (0);
+
+	return (1);
+}
+
 float TessellationFactor (vec3 p0, vec3 p1)
 {
     float edgeLength = distance(p0, p1);
@@ -53,18 +63,20 @@ void main()
 		if (depth < 0.25) cull = (AreaInView(center, vec2(20 * tolerance)) == 0 && AreaInView(p0, vec2(20 * tolerance)) == 0 && AreaInView(p1, vec2(20 * tolerance)) == 0 && AreaInView(p2, vec2(20 * tolerance)) == 0);
         else cull = (InView(center, 0) == 0 && InView(p0, 0) == 0 && InView(p1, 0) == 0 && InView(p2, 0) == 0);
 
-        if (!cull)
-        {
-            vec3 offset = vec3(0, 100 * depth, 0);
-            vec3 centerClip = WorldToCull(center + offset);
-            vec3 p0Clip = WorldToCull(p0 + offset);
-            vec3 p1Clip = WorldToCull(p1 + offset);
-            vec3 p2Clip = WorldToCull(p2 + offset);
-            cull = Occluded(centerClip, 0.01) == 1;
-            if (cull) cull = Occluded(p0Clip, 0.01) == 1;
-            if (cull) cull = Occluded(p1Clip, 0.01) == 1;
-            if (cull) cull = Occluded(p2Clip, 0.01) == 1;
-        }
+		//if (!cull) cull = PatchOccluded(p0, p1, p2, center) == 1;
+
+        //if (!cull)
+        //{
+        //    vec3 offset = vec3(0, 100 * depth, 0);
+        //    vec3 centerClip = WorldToCull(center + offset);
+        //    vec3 p0Clip = WorldToCull(p0 + offset);
+        //    vec3 p1Clip = WorldToCull(p1 + offset);
+        //    vec3 p2Clip = WorldToCull(p2 + offset);
+        //    cull = Occluded(centerClip, 0.01) == 1;
+        //    if (cull) cull = Occluded(p0Clip, 0.01) == 1;
+        //    if (cull) cull = Occluded(p1Clip, 0.01) == 1;
+        //    if (cull) cull = Occluded(p2Clip, 0.01) == 1;
+        //}
 
         /*bool cull = true;
         //float sqrDis = SquaredDistance(variables.viewPosition, center);
