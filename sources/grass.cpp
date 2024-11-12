@@ -449,10 +449,8 @@ void Grass::PostFrame()
 void Grass::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 {
 	graphicsPipeline.BindGraphics(commandBuffer);
-
 	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
 	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
-
 	RenderGrass(commandBuffer);
 }
 

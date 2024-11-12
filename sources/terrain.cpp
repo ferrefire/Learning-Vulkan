@@ -380,7 +380,6 @@ void Terrain::PostFrame()
 	if (Time::newSubTick)
 	{
 		CheckTerrainOffset();
-		Manager::UpdateShaderVariables();
 	}
 }
 
@@ -600,6 +599,8 @@ void Terrain::ComputeHeightMapArray(uint32_t index)
 
 void Terrain::CheckTerrainOffset()
 {
+	bool updated = true;
+
 	float xw = Manager::camera.Position().x;
 	float zw = Manager::camera.Position().z;
 
@@ -617,8 +618,11 @@ void Terrain::CheckTerrainOffset()
 		terrainLod1Offset = glm::vec2(0);
 
 		Manager::camera.Move(-glm::vec3(newOffset.x, 0, newOffset.y));
+
+		Manager::UpdateShaderVariables();
 	}
-	else if (abs(x1) >= terrainLod1Size * terrainLod1Step || abs(z1) >= terrainLod1Size * terrainLod1Step)
+
+	if (abs(x1) >= terrainLod1Size * terrainLod1Step || abs(z1) >= terrainLod1Size * terrainLod1Step)
 	{
 		glm::vec2 newOffset = glm::vec2(Utilities::Fits(terrainLod1Size * terrainLod1Step, x1), Utilities::Fits(terrainLod1Size * terrainLod1Step, z1)) * terrainLod1Size * terrainLod1Step;
 		terrainLod1Offset += newOffset;
@@ -631,6 +635,15 @@ void Terrain::CheckTerrainOffset()
 		terrainLod0Offset += newOffset;
 
 		ComputeHeightMap(0);
+	}
+	else
+	{
+		updated = false;
+	}
+
+	if (updated)
+	{
+		Manager::UpdateShaderVariables();
 	}
 }
 

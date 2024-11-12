@@ -13,5 +13,5 @@ void main()
 	//vec3 combinedColor = diffuse;
 
 	//outColor = vec4(combinedColor, 1.0);
-	outColor = vec4(1.0);
+	outColor = vec4(vec3(0.5), 1.0);
 }

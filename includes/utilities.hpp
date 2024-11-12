@@ -1,5 +1,9 @@
 #pragma once
 
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <string>
 #include <vector>
 
@@ -15,4 +19,5 @@ class Utilities
 		static std::string GetPath();
 		static float SignedFloor(float x);
 		static int Fits(float part, float whole);
+		static void PrintVec(glm::vec3 vec);
 };

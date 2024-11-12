@@ -16,12 +16,17 @@ layout(std430, set = 1, binding = 0) buffer DataBuffer
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-const int treeBase = 128;
+const int treeBase = 2048;
 const float spacing = 20;
 
 #include "variables.glsl"
 #include "functions.glsl"
 #include "heightmap.glsl"
+
+float random(vec2 st)
+{
+    return fract(sin(dot(st.xy * 0.001, vec2(12.9898,78.233))) * 43758.5453123);
+}
 
 void main()
 {
@@ -32,7 +37,15 @@ void main()
 	//float y = SampleDynamic(vec2(x, z));
 	//vec3 worldPosition = vec3(x, y, z);
 
-	vec3 position = vec3(0);
+	float ran = random(gl_GlobalInvocationID.xy);
+
+	float x = (ran - 0.5) * spacing;
+	ran = random(vec2(index, x));
+	float z = (ran - 0.5) * spacing;
+	ran = random(vec2(x, z));
+	float y = (ran - 0.5) * spacing * 0.2;
+
+	vec3 position = vec3(x, y, z);
 	//vec3 normal = SampleNormalDynamic(position.xz, 1.0);
 
 	float scale = 1.0;

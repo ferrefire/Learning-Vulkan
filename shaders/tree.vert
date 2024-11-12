@@ -37,7 +37,7 @@ void main()
 
     position += variables.viewPosition;
 
-    vec3 worldPosition = ObjectToWorld(inPosition * 5, mat4(1)) + position;
+    vec3 worldPosition = ObjectToWorld(inPosition * vec3(1.5, 15, 1.5), mat4(1)) + position + vec3(0, 7.5, 0);
 
     gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
 }

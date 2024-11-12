@@ -232,10 +232,8 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 void Graphics::DrawFrame()
 {
-	Manager::UpdateShaderVariables();
-	Terrain::PostFrame();
-	Trees::PostFrame();
-	Grass::PostFrame();
+	//Manager::UpdateShaderVariables();
+	
 
 	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
 
@@ -254,7 +252,15 @@ void Graphics::DrawFrame()
 
 	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
 
+	
+
 	vkResetCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], 0);
+
+	Manager::UpdateShaderVariables();
+	Terrain::PostFrame();
+	Trees::PostFrame();
+	Grass::PostFrame();
+
 	RecordCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], imageIndex);
 
 	VkSubmitInfo submitInfo{};

@@ -7,6 +7,7 @@
 #include "shadow.hpp"
 #include "culling.hpp"
 #include "trees.hpp"
+#include "utilities.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -231,10 +232,12 @@ void Manager::Frame()
 
 	if (Input::GetKey(GLFW_MOUSE_BUTTON_RIGHT, true).pressed)
 	{
-		glm::vec3 camDir = camera.Front();
-		glm::vec2 camDir2 = glm::vec2(camDir.x, camDir.z);
-		camDir2 = glm::normalize(camDir2);
-		std::cout << "x: " << camDir2.x << " z: " << camDir2.y << std::endl;
+		//glm::vec3 camDir = camera.Front();
+		//glm::vec2 camDir2 = glm::vec2(camDir.x, camDir.z);
+		//camDir2 = glm::normalize(camDir2);
+		//std::cout << "x: " << camDir2.x << " z: " << camDir2.y << std::endl;
+
+		Utilities::PrintVec(camera.Position() + glm::vec3(Terrain::terrainOffset.x, 0, Terrain::terrainOffset.y));
 	}
 
 	//if (settings.fullscreen && Time::newSecond)

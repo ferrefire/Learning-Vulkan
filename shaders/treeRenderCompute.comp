@@ -33,7 +33,7 @@ layout(std430, set = 1, binding = 2) buffer CountBuffer
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-const int treeBase = 512;
+const int treeBase = 2048;
 const int treeRenderBase = 128;
 const float spacing = 20;
 const float spacingMult = 0.05;
@@ -50,10 +50,8 @@ void main()
 	}
 
 	vec2 flooredViewPosition = vec2(0);
-	flooredViewPosition.x = floor(variables.viewPosition.x * spacingMult);
-	flooredViewPosition.y = floor(variables.viewPosition.z * spacingMult);
-
-	//uint index = gl_GlobalInvocationID.x * treeBase + gl_GlobalInvocationID.y;
+	flooredViewPosition.x = floor((variables.viewPosition.x) * spacingMult);
+	flooredViewPosition.y = floor((variables.viewPosition.z) * spacingMult);
 
 	int ix = int(gl_GlobalInvocationID.x) - int(treeRenderBase * 0.5);
 	int iz = int(gl_GlobalInvocationID.y) - int(treeRenderBase * 0.5);
@@ -61,12 +59,30 @@ void main()
 	ix += int(flooredViewPosition.x);
 	iz += int(flooredViewPosition.y);
 
-	float x = ix * spacing;
-	float z = iz * spacing;
+	vec2 worldOffset = vec2(ix, iz);
+
+	ix += int(floor((variables.terrainOffset.x) * spacingMult));
+	iz += int(floor((variables.terrainOffset.y) * spacingMult));
+
+	vec2 dataIndexVec = vec2(treeBase * 0.5) + vec2(ix, iz);
+
+	if (dataIndexVec.x < 0 || dataIndexVec.x > treeBase || dataIndexVec.y < 0 || dataIndexVec.y > treeBase) return ;
+
+	uint dataIndex = uint(floor(dataIndexVec.x * treeBase + dataIndexVec.y));
+
+	vec3 offset = vec3(0);
+	offset.xz = unpackHalf2x16(data[dataIndex].posxz);
+	vec2 yy = unpackHalf2x16(data[dataIndex].posyroty);
+	offset.y = yy.x;
+	//rotation = yy.y;
+	//vec2 xx = unpackHalf2x16(data[gl_InstanceIndex].scaxcoly);
+	//scale = xx.x;
+	//color = xx.y;
+
+	float x = worldOffset.x * spacing + offset.x;
+	float z = worldOffset.y * spacing + offset.z;
 	float y = SampleDynamic(vec2(x, z)) * 5000;
 	vec3 worldPosition = vec3(x, y, z);
-
-	
 
 	//ix += int(flooredViewPosition.x + treeBase * 0.5);
 	//iz += int(flooredViewPosition.y + treeBase * 0.5);
