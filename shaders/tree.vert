@@ -15,6 +15,9 @@ layout(std430, set = 1, binding = 0) buffer RenderBuffer
 };
 
 layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec3 inNormal;
+
+layout(location = 0) out vec3 normal;
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -39,5 +42,6 @@ void main()
 
     vec3 worldPosition = ObjectToWorld(inPosition * vec3(1.5, 15, 1.5), mat4(1)) + position + vec3(0, 7.5, 0);
 
+	normal = inNormal;
     gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
 }

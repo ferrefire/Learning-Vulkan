@@ -22,9 +22,9 @@ void Trees::Create()
 
 void Trees::CreateMeshes()
 {
-	treeMesh.coordinate = false;
-	treeMesh.shape.positionsOnly = true;
-	treeMesh.shape.SetShape(CUBE, 0);
+	treeMesh.normal = true;
+	treeMesh.shape.normal = true;
+	treeMesh.shape.SetShape(CYLINDER, 9);
 	treeMesh.RecalculateVertices();
 	treeMesh.Create();
 }
@@ -36,7 +36,6 @@ void Trees::CreateGraphicsPipeline()
 	descriptorLayoutConfig[0].stages = VERTEX_STAGE;
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
-	pipelineConfiguration.foliage = true;
 
 	VertexInfo vertexInfo = treeMesh.MeshVertexInfo();
 

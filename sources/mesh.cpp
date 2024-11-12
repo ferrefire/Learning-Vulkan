@@ -85,12 +85,13 @@ void Mesh::DestroyIndexBuffer()
 void Mesh::RecalculateVertices()
 {
 	vertices.clear();
-	vertices.resize(glm::max(shape.positions.size(), shape.coordinates.size()));
+	vertices.resize(glm::max(glm::max(shape.positions.size(), shape.coordinates.size()), shape.normals.size()));
 
 	for (int i = 0; i < vertices.size(); i++)
 	{
 		if (i < shape.positions.size()) vertices[i].position = shape.positions[i];
 		if (i < shape.coordinates.size()) vertices[i].coordinate = shape.coordinates[i];
+		if (i < shape.normals.size()) vertices[i].normal = shape.normals[i];
 	}
 
 	VertexInfo info = MeshVertexInfo(); //Check if can be removed
@@ -108,6 +109,12 @@ void Mesh::RecalculateVertices()
 		{
 			verticesData.push_back(vertex.coordinate.x);
 			verticesData.push_back(vertex.coordinate.y);
+		}
+		if (normal)
+		{
+			verticesData.push_back(vertex.normal.x);
+			verticesData.push_back(vertex.normal.y);
+			verticesData.push_back(vertex.normal.z);
 		}
 	}
 

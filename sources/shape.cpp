@@ -1,5 +1,7 @@
 #include "shape.hpp"
 
+#include "utilities.hpp"
+
 Shape::Shape()
 {
 
@@ -8,6 +10,11 @@ Shape::Shape()
 Shape::Shape(int type)
 {
     SetShape(type);
+}
+
+Shape::Shape(int type, int resolution)
+{
+    SetShape(type, resolution);
 }
 
 Shape::~Shape()
@@ -32,12 +39,13 @@ void Shape::SetShape(int type, int resolution)
 		AddIndice(1);
 		AddIndice(0);
 
-		if (positionsOnly) return;
-
-		AddCoordinate(glm::vec2(0.0f, 0.0f));
-		AddCoordinate(glm::vec2(1.0f, 1.0f));
-		AddCoordinate(glm::vec2(1.0f, 0.0f));
-		AddCoordinate(glm::vec2(0.0f, 1.0f));
+		if (coordinate)
+		{
+			AddCoordinate(glm::vec2(0.0f, 0.0f));
+			AddCoordinate(glm::vec2(1.0f, 1.0f));
+			AddCoordinate(glm::vec2(1.0f, 0.0f));
+			AddCoordinate(glm::vec2(0.0f, 1.0f));
+		}
 	}
     else if (type == CUBE)
     {
@@ -73,8 +81,6 @@ void Shape::SetShape(int type, int resolution)
     }
     else if (type == PLANE)
     {
-        positionsOnly = true;
-
         int sideVertCount = resolution;
         float halfLength = 0.5f;
 
@@ -101,8 +107,6 @@ void Shape::SetShape(int type, int resolution)
     }
 	else if (type == BLADE)
 	{
-		positionsOnly = true;
-
 		int layer = 1;
 		int subLayers = resolution;
 		const float BLADE_WIDTH = 0.05f;
@@ -148,6 +152,65 @@ void Shape::SetShape(int type, int resolution)
 		indices.push_back(max);
 		indices.push_back(top);
 	}
+	else if (type == CYLINDER)
+	{
+		Shape plane = Shape(PLANE, resolution);
+		plane.Rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+
+		Join(plane);
+
+		std::vector<unsigned int> startVertices;
+		std::vector<unsigned int> endVertices;
+
+		int index = 0;
+
+		for (glm::vec3 &position : positions)
+		{
+			float x = round((position.x + 0.5) * (resolution - 1));
+			float y = round((position.y + 0.5) * (resolution - 1));
+
+			if (x == 0) startVertices.push_back(index);
+			else if (x == (resolution - 1)) endVertices.push_back(index);
+
+			if (y == 0) mergeBottomPoints.push_back(index);
+			else if (y == (resolution - 1)) mergeTopPoints.push_back(index);
+
+			glm::vec3 newPosition = glm::normalize(Utilities::RotateVec(glm::vec3(0, 0, -1), (360.0 / resolution) * -x, glm::vec3(0, 1, 0)));
+
+			position.x = newPosition.x;
+			position.z = newPosition.z;
+
+			index++;
+		}
+
+		for (int i = 0; i < startVertices.size() - 1; i++)
+		{
+			indices.push_back(endVertices[i + 1]);
+			indices.push_back(startVertices[i]);
+			indices.push_back(endVertices[i]);
+
+			indices.push_back(endVertices[i + 1]);
+			indices.push_back(startVertices[i + 1]);
+			indices.push_back(startVertices[i]);
+		}
+
+		for (int i = 0; i < mergeTopPoints.size(); i++)
+		{
+			pointMerged.push_back(glm::ivec2(0));
+		}
+
+		if (normal) RecalculateNormals();
+
+		//if (resolution > 4)
+		//{
+		//	centerMergePoint = positions.size();
+		//	positions.push_back(TopMergePointsCenter() + glm::vec3(0, 0.05, 0));
+		//	//normals.push_back(glm::vec3(0, 1, 0));
+		//	//coordinates.push_back(glm::vec2(0, 1));
+		//}
+
+		//Translate(glm::vec3(0, 0.5, 0));
+	}
 }
 
 void Shape::AddPosition(glm::vec3 pos)
@@ -157,7 +220,7 @@ void Shape::AddPosition(glm::vec3 pos)
 
 void Shape::AddCoordinate(glm::vec2 uv)
 {
-	if (positionsOnly) return;
+	if (!coordinate) return;
 
 	coordinates.push_back(uv);
 }
@@ -181,12 +244,21 @@ void Shape::Join(Shape &joinShape)
 		indices.push_back(index + count);
 	}
 
-	if (positionsOnly) return;
+	if (coordinate)
+	{
+		for (glm::vec2 coord : joinShape.coordinates)
+    	{
+    	    coordinates.push_back(coord);
+    	}
+	}
 
-	for (glm::vec2 coord : joinShape.coordinates)
-    {
-        coordinates.push_back(coord);
-    }
+	if (normal)
+	{
+		for (glm::vec3 normal : joinShape.normals)
+    	{
+    	    normals.push_back(normal);
+    	}
+	}
 }
 
 void Shape::Move(glm::vec3 movement)
@@ -206,4 +278,47 @@ void Shape::Rotate(float degrees, glm::vec3 axis)
 	{
 		pos = rotation * glm::vec4(pos, 1.0f);
 	}
+
+	for (glm::vec3 &norm : normals)
+	{
+		norm = rotation * glm::vec4(norm, 0.0f);
+	}
+}
+
+void Shape::RecalculateNormals()
+{
+	normals.clear();
+
+	for (const glm::vec3 &position : positions)
+	{
+		normals.push_back(glm::normalize(glm::vec3(position.x, 0, position.z)));
+	}
+}
+
+glm::vec3 Shape::BottomMergePointsCenter()
+{
+	glm::vec3 center = glm::vec3(0);
+
+	for (const unsigned int &i : mergeBottomPoints)
+	{
+		center += positions[i];
+	}
+
+	center /= mergeBottomPoints.size();
+
+	return (center);
+}
+
+glm::vec3 Shape::TopMergePointsCenter()
+{
+	glm::vec3 center = glm::vec3(0);
+
+	for (const unsigned int &i : mergeTopPoints)
+	{
+		center += positions[i];
+	}
+
+	center /= mergeTopPoints.size();
+
+	return (center);
 }

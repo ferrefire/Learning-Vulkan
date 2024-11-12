@@ -201,7 +201,7 @@ void Manager::Start()
 {
 	Input::Start();
 	Terrain::Start();
-	Trees::Start();
+	if (Manager::settings.trees) Trees::Start();
 	Grass::Start();
 
 	cinematic.Start();
@@ -246,6 +246,7 @@ void Manager::Frame()
 	//}
 
 	Terrain::Frame();
+	if (Manager::settings.trees) Trees::Frame();
 	Grass::Frame();
 }
 

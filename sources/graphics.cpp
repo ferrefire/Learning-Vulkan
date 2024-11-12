@@ -114,8 +114,7 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 	Terrain::RecordGraphicsCommands(commandBuffer);
-	Trees::RecordGraphicsCommands(commandBuffer);
-	//std::cout << "trees render" << std::endl;
+	if (Manager::settings.trees) Trees::RecordGraphicsCommands(commandBuffer);
 	Grass::RecordGraphicsCommands(commandBuffer);
 
 	if (Manager::settings.screenQuad)
@@ -232,9 +231,6 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 
 void Graphics::DrawFrame()
 {
-	//Manager::UpdateShaderVariables();
-	
-
 	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
 
 	uint32_t imageIndex;
@@ -250,16 +246,13 @@ void Graphics::DrawFrame()
 		throw std::runtime_error("failed to acquire swap chain image");
 	}
 
-	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
-
-	
-
-	vkResetCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], 0);
-
 	Manager::UpdateShaderVariables();
 	Terrain::PostFrame();
-	Trees::PostFrame();
+	if (Manager::settings.trees) Trees::PostFrame();
 	Grass::PostFrame();
+
+	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
+	vkResetCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], 0);
 
 	RecordCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], imageIndex);
 
@@ -389,12 +382,11 @@ void Graphics::Create()
 	Terrain::Create();
 	Manager::CreateDescriptor();
 	Grass::Create();
-	Trees::Create();
+	if (Manager::settings.trees) Trees::Create();
 
 	if (Manager::settings.screenQuad)
 	{
 		Manager::screenQuad.mesh = Manager::NewMesh();
-		Manager::screenQuad.mesh->shape.positionsOnly = true;
 		Manager::screenQuad.mesh->shape.SetShape(QUAD);
 		Manager::screenQuad.mesh->RecalculateVertices();
 		Manager::screenQuad.mesh->Create();
@@ -460,7 +452,7 @@ void Graphics::Destroy()
 
 	Terrain::Destroy();
 	Grass::Destroy();
-	Trees::Destroy();
+	if (Manager::settings.trees) Trees::Destroy();
 	Manager::screenQuadDescriptor.Destroy();
 	Manager::Clean();
 

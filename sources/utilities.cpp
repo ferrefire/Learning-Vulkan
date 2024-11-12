@@ -89,3 +89,11 @@ void Utilities::PrintVec(glm::vec3 vec)
 {
 	std::cout << vec.x << " | " << vec.y << " | " << vec.z << std::endl;
 }
+
+glm::vec3 Utilities::RotateVec(glm::vec3 vec, float angle, glm::vec3 axis)
+{
+	glm::mat4 rotation = glm::mat4(1.0f);
+	rotation = glm::rotate(rotation, glm::radians(angle), axis);
+	vec = rotation * glm::vec4(vec, 0.0f);
+	return (vec);
+}

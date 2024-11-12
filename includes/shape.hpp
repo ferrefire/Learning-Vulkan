@@ -10,6 +10,7 @@
 #define CUBE 2
 #define PLANE 3
 #define BLADE 4
+#define CYLINDER 5
 
 #define INDEX_TYPE VK_INDEX_TYPE_UINT16
 
@@ -23,6 +24,7 @@ class Shape
     public:
         Shape();
         Shape(int type);
+        Shape(int type, int resolution);
         ~Shape();
 
         std::vector<glm::vec3> positions;
@@ -31,7 +33,14 @@ class Shape
         std::vector<glm::vec3> colors;
         std::vector<indexType> indices;
 
-		bool positionsOnly = false;
+        std::vector<unsigned int> mergeTopPoints;
+		std::vector<unsigned int> mergeBottomPoints;
+		std::vector<glm::ivec2> pointMerged;
+
+        int centerMergePoint = -1;
+
+		bool coordinate = false;
+		bool normal = false;
 
         void SetShape(int type, int resolution = 1);
 
@@ -43,4 +52,9 @@ class Shape
 
         void Move(glm::vec3 movement);
         void Rotate(float degrees, glm::vec3 axis);
+
+        void RecalculateNormals();
+
+        glm::vec3 BottomMergePointsCenter();
+		glm::vec3 TopMergePointsCenter();
 };

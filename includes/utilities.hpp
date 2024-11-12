@@ -20,4 +20,5 @@ class Utilities
 		static float SignedFloor(float x);
 		static int Fits(float part, float whole);
 		static void PrintVec(glm::vec3 vec);
+		static glm::vec3 RotateVec(glm::vec3 vec, float angle, glm::vec3 axis);
 };
