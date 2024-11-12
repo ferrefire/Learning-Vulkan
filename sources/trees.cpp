@@ -394,6 +394,8 @@ void Trees::ComputeTreeRender()
 void Trees::GenerateTrunkMesh(Mesh &mesh)
 {
 	BranchConfiguration branchConfig;
+	branchConfig.main = true;
+	//branchConfig.scale = glm::vec2(1.25, 1.0);
 
 	Shape trunkShape = branchConfig.Generate();
 
@@ -494,12 +496,14 @@ Shape BranchConfiguration::Generate()
 	if (scale.x <= minSize) splitCount = 0;
 	if (splitCount <= 0) return (branch);
 
-	float angleSpacing = 360.0 / splitCount;
+	int currentSplitCount = splitCount + (main ? 1 : 0);
+
+	float angleSpacing = 360.0 / currentSplitCount;
 	float angleMax = angleSpacing * 0.5;
 	branchSeed = Utilities::Random11(branchSeed);
 	float startAngle = branchSeed * 180.0;
 
-	for (int i = 0; i < splitCount; i++)
+	for (int i = 0; i < currentSplitCount; i++)
 	{
 		int subResolution = glm::clamp(int(glm::ceil(resolution * 0.5)), 4, resolution);
 
@@ -512,7 +516,8 @@ Shape BranchConfiguration::Generate()
 
 		branchSeed = Utilities::Random01(branchSeed);
 		subOffset.y = 1.0 + branchSeed;
-		// subOffset *= (scale.x + scale.y) * (main ? 5 : 3);
+		//subOffset *= (scale.x + scale.y) * (main ? 5 : 3);
+		//subOffset *= (scale.x + scale.y) * (main ? 3 : 3);
 		subOffset *= (scale.x + scale.y) * 3;
 
 		branchSeed = Utilities::Random01(branchSeed);
@@ -537,6 +542,7 @@ Shape BranchConfiguration::Generate()
 		subBranchConfig.splitCount = splitCount;
 		subBranchConfig.scale = subScale;
 		subBranchConfig.minSize = minSize;
+		subBranchConfig.main = false;
 
 		Shape subBranch = subBranchConfig.Generate();
 		branch.Merge(subBranch);

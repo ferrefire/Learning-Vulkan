@@ -26,6 +26,7 @@ struct BranchConfiguration
 	glm::vec3 angles = glm::vec3(0);
 	glm::vec2 scale = glm::vec2(1);
 	float minSize = 0.1f;
+	bool main = false;
 
 	float GetAngle(glm::vec2 dir);
 	Shape Generate();
