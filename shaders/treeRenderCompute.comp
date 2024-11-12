@@ -11,9 +11,11 @@ struct TreeData
 
 struct TreeRenderData
 {
-	uint posxz;
-	uint posyroty;
-	uint scaxcoly;
+	//uint posxz;
+	//uint posyroty;
+	//uint scaxcoly;
+	vec3 position;
+	vec3 rotscacol;
 };
 
 layout(std430, set = 1, binding = 0) buffer DataBuffer
@@ -96,7 +98,10 @@ void main()
 
 	uint index = atomicAdd(renderCount, 1);
 
-	renderData[index].posxz = packHalf2x16(worldPosition.xz - variables.viewPosition.xz);
-	renderData[index].posyroty = packHalf2x16(vec2(worldPosition.y - variables.viewPosition.y, rotation));
-	renderData[index].scaxcoly = packHalf2x16(vec2(scale, color));
+	//renderData[index].posxz = packHalf2x16(worldPosition.xz - variables.viewPosition.xz);
+	//renderData[index].posyroty = packHalf2x16(vec2(worldPosition.y - variables.viewPosition.y, rotation));
+	//renderData[index].scaxcoly = packHalf2x16(vec2(scale, color));
+
+	renderData[index].position = worldPosition - variables.viewPosition;
+	renderData[index].rotscacol = vec3(rotation, scale, color);
 }

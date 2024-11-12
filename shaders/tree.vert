@@ -4,9 +4,11 @@
 
 struct TreeRenderData
 {
-	uint posxz;
-	uint posyroty;
-	uint scaxcoly;
+	//uint posxz;
+	//uint posyroty;
+	//uint scaxcoly;
+	vec3 position;
+	vec3 rotscacol;
 };
 
 layout(std430, set = 1, binding = 0) buffer RenderBuffer
@@ -30,13 +32,18 @@ void main()
 	float scale = 1.0;
 	float color = 1.0;
 
-    position.xz = unpackHalf2x16(renderData[gl_InstanceIndex].posxz);
-	vec2 yy = unpackHalf2x16(renderData[gl_InstanceIndex].posyroty);
-	position.y = yy.x;
-	rotation = yy.y * 360.0;
-	vec2 xx = unpackHalf2x16(renderData[gl_InstanceIndex].scaxcoly);
-	scale = xx.x;
-	color = xx.y;
+    //position.xz = unpackHalf2x16(renderData[gl_InstanceIndex].posxz);
+	//vec2 yy = unpackHalf2x16(renderData[gl_InstanceIndex].posyroty);
+	//position.y = yy.x;
+	//rotation = yy.y * 360.0;
+	//vec2 xx = unpackHalf2x16(renderData[gl_InstanceIndex].scaxcoly);
+	//scale = xx.x;
+	//color = xx.y;
+
+	position = renderData[gl_InstanceIndex].position;
+	rotation = renderData[gl_InstanceIndex].rotscacol.x;
+	scale = renderData[gl_InstanceIndex].rotscacol.y;
+	color = renderData[gl_InstanceIndex].rotscacol.z;
 
     position += variables.viewPosition;
 
