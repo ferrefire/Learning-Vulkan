@@ -1,6 +1,7 @@
 #include "trees.hpp"
 
 #include "manager.hpp"
+#include "utilities.hpp"
 
 #include <iostream>
 
@@ -22,10 +23,13 @@ void Trees::Create()
 
 void Trees::CreateMeshes()
 {
-	treeMesh.normal = true;
-	treeMesh.shape.normal = true;
-	treeMesh.shape.SetShape(CYLINDER, 9);
-	treeMesh.RecalculateVertices();
+	//treeMesh.normal = true;
+	//treeMesh.shape.normal = true;
+	//treeMesh.shape.SetShape(CYLINDER, 9);
+	//treeMesh.RecalculateVertices();
+
+	GenerateTrunkMesh(treeMesh);
+
 	treeMesh.Create();
 }
 
@@ -387,10 +391,171 @@ void Trees::ComputeTreeRender()
 	treeRenderCounts[Manager::currentFrame] = *(uint32_t *)countBuffers[Manager::currentFrame].mappedBuffer;
 }
 
+void Trees::GenerateTrunkMesh(Mesh &mesh)
+{
+	BranchConfiguration branchConfig;
+
+	Shape trunkShape = branchConfig.Generate();
+
+	mesh.normal = true;
+	mesh.shape.normal = true;
+	mesh.shape.Join(trunkShape);
+	mesh.RecalculateVertices();
+}
+
+float BranchConfiguration::GetAngle(glm::vec2 dir)
+{
+	float angle = 0;
+
+	int signX = glm::sign(dir.x);
+	int signZ = glm::sign(dir.y);
+
+	float angleX = signX * dir.x;
+	float angleZ = signZ * dir.y;
+
+	if (signX == -1 && signZ != -1)
+	{
+		angle = (1.0 - angleX) * 90.0 + 270.0;
+	}
+	else if (signX == -1 && signZ == -1)
+	{
+		angle = angleX * 90.0 + 180.0;
+	}
+	else if (signZ == -1)
+	{
+		angle = (1.0 - angleX) * 90.0 + 90.0;
+	}
+	else
+	{
+		angle = angleX * 90.0;
+	}
+
+	return (angle);
+}
+
+Shape BranchConfiguration::Generate()
+{
+	float branchSeed = angles.length() + base.length() + offset.y + seed;
+
+	Shape branch = Shape(CYLINDER, resolution);
+	float sideAngle = 0;
+	float sideAngleStart = 0;
+	branch.Scale(glm::vec3(scale.x, scale.y, scale.x));
+
+	//int i = 0;
+	float angleDiff = angles.x - angles.y;
+
+	glm::vec2 vec2Offset = glm::vec2(offset.x, offset.z);
+	sideAngle = GetAngle(Utilities::Normalize(vec2Offset));
+	sideAngleStart = angles.z;
+	if (sideAngle > 180.0) sideAngle = -(360.0 - sideAngle);
+
+	for (int y = 0; y <= resolution; y++)
+	{
+		float gradient = float(y) / float(resolution);
+
+		float xAngle = angles.y + angleDiff * 0.5 + angleDiff * 0.5 * gradient;
+		glm::mat4 xRotationMatrix = Utilities::GetRotationMatrix(xAngle, glm::vec3(1, 0, 0));
+
+		float yAngle = glm::mix(sideAngleStart, sideAngle, gradient);
+		glm::mat4 yRotationMatrix = Utilities::GetRotationMatrix(yAngle, glm::vec3(0, 1, 0));
+
+		// glm::mat4 rotationMatrix = Utilities::GetRotationMatrix(glm::vec3(xAngle, yAngle, 0));
+
+		for (int x = 0; x <= resolution; x++)
+		{
+			branch.positions[branch.GetPositionIndex(y, x)] = xRotationMatrix *
+				glm::vec4(branch.positions[branch.GetPositionIndex(y, x)], 1);
+			branch.positions[branch.GetPositionIndex(y, x)] = yRotationMatrix *
+				glm::vec4(branch.positions[branch.GetPositionIndex(y, x)], 1);
+
+			branch.normals[branch.GetPositionIndex(y, x)] = xRotationMatrix *
+				glm::vec4(branch.normals[branch.GetPositionIndex(y, x)], 0);
+			branch.normals[branch.GetPositionIndex(y, x)] = yRotationMatrix *
+				glm::vec4(branch.normals[branch.GetPositionIndex(y, x)], 0);
+
+			if (y == resolution && x == resolution && branch.centerMergePoint != -1)
+			{
+				branch.positions[branch.centerMergePoint] = xRotationMatrix *
+					glm::vec4(branch.positions[branch.centerMergePoint], 1);
+				branch.positions[branch.centerMergePoint] = yRotationMatrix *
+					glm::vec4(branch.positions[branch.centerMergePoint], 1);
+
+				branch.normals[branch.centerMergePoint] = xRotationMatrix *
+					glm::vec4(branch.normals[branch.centerMergePoint], 0);
+				branch.normals[branch.centerMergePoint] = yRotationMatrix *
+					glm::vec4(branch.normals[branch.centerMergePoint], 0);
+			}
+		}
+	}
+
+	branch.Move(base + offset);
+
+	if (scale.x <= minSize) splitCount = 0;
+	if (splitCount <= 0) return (branch);
+
+	float angleSpacing = 360.0 / splitCount;
+	float angleMax = angleSpacing * 0.5;
+	branchSeed = Utilities::Random11(branchSeed);
+	float startAngle = branchSeed * 180.0;
+
+	for (int i = 0; i < splitCount; i++)
+	{
+		int subResolution = glm::clamp(int(glm::ceil(resolution * 0.5)), 4, resolution);
+
+		branchSeed = Utilities::Random11(branchSeed);
+		float newSubAngle = startAngle + (i * angleSpacing) + (branchSeed * angleMax);
+		glm::vec3 subOffset = glm::vec3(0, 0, -1);
+		subOffset = Utilities::RotateVec(subOffset, newSubAngle, glm::vec3(0, 1, 0));
+
+		glm::vec3 subBase = branch.TopMergePointsCenter();
+
+		branchSeed = Utilities::Random01(branchSeed);
+		subOffset.y = 1.0 + branchSeed;
+		// subOffset *= (scale.x + scale.y) * (main ? 5 : 3);
+		subOffset *= (scale.x + scale.y) * 3;
+
+		branchSeed = Utilities::Random01(branchSeed);
+		float scaleMult = glm::mix(0.9, 1.1, branchSeed);
+		glm::vec2 subScale = glm::vec2(scale.x * scaleMult * 0.6, scale.y * scaleMult * 0.75);
+
+		float subAngle = angles.x;
+		branchSeed = Utilities::Random01(branchSeed);
+		if (i == 0) subAngle += glm::mix(0.0, 5.0, branchSeed);
+		else subAngle += glm::mix(5.0, 60.0, branchSeed);
+		glm::vec3 subAngles = glm::vec3(subAngle, angles.x, sideAngle);
+
+		subOffset = Utilities::RotateVec(subOffset, subAngle, glm::vec3(1, 0, 0));
+		subOffset = Utilities::RotateVec(subOffset, sideAngle, glm::vec3(0, 1, 0));
+
+		BranchConfiguration subBranchConfig;
+		subBranchConfig.seed = seed;
+		subBranchConfig.resolution = subResolution;
+		subBranchConfig.base = subBase;
+		subBranchConfig.offset = subOffset;
+		subBranchConfig.angles = subAngles;
+		subBranchConfig.splitCount = splitCount;
+		subBranchConfig.scale = subScale;
+		subBranchConfig.minSize = minSize;
+
+		Shape subBranch = subBranchConfig.Generate();
+		branch.Merge(subBranch);
+
+		// Shape subBranch = Generate(subResolution, subBase, subOffset, subScale, subAngles, 2, false);
+		// branch.Join(subBranch, true);
+
+		// futures[i] = promises[i].get_future();
+		// threads[i] = std::thread(GenerateBranchThreaded, subResolution, subBase, subOffset, subScale, subAngles, tsbc, false, &promises[i]);
+	}
+
+	branch.CloseUnusedPoints();
+	return (branch);
+}
+
 uint32_t Trees::treeBase = 2048;
 uint32_t Trees::treeCount = Trees::treeBase * Trees::treeBase;
 
-uint32_t Trees::treeRenderBase = 128;
+uint32_t Trees::treeRenderBase = 16;
 uint32_t Trees::treeRenderCount = Trees::treeRenderBase * Trees::treeRenderBase;
 std::vector<uint32_t> Trees::treeRenderCounts;
 

@@ -33,15 +33,20 @@ void main()
     position.xz = unpackHalf2x16(renderData[gl_InstanceIndex].posxz);
 	vec2 yy = unpackHalf2x16(renderData[gl_InstanceIndex].posyroty);
 	position.y = yy.x;
-	rotation = yy.y;
+	rotation = yy.y * 360.0;
 	vec2 xx = unpackHalf2x16(renderData[gl_InstanceIndex].scaxcoly);
 	scale = xx.x;
 	color = xx.y;
 
     position += variables.viewPosition;
 
-    vec3 worldPosition = ObjectToWorld(inPosition * vec3(1.5, 15, 1.5), mat4(1)) + position + vec3(0, 7.5, 0);
+	mat4 rotationMatrix = GetRotationMatrix(radians(rotation), vec3(0.0, 1.0, 0.0));
+    vec3 objectPosition = (rotationMatrix * vec4(inPosition, 1.0)).xyz;
+    normal = (rotationMatrix * vec4(inNormal, 0.0)).xyz;
 
-	normal = inNormal;
+    //vec3 worldPosition = ObjectToWorld(inPosition * vec3(1.5, 15, 1.5), mat4(1)) + position + vec3(0, 7.5, 0);
+    vec3 worldPosition = ObjectToWorld(objectPosition, mat4(1)) + position;
+
+	//normal = inNormal;
     gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
 }

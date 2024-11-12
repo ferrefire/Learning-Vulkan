@@ -24,6 +24,8 @@ Shape::~Shape()
 
 void Shape::SetShape(int type, int resolution)
 {
+	createResolution = resolution;
+
 	if (type == QUAD)
 	{
 		AddPosition(glm::vec3(-0.5f, -0.5f, 0.0f));
@@ -154,6 +156,8 @@ void Shape::SetShape(int type, int resolution)
 	}
 	else if (type == CYLINDER)
 	{
+		normal = true;
+
 		Shape plane = Shape(PLANE, resolution);
 		plane.Rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
 
@@ -201,15 +205,16 @@ void Shape::SetShape(int type, int resolution)
 
 		if (normal) RecalculateNormals();
 
-		//if (resolution > 4)
-		//{
-		//	centerMergePoint = positions.size();
-		//	positions.push_back(TopMergePointsCenter() + glm::vec3(0, 0.05, 0));
-		//	//normals.push_back(glm::vec3(0, 1, 0));
-		//	//coordinates.push_back(glm::vec2(0, 1));
-		//}
+		if (resolution > 4)
+		{
+			centerMergePoint = positions.size();
+			positions.push_back(TopMergePointsCenter() + glm::vec3(0, 0.05, 0));
+			if (normal) normals.push_back(glm::vec3(0, 1, 0));
+			//coordinates.push_back(glm::vec2(0, 1));
+		}
 
-		//Translate(glm::vec3(0, 0.5, 0));
+		Move(glm::vec3(0, 0.5, 0));
+		Scale(glm::vec3(1, 15, 1));
 	}
 }
 
@@ -232,9 +237,10 @@ void Shape::AddIndice(indexType index)
 
 void Shape::Join(Shape &joinShape)
 {
-    int count = glm::max(positions.size(), coordinates.size());
+	//int count = glm::max(positions.size(), coordinates.size());
+	int count = positions.size();
 
-    for (glm::vec3 pos : joinShape.positions)
+	for (glm::vec3 pos : joinShape.positions)
     {
         positions.push_back(pos);
     }
@@ -261,6 +267,109 @@ void Shape::Join(Shape &joinShape)
 	}
 }
 
+int CalculateIndex(int i)
+{
+	int index = 0;
+
+	if (i % 2 == 0)
+	{
+		index += i / 2;
+	}
+	else
+	{
+		index -= i / 2 + 1;
+	}
+
+	return (index);
+}
+
+void Shape::Merge(Shape &joinShape)
+{
+	int count = positions.size();
+	int joinCount = joinShape.mergeBottomPoints.size();
+	int mainCount = mergeTopPoints.size();
+	int minCount = glm::min(joinCount, mainCount);
+
+	int closestMainPoint = ClosestMergeIndex(joinShape.BottomMergePointsCenter(), true, true);
+	int furthestJoinPoint = joinShape.ClosestMergeIndex(TopMergePointsCenter(), false, false);
+
+	for (int i = 0; i < minCount; i++)
+	{
+		int index = CalculateIndex(i);
+
+		int i1 = index + furthestJoinPoint;
+		int i2 = index + 1 + furthestJoinPoint;
+
+		if (i1 >= joinCount) i1 -= joinCount;
+		if (i2 >= joinCount) i2 -= joinCount;
+		if (i1 < 0) i1 += joinCount;
+		if (i2 < 0) i2 += joinCount;
+
+		int mi1 = index + closestMainPoint;
+		int mi2 = index + 1 + closestMainPoint;
+
+		if (mi1 >= mainCount) mi1 -= mainCount;
+		if (mi1 < 0) mi1 += mainCount;
+		if (mi2 >= mainCount) mi2 -= mainCount;
+		if (mi2 < 0) mi2 += mainCount;
+
+		indices.push_back(joinShape.mergeBottomPoints[i1] + count);
+		indices.push_back(mergeTopPoints[mi2]);
+		indices.push_back(mergeTopPoints[mi1]);
+
+		indices.push_back(joinShape.mergeBottomPoints[i1] + count);
+		indices.push_back(joinShape.mergeBottomPoints[i2] + count);
+		indices.push_back(mergeTopPoints[mi2]);
+
+		glm::vec3 direction = joinShape.positions[joinShape.mergeBottomPoints[i1]] - positions[mergeTopPoints[mi1]];
+		joinShape.positions[joinShape.mergeBottomPoints[i1]] -= direction * 0.25f;
+		direction = joinShape.positions[joinShape.mergeBottomPoints[i1]] - positions[mergeTopPoints[mi1]];
+		positions[mergeTopPoints[mi1]] += direction * 0.1f;
+
+		glm::ivec2 coords = GetPositionCoordinates(mergeTopPoints[mi1]);
+		int range = int(glm::ceil(createResolution * 0.25));
+		for (int j = 1; j < range; j++)
+		{
+			int prev = GetPositionIndex(coords.x - j + 1, coords.y);
+			int below = GetPositionIndex(coords.x - j, coords.y);
+
+			direction = positions[prev] - positions[below];
+			positions[below] += direction * 0.25f;
+		}
+
+		pointMerged[mi1].x = 1;
+		pointMerged[mi2].y = 1;
+	}
+
+	if (centerMergePoint != -1)
+	{
+		int index = CalculateIndex(minCount - 1);
+		int i1 = index + 1 + furthestJoinPoint;
+		if (i1 >= joinCount) i1 -= joinCount;
+		if (i1 < 0) i1 += joinCount;
+
+		int mi1 = index + 1 + closestMainPoint;
+		if (mi1 >= mainCount) mi1 -= mainCount;
+		if (mi1 < 0) mi1 += mainCount;
+
+		indices.push_back(joinShape.mergeBottomPoints[i1] + count);
+		indices.push_back(centerMergePoint);
+		indices.push_back(mergeTopPoints[mi1]);
+
+		index = CalculateIndex(minCount - 2);
+
+		mi1 = index + closestMainPoint;
+		if (mi1 >= mainCount) mi1 -= mainCount;
+		if (mi1 < 0) mi1 += mainCount;
+
+		indices.push_back(joinShape.mergeBottomPoints[i1] + count);
+		indices.push_back(mergeTopPoints[mi1]);
+		indices.push_back(centerMergePoint);
+	}
+
+	Join(joinShape);
+}
+
 void Shape::Move(glm::vec3 movement)
 {
 	for (glm::vec3 &pos : positions)
@@ -282,6 +391,17 @@ void Shape::Rotate(float degrees, glm::vec3 axis)
 	for (glm::vec3 &norm : normals)
 	{
 		norm = rotation * glm::vec4(norm, 0.0f);
+	}
+}
+
+void Shape::Scale(glm::vec3 scale)
+{
+	glm::mat4 scaleMatrix = glm::mat4(1.0f);
+	scaleMatrix = glm::scale(scaleMatrix, scale);
+
+	for (glm::vec3 &pos : positions)
+	{
+		pos = scaleMatrix * glm::vec4(pos, 1.0f);
 	}
 }
 
@@ -321,4 +441,79 @@ glm::vec3 Shape::TopMergePointsCenter()
 	center /= mergeTopPoints.size();
 
 	return (center);
+}
+
+int Shape::GetPositionIndex(int x, int y)
+{
+	int root = createResolution + 1;
+
+	return (x + y * root);
+}
+
+glm::ivec2 Shape::GetPositionCoordinates(int i)
+{
+	int root = createResolution + 1;
+
+	glm::ivec2 coords = glm::ivec2(0);
+	coords.y = i / root;
+	coords.x = i % root;
+
+	return (coords);
+}
+
+int Shape::ClosestMergeIndex(glm::vec3 position, bool closest, bool top)
+{
+	int index = 0;
+	int closestIndex = 0;
+	float closestDistance = 0;
+
+	if (top) closestDistance = glm::distance(position, positions[mergeTopPoints[0]]);
+	else closestDistance = glm::distance(position, positions[mergeBottomPoints[0]]);
+
+	for (const int &i : (top ? mergeTopPoints : mergeBottomPoints))
+	{
+		float currentDistance = glm::distance(position, positions[i]);
+		if (closest)
+		{
+			if (currentDistance < closestDistance)
+			{
+				closestDistance = currentDistance;
+				closestIndex = index;
+			}
+		}
+		else
+		{
+			if (currentDistance > closestDistance)
+			{
+				closestDistance = currentDistance;
+				closestIndex = index;
+			}
+		}
+		index++;
+	}
+
+	return (closestIndex);
+}
+
+void Shape::CloseUnusedPoints()
+{
+	if (centerMergePoint == -1) return;
+
+	glm::vec3 center = TopMergePointsCenter();
+
+	int i = 0;
+	for (const unsigned int &point : mergeTopPoints)
+	{
+		if (pointMerged[i].x == 0)
+		{
+			int mi1 = i;
+			int mi2 = i + 1;
+			if (mi2 >= mergeTopPoints.size()) mi2 -= mergeTopPoints.size();
+
+			indices.push_back(centerMergePoint);
+			indices.push_back(mergeTopPoints[mi2]);
+			indices.push_back(mergeTopPoints[mi1]);
+		}
+		i++;
+	}
 }

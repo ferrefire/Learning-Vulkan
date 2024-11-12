@@ -38,6 +38,7 @@ class Shape
 		std::vector<glm::ivec2> pointMerged;
 
         int centerMergePoint = -1;
+        int createResolution = -1;
 
 		bool coordinate = false;
 		bool normal = false;
@@ -48,13 +49,19 @@ class Shape
 		void AddCoordinate(glm::vec2 uv);
 		void AddIndice(indexType index);
 
-		void Join(Shape &joinShape);
+        void Join(Shape &joinShape);
+        void Merge(Shape &joinShape);
 
         void Move(glm::vec3 movement);
         void Rotate(float degrees, glm::vec3 axis);
+        void Scale(glm::vec3 scale);
 
         void RecalculateNormals();
 
+        int ClosestMergeIndex(glm::vec3 position, bool closest, bool top);
         glm::vec3 BottomMergePointsCenter();
 		glm::vec3 TopMergePointsCenter();
+        int GetPositionIndex(int x, int y);
+        glm::ivec2 GetPositionCoordinates(int i);
+        void CloseUnusedPoints();
 };

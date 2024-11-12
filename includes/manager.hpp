@@ -36,7 +36,7 @@ struct Settings
 	bool uncappedFPS = false;
 	bool screenQuad = false;
 	bool occlussionCulling = false;
-	bool trees = false;
+	bool trees = true;
 };
 
 struct ShaderVariables

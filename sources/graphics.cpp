@@ -38,7 +38,9 @@ void Graphics::CreateInstance()
 
 	if (Manager::settings.validationLayersActive && !CheckValidationLayerSupport())
 	{
-		throw std::runtime_error("validation layers requested, but not available");
+		//throw std::runtime_error("validation layers requested, but not available");
+		std::cout << "validation layers requested, but not available" << std::endl;
+		Manager::settings.validationLayersActive = false;
 	}
 	
 	std::cout << "Validation layers: " << (Manager::settings.validationLayersActive ? "enabled" : "disabled") << std::endl;

@@ -85,7 +85,8 @@ void Mesh::DestroyIndexBuffer()
 void Mesh::RecalculateVertices()
 {
 	vertices.clear();
-	vertices.resize(glm::max(glm::max(shape.positions.size(), shape.coordinates.size()), shape.normals.size()));
+	//vertices.resize(glm::max(glm::max(shape.positions.size(), shape.coordinates.size()), shape.normals.size()));
+	vertices.resize(shape.positions.size());
 
 	for (int i = 0; i < vertices.size(); i++)
 	{

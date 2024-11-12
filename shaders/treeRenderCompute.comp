@@ -34,9 +34,9 @@ layout(std430, set = 1, binding = 2) buffer CountBuffer
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 const int treeBase = 2048;
-const int treeRenderBase = 128;
-const float spacing = 20;
-const float spacingMult = 0.05;
+const int treeRenderBase = 16;
+const float spacing = 50;
+const float spacingMult = 0.02;
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -74,14 +74,14 @@ void main()
 	offset.xz = unpackHalf2x16(data[dataIndex].posxz);
 	vec2 yy = unpackHalf2x16(data[dataIndex].posyroty);
 	offset.y = yy.x;
-	//rotation = yy.y;
+	float rotation = yy.y;
 	//vec2 xx = unpackHalf2x16(data[gl_InstanceIndex].scaxcoly);
 	//scale = xx.x;
 	//color = xx.y;
 
 	float x = worldOffset.x * spacing + offset.x;
 	float z = worldOffset.y * spacing + offset.z;
-	float y = SampleDynamic(vec2(x, z)) * 5000;
+	float y = SampleDynamic(vec2(x, z)) * 5000 - 1;
 	vec3 worldPosition = vec3(x, y, z);
 
 	//ix += int(flooredViewPosition.x + treeBase * 0.5);
@@ -92,7 +92,7 @@ void main()
 
 	float scale = 1.0;
 	float color = 1.0;
-	float rotation = 0.0;
+	//float rotation = 0.0;
 
 	uint index = atomicAdd(renderCount, 1);
 

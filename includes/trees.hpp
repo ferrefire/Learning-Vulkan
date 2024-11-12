@@ -5,6 +5,7 @@
 #include "pipeline.hpp"
 #include "descriptor.hpp"
 #include "texture.hpp"
+#include "shape.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -15,6 +16,21 @@
 
 #include <vector>
 
+struct BranchConfiguration
+{
+	float seed = 32.0f;
+	int resolution = 24;
+	int splitCount = 3;
+	glm::vec3 base = glm::vec3(0);
+	glm::vec3 offset = glm::vec3(0);
+	glm::vec3 angles = glm::vec3(0);
+	glm::vec2 scale = glm::vec2(1);
+	float minSize = 0.1f;
+
+	float GetAngle(glm::vec2 dir);
+	Shape Generate();
+};
+
 struct TreeData
 {
 	uint32_t posxz;
@@ -24,12 +40,6 @@ struct TreeData
 
 struct TreeRenderData
 {
-	//uint32_t posxz;
-	//uint32_t normxz;
-	//uint32_t posynormy;
-	//uint32_t rot;
-	//uint32_t scaxcoly;
-
 	uint32_t posxz;
 	uint32_t posyroty;
 	uint32_t scaxcoly;
@@ -99,4 +109,7 @@ class Trees
 		static void RenderCulling(VkCommandBuffer commandBuffer);
 		static void ComputeTreeSetup();
 		static void ComputeTreeRender();
+
+		static void GenerateTrunkMesh(Mesh &mesh);
+		//static Shape GenerateBranchShape(BranchConfiguration branchConfig);
 };

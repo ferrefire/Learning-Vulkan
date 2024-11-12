@@ -13,6 +13,10 @@ class Utilities
 		/* data */
 
 	public:
+		//static unsigned int seed;
+		static std::hash<float> floatHash;
+		static std::hash<size_t> sizetHash;
+
 		static std::string FileToString(const char *path);
 		static std::vector<char> FileToBinary(const char *path);
 		static bool Contains(const std::string &str, const std::string &find);
@@ -21,4 +25,11 @@ class Utilities
 		static int Fits(float part, float whole);
 		static void PrintVec(glm::vec3 vec);
 		static glm::vec3 RotateVec(glm::vec3 vec, float angle, glm::vec3 axis);
+		static glm::vec2 Normalize(const glm::vec2 &vec);
+		static glm::vec3 Normalize(const glm::vec3 &vec);
+		static glm::mat4 GetRotationMatrix(float angle, glm::vec3 axis);
+		//static float Utilities::Random01();
+		static float Random01(float seed);
+		//static float Utilities::Random11();
+		static float Random11(float seed);
 };

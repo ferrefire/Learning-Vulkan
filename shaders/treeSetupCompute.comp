@@ -17,7 +17,8 @@ layout(std430, set = 1, binding = 0) buffer DataBuffer
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 const int treeBase = 2048;
-const float spacing = 20;
+const float spacing = 50;
+const float spacingMult = 0.02;
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -39,9 +40,9 @@ void main()
 
 	float ran = random(gl_GlobalInvocationID.xy);
 
-	float x = (ran - 0.5) * spacing;
+	float x = (ran - 0.5) * spacing * 0.5;
 	ran = random(vec2(index, x));
-	float z = (ran - 0.5) * spacing;
+	float z = (ran - 0.5) * spacing * 0.5;
 	ran = random(vec2(x, z));
 	float y = (ran - 0.5) * spacing * 0.2;
 
@@ -50,7 +51,8 @@ void main()
 
 	float scale = 1.0;
 	float color = 1.0;
-	float rotation = 0.0;
+	ran = random(vec2(ran, index));
+	float rotation = ran;
 	//float life = 1.0;
 
 	data[index].posxz = packHalf2x16(position.xz);
