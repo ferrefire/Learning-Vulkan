@@ -23,6 +23,7 @@ layout(set = 0, binding = 0) uniform Variables
 	float terrainChunksLengthMult;
 	float time;
 	uint occlusionCulling;
+	uint shadows;
 } variables;
 
 #endif

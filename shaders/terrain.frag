@@ -202,7 +202,8 @@ void main()
 	vec3 diffuse = DiffuseLighting(terrainNormal, vec3(1));
 	
 	//vec4 shadowSpace = variables.shadowProjection * variables.shadowView * vec4(inPosition, 1.0);
-	float shadow = GetShadow(shadowPosition);
+	float shadow = 1;
+	if (variables.shadows == 1) shadow = GetShadow(shadowPosition);
 
 	vec3 combinedColor = textureColor * diffuse * shadow;
 	vec3 endColor = Fog(combinedColor, depth);

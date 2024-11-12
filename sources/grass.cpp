@@ -10,12 +10,12 @@ void Grass::Create()
 {
 	CreateMeshes();
 	CreateGraphicsPipeline();
-	CreateShadowPipeline();
+	if (Manager::settings.shadows) CreateShadowPipeline();
 	CreateComputePipelines();
 	CreateTextures();
 	CreateBuffers();
 	CreateGraphicsDescriptor();
-	CreateShadowDescriptor();
+	if (Manager::settings.shadows) CreateShadowDescriptor();
 	CreateComputeDescriptors();
 }
 
@@ -46,13 +46,13 @@ void Grass::CreateMeshes()
 
 void Grass::CreateGraphicsPipeline()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(3);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(2);
 	descriptorLayoutConfig[0].type = STORAGE_BUFFER;
 	descriptorLayoutConfig[0].stages = VERTEX_STAGE;
-	descriptorLayoutConfig[1].type = STORAGE_BUFFER;
+	//descriptorLayoutConfig[1].type = STORAGE_BUFFER;
+	//descriptorLayoutConfig[1].stages = VERTEX_STAGE;
+	descriptorLayoutConfig[1].type = UNIFORM_BUFFER;
 	descriptorLayoutConfig[1].stages = VERTEX_STAGE;
-	descriptorLayoutConfig[2].type = UNIFORM_BUFFER;
-	descriptorLayoutConfig[2].stages = VERTEX_STAGE;
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
 	pipelineConfiguration.foliage = true;
@@ -67,13 +67,13 @@ void Grass::CreateGraphicsPipeline()
 
 void Grass::CreateShadowPipeline()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(3);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(2);
 	descriptorLayoutConfig[0].type = STORAGE_BUFFER;
 	descriptorLayoutConfig[0].stages = VERTEX_STAGE;
-	descriptorLayoutConfig[1].type = STORAGE_BUFFER;
+	//descriptorLayoutConfig[1].type = STORAGE_BUFFER;
+	//descriptorLayoutConfig[1].stages = VERTEX_STAGE;
+	descriptorLayoutConfig[1].type = UNIFORM_BUFFER;
 	descriptorLayoutConfig[1].stages = VERTEX_STAGE;
-	descriptorLayoutConfig[2].type = UNIFORM_BUFFER;
-	descriptorLayoutConfig[2].stages = VERTEX_STAGE;
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
 	pipelineConfiguration.foliage = true;
@@ -90,19 +90,19 @@ void Grass::CreateShadowPipeline()
 
 void Grass::CreateComputePipelines()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(6);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(4);
 	descriptorLayoutConfig[0].type = STORAGE_BUFFER;
 	descriptorLayoutConfig[0].stages = COMPUTE_STAGE;
+	//descriptorLayoutConfig[1].type = STORAGE_BUFFER;
+	//descriptorLayoutConfig[1].stages = COMPUTE_STAGE;
 	descriptorLayoutConfig[1].type = STORAGE_BUFFER;
 	descriptorLayoutConfig[1].stages = COMPUTE_STAGE;
-	descriptorLayoutConfig[2].type = STORAGE_BUFFER;
+	//descriptorLayoutConfig[2].type = STORAGE_BUFFER;
+	//descriptorLayoutConfig[2].stages = COMPUTE_STAGE;
+	descriptorLayoutConfig[2].type = UNIFORM_BUFFER;
 	descriptorLayoutConfig[2].stages = COMPUTE_STAGE;
-	descriptorLayoutConfig[3].type = STORAGE_BUFFER;
+	descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[3].stages = COMPUTE_STAGE;
-	descriptorLayoutConfig[4].type = UNIFORM_BUFFER;
-	descriptorLayoutConfig[4].stages = COMPUTE_STAGE;
-	descriptorLayoutConfig[5].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[5].stages = COMPUTE_STAGE;
 
 	computePipeline.CreateComputePipeline("grassCompute", descriptorLayoutConfig);
 
@@ -118,7 +118,8 @@ void Grass::CreateBuffers()
 	dataBuffers.resize(Manager::settings.maxFramesInFlight);
 
 	BufferConfiguration dataConfiguration;
-	dataConfiguration.size = sizeof(GrassData) * grassCount;
+	//dataConfiguration.size = sizeof(GrassData) * grassCount;
+	dataConfiguration.size = sizeof(GrassData) * grassTotalCount;
 	dataConfiguration.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 	dataConfiguration.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 	dataConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -129,7 +130,7 @@ void Grass::CreateBuffers()
 		buffer.Create(dataConfiguration);
 	}
 
-	lodDataBuffers.resize(Manager::settings.maxFramesInFlight);
+	/*lodDataBuffers.resize(Manager::settings.maxFramesInFlight);
 
 	BufferConfiguration lodDataConfiguration;
 	lodDataConfiguration.size = sizeof(GrassData) * grassLodCount;
@@ -141,12 +142,12 @@ void Grass::CreateBuffers()
 	for (Buffer &buffer : lodDataBuffers)
 	{
 		buffer.Create(lodDataConfiguration);
-	}
+	}*/
 
 	countBuffers.resize(Manager::settings.maxFramesInFlight);
 
 	BufferConfiguration countConfiguration;
-	countConfiguration.size = sizeof(uint32_t);
+	countConfiguration.size = sizeof(CountData);
 	countConfiguration.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 	countConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 	countConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -157,7 +158,7 @@ void Grass::CreateBuffers()
 		buffer.Create(countConfiguration);
 	}
 
-	lodCountBuffers.resize(Manager::settings.maxFramesInFlight);
+	/*lodCountBuffers.resize(Manager::settings.maxFramesInFlight);
 
 	BufferConfiguration lodCountConfiguration;
 	lodCountConfiguration.size = sizeof(uint32_t);
@@ -169,7 +170,7 @@ void Grass::CreateBuffers()
 	for (Buffer &buffer : lodCountBuffers)
 	{
 		buffer.Create(lodCountConfiguration);
-	}
+	}*/
 
 	variableBuffers.resize(Manager::settings.maxFramesInFlight);
 
@@ -188,7 +189,7 @@ void Grass::CreateBuffers()
 
 void Grass::CreateGraphicsDescriptor()
 {
-	std::vector<DescriptorConfiguration> descriptorConfig(3);
+	std::vector<DescriptorConfiguration> descriptorConfig(2);
 
 	descriptorConfig[0].type = STORAGE_BUFFER;
 	descriptorConfig[0].stages = VERTEX_STAGE;
@@ -197,32 +198,33 @@ void Grass::CreateGraphicsDescriptor()
 	for (Buffer &buffer : dataBuffers)
 	{
 		descriptorConfig[0].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[0].buffersInfo[index].range = sizeof(GrassData) * grassCount;
+		//descriptorConfig[0].buffersInfo[index].range = sizeof(GrassData) * grassCount;
+		descriptorConfig[0].buffersInfo[index].range = sizeof(GrassData) * grassTotalCount;
 		descriptorConfig[0].buffersInfo[index].offset = 0;
 		index++;
 	}
 
-	descriptorConfig[1].type = STORAGE_BUFFER;
-	descriptorConfig[1].stages = VERTEX_STAGE;
-	descriptorConfig[1].buffersInfo.resize(lodDataBuffers.size());
-	index = 0;
-	for (Buffer &buffer : lodDataBuffers)
-	{
-		descriptorConfig[1].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[1].buffersInfo[index].range = sizeof(GrassData) * grassLodCount;
-		descriptorConfig[1].buffersInfo[index].offset = 0;
-		index++;
-	}
+	//descriptorConfig[1].type = STORAGE_BUFFER;
+	//descriptorConfig[1].stages = VERTEX_STAGE;
+	//descriptorConfig[1].buffersInfo.resize(lodDataBuffers.size());
+	//index = 0;
+	//for (Buffer &buffer : lodDataBuffers)
+	//{
+	//	descriptorConfig[1].buffersInfo[index].buffer = buffer.buffer;
+	//	descriptorConfig[1].buffersInfo[index].range = sizeof(GrassData) * grassLodCount;
+	//	descriptorConfig[1].buffersInfo[index].offset = 0;
+	//	index++;
+	//}
 
-	descriptorConfig[2].type = UNIFORM_BUFFER;
-	descriptorConfig[2].stages = VERTEX_STAGE;
-	descriptorConfig[2].buffersInfo.resize(variableBuffers.size());
+	descriptorConfig[1].type = UNIFORM_BUFFER;
+	descriptorConfig[1].stages = VERTEX_STAGE;
+	descriptorConfig[1].buffersInfo.resize(variableBuffers.size());
 	index = 0;
 	for (Buffer &buffer : variableBuffers)
 	{
-		descriptorConfig[2].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[2].buffersInfo[index].range = sizeof(GrassVariables);
-		descriptorConfig[2].buffersInfo[index].offset = 0;
+		descriptorConfig[1].buffersInfo[index].buffer = buffer.buffer;
+		descriptorConfig[1].buffersInfo[index].range = sizeof(GrassVariables);
+		descriptorConfig[1].buffersInfo[index].offset = 0;
 		index++;
 	}
 
@@ -231,7 +233,7 @@ void Grass::CreateGraphicsDescriptor()
 
 void Grass::CreateShadowDescriptor()
 {
-	std::vector<DescriptorConfiguration> descriptorConfig(3);
+	std::vector<DescriptorConfiguration> descriptorConfig(2);
 
 	descriptorConfig[0].type = STORAGE_BUFFER;
 	descriptorConfig[0].stages = VERTEX_STAGE;
@@ -240,25 +242,94 @@ void Grass::CreateShadowDescriptor()
 	for (Buffer &buffer : dataBuffers)
 	{
 		descriptorConfig[0].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[0].buffersInfo[index].range = sizeof(GrassData) * grassCount;
+		//descriptorConfig[0].buffersInfo[index].range = sizeof(GrassData) * grassCount;
+		descriptorConfig[0].buffersInfo[index].range = sizeof(GrassData) * grassTotalCount;
 		descriptorConfig[0].buffersInfo[index].offset = 0;
 		index++;
 	}
 
-	descriptorConfig[1].type = STORAGE_BUFFER;
+	//descriptorConfig[1].type = STORAGE_BUFFER;
+	//descriptorConfig[1].stages = VERTEX_STAGE;
+	//descriptorConfig[1].buffersInfo.resize(lodDataBuffers.size());
+	//index = 0;
+	//for (Buffer &buffer : lodDataBuffers)
+	//{
+	//	descriptorConfig[1].buffersInfo[index].buffer = buffer.buffer;
+	//	descriptorConfig[1].buffersInfo[index].range = sizeof(GrassData) * grassLodCount;
+	//	descriptorConfig[1].buffersInfo[index].offset = 0;
+	//	index++;
+	//}
+
+	descriptorConfig[1].type = UNIFORM_BUFFER;
 	descriptorConfig[1].stages = VERTEX_STAGE;
-	descriptorConfig[1].buffersInfo.resize(lodDataBuffers.size());
+	descriptorConfig[1].buffersInfo.resize(variableBuffers.size());
 	index = 0;
-	for (Buffer &buffer : lodDataBuffers)
+	for (Buffer &buffer : variableBuffers)
 	{
 		descriptorConfig[1].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[1].buffersInfo[index].range = sizeof(GrassData) * grassLodCount;
+		descriptorConfig[1].buffersInfo[index].range = sizeof(GrassVariables);
 		descriptorConfig[1].buffersInfo[index].offset = 0;
 		index++;
 	}
 
+	shadowDescriptor.Create(descriptorConfig, shadowPipeline.objectDescriptorSetLayout);
+}
+
+void Grass::CreateComputeDescriptors()
+{
+	std::vector<DescriptorConfiguration> descriptorConfig(4);
+
+	descriptorConfig[0].type = STORAGE_BUFFER;
+	descriptorConfig[0].stages = COMPUTE_STAGE;
+	descriptorConfig[0].buffersInfo.resize(dataBuffers.size());
+	int index = 0;
+	for (Buffer &buffer : dataBuffers)
+	{
+		descriptorConfig[0].buffersInfo[index].buffer = buffer.buffer;
+		//descriptorConfig[0].buffersInfo[index].range = sizeof(GrassData) * grassCount;
+		descriptorConfig[0].buffersInfo[index].range = sizeof(GrassData) * grassTotalCount;
+		descriptorConfig[0].buffersInfo[index].offset = 0;
+		index++;
+	}
+
+	//descriptorConfig[1].type = STORAGE_BUFFER;
+	//descriptorConfig[1].stages = COMPUTE_STAGE;
+	//descriptorConfig[1].buffersInfo.resize(lodDataBuffers.size());
+	//index = 0;
+	//for (Buffer &buffer : lodDataBuffers)
+	//{
+	//	descriptorConfig[1].buffersInfo[index].buffer = buffer.buffer;
+	//	descriptorConfig[1].buffersInfo[index].range = sizeof(GrassData) * grassLodCount;
+	//	descriptorConfig[1].buffersInfo[index].offset = 0;
+	//	index++;
+	//}
+
+	descriptorConfig[1].type = STORAGE_BUFFER;
+	descriptorConfig[1].stages = COMPUTE_STAGE;
+	descriptorConfig[1].buffersInfo.resize(countBuffers.size());
+	index = 0;
+	for (Buffer &buffer : countBuffers)
+	{
+		descriptorConfig[1].buffersInfo[index].buffer = buffer.buffer;
+		descriptorConfig[1].buffersInfo[index].range = sizeof(CountData);
+		descriptorConfig[1].buffersInfo[index].offset = 0;
+		index++;
+	}
+
+	//descriptorConfig[2].type = STORAGE_BUFFER;
+	//descriptorConfig[2].stages = COMPUTE_STAGE;
+	//descriptorConfig[2].buffersInfo.resize(lodCountBuffers.size());
+	//index = 0;
+	//for (Buffer &buffer : lodCountBuffers)
+	//{
+	//	descriptorConfig[2].buffersInfo[index].buffer = buffer.buffer;
+	//	descriptorConfig[2].buffersInfo[index].range = sizeof(uint32_t);
+	//	descriptorConfig[2].buffersInfo[index].offset = 0;
+	//	index++;
+	//}
+
 	descriptorConfig[2].type = UNIFORM_BUFFER;
-	descriptorConfig[2].stages = VERTEX_STAGE;
+	descriptorConfig[2].stages = COMPUTE_STAGE;
 	descriptorConfig[2].buffersInfo.resize(variableBuffers.size());
 	index = 0;
 	for (Buffer &buffer : variableBuffers)
@@ -269,78 +340,11 @@ void Grass::CreateShadowDescriptor()
 		index++;
 	}
 
-	shadowDescriptor.Create(descriptorConfig, shadowPipeline.objectDescriptorSetLayout);
-}
-
-void Grass::CreateComputeDescriptors()
-{
-	std::vector<DescriptorConfiguration> descriptorConfig(6);
-
-	descriptorConfig[0].type = STORAGE_BUFFER;
-	descriptorConfig[0].stages = COMPUTE_STAGE;
-	descriptorConfig[0].buffersInfo.resize(dataBuffers.size());
-	int index = 0;
-	for (Buffer &buffer : dataBuffers)
-	{
-		descriptorConfig[0].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[0].buffersInfo[index].range = sizeof(GrassData) * grassCount;
-		descriptorConfig[0].buffersInfo[index].offset = 0;
-		index++;
-	}
-
-	descriptorConfig[1].type = STORAGE_BUFFER;
-	descriptorConfig[1].stages = COMPUTE_STAGE;
-	descriptorConfig[1].buffersInfo.resize(lodDataBuffers.size());
-	index = 0;
-	for (Buffer &buffer : lodDataBuffers)
-	{
-		descriptorConfig[1].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[1].buffersInfo[index].range = sizeof(GrassData) * grassLodCount;
-		descriptorConfig[1].buffersInfo[index].offset = 0;
-		index++;
-	}
-
-	descriptorConfig[2].type = STORAGE_BUFFER;
-	descriptorConfig[2].stages = COMPUTE_STAGE;
-	descriptorConfig[2].buffersInfo.resize(countBuffers.size());
-	index = 0;
-	for (Buffer &buffer : countBuffers)
-	{
-		descriptorConfig[2].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[2].buffersInfo[index].range = sizeof(uint32_t);
-		descriptorConfig[2].buffersInfo[index].offset = 0;
-		index++;
-	}
-
-	descriptorConfig[3].type = STORAGE_BUFFER;
+	descriptorConfig[3].type = IMAGE_SAMPLER;
 	descriptorConfig[3].stages = COMPUTE_STAGE;
-	descriptorConfig[3].buffersInfo.resize(lodCountBuffers.size());
-	index = 0;
-	for (Buffer &buffer : lodCountBuffers)
-	{
-		descriptorConfig[3].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[3].buffersInfo[index].range = sizeof(uint32_t);
-		descriptorConfig[3].buffersInfo[index].offset = 0;
-		index++;
-	}
-
-	descriptorConfig[4].type = UNIFORM_BUFFER;
-	descriptorConfig[4].stages = COMPUTE_STAGE;
-	descriptorConfig[4].buffersInfo.resize(variableBuffers.size());
-	index = 0;
-	for (Buffer &buffer : variableBuffers)
-	{
-		descriptorConfig[4].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[4].buffersInfo[index].range = sizeof(GrassVariables);
-		descriptorConfig[4].buffersInfo[index].offset = 0;
-		index++;
-	}
-
-	descriptorConfig[5].type = IMAGE_SAMPLER;
-	descriptorConfig[5].stages = COMPUTE_STAGE;
-	descriptorConfig[5].imageInfo.imageLayout = LAYOUT_GENERAL;
-	descriptorConfig[5].imageInfo.imageView = clumpingTexture.imageView;
-	descriptorConfig[5].imageInfo.sampler = clumpingTexture.sampler;
+	descriptorConfig[3].imageInfo.imageLayout = LAYOUT_GENERAL;
+	descriptorConfig[3].imageInfo.imageView = clumpingTexture.imageView;
+	descriptorConfig[3].imageInfo.sampler = clumpingTexture.sampler;
 
 	computeDescriptor.Create(descriptorConfig, computePipeline.objectDescriptorSetLayout);
 
@@ -388,14 +392,14 @@ void Grass::DestroyBuffers()
 	for (Buffer &buffer : dataBuffers) buffer.Destroy();
 	dataBuffers.clear();
 
-	for (Buffer &buffer : lodDataBuffers) buffer.Destroy();
-	lodDataBuffers.clear();
+	//for (Buffer &buffer : lodDataBuffers) buffer.Destroy();
+	//lodDataBuffers.clear();
 
 	for (Buffer &buffer : countBuffers) buffer.Destroy();
 	countBuffers.clear();
 
-	for (Buffer &buffer : lodCountBuffers) buffer.Destroy();
-	lodCountBuffers.clear();
+	//for (Buffer &buffer : lodCountBuffers) buffer.Destroy();
+	//lodCountBuffers.clear();
 
 	for (Buffer &buffer : variableBuffers) buffer.Destroy();
 	variableBuffers.clear();
@@ -424,7 +428,7 @@ void Grass::Start()
 	grassVariables.grassTotalCount = grassTotalCount;
 
 	grassRenderCounts.resize(Manager::settings.maxFramesInFlight);
-	grassLodRenderCounts.resize(Manager::settings.maxFramesInFlight);
+	//grassLodRenderCounts.resize(Manager::settings.maxFramesInFlight);
 
 	for (Buffer &buffer : variableBuffers)
 	{
@@ -471,11 +475,12 @@ void Grass::RenderGrass(VkCommandBuffer commandBuffer)
 
 	grassMesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), grassRenderCounts[Manager::currentFrame], 0, 0, 0);
+	//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), grassRenderCounts[Manager::currentFrame], 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), grassRenderCounts[Manager::currentFrame].renderCount, 0, 0, 0);
 
 	grassLodMesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassLodRenderCounts[Manager::currentFrame], 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassRenderCounts[Manager::currentFrame].lodRenderCount, 0, 0, 0);
 }
 
 void Grass::RenderShadows(VkCommandBuffer commandBuffer)
@@ -485,7 +490,7 @@ void Grass::RenderShadows(VkCommandBuffer commandBuffer)
 
 	grassMesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), grassRenderCounts[Manager::currentFrame], 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), grassRenderCounts[Manager::currentFrame].renderCount, 0, 0, 0);
 
 	//grassLodMesh.Bind(commandBuffer);
 	//vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
@@ -512,8 +517,10 @@ void Grass::ComputeGrass()
 
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
 
-	grassRenderCounts[Manager::currentFrame] = *(uint32_t *)countBuffers[Manager::currentFrame].mappedBuffer;
-	grassLodRenderCounts[Manager::currentFrame] = *(uint32_t *)lodCountBuffers[Manager::currentFrame].mappedBuffer;
+	//grassRenderCounts[Manager::currentFrame] = *(uint32_t *)countBuffers[Manager::currentFrame].mappedBuffer;
+	//grassLodRenderCounts[Manager::currentFrame] = *(uint32_t *)lodCountBuffers[Manager::currentFrame].mappedBuffer;
+
+	grassRenderCounts[Manager::currentFrame] = *(CountData *)countBuffers[Manager::currentFrame].mappedBuffer;
 
 	//if (Time::newSecond) std::cout << "Total count: " << grassRenderCounts[Manager::currentFrame] + 
 	//	grassLodRenderCounts[Manager::currentFrame] << std::endl;
@@ -534,11 +541,11 @@ void Grass::ComputeClumping()
 
 uint32_t Grass::grassBase = 512;
 uint32_t Grass::grassCount = Grass::grassBase * Grass::grassBase;
-std::vector<uint32_t> Grass::grassRenderCounts;
+std::vector<CountData> Grass::grassRenderCounts;
 
 uint32_t Grass::grassLodBase = 2048;
 uint32_t Grass::grassLodCount = Grass::grassLodBase * Grass::grassLodBase;
-std::vector<uint32_t> Grass::grassLodRenderCounts;
+//std::vector<uint32_t> Grass::grassLodRenderCounts;
 
 uint32_t Grass::grassTotalBase = Grass::grassBase + Grass::grassLodBase;
 uint32_t Grass::grassTotalCount = Grass::grassTotalBase * Grass::grassTotalBase;
@@ -557,9 +564,9 @@ Descriptor Grass::computeDescriptor{Manager::currentDevice};
 Descriptor Grass::clumpingComputeDescriptor{Manager::currentDevice};
 
 std::vector<Buffer> Grass::dataBuffers;
-std::vector<Buffer> Grass::lodDataBuffers;
+//std::vector<Buffer> Grass::lodDataBuffers;
 std::vector<Buffer> Grass::countBuffers;
-std::vector<Buffer> Grass::lodCountBuffers;
+//std::vector<Buffer> Grass::lodCountBuffers;
 std::vector<Buffer> Grass::variableBuffers;
 
 Texture Grass::clumpingTexture;

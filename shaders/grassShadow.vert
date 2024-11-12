@@ -16,12 +16,12 @@ layout(std430, set = 1, binding = 0) buffer DataBuffer
 	GrassData data[];
 };
 
-layout(std430, set = 1, binding = 1) buffer LodDataBuffer
-{
-	GrassData lodData[];
-};
+//layout(std430, set = 1, binding = 1) buffer LodDataBuffer
+//{
+//	GrassData lodData[];
+//};
 
-layout(set = 1, binding = 2) uniform GrassVariables
+layout(set = 1, binding = 1) uniform GrassVariables
 {
 	uint grassBase;
 	float grassBaseMult;
@@ -84,13 +84,25 @@ void main()
 	}
 	else if (pc.grassLod == 1)
 	{
-		position.xz = unpackHalf2x16(lodData[gl_InstanceIndex].posxz);
-		terrainNormal.xz = unpackHalf2x16(lodData[gl_InstanceIndex].normxz);
-		vec2 yy = unpackHalf2x16(lodData[gl_InstanceIndex].posynormy);
+		//position.xz = unpackHalf2x16(lodData[gl_InstanceIndex].posxz);
+		//terrainNormal.xz = unpackHalf2x16(lodData[gl_InstanceIndex].normxz);
+		//vec2 yy = unpackHalf2x16(lodData[gl_InstanceIndex].posynormy);
+		//position.y = yy.x;
+		//terrainNormal.y = yy.y;
+		//rotation.xy = unpackHalf2x16(lodData[gl_InstanceIndex].rot);
+		//vec2 xx = unpackHalf2x16(lodData[gl_InstanceIndex].scaxcoly);
+		//clumpScale = xx.x;
+		//colorVal = xx.y;
+
+		uint dataIndex = gl_InstanceIndex + grassVariables.grassCount;
+
+		position.xz = unpackHalf2x16(data[dataIndex].posxz);
+		terrainNormal.xz = unpackHalf2x16(data[dataIndex].normxz);
+		vec2 yy = unpackHalf2x16(data[dataIndex].posynormy);
 		position.y = yy.x;
 		terrainNormal.y = yy.y;
-		rotation.xy = unpackHalf2x16(lodData[gl_InstanceIndex].rot);
-		vec2 xx = unpackHalf2x16(lodData[gl_InstanceIndex].scaxcoly);
+		rotation.xy = unpackHalf2x16(data[dataIndex].rot);
+		vec2 xx = unpackHalf2x16(data[dataIndex].scaxcoly);
 		clumpScale = xx.x;
 		colorVal = xx.y;
 	}

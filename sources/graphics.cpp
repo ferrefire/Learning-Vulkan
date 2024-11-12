@@ -221,9 +221,9 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 		throw std::runtime_error("failed to begin recording command buffer");
 	}
 
-	RenderShadows(commandBuffer, imageIndex);
-	if (Manager::settings.occlussionCulling) RenderCulling(commandBuffer, imageIndex);
+	if (Manager::settings.shadows) RenderShadows(commandBuffer, imageIndex);
 	RenderGraphics(commandBuffer, imageIndex);
+	if (Manager::settings.occlussionCulling) RenderCulling(commandBuffer, imageIndex);
 
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
 	{
@@ -454,7 +454,7 @@ void Graphics::Destroy()
 
 	Terrain::Destroy();
 	Grass::Destroy();
-	if (Manager::settings.trees) Trees::Destroy();
+	Trees::Destroy();
 	Manager::screenQuadDescriptor.Destroy();
 	Manager::Clean();
 

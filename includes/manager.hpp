@@ -35,8 +35,9 @@ struct Settings
 	bool validationLayersActive = true;
 	bool uncappedFPS = false;
 	bool screenQuad = false;
-	bool occlussionCulling = false;
-	bool trees = true;
+	bool occlussionCulling = true;
+	bool trees = false;
+	bool shadows = true;
 };
 
 struct ShaderVariables
@@ -65,6 +66,7 @@ struct ShaderVariables
 	alignas(4) float time;
 
 	alignas(4) uint32_t occlusionCulling;
+	alignas(4) uint32_t shadows;
 };
 
 class Manager

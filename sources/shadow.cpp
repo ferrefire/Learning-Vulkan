@@ -25,6 +25,7 @@ void Shadow::CreateShadowResources()
 	// imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 	imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	imageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
+	imageConfig.transitionLayout = LAYOUT_READ_ONLY;
 	// imageConfig.sampleCount = device.MaxSampleCount();
 
 	SamplerConfiguration samplerConfig;
@@ -33,6 +34,7 @@ void Shadow::CreateShadowResources()
 	samplerConfig.anisotrophic = VK_FALSE;
 
 	shadowTexture.CreateImage(imageConfig, samplerConfig);
+	if (!Manager::settings.shadows) shadowTexture.TransitionImageLayout(imageConfig);
 
 	VkFramebufferCreateInfo framebufferInfo{};
 	framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

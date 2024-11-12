@@ -11,27 +11,34 @@ struct GrassData
 	uint scaxcoly;
 };
 
+struct CountData
+{
+	uint renderCount;
+	uint lodRenderCount;
+};
+
 layout(std430, set = 1, binding = 0) buffer DataBuffer
 {
 	GrassData data[];
 };
 
-layout(std430, set = 1, binding = 1) buffer LodDataBuffer
+//layout(std430, set = 1, binding = 1) buffer LodDataBuffer
+//{
+//	GrassData lodData[];
+//};
+
+layout(std430, set = 1, binding = 1) buffer RenderCount
 {
-	GrassData lodData[];
+    //uint renderCount;
+	CountData countData;
 };
 
-layout(std430, set = 1, binding = 2) buffer RenderCount
-{
-    uint renderCount;
-};
+//layout(std430, set = 1, binding = 2) buffer LodRenderCount
+//{
+//    uint lodRenderCount;
+//};
 
-layout(std430, set = 1, binding = 3) buffer LodRenderCount
-{
-    uint lodRenderCount;
-};
-
-layout(set = 1, binding = 4) uniform GrassVariables
+layout(set = 1, binding = 2) uniform GrassVariables
 {
 	uint grassBase;
 	float grassBaseMult;
@@ -49,21 +56,9 @@ layout(set = 1, binding = 4) uniform GrassVariables
 	vec3 flooredViewPosition;
 } grassVariables;
 
-layout(set = 1, binding = 5) uniform sampler2D clumpingSampler;
+layout(set = 1, binding = 3) uniform sampler2D clumpingSampler;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
-
-//#define COUNT 2048
-//
-//const uint grassCount = COUNT;
-//const float grassCountMult = 1.0 / COUNT;
-//const uint grassTotalCount = COUNT * COUNT;
-//
-//const float spacing = 0.125;
-//const float spacingMult = 8;
-//
-//const float windStrength = 0.225;
-//const float windFrequency = 2.75;
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -90,8 +85,8 @@ void main()
 	//uint index = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y * grassCount;
 	if (gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.y == 0)
 	{
-		atomicExchange(renderCount, 0);
-		atomicExchange(lodRenderCount, 0);
+		atomicExchange(countData.renderCount, 0);
+		atomicExchange(countData.lodRenderCount, 0);
 	}
 
 	float x = float(gl_GlobalInvocationID.x) - grassVariables.grassTotalBase * 0.5;
@@ -173,7 +168,7 @@ void main()
 
 	if (lod == 0)
 	{
-		uint index = atomicAdd(renderCount, 1);
+		uint index = atomicAdd(countData.renderCount, 1);
 		data[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
 		data[index].normxz = packHalf2x16(terrainNormal.xz);
 		data[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
@@ -182,12 +177,18 @@ void main()
 	}
 	else if (lod == 1)
 	{
-		uint index = atomicAdd(lodRenderCount, 1);
-		lodData[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
-		lodData[index].normxz = packHalf2x16(terrainNormal.xz);
-		lodData[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
-		lodData[index].rot = packHalf2x16(rotations.xy);
-		lodData[index].scaxcoly = packHalf2x16(vec2(scale, colorVal));
+		uint index = atomicAdd(countData.lodRenderCount, 1) + grassVariables.grassCount;
+		//lodData[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
+		//lodData[index].normxz = packHalf2x16(terrainNormal.xz);
+		//lodData[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
+		//lodData[index].rot = packHalf2x16(rotations.xy);
+		//lodData[index].scaxcoly = packHalf2x16(vec2(scale, colorVal));
+
+		data[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
+		data[index].normxz = packHalf2x16(terrainNormal.xz);
+		data[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
+		data[index].rot = packHalf2x16(rotations.xy);
+		data[index].scaxcoly = packHalf2x16(vec2(scale, colorVal));
 	}
 
 	
