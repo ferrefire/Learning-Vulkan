@@ -32,6 +32,12 @@ struct BranchConfiguration
 	Shape Generate();
 };
 
+struct TreeCountData
+{
+	uint32_t lod0Count;
+	uint32_t lod1Count;
+};
+
 struct TreeData
 {
 	uint32_t posxz;
@@ -48,6 +54,22 @@ struct TreeRenderData
 	alignas(16) glm::vec3 rotscacol;
 };
 
+struct TreeVariables
+{
+	uint32_t treeBase;
+	uint32_t treeCount;
+
+	uint32_t treeLod0RenderBase;
+	uint32_t treeLod0RenderCount;
+	uint32_t treeLod1RenderBase;
+	uint32_t treeLod1RenderCount;
+	uint32_t treeTotalRenderBase;
+	uint32_t treeTotalRenderCount;
+
+	float spacing;
+	float spacingMult;
+};
+
 class Trees
 {
 	private:
@@ -57,11 +79,17 @@ class Trees
 		static uint32_t treeBase;
 		static uint32_t treeCount;
 
-		static uint32_t treeRenderBase;
-		static uint32_t treeRenderCount;
-		static std::vector<uint32_t> treeRenderCounts;
+		static uint32_t treeLod0RenderBase;
+		static uint32_t treeLod0RenderCount;
+		static uint32_t treeLod1RenderBase;
+		static uint32_t treeLod1RenderCount;
+		static uint32_t treeTotalRenderBase;
+		static uint32_t treeTotalRenderCount;
 
-		static Mesh treeMesh;
+		static std::vector<TreeCountData> treeRenderCounts;
+
+		static Mesh treeLod0Mesh;
+		static Mesh treeLod1Mesh;
 
 		static Pipeline graphicsPipeline;
 		static Pipeline shadowPipeline;
@@ -78,6 +106,9 @@ class Trees
 		static Buffer dataBuffer;
 		static std::vector<Buffer> renderBuffers;
 		static std::vector<Buffer> countBuffers;
+		static std::vector<Buffer> variableBuffers;
+
+		static TreeVariables treeVariables;
 
 		static void Create();
 		static void CreateMeshes();
@@ -113,6 +144,6 @@ class Trees
 		static void ComputeTreeSetup();
 		static void ComputeTreeRender();
 
-		static void GenerateTrunkMesh(Mesh &mesh);
+		static void GenerateTrunkMesh(Mesh &mesh, BranchConfiguration config);
 		//static Shape GenerateBranchShape(BranchConfiguration branchConfig);
 };

@@ -2,6 +2,12 @@
 
 #extension GL_ARB_shading_language_include : require
 
+struct CountData
+{
+	uint lod0Count;
+	uint lod1Count;
+};
+
 struct TreeData
 {
 	uint posxz;
@@ -30,47 +36,75 @@ layout(std430, set = 1, binding = 1) buffer RenderBuffer
 
 layout(std430, set = 1, binding = 2) buffer CountBuffer
 {
-    uint renderCount;
+    //uint renderCount;
+	CountData countData;
 };
+
+layout(set = 1, binding = 3) uniform TreeVariables
+{
+	uint treeBase;
+	uint treeCount;
+	uint treeLod0RenderBase;
+	uint treeLod0RenderCount;
+	uint treeLod1RenderBase;
+	uint treeLod1RenderCount;
+	uint treeTotalRenderBase;
+	uint treeTotalRenderCount;
+	float spacing;
+	float spacingMult;
+} treeVariables;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-const int treeBase = 2048;
-const int treeRenderBase = 16;
-const float spacing = 50;
-const float spacingMult = 0.02;
+//const int treeBase = 2048;
+//const int treeRenderBase = 16;
+//const float spacing = 50;
+//const float spacingMult = 0.02;
 
 #include "variables.glsl"
 #include "functions.glsl"
 #include "heightmap.glsl"
 
+int Inside(vec2 pos)
+{
+	float dis = SquaredDistanceVec2(pos, vec2(0));
+	if (dis > pow(treeVariables.treeTotalRenderBase * 0.5, 2)) return (-1);
+	else if (dis > pow(treeVariables.treeLod0RenderBase * 0.5, 2)) return (1);
+	else return (0);
+}
+
 void main()
 {
 	if (gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.y == 0)
 	{
-		atomicExchange(renderCount, 0);
+		atomicExchange(countData.lod0Count, 0);
+		atomicExchange(countData.lod1Count, 0);
 	}
 
 	vec2 flooredViewPosition = vec2(0);
-	flooredViewPosition.x = floor((variables.viewPosition.x) * spacingMult);
-	flooredViewPosition.y = floor((variables.viewPosition.z) * spacingMult);
+	flooredViewPosition.x = floor((variables.viewPosition.x) * treeVariables.spacingMult);
+	flooredViewPosition.y = floor((variables.viewPosition.z) * treeVariables.spacingMult);
 
-	int ix = int(gl_GlobalInvocationID.x) - int(treeRenderBase * 0.5);
-	int iz = int(gl_GlobalInvocationID.y) - int(treeRenderBase * 0.5);
+	int ix = int(gl_GlobalInvocationID.x) - int(treeVariables.treeTotalRenderBase * 0.5);
+	int iz = int(gl_GlobalInvocationID.y) - int(treeVariables.treeTotalRenderBase * 0.5);
+
+	int lod = Inside(vec2(ix, iz));
+
+	if (lod == -1) return ;
 
 	ix += int(flooredViewPosition.x);
 	iz += int(flooredViewPosition.y);
 
 	vec2 worldOffset = vec2(ix, iz);
 
-	ix += int(floor((variables.terrainOffset.x) * spacingMult));
-	iz += int(floor((variables.terrainOffset.y) * spacingMult));
+	ix += int(floor((variables.terrainOffset.x) * treeVariables.spacingMult));
+	iz += int(floor((variables.terrainOffset.y) * treeVariables.spacingMult));
 
-	vec2 dataIndexVec = vec2(treeBase * 0.5) + vec2(ix, iz);
+	vec2 dataIndexVec = vec2(treeVariables.treeBase * 0.5) + vec2(ix, iz);
 
-	if (dataIndexVec.x < 0 || dataIndexVec.x > treeBase || dataIndexVec.y < 0 || dataIndexVec.y > treeBase) return ;
+	if (dataIndexVec.x < 0 || dataIndexVec.x > treeVariables.treeBase || dataIndexVec.y < 0 || dataIndexVec.y > treeVariables.treeBase) return ;
 
-	uint dataIndex = uint(floor(dataIndexVec.x * treeBase + dataIndexVec.y));
+	uint dataIndex = uint(floor(dataIndexVec.x * treeVariables.treeBase + dataIndexVec.y));
 
 	vec3 offset = vec3(0);
 	offset.xz = unpackHalf2x16(data[dataIndex].posxz);
@@ -81,8 +115,8 @@ void main()
 	//scale = xx.x;
 	//color = xx.y;
 
-	float x = worldOffset.x * spacing + offset.x;
-	float z = worldOffset.y * spacing + offset.z;
+	float x = worldOffset.x * treeVariables.spacing + offset.x;
+	float z = worldOffset.y * treeVariables.spacing + offset.z;
 	float y = SampleDynamic(vec2(x, z)) * 5000 - 1;
 	vec3 worldPosition = vec3(x, y, z);
 
@@ -96,12 +130,25 @@ void main()
 	float color = 1.0;
 	//float rotation = 0.0;
 
-	uint index = atomicAdd(renderCount, 1);
+	//uint index = atomicAdd(renderCount, 1);
 
 	//renderData[index].posxz = packHalf2x16(worldPosition.xz - variables.viewPosition.xz);
 	//renderData[index].posyroty = packHalf2x16(vec2(worldPosition.y - variables.viewPosition.y, rotation));
 	//renderData[index].scaxcoly = packHalf2x16(vec2(scale, color));
 
-	renderData[index].position = worldPosition - variables.viewPosition;
-	renderData[index].rotscacol = vec3(rotation, scale, color);
+	//renderData[index].position = worldPosition - variables.viewPosition;
+	//renderData[index].rotscacol = vec3(rotation, scale, color);
+
+	if (lod == 0)
+	{
+		uint index = atomicAdd(countData.lod0Count, 1);
+		renderData[index].position = worldPosition - variables.viewPosition;
+		renderData[index].rotscacol = vec3(rotation, scale, color);
+	}
+	else if (lod == 1)
+	{
+		uint index = atomicAdd(countData.lod1Count, 1) + treeVariables.treeLod0RenderCount;
+		renderData[index].position = worldPosition - variables.viewPosition;
+		renderData[index].rotscacol = vec3(rotation, scale, color);
+	}
 }

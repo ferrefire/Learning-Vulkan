@@ -14,11 +14,25 @@ layout(std430, set = 1, binding = 0) buffer DataBuffer
 	TreeData data[];
 };
 
+layout(set = 1, binding = 1) uniform TreeVariables
+{
+	uint treeBase;
+	uint treeCount;
+	uint treeLod0RenderBase;
+	uint treeLod0RenderCount;
+	uint treeLod1RenderBase;
+	uint treeLod1RenderCount;
+	uint treeTotalRenderBase;
+	uint treeTotalRenderCount;
+	float spacing;
+	float spacingMult;
+} treeVariables;
+
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
-const int treeBase = 2048;
-const float spacing = 50;
-const float spacingMult = 0.02;
+//const int treeBase = 2048;
+//const float spacing = 50;
+//const float spacingMult = 0.02;
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -31,7 +45,7 @@ float random(vec2 st)
 
 void main()
 {
-	uint index = gl_GlobalInvocationID.x * treeBase + gl_GlobalInvocationID.y;
+	uint index = gl_GlobalInvocationID.x * treeVariables.treeBase + gl_GlobalInvocationID.y;
 
 	//float x = (float(gl_GlobalInvocationID.x) - float(treeBase) * 0.5) * spacing;
 	//float z = (float(gl_GlobalInvocationID.y) - float(treeBase) * 0.5) * spacing;
@@ -40,11 +54,11 @@ void main()
 
 	float ran = random(gl_GlobalInvocationID.xy);
 
-	float x = (ran - 0.5) * spacing * 0.75;
+	float x = (ran - 0.5) * treeVariables.spacing * 0.75;
 	ran = random(vec2(index, x));
-	float z = (ran - 0.5) * spacing * 0.75;
+	float z = (ran - 0.5) * treeVariables.spacing * 0.75;
 	ran = random(vec2(x, z));
-	float y = (ran - 0.5) * spacing * 0.2;
+	float y = (ran - 0.5) * treeVariables.spacing * 0.2;
 
 	vec3 position = vec3(x, y, z);
 	//vec3 normal = SampleNormalDynamic(position.xz, 1.0);

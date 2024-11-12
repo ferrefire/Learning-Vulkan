@@ -16,6 +16,25 @@ layout(std430, set = 1, binding = 0) buffer RenderBuffer
 	TreeRenderData renderData[];
 };
 
+layout(set = 1, binding = 1) uniform TreeVariables
+{
+	uint treeBase;
+	uint treeCount;
+	uint treeLod0RenderBase;
+	uint treeLod0RenderCount;
+	uint treeLod1RenderBase;
+	uint treeLod1RenderCount;
+	uint treeTotalRenderBase;
+	uint treeTotalRenderCount;
+	float spacing;
+	float spacingMult;
+} treeVariables;
+
+layout(push_constant, std430) uniform PushConstants
+{
+    uint treeLod;
+} pc;
+
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
 
@@ -40,10 +59,13 @@ void main()
 	//scale = xx.x;
 	//color = xx.y;
 
-	position = renderData[gl_InstanceIndex].position;
-	rotation = renderData[gl_InstanceIndex].rotscacol.x;
-	scale = renderData[gl_InstanceIndex].rotscacol.y;
-	color = renderData[gl_InstanceIndex].rotscacol.z;
+	uint dataIndex = gl_InstanceIndex;
+	if (pc.treeLod == 1) dataIndex += treeVariables.treeLod0RenderCount;
+
+	position = renderData[dataIndex].position;
+	rotation = renderData[dataIndex].rotscacol.x * 360.0;
+	scale = renderData[dataIndex].rotscacol.y;
+	color = renderData[dataIndex].rotscacol.z;
 
     position += variables.viewPosition;
 
