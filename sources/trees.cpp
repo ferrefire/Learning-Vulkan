@@ -2,6 +2,8 @@
 
 #include "manager.hpp"
 #include "utilities.hpp"
+#include "input.hpp"
+#include "time.hpp"
 
 #include <iostream>
 
@@ -30,6 +32,10 @@ void Trees::CreateMeshes()
 
 	BranchConfiguration branchConfig;
 	branchConfig.main = true;
+	branchConfig.splitCount = 3;
+	branchConfig.resolution = 32;
+	//branchConfig.blendRange = 8;
+	//branchConfig.minSize = 0.75;
 
 	GenerateTrunkMesh(treeLod0Mesh, branchConfig);
 	treeLod0Mesh.Create();
@@ -418,7 +424,35 @@ void Trees::Start()
 
 void Trees::Frame()
 {
+	if (Input::GetKey(GLFW_KEY_G).pressed)
+	{
+		treeLod0Mesh.DestroyAtRuntime();
 
+		double ctime = Time::GetCurrentTime() * 100.0;
+		Utilities::seed = ctime;
+
+		BranchConfiguration branchConfig;
+		branchConfig.seed = ctime;
+		branchConfig.main = true;
+		branchConfig.splitCount = Utilities::RandomInt(2, 4);
+		//branchConfig.splitChance = Utilities::RandomFloat(0.0f, 0.75f);
+		//branchConfig.fallChance = Utilities::RandomFloat(0.0, 0.25);
+		branchConfig.angleRandomness = Utilities::RandomFloat(0.0f, 0.5f);
+		branchConfig.reach = Utilities::RandomFloat(1.0f, 3.0f);
+		branchConfig.thickness = Utilities::RandomFloat(0.5f, 0.6f);
+		branchConfig.length = Utilities::RandomFloat(0.7f, 0.85f);
+		//branchConfig.steepness.x = Utilities::RandomFloat(-10.0f, 10.0f);
+		//branchConfig.steepness.y = Utilities::RandomFloat(30.0f, 70.0f);
+		branchConfig.resolution = 32;
+		
+		//branchConfig.blendRange = 8;
+		//branchConfig.minSize = 0.75;
+
+		//std::cout << branchConfig.seed << std::endl;
+
+		GenerateTrunkMesh(treeLod0Mesh, branchConfig);
+		treeLod0Mesh.Create();
+	}
 }
 
 void Trees::PostFrame()
@@ -563,17 +597,14 @@ Shape BranchConfiguration::Generate()
 	float branchSeed = angles.length() + base.length() + offset.y + seed;
 
 	Shape branch = Shape(CYLINDER, resolution);
-	float sideAngle = 0;
-	float sideAngleStart = 0;
 	branch.Scale(glm::vec3(scale.x, scale.y, scale.x));
 
-	//int i = 0;
 	float angleDiff = angles.x - angles.y;
-
 	glm::vec2 vec2Offset = glm::vec2(offset.x, offset.z);
-	sideAngle = GetAngle(Utilities::Normalize(vec2Offset));
-	sideAngleStart = angles.z;
-	if (sideAngle > 180.0) sideAngle = -(360.0 - sideAngle);
+	float sideAngle = GetAngle(Utilities::Normalize(vec2Offset));
+	float sideAngleStart = angles.z;
+
+	if (sideAngle - sideAngleStart > 180.0) sideAngle = -(360.0 - sideAngle);
 
 	for (int y = 0; y <= resolution; y++)
 	{
@@ -583,50 +614,43 @@ Shape BranchConfiguration::Generate()
 		glm::mat4 xRotationMatrix = Utilities::GetRotationMatrix(xAngle, glm::vec3(1, 0, 0));
 
 		float yAngle = glm::mix(sideAngleStart, sideAngle, gradient);
+		//float yAngle = sideAngle;
 		glm::mat4 yRotationMatrix = Utilities::GetRotationMatrix(yAngle, glm::vec3(0, 1, 0));
 
 		// glm::mat4 rotationMatrix = Utilities::GetRotationMatrix(glm::vec3(xAngle, yAngle, 0));
 
 		for (int x = 0; x <= resolution; x++)
 		{
-			branch.positions[branch.GetPositionIndex(y, x)] = xRotationMatrix *
-				glm::vec4(branch.positions[branch.GetPositionIndex(y, x)], 1);
-			branch.positions[branch.GetPositionIndex(y, x)] = yRotationMatrix *
-				glm::vec4(branch.positions[branch.GetPositionIndex(y, x)], 1);
+			branch.positions[branch.GetPositionIndex(y, x)] = xRotationMatrix * glm::vec4(branch.positions[branch.GetPositionIndex(y, x)], 1);
+			branch.positions[branch.GetPositionIndex(y, x)] = yRotationMatrix * glm::vec4(branch.positions[branch.GetPositionIndex(y, x)], 1);
 
-			branch.normals[branch.GetPositionIndex(y, x)] = xRotationMatrix *
-				glm::vec4(branch.normals[branch.GetPositionIndex(y, x)], 0);
-			branch.normals[branch.GetPositionIndex(y, x)] = yRotationMatrix *
-				glm::vec4(branch.normals[branch.GetPositionIndex(y, x)], 0);
+			branch.normals[branch.GetPositionIndex(y, x)] = xRotationMatrix * glm::vec4(branch.normals[branch.GetPositionIndex(y, x)], 0);
+			branch.normals[branch.GetPositionIndex(y, x)] = yRotationMatrix * glm::vec4(branch.normals[branch.GetPositionIndex(y, x)], 0);
 
 			if (y == resolution && x == resolution && branch.centerMergePoint != -1)
 			{
-				branch.positions[branch.centerMergePoint] = xRotationMatrix *
-					glm::vec4(branch.positions[branch.centerMergePoint], 1);
-				branch.positions[branch.centerMergePoint] = yRotationMatrix *
-					glm::vec4(branch.positions[branch.centerMergePoint], 1);
+				branch.positions[branch.centerMergePoint] = xRotationMatrix * glm::vec4(branch.positions[branch.centerMergePoint], 1);
+				branch.positions[branch.centerMergePoint] = yRotationMatrix * glm::vec4(branch.positions[branch.centerMergePoint], 1);
 
-				branch.normals[branch.centerMergePoint] = xRotationMatrix *
-					glm::vec4(branch.normals[branch.centerMergePoint], 0);
-				branch.normals[branch.centerMergePoint] = yRotationMatrix *
-					glm::vec4(branch.normals[branch.centerMergePoint], 0);
+				branch.normals[branch.centerMergePoint] = xRotationMatrix * glm::vec4(branch.normals[branch.centerMergePoint], 0);
+				branch.normals[branch.centerMergePoint] = yRotationMatrix * glm::vec4(branch.normals[branch.centerMergePoint], 0);
 			}
 		}
 	}
 
 	branch.Move(base + offset);
 
-	if (scale.x <= minSize) splitCount = 0;
+	if (scale.x <= minSize || iteration >= maxIteration) splitCount = 0;
 	if (splitCount <= 0) return (branch);
 
-	int currentSplitCount = splitCount + (main ? 1 : 0);
-
-	float angleSpacing = 360.0 / currentSplitCount;
-	float angleMax = angleSpacing * 0.5;
+	float angleSpacing = 360.0 / splitCount;
+	float angleMax = angleSpacing * angleRandomness;
+	//float angleMax = 0.0;
 	branchSeed = Utilities::Random11(branchSeed);
 	float startAngle = branchSeed * 180.0;
+	//float startAngle = 0.0;
 
-	for (int i = 0; i < currentSplitCount; i++)
+	for (int i = 0; i < splitCount; i++)
 	{
 		int subResolution = glm::clamp(int(glm::ceil(resolution * 0.5)), 4, resolution);
 
@@ -634,27 +658,28 @@ Shape BranchConfiguration::Generate()
 		float newSubAngle = startAngle + (i * angleSpacing) + (branchSeed * angleMax);
 		glm::vec3 subOffset = glm::vec3(0, 0, -1);
 		subOffset = Utilities::RotateVec(subOffset, newSubAngle, glm::vec3(0, 1, 0));
+		subOffset = Utilities::Normalize(subOffset);
 
 		glm::vec3 subBase = branch.TopMergePointsCenter();
 
 		branchSeed = Utilities::Random01(branchSeed);
 		subOffset.y = 1.0 + branchSeed;
-		//subOffset *= (scale.x + scale.y) * (main ? 5 : 3);
-		//subOffset *= (scale.x + scale.y) * (main ? 3 : 3);
-		subOffset *= (scale.x + scale.y) * 3;
+		subOffset *= (scale.x / mainScale.x + scale.y / mainScale.y) * reach;
 
 		branchSeed = Utilities::Random01(branchSeed);
 		float scaleMult = glm::mix(0.9, 1.1, branchSeed);
-		glm::vec2 subScale = glm::vec2(scale.x * scaleMult * 0.6, scale.y * scaleMult * 0.75);
+		glm::vec2 subScale = glm::vec2(scale.x * scaleMult * thickness, scale.y * scaleMult * length);
 
 		float subAngle = angles.x;
 		branchSeed = Utilities::Random01(branchSeed);
-		if (i == 0) subAngle += glm::mix(0.0, 5.0, branchSeed);
-		else subAngle += glm::mix(5.0, 60.0, branchSeed);
+		//if (i == 0) subAngle += glm::mix(5.0, 25.0, branchSeed);
+		subAngle += glm::mix(steepness.x, steepness.y, branchSeed);
 		glm::vec3 subAngles = glm::vec3(subAngle, angles.x, sideAngle);
 
-		subOffset = Utilities::RotateVec(subOffset, subAngle, glm::vec3(1, 0, 0));
+		if (!main) subOffset = Utilities::RotateVec(subOffset, subAngle, glm::vec3(1, 0, 0));
 		subOffset = Utilities::RotateVec(subOffset, sideAngle, glm::vec3(0, 1, 0));
+
+		int subBlendRange = glm::floor(blendRange * 0.75f);
 
 		BranchConfiguration subBranchConfig;
 		subBranchConfig.seed = seed;
@@ -665,13 +690,34 @@ Shape BranchConfiguration::Generate()
 		subBranchConfig.splitCount = splitCount;
 		subBranchConfig.scale = subScale;
 		subBranchConfig.minSize = minSize;
+		subBranchConfig.blendRange = subBlendRange;
+		subBranchConfig.splitChance = splitChance;
+		subBranchConfig.fallChance = fallChance;
+		subBranchConfig.angleRandomness = angleRandomness;
+		subBranchConfig.reach = reach;
+		subBranchConfig.thickness = thickness;
+		subBranchConfig.length = length;
+		subBranchConfig.steepness = steepness;
+		subBranchConfig.mainScale = mainScale;
+		subBranchConfig.maxIteration = maxIteration;
+		subBranchConfig.iteration = iteration + 1;
 		subBranchConfig.main = false;
 
-		Shape subBranch = subBranchConfig.Generate();
-		branch.Merge(subBranch);
+		//if (i == 0) std::cout << iteration << std::endl;
 
-		// Shape subBranch = Generate(subResolution, subBase, subOffset, subScale, subAngles, 2, false);
-		// branch.Join(subBranch, true);
+		//if (splitChance > 0.0f)
+		//{
+		//	branchSeed = Utilities::Random01(branchSeed) * pow((splitCount - 1), 2);
+		//	if (branchSeed < splitChance) subBranchConfig.splitCount += 1;
+		//}
+		//if (fallChance > 0.0)
+		//{
+		//	branchSeed = Utilities::Random01(branchSeed) / float(splitCount);
+		//	if (branchSeed < fallChance) subBranchConfig.splitCount -= 1;
+		//}
+
+		Shape subBranch = subBranchConfig.Generate();
+		branch.Merge(subBranch, main ? 2 : 0, blendRange);
 
 		// futures[i] = promises[i].get_future();
 		// threads[i] = std::thread(GenerateBranchThreaded, subResolution, subBase, subOffset, subScale, subAngles, tsbc, false, &promises[i]);

@@ -35,6 +35,7 @@ class Shape
 
         std::vector<unsigned int> mergeTopPoints;
 		std::vector<unsigned int> mergeBottomPoints;
+		std::vector<unsigned int> pointBlended;
 		std::vector<glm::ivec2> pointMerged;
 
         int centerMergePoint = -1;
@@ -50,13 +51,14 @@ class Shape
 		void AddIndice(indexType index);
 
         void Join(Shape &joinShape);
-        void Merge(Shape &joinShape);
+        void Merge(Shape &joinShape, int mainBlendRange, int joinBlendRange);
 
         void Move(glm::vec3 movement);
         void Rotate(float degrees, glm::vec3 axis);
         void Scale(glm::vec3 scale);
 
         void RecalculateNormals();
+        void RecalculateNormal(unsigned int index);
 
         int ClosestMergeIndex(glm::vec3 position, bool closest, bool top);
         glm::vec3 BottomMergePointsCenter();

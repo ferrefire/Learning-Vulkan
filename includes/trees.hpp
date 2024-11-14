@@ -18,15 +18,28 @@
 
 struct BranchConfiguration
 {
-	float seed = 32.0f;
+	bool main = false;
+	int iteration = 0;
+	int maxIteration = 10;
+	float seed = 103.84f;
+
 	int resolution = 24;
 	int splitCount = 3;
+	float splitChance = 0;
+	float fallChance = 0;
+	int blendRange = 4;
+	float minSize = 0.1f;
+	float angleRandomness = 0.25f;
+	float reach = 2.0f;
+	float thickness = 0.6f;
+	float length = 0.75f;
+	glm::vec2 steepness = glm::vec2(-5.0f, 50.0f);
+
 	glm::vec3 base = glm::vec3(0);
 	glm::vec3 offset = glm::vec3(0);
 	glm::vec3 angles = glm::vec3(0);
 	glm::vec2 scale = glm::vec2(1);
-	float minSize = 0.1f;
-	bool main = false;
+	glm::vec2 mainScale = glm::vec2(1);
 
 	float GetAngle(glm::vec2 dir);
 	Shape Generate();

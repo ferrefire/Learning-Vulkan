@@ -1,6 +1,7 @@
 #include "utilities.hpp"
 
 #include "manager.hpp"
+#include "time.hpp"
 
 #include <iostream>
 #include <vector>
@@ -94,7 +95,7 @@ glm::vec3 Utilities::RotateVec(glm::vec3 vec, float angle, glm::vec3 axis)
 {
 	glm::mat4 rotation = glm::mat4(1.0f);
 	rotation = glm::rotate(rotation, glm::radians(angle), axis);
-	vec = rotation * glm::vec4(vec, 0.0f);
+	vec = rotation * glm::vec4(vec, 1.0f);
 	return (vec);
 }
 
@@ -127,21 +128,21 @@ glm::mat4 Utilities::GetRotationMatrix(float angle, glm::vec3 axis)
 	return (rotation);
 }
 
-//float Utilities::Random11()
-//{
-//	return ((Random01() - 0.5f) * 2.0f);
-//}
+float Utilities::Random11()
+{
+	return ((Random01(seed) - 0.5f) * 2.0f);
+}
 
 float Utilities::Random11(float newSeed)
 {
 	return ((Random01(newSeed) - 0.5f) * 2.0f);
 }
 
-//float Utilities::Random01()
-//{
-//	seed = rand();
-//	return float(double(seed) / double(RAND_MAX));
-//}
+float Utilities::Random01()
+{
+	seed = Random01(seed + Time::GetCurrentTime());
+	return (Random01(seed));
+}
 
 float Utilities::Random01(float newSeed)
 {
@@ -152,6 +153,30 @@ float Utilities::Random01(float newSeed)
 	return glm::fract(sin(glm::dot(vecSeed, glm::dvec2(12.9898, 78.233))) * 43758.5453123);
 }
 
-//unsigned int Utilities::seed = 1;
+float Utilities::RandomFloat(float min, float max, float newSeed)
+{
+	float inter = Random01(newSeed);
+	return (glm::mix(min, max, inter));
+}
+
+float Utilities::RandomFloat(float min, float max)
+{
+	float inter = Random01();
+	return (glm::mix(min, max, inter));
+}
+
+int Utilities::RandomInt(int min, int max, float newSeed)
+{
+	float inter = Random01(newSeed);
+	return (glm::mix(min, max, inter));
+}
+
+int Utilities::RandomInt(int min, int max)
+{
+	float inter = Random01();
+	return (glm::mix(min, max, inter));
+}
+
+double Utilities::seed = 1;
 std::hash<float> Utilities::floatHash;
 std::hash<size_t> Utilities::sizetHash;

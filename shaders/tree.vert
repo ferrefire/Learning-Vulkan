@@ -73,6 +73,13 @@ void main()
     vec3 objectPosition = (rotationMatrix * vec4(inPosition, 1.0)).xyz;
     normal = (rotationMatrix * vec4(inNormal, 0.0)).xyz;
 
+	if (gl_InstanceIndex == 0 && pc.treeLod == 0)
+	{
+		position = vec3(-250, 750, -2050);
+		objectPosition = inPosition;
+		normal = inNormal;
+	}
+
     //vec3 worldPosition = ObjectToWorld(inPosition * vec3(1.5, 15, 1.5), mat4(1)) + position + vec3(0, 7.5, 0);
     vec3 worldPosition = ObjectToWorld(objectPosition, mat4(1)) + position;
 

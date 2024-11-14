@@ -50,6 +50,7 @@ class Mesh
 		bool coordinate = false;
 		bool normal = false;
 		bool color = false;
+		bool ready = true;
 
 		Shape shape;
 
@@ -65,6 +66,7 @@ class Mesh
 		void CreateIndexBuffer();
 
 		void Destroy();
+		void DestroyAtRuntime();
 		void DestroyVertexBuffer();
 		void DestroyIndexBuffer();
 

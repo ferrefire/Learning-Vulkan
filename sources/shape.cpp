@@ -209,7 +209,7 @@ void Shape::SetShape(int type, int resolution)
 		{
 			centerMergePoint = positions.size();
 			positions.push_back(TopMergePointsCenter() + glm::vec3(0, 0.05, 0));
-			if (normal) normals.push_back(glm::vec3(0, 1, 0));
+			if (normal) normals.push_back(glm::normalize(glm::vec3(0, 0, 0)));
 			//coordinates.push_back(glm::vec2(0, 1));
 		}
 
@@ -283,7 +283,7 @@ int CalculateIndex(int i)
 	return (index);
 }
 
-void Shape::Merge(Shape &joinShape)
+void Shape::Merge(Shape &joinShape, int mainBlendRange, int joinBlendRange)
 {
 	int count = positions.size();
 	int joinCount = joinShape.mergeBottomPoints.size();
@@ -321,20 +321,43 @@ void Shape::Merge(Shape &joinShape)
 		indices.push_back(joinShape.mergeBottomPoints[i2] + count);
 		indices.push_back(mergeTopPoints[mi2]);
 
+		int mergeJoinRange = glm::clamp(joinBlendRange, 1, joinShape.createResolution);
+		int mergeMainRange = glm::clamp(mainBlendRange, 1, createResolution);
+		float mergeAmount = 1.0 / ((mergeJoinRange + mergeMainRange) + 1);
+
 		glm::vec3 direction = joinShape.positions[joinShape.mergeBottomPoints[i1]] - positions[mergeTopPoints[mi1]];
-		joinShape.positions[joinShape.mergeBottomPoints[i1]] -= direction * 0.25f;
-		direction = joinShape.positions[joinShape.mergeBottomPoints[i1]] - positions[mergeTopPoints[mi1]];
-		positions[mergeTopPoints[mi1]] += direction * 0.1f;
+		glm::ivec2 joinCoords = joinShape.GetPositionCoordinates(joinShape.mergeBottomPoints[i1]);
+		glm::ivec2 mainCoords = GetPositionCoordinates(mergeTopPoints[mi1]);
 
-		glm::ivec2 coords = GetPositionCoordinates(mergeTopPoints[mi1]);
-		int range = int(glm::ceil(createResolution * 0.25));
-		for (int j = 1; j < range; j++)
+		for (int j = 0; j < mergeJoinRange; j++)
 		{
-			int prev = GetPositionIndex(coords.x - j + 1, coords.y);
-			int below = GetPositionIndex(coords.x - j, coords.y);
+			float mergeStrength = mergeJoinRange - j;
+			float mergeFalloff = pow(0.9, j);
+			int mergeIndex = joinShape.GetPositionIndex(joinCoords.x + j, joinCoords.y);
+			joinShape.positions[mergeIndex] -= direction * (mergeStrength * mergeAmount * mergeFalloff);
+		}
 
-			direction = positions[prev] - positions[below];
-			positions[below] += direction * 0.25f;
+		bool canBlend = true;
+		for (unsigned int blendedIndex : pointBlended)
+		{
+			if (blendedIndex == mergeTopPoints[mi1])
+			{
+				canBlend = false;
+				break;
+			}
+		}
+
+		if (canBlend)
+		{
+			for (int j = 0; j < mergeMainRange; j++)
+			{
+				float mergeStrength = mergeMainRange - j;
+				float mergeFalloff = pow(0.9, j);
+				int mergeIndex = GetPositionIndex(mainCoords.x - j, mainCoords.y);
+				positions[mergeIndex] += direction * (mergeStrength * mergeAmount * mergeFalloff);
+				if (mainBlendRange > 0) RecalculateNormal(mergeIndex);
+			}
+			pointBlended.push_back(mergeTopPoints[mi1]);
 		}
 
 		pointMerged[mi1].x = 1;
@@ -413,6 +436,11 @@ void Shape::RecalculateNormals()
 	{
 		normals.push_back(glm::normalize(glm::vec3(position.x, 0, position.z)));
 	}
+}
+
+void Shape::RecalculateNormal(unsigned int index)
+{
+	normals[index] = glm::normalize(glm::vec3(positions[index].x, 0, positions[index].z));
 }
 
 glm::vec3 Shape::BottomMergePointsCenter()

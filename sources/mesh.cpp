@@ -72,6 +72,18 @@ void Mesh::Destroy()
 	DestroyIndexBuffer();
 }
 
+void Mesh::DestroyAtRuntime()
+{
+	vkWaitForFences(Manager::currentDevice.logicalDevice, Manager::settings.maxFramesInFlight, Manager::currentDevice.inFlightFences.data(), VK_TRUE, UINT64_MAX);
+
+	Destroy();
+
+	shape = Shape();
+	vertices.clear();
+	verticesData.clear();
+	indices.clear();
+}
+
 void Mesh::DestroyVertexBuffer()
 {
 	vertexBuffer.Destroy();
