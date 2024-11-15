@@ -50,6 +50,7 @@ layout(location = 1) out vec3 objectNormal;
 layout(location = 2) out vec3 terrainNormal;
 layout(location = 3) out vec3 grassColor;
 layout(location = 4) out vec2 uv;
+layout(location = 5) out vec4 shadowPosition;
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -148,5 +149,5 @@ void main()
 
 	uv = vec2(inPosition.x * 10 + 0.5, inPosition.y);
 
-	//shadowPosition = variables.shadowProjection * variables.shadowView * vec4(worldPosition, 1.0); 
+	shadowPosition = variables.shadowLod1Projection * variables.shadowLod1View * vec4(worldPosition, 1.0); 
 }

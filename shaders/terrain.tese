@@ -16,7 +16,8 @@ layout(push_constant, std430) uniform PushConstants
 layout(triangles, fractional_odd_spacing, cw) in;
 
 layout(location = 0) out vec3 worldPosition;
-layout(location = 1) out vec4 shadowPosition;
+layout(location = 1) out vec4 shadowLod0Position;
+layout(location = 2) out vec4 shadowLod1Position;
 //layout(location = 1) out mat3 tbn;
 
 #include "variables.glsl"
@@ -31,7 +32,8 @@ void main()
 	worldPosition = position.xyz;
 	worldPosition.y = ObjectToWorld(vec3(0), objectDatas[pc.chunkIndex].model).y + SampleDynamic(worldPosition.xz) * 5000;
 
-	shadowPosition = variables.shadowProjection * variables.shadowView * vec4(worldPosition, 1.0);
+	shadowLod0Position = variables.shadowLod0Projection * variables.shadowLod0View * vec4(worldPosition, 1.0);
+	shadowLod1Position = variables.shadowLod1Projection * variables.shadowLod1View * vec4(worldPosition, 1.0);
 
 	gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
 }

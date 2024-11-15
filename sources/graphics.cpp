@@ -133,40 +133,77 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 
 void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
-	VkRenderPassBeginInfo renderPassInfo{};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassInfo.renderPass = Shadow::shadowPass;
-	renderPassInfo.framebuffer = Shadow::shadowFrameBuffer;
-	renderPassInfo.renderArea.offset = {0, 0};
-	renderPassInfo.renderArea.extent.width = Shadow::shadowResolution;
-	renderPassInfo.renderArea.extent.height = Shadow::shadowResolution;
+	VkRenderPassBeginInfo lod0RenderPassInfo{};
+	lod0RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	lod0RenderPassInfo.renderPass = Shadow::shadowPass;
+	lod0RenderPassInfo.framebuffer = Shadow::shadowLod0FrameBuffer;
+	lod0RenderPassInfo.renderArea.offset = {0, 0};
+	lod0RenderPassInfo.renderArea.extent.width = Shadow::shadowLod0Resolution;
+	lod0RenderPassInfo.renderArea.extent.height = Shadow::shadowLod0Resolution;
 
 	std::vector<VkClearValue> clearValues(1);
 	clearValues[0].depthStencil = {1.0f, 0};
 
-	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-	renderPassInfo.pClearValues = clearValues.data();
+	lod0RenderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+	lod0RenderPassInfo.pClearValues = clearValues.data();
 
-	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdBeginRenderPass(commandBuffer, &lod0RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	VkViewport viewport{};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = Shadow::shadowResolution;
-	viewport.height = Shadow::shadowResolution;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+	VkViewport lod0Viewport{};
+	lod0Viewport.x = 0.0f;
+	lod0Viewport.y = 0.0f;
+	lod0Viewport.width = Shadow::shadowLod0Resolution;
+	lod0Viewport.height = Shadow::shadowLod0Resolution;
+	lod0Viewport.minDepth = 0.0f;
+	lod0Viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(commandBuffer, 0, 1, &lod0Viewport);
 
-	VkRect2D scissor{};
-	scissor.offset = {0, 0};
-	scissor.extent.width = Shadow::shadowResolution;
-	scissor.extent.height = Shadow::shadowResolution;
-	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+	VkRect2D lod0Scissor{};
+	lod0Scissor.offset = {0, 0};
+	lod0Scissor.extent.width = Shadow::shadowLod0Resolution;
+	lod0Scissor.extent.height = Shadow::shadowLod0Resolution;
+	vkCmdSetScissor(commandBuffer, 0, 1, &lod0Scissor);
+
+	//Terrain::RecordCommands(commandBuffer, true);
+	//if (Manager::settings.trees) Trees::RecordShadowCommands(commandBuffer);
+	Grass::RecordShadowCommands(commandBuffer);
+
+	vkCmdEndRenderPass(commandBuffer);
+
+	VkRenderPassBeginInfo lod1RenderPassInfo{};
+	lod1RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	lod1RenderPassInfo.renderPass = Shadow::shadowPass;
+	lod1RenderPassInfo.framebuffer = Shadow::shadowLod1FrameBuffer;
+	lod1RenderPassInfo.renderArea.offset = {0, 0};
+	lod1RenderPassInfo.renderArea.extent.width = Shadow::shadowLod1Resolution;
+	lod1RenderPassInfo.renderArea.extent.height = Shadow::shadowLod1Resolution;
+
+	//std::vector<VkClearValue> clearValues(1);
+	//clearValues[0].depthStencil = {1.0f, 0};
+
+	lod1RenderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+	lod1RenderPassInfo.pClearValues = clearValues.data();
+
+	vkCmdBeginRenderPass(commandBuffer, &lod1RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	VkViewport lod1Viewport{};
+	lod1Viewport.x = 0.0f;
+	lod1Viewport.y = 0.0f;
+	lod1Viewport.width = Shadow::shadowLod1Resolution;
+	lod1Viewport.height = Shadow::shadowLod1Resolution;
+	lod1Viewport.minDepth = 0.0f;
+	lod1Viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(commandBuffer, 0, 1, &lod1Viewport);
+
+	VkRect2D lod1Scissor{};
+	lod1Scissor.offset = {0, 0};
+	lod1Scissor.extent.width = Shadow::shadowLod1Resolution;
+	lod1Scissor.extent.height = Shadow::shadowLod1Resolution;
+	vkCmdSetScissor(commandBuffer, 0, 1, &lod1Scissor);
 
 	//Terrain::RecordCommands(commandBuffer, true);
 	if (Manager::settings.trees) Trees::RecordShadowCommands(commandBuffer);
-	Grass::RecordShadowCommands(commandBuffer);
+	//Grass::RecordShadowCommands(commandBuffer);
 
 	vkCmdEndRenderPass(commandBuffer);
 }
@@ -409,8 +446,8 @@ void Graphics::Create()
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
 		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[0].imageInfo.imageView = Culling::cullTexture.imageView;
-		descriptorConfig[0].imageInfo.sampler = Culling::cullTexture.sampler;
+		descriptorConfig[0].imageInfo.imageView = Shadow::shadowLod1Texture.imageView;
+		descriptorConfig[0].imageInfo.sampler = Shadow::shadowLod1Texture.sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}

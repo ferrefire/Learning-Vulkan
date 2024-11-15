@@ -103,7 +103,7 @@ void Manager::CreateShaderVariableBuffers()
 
 void Manager::CreateDescriptorSetLayout()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(6);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(7);
 	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
 	descriptorLayoutConfig[0].stages = ALL_STAGE;
 	descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
@@ -115,7 +115,9 @@ void Manager::CreateDescriptorSetLayout()
 	descriptorLayoutConfig[4].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[4].stages = FRAGMENT_STAGE;
 	descriptorLayoutConfig[5].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[5].stages = ALL_STAGE;
+	descriptorLayoutConfig[5].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[6].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[6].stages = ALL_STAGE;
 
 	Pipeline::CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
 }
@@ -133,7 +135,7 @@ void Manager::CreateDescriptor()
 	//descriptorLayoutConfig[3].stages = ALL_STAGE;
 	//Pipeline::CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
 
-	std::vector<DescriptorConfiguration> descriptorConfig(6);
+	std::vector<DescriptorConfiguration> descriptorConfig(7);
 
 	descriptorConfig[0].type = UNIFORM_BUFFER;
 	descriptorConfig[0].stages = ALL_STAGE;
@@ -168,14 +170,20 @@ void Manager::CreateDescriptor()
 	descriptorConfig[4].type = IMAGE_SAMPLER;
 	descriptorConfig[4].stages = FRAGMENT_STAGE;
 	descriptorConfig[4].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[4].imageInfo.imageView = Shadow::shadowTexture.imageView;
-	descriptorConfig[4].imageInfo.sampler = Shadow::shadowTexture.sampler;
+	descriptorConfig[4].imageInfo.imageView = Shadow::shadowLod0Texture.imageView;
+	descriptorConfig[4].imageInfo.sampler = Shadow::shadowLod0Texture.sampler;
 
 	descriptorConfig[5].type = IMAGE_SAMPLER;
-	descriptorConfig[5].stages = ALL_STAGE;
+	descriptorConfig[5].stages = FRAGMENT_STAGE;
 	descriptorConfig[5].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[5].imageInfo.imageView = Culling::cullTexture.imageView;
-	descriptorConfig[5].imageInfo.sampler = Culling::cullTexture.sampler;
+	descriptorConfig[5].imageInfo.imageView = Shadow::shadowLod1Texture.imageView;
+	descriptorConfig[5].imageInfo.sampler = Shadow::shadowLod1Texture.sampler;
+
+	descriptorConfig[6].type = IMAGE_SAMPLER;
+	descriptorConfig[6].stages = ALL_STAGE;
+	descriptorConfig[6].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	descriptorConfig[6].imageInfo.imageView = Culling::cullTexture.imageView;
+	descriptorConfig[6].imageInfo.sampler = Culling::cullTexture.sampler;
 
 	globalDescriptor.Create(descriptorConfig, globalDescriptorSetLayout);
 }
@@ -261,9 +269,11 @@ void Manager::UpdateShaderVariables()
 	//shaderVariables.lightDirection = glm::normalize(glm::vec3(1, 1, 1));
 
 	shaderVariables.view = camera.View();
-	shaderVariables.shadowView = Shadow::GetShadowView();
+	shaderVariables.shadowLod0View = Shadow::GetShadowView(0);
+	shaderVariables.shadowLod1View = Shadow::GetShadowView(1);
 	shaderVariables.projection = camera.Projection();
-	shaderVariables.shadowProjection = Shadow::shadowProjection;
+	shaderVariables.shadowLod0Projection = Shadow::shadowLod0Projection;
+	shaderVariables.shadowLod1Projection = Shadow::shadowLod1Projection;
 	shaderVariables.cullProjection = Culling::cullProjection;
 
 	shaderVariables.viewPosition = camera.Position();

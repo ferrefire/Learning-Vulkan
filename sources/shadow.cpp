@@ -6,46 +6,70 @@
 
 void Shadow::Create()
 {
-	GetShadowProjection();
+	GetShadowProjection(0);
+	GetShadowProjection(1);
 	CreateShadowPass();
 	CreateShadowResources();
 }
 
 void Shadow::CreateShadowResources()
 {
-	if (shadowTexture.image != nullptr || shadowTexture.imageMemory != nullptr || shadowTexture.imageView != nullptr)
-		throw std::runtime_error("cannot create shadow resources because they already exist");
+	//if (shadowTexture.image != nullptr || shadowTexture.imageMemory != nullptr || shadowTexture.imageView != nullptr)
+	//	throw std::runtime_error("cannot create shadow resources because they already exist");
 
-	ImageConfiguration imageConfig;
-	// imageConfig.width = swapChainExtent.width;
-	// imageConfig.height = swapChainExtent.height;
-	imageConfig.width = shadowResolution;
-	imageConfig.height = shadowResolution;
-	imageConfig.format = Manager::currentDevice.FindDepthFormat();
-	// imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-	imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-	imageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
-	imageConfig.transitionLayout = LAYOUT_READ_ONLY;
-	// imageConfig.sampleCount = device.MaxSampleCount();
+	ImageConfiguration imageLod0Config;
+	imageLod0Config.width = shadowLod0Resolution;
+	imageLod0Config.height = shadowLod0Resolution;
+	imageLod0Config.format = Manager::currentDevice.FindDepthFormat();
+	imageLod0Config.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	imageLod0Config.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
+	imageLod0Config.transitionLayout = LAYOUT_READ_ONLY;
+
+	ImageConfiguration imageLod1Config;
+	imageLod1Config.width = shadowLod1Resolution;
+	imageLod1Config.height = shadowLod1Resolution;
+	imageLod1Config.format = Manager::currentDevice.FindDepthFormat();
+	imageLod1Config.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	imageLod1Config.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
+	imageLod1Config.transitionLayout = LAYOUT_READ_ONLY;
 
 	SamplerConfiguration samplerConfig;
 	samplerConfig.repeatMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
 	samplerConfig.borderColor = VK_BORDER_COLOR_INT_OPAQUE_WHITE;
 	samplerConfig.anisotrophic = VK_FALSE;
 
-	shadowTexture.CreateImage(imageConfig, samplerConfig);
-	if (!Manager::settings.shadows) shadowTexture.TransitionImageLayout(imageConfig);
+	shadowLod0Texture.CreateImage(imageLod0Config, samplerConfig);
+	shadowLod1Texture.CreateImage(imageLod1Config, samplerConfig);
+	if (!Manager::settings.shadows)
+	{
+		shadowLod0Texture.TransitionImageLayout(imageLod0Config);
+		shadowLod1Texture.TransitionImageLayout(imageLod1Config);
+	}
 
-	VkFramebufferCreateInfo framebufferInfo{};
-	framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-	framebufferInfo.renderPass = shadowPass;
-	framebufferInfo.attachmentCount = 1;
-	framebufferInfo.pAttachments = &shadowTexture.imageView;
-	framebufferInfo.width = shadowResolution;
-	framebufferInfo.height = shadowResolution;
-	framebufferInfo.layers = 1;
+	VkFramebufferCreateInfo lod0FramebufferInfo{};
+	lod0FramebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+	lod0FramebufferInfo.renderPass = shadowPass;
+	lod0FramebufferInfo.attachmentCount = 1;
+	lod0FramebufferInfo.pAttachments = &shadowLod0Texture.imageView;
+	lod0FramebufferInfo.width = shadowLod0Resolution;
+	lod0FramebufferInfo.height = shadowLod0Resolution;
+	lod0FramebufferInfo.layers = 1;
 
-	if (vkCreateFramebuffer(Manager::currentDevice.logicalDevice, &framebufferInfo, nullptr, &shadowFrameBuffer) != VK_SUCCESS)
+	if (vkCreateFramebuffer(Manager::currentDevice.logicalDevice, &lod0FramebufferInfo, nullptr, &shadowLod0FrameBuffer) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create shadow framebuffer");
+	}
+
+	VkFramebufferCreateInfo lod1FramebufferInfo{};
+	lod1FramebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+	lod1FramebufferInfo.renderPass = shadowPass;
+	lod1FramebufferInfo.attachmentCount = 1;
+	lod1FramebufferInfo.pAttachments = &shadowLod1Texture.imageView;
+	lod1FramebufferInfo.width = shadowLod1Resolution;
+	lod1FramebufferInfo.height = shadowLod1Resolution;
+	lod1FramebufferInfo.layers = 1;
+
+	if (vkCreateFramebuffer(Manager::currentDevice.logicalDevice, &lod1FramebufferInfo, nullptr, &shadowLod1FrameBuffer) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create shadow framebuffer");
 	}
@@ -97,13 +121,19 @@ void Shadow::Destroy()
 
 void Shadow::DestroyShadowResources()
 {
-	if (shadowFrameBuffer)
+	if (shadowLod0FrameBuffer)
 	{
-		vkDestroyFramebuffer(Manager::currentDevice.logicalDevice, shadowFrameBuffer, nullptr);
-		shadowFrameBuffer = nullptr;
+		vkDestroyFramebuffer(Manager::currentDevice.logicalDevice, shadowLod0FrameBuffer, nullptr);
+		shadowLod0FrameBuffer = nullptr;
+	}
+	if (shadowLod1FrameBuffer)
+	{
+		vkDestroyFramebuffer(Manager::currentDevice.logicalDevice, shadowLod1FrameBuffer, nullptr);
+		shadowLod1FrameBuffer = nullptr;
 	}
 
-	shadowTexture.Destroy();
+	shadowLod0Texture.Destroy();
+	shadowLod1Texture.Destroy();
 }
 
 void Shadow::DestroyShadowPass()
@@ -114,47 +144,58 @@ void Shadow::DestroyShadowPass()
 	shadowPass = nullptr;
 }
 
-glm::mat4 Shadow::GetShadowView()
+glm::mat4 Shadow::GetShadowView(int lod)
 {
 	glm::vec3 direction = Manager::shaderVariables.lightDirection;
 
-	//glm::vec3 cameraFront = Manager::camera.Front();
-	//cameraFront = (cameraFront + 1.0f) * 0.5f;
-	//cameraFront.y = 0;
-
-	//glm::vec3 focus = (Manager::camera.Position() + Manager::camera.Front() * 10.0f);
 	glm::vec3 focus = Manager::camera.Position();
-	//glm::vec3 position = focus + glm::vec3(0, shadowDistance * 2, 0) + glm::vec3(cameraFront.x, 0, cameraFront.z) * shadowDistance;
-	glm::vec3 position = focus + direction * shadowDistance * 1.0f;
-	//position += cameraFront * shadowDistance * 2.0f;
 
 	glm::vec3 front = glm::normalize(-direction);
 	glm::vec3 side = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
 	glm::vec3 up = glm::normalize(glm::cross(side, front));
-	shadowView = glm::lookAt(position, position + front, up);
 
-	//shadowView = glm::lookAt(position, Manager::camera.Position(), glm::vec3(0, 1, 0));
-
-	return (shadowView);
+	if (lod == 0)
+	{
+		glm::vec3 position = focus + direction * shadowLod0Distance;
+		shadowLod0View = glm::lookAt(position, position + front, up);
+		return (shadowLod0View);
+	}
+	else
+	{
+		glm::vec3 position = focus + direction * shadowLod1Distance;
+		shadowLod1View = glm::lookAt(position, position + front, up);
+		return (shadowLod1View);
+	}
 }
 
-glm::mat4 Shadow::GetShadowProjection()
+glm::mat4 Shadow::GetShadowProjection(int lod)
 {
-	//shadowProjection = glm::perspective(glm::radians(45.0f), 1024.0f / 1024.0f, 0.1f, 25000.0f);
-
-	shadowProjection = glm::ortho(-shadowDistance, shadowDistance, -shadowDistance, shadowDistance, 1.0f, shadowDistance * 2.0f);
-
-	shadowProjection[1][1] *= -1;
-
-	return (shadowProjection);
+	if (lod == 0)
+	{
+		shadowLod0Projection = glm::ortho(-shadowLod0Distance, shadowLod0Distance, -shadowLod0Distance, shadowLod0Distance, 1.0f, shadowLod0Distance * 2.0f);
+		shadowLod0Projection[1][1] *= -1;
+		return (shadowLod0Projection);
+	}
+	else
+	{
+		shadowLod1Projection = glm::ortho(-shadowLod1Distance, shadowLod1Distance, -shadowLod1Distance, shadowLod1Distance, 1.0f, shadowLod1Distance * 2.0f);
+		shadowLod1Projection[1][1] *= -1;
+		return (shadowLod1Projection);
+	}
 }
 
 VkRenderPass Shadow::shadowPass = nullptr;
-VkFramebuffer Shadow::shadowFrameBuffer = nullptr;
-Texture Shadow::shadowTexture;
+VkFramebuffer Shadow::shadowLod0FrameBuffer = nullptr;
+VkFramebuffer Shadow::shadowLod1FrameBuffer = nullptr;
+Texture Shadow::shadowLod0Texture;
+Texture Shadow::shadowLod1Texture;
 
-glm::mat4 Shadow::shadowView = glm::mat4(1);
-glm::mat4 Shadow::shadowProjection = glm::mat4(1);
+glm::mat4 Shadow::shadowLod0View = glm::mat4(1);
+glm::mat4 Shadow::shadowLod0Projection = glm::mat4(1);
+glm::mat4 Shadow::shadowLod1View = glm::mat4(1);
+glm::mat4 Shadow::shadowLod1Projection = glm::mat4(1);
 
-int Shadow::shadowResolution = 4096;
-float Shadow::shadowDistance = 20;
+int Shadow::shadowLod0Resolution = 4096;
+float Shadow::shadowLod0Distance = 20;
+int Shadow::shadowLod1Resolution = 4096 * 2;
+float Shadow::shadowLod1Distance = 250;

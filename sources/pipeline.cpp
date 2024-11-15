@@ -253,6 +253,13 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 		pipelineConfig.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
 	}
 
+	if (pipelineConfig.shadow)
+	{
+		pipelineConfig.rasterization.depthBiasEnable = VK_TRUE;
+		pipelineConfig.rasterization.depthBiasConstantFactor = 4.0f;
+		pipelineConfig.rasterization.depthBiasSlopeFactor = 1.5f;
+	}
+
 	VkGraphicsPipelineCreateInfo graphicsPipelineInfo{};
 	graphicsPipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	graphicsPipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());

@@ -14,8 +14,8 @@ layout(location = 0) out vec4 outColor;
 void main()
 {
     float val = texture(textureSampler, inCoordinates).r;
-    outColor = vec4(GetDepth(val));
-    //outColor = vec4(vec3(val), 1.0);
+    //outColor = vec4(GetDepth(val));
+    outColor = vec4(vec3(val), 1.0);
 
     //outColor = vec4(1);
 }

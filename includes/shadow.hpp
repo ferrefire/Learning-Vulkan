@@ -19,14 +19,20 @@ class Shadow
 
 	public:
 		static VkRenderPass shadowPass;
-		static VkFramebuffer shadowFrameBuffer;
-		static Texture shadowTexture;
+		static VkFramebuffer shadowLod0FrameBuffer;
+		static VkFramebuffer shadowLod1FrameBuffer;
+		static Texture shadowLod0Texture;
+		static Texture shadowLod1Texture;
 
-		static glm::mat4 shadowView;
-		static glm::mat4 shadowProjection;
+		static glm::mat4 shadowLod0View;
+		static glm::mat4 shadowLod0Projection;
+		static glm::mat4 shadowLod1View;
+		static glm::mat4 shadowLod1Projection;
 
-		static int shadowResolution;
-		static float shadowDistance;
+		static int shadowLod0Resolution;
+		static float shadowLod0Distance;
+		static int shadowLod1Resolution;
+		static float shadowLod1Distance;
 
 		static void Create();
 		static void CreateShadowResources();
@@ -36,6 +42,6 @@ class Shadow
 		static void DestroyShadowResources();
 		static void DestroyShadowPass();
 
-		static glm::mat4 GetShadowView();
-		static glm::mat4 GetShadowProjection();
+		static glm::mat4 GetShadowView(int lod);
+		static glm::mat4 GetShadowProjection(int lod);
 };

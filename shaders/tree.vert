@@ -41,6 +41,7 @@ layout(location = 2) in vec3 inNormal;
 
 layout(location = 0) out vec2 coord;
 layout(location = 1) out vec3 normal;
+layout(location = 2) out vec4 shadowPosition;
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -89,4 +90,6 @@ void main()
 
 	//normal = inNormal;
     gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
+
+	shadowPosition = variables.shadowLod1Projection * variables.shadowLod1View * vec4(worldPosition, 1.0);
 }

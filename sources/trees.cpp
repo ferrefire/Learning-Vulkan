@@ -42,7 +42,7 @@ void Trees::CreateMeshes()
 	treeLod0Mesh.Create();
 
 	branchConfig.resolution = 12;
-	branchConfig.minSize = 0.5;
+	branchConfig.minSize = 0.25;
 
 	GenerateTrunkMesh(treeLod1Mesh, branchConfig);
 	treeLod1Mesh.Create();
@@ -534,15 +534,15 @@ void Trees::RenderTrees(VkCommandBuffer commandBuffer)
 void Trees::RenderShadows(VkCommandBuffer commandBuffer)
 {
 	uint32_t lod0 = 0;
-	//uint32_t lod1 = 1;
+	uint32_t lod1 = 1;
 
 	treeLod0Mesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod0Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod0Count, 0, 0, 0);
 
-	//treeLod1Mesh.Bind(commandBuffer);
-	//vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
-	//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod1Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod1Count, 0, 0, 0);
+	treeLod1Mesh.Bind(commandBuffer);
+	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod1Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod1Count, 0, 0, 0);
 }
 
 void Trees::RenderCulling(VkCommandBuffer commandBuffer)

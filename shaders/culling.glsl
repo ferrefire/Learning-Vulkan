@@ -1,7 +1,7 @@
 #ifndef CULLING_INCLUDED
 #define CULLING_INCLUDED
 
-layout(set = 0, binding = 5) uniform sampler2D cullSampler;
+layout(set = 0, binding = 6) uniform sampler2D cullSampler;
 
 #include "transformation.glsl"
 #include "functions.glsl"

@@ -21,7 +21,8 @@ layout(set = 1, binding = 2) uniform sampler2D rockDiffuseSampler;
 layout(set = 1, binding = 3) uniform sampler2D dirtDiffuseSampler;
 
 layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec4 shadowPosition;
+layout(location = 1) in vec4 shadowLod0Position;
+layout(location = 2) in vec4 shadowLod1Position;
 //layout(location = 1) in mat3 tbn;
 //layout(location = 1) in vec2 inTexCoord;
 
@@ -202,8 +203,16 @@ void main()
 	vec3 diffuse = DiffuseLighting(terrainNormal, vec3(1));
 	
 	//vec4 shadowSpace = variables.shadowProjection * variables.shadowView * vec4(inPosition, 1.0);
-	float shadow = 1;
-	if (variables.shadows == 1) shadow = GetShadow(shadowPosition);
+	float shadow = 1.0;
+	if (variables.shadows == 1)
+	{
+		shadow = clamp(1.0 - GetShadow(shadowLod0Position, 0), 0.3, 1.0);
+		if (shadow > 0.3)
+		{
+			float tempShadow = clamp(1.0 - GetShadow(shadowLod1Position, 1), 0.3, 1.0);
+			if (tempShadow < shadow) shadow = tempShadow;
+		}
+	}
 
 	vec3 combinedColor = textureColor * diffuse * shadow;
 	vec3 endColor = Fog(combinedColor, depth);
