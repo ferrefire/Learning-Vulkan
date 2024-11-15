@@ -4,6 +4,7 @@
 #include "utilities.hpp"
 #include "input.hpp"
 #include "time.hpp"
+#include "terrain.hpp"
 
 #include <iostream>
 
@@ -41,11 +42,23 @@ void Trees::CreateMeshes()
 	GenerateTrunkMesh(treeLod0Mesh, branchConfig);
 	treeLod0Mesh.Create();
 
-	branchConfig.resolution = 12;
-	branchConfig.minSize = 0.25;
+	branchConfig.resolution = 16;
+	branchConfig.minSize = 0.15;
 
 	GenerateTrunkMesh(treeLod1Mesh, branchConfig);
 	treeLod1Mesh.Create();
+
+	branchConfig.resolution = 8;
+	branchConfig.minSize = 0.25;
+
+	GenerateTrunkMesh(treeLod2Mesh, branchConfig);
+	treeLod2Mesh.Create();
+
+	branchConfig.resolution = 4;
+	branchConfig.minSize = 0.5;
+
+	GenerateTrunkMesh(treeLod3Mesh, branchConfig);
+	treeLod3Mesh.Create();
 }
 
 void Trees::CreateGraphicsPipeline()
@@ -376,6 +389,8 @@ void Trees::DestroyMeshes()
 {
 	treeLod0Mesh.Destroy();
 	treeLod1Mesh.Destroy();
+	treeLod2Mesh.Destroy();
+	treeLod3Mesh.Destroy();
 }
 
 void Trees::DestroyPipelines()
@@ -433,6 +448,10 @@ void Trees::Start()
 	treeVariables.treeLod0RenderCount = treeLod0RenderCount;
 	treeVariables.treeLod1RenderBase = treeLod1RenderBase;
 	treeVariables.treeLod1RenderCount = treeLod1RenderCount;
+	treeVariables.treeLod2RenderBase = treeLod2RenderBase;
+	treeVariables.treeLod2RenderCount = treeLod2RenderCount;
+	treeVariables.treeLod3RenderBase = treeLod3RenderBase;
+	treeVariables.treeLod3RenderCount = treeLod3RenderCount;
 	treeVariables.treeTotalRenderBase = treeTotalRenderBase;
 	treeVariables.treeTotalRenderCount = treeTotalRenderCount;
 
@@ -446,11 +465,17 @@ void Trees::Start()
 		memcpy(buffer.mappedBuffer, &treeVariables, sizeof(treeVariables));
 	}
 
-	ComputeTreeSetup();
+	//ComputeTreeSetup();
 }
 
 void Trees::Frame()
 {
+	if (!treesComputed && Terrain::HeightMapsGenerated())
+	{
+		treesComputed = true;
+		ComputeTreeSetup();
+	}
+
 	if (Input::GetKey(GLFW_KEY_G).pressed)
 	{
 		treeLod0Mesh.DestroyAtRuntime();
@@ -521,6 +546,8 @@ void Trees::RenderTrees(VkCommandBuffer commandBuffer)
 {
 	uint32_t lod0 = 0;
 	uint32_t lod1 = 1;
+	uint32_t lod2 = 2;
+	uint32_t lod3 = 3;
 
 	treeLod0Mesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
@@ -529,6 +556,14 @@ void Trees::RenderTrees(VkCommandBuffer commandBuffer)
 	treeLod1Mesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod1Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod1Count, 0, 0, 0);
+
+	treeLod2Mesh.Bind(commandBuffer);
+	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod2), &lod2);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod2Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod2Count, 0, 0, 0);
+
+	treeLod3Mesh.Bind(commandBuffer);
+	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod3), &lod3);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod3Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod3Count, 0, 0, 0);
 }
 
 void Trees::RenderShadows(VkCommandBuffer commandBuffer)
@@ -771,13 +806,19 @@ uint32_t Trees::treeLod0RenderBase = 8;
 uint32_t Trees::treeLod0RenderCount = Trees::treeLod0RenderBase * Trees::treeLod0RenderBase;
 uint32_t Trees::treeLod1RenderBase = 16;
 uint32_t Trees::treeLod1RenderCount = Trees::treeLod1RenderBase * Trees::treeLod1RenderBase;
-uint32_t Trees::treeTotalRenderBase = Trees::treeLod0RenderBase + Trees::treeLod1RenderBase;
+uint32_t Trees::treeLod2RenderBase = 32;
+uint32_t Trees::treeLod2RenderCount = Trees::treeLod2RenderBase * Trees::treeLod2RenderBase;
+uint32_t Trees::treeLod3RenderBase = 64;
+uint32_t Trees::treeLod3RenderCount = Trees::treeLod3RenderBase * Trees::treeLod3RenderBase;
+uint32_t Trees::treeTotalRenderBase = Trees::treeLod0RenderBase + Trees::treeLod1RenderBase + Trees::treeLod2RenderBase + Trees::treeLod3RenderBase;
 uint32_t Trees::treeTotalRenderCount = Trees::treeTotalRenderBase * Trees::treeTotalRenderBase;
 
 std::vector<TreeCountData> Trees::treeRenderCounts;
 
 Mesh Trees::treeLod0Mesh;
 Mesh Trees::treeLod1Mesh;
+Mesh Trees::treeLod2Mesh;
+Mesh Trees::treeLod3Mesh;
 
 Pipeline Trees::graphicsPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Trees::shadowPipeline{Manager::currentDevice, Manager::camera};
@@ -799,3 +840,5 @@ std::vector<Buffer> Trees::countBuffers;
 std::vector<Buffer> Trees::variableBuffers;
 
 TreeVariables Trees::treeVariables;
+
+bool Trees::treesComputed = false;

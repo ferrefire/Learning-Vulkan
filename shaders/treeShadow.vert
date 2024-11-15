@@ -21,6 +21,10 @@ layout(set = 1, binding = 1) uniform TreeVariables
 	uint treeLod0RenderCount;
 	uint treeLod1RenderBase;
 	uint treeLod1RenderCount;
+	uint treeLod2RenderBase;
+	uint treeLod2RenderCount;
+	uint treeLod3RenderBase;
+	uint treeLod3RenderCount;
 	uint treeTotalRenderBase;
 	uint treeTotalRenderCount;
 	float spacing;
@@ -51,7 +55,9 @@ void main()
 	//float color = 1.0;
 
 	uint dataIndex = gl_InstanceIndex;
-	if (pc.treeLod == 1) dataIndex += treeVariables.treeLod0RenderCount;
+	if (pc.treeLod > 0) dataIndex += treeVariables.treeLod0RenderCount;
+	if (pc.treeLod > 1) dataIndex += treeVariables.treeLod1RenderCount;
+	if (pc.treeLod > 2) dataIndex += treeVariables.treeLod2RenderCount;
 
 	position = renderData[dataIndex].position;
 	rotation = renderData[dataIndex].rotscacol.x * 360.0;
@@ -68,5 +74,5 @@ void main()
     vec3 worldPosition = ObjectToWorld(objectPosition, mat4(1)) + position;
 
     //gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
-    gl_Position = variables.shadowLod1Projection * variables.shadowLod1View * vec4(worldPosition, 1.0);
+    gl_Position = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
 }

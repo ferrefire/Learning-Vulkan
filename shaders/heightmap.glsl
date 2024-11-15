@@ -85,12 +85,33 @@ float SampleDynamic(vec2 worldPosition)
 	//}
 }
 
+float SampleArrayWorld(vec2 worldPosition)
+{
+	vec2 worldUV = worldPosition * variables.terrainTotalSizeMult;
+	if (abs(worldUV.x) > 0.5 || abs(worldUV.y) > 0.5) return 0;
+	return (SampleArray(worldUV + 0.5));
+}
+
 vec3 SampleNormalDynamic(vec2 worldPosition, float power)
 {
 	float left = SampleDynamic(worldPosition - vec2(worldSampleDistance, 0));
     float right = SampleDynamic(worldPosition + vec2(worldSampleDistance, 0));
     float down = SampleDynamic(worldPosition - vec2(0, worldSampleDistance));
     float up = SampleDynamic(worldPosition + vec2(0, worldSampleDistance));
+    vec3 normalTS = vec3((left - right) / worldSampleDistanceMult, 1, (down - up) / worldSampleDistanceMult);
+
+	if (power == 1) return normalize(normalTS);
+
+    normalTS.xz *= power;
+    return (normalize(normalTS));
+}
+
+vec3 SampleNormalArray(vec2 worldPosition, float power)
+{
+	float left = SampleArrayWorld(worldPosition - vec2(worldSampleDistance, 0));
+    float right = SampleArrayWorld(worldPosition + vec2(worldSampleDistance, 0));
+    float down = SampleArrayWorld(worldPosition - vec2(0, worldSampleDistance));
+    float up = SampleArrayWorld(worldPosition + vec2(0, worldSampleDistance));
     vec3 normalTS = vec3((left - right) / worldSampleDistanceMult, 1, (down - up) / worldSampleDistanceMult);
 
 	if (power == 1) return normalize(normalTS);

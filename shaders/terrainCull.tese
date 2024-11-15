@@ -33,5 +33,5 @@ void main()
 
 	//shadowPosition = variables.shadowProjection * variables.shadowView * vec4(worldPosition, 1.0);
 
-	gl_Position = variables.cullProjection * variables.view * vec4(worldPosition, 1.0);
+	gl_Position = variables.cullMatrix * vec4(worldPosition, 1.0);
 }

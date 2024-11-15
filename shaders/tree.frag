@@ -12,6 +12,7 @@ layout(location = 0) out vec4 outColor;
 
 #include "variables.glsl"
 #include "lighting.glsl"
+#include "depth.glsl"
 
 void main()
 {
@@ -21,6 +22,7 @@ void main()
 	float shadow = 1.0;
 	if (variables.shadows == 1) shadow = clamp(1.0 - GetShadow(shadowPosition, 1), 0.3, 1.0);
 	combinedColor *= shadow;
+	combinedColor = Fog(combinedColor, GetDepth(gl_FragCoord.z));
 
 	outColor = vec4(combinedColor, 1.0);
 

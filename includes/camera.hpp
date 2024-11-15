@@ -7,6 +7,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <vector>
+
 class Camera
 {
 	private:
@@ -61,4 +63,7 @@ class Camera
 
 		const glm::mat4 &View();
 		const glm::mat4 &Projection();
+
+		std::vector<glm::vec4> GetFrustumCorners();
+		glm::mat4 CreateBoundedOrtho(const glm::mat4 &shadowView);
 };

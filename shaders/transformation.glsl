@@ -20,13 +20,12 @@ vec4 WorldToView(vec3 worldSpace)
 
 vec3 WorldToClip(vec3 worldSpace)
 {
-    vec4 viewSpace = variables.projection * WorldToView(worldSpace);
+    vec4 viewSpace = variables.viewMatrix * vec4(worldSpace, 1.0);
 
     vec3 clipSpace = viewSpace.xyz;
     clipSpace /= viewSpace.w;
 
-    clipSpace.x = clipSpace.x * 0.5 + 0.5;
-    clipSpace.y = clipSpace.y * 0.5 + 0.5;
+    clipSpace.xy = clipSpace.xy * 0.5 + 0.5;
     clipSpace.z = viewSpace.w * farMult;
 
     return (clipSpace);
@@ -34,13 +33,12 @@ vec3 WorldToClip(vec3 worldSpace)
 
 vec3 WorldToCull(vec3 worldSpace)
 {
-    vec4 viewSpace = variables.cullProjection * WorldToView(worldSpace);
+    vec4 viewSpace = variables.cullMatrix * vec4(worldSpace, 1.0);
 
     vec3 clipSpace = viewSpace.xyz;
     clipSpace /= viewSpace.w;
 
-    clipSpace.x = clipSpace.x * 0.5 + 0.5;
-    clipSpace.y = clipSpace.y * 0.5 + 0.5;
+    clipSpace.xy = clipSpace.xy * 0.5 + 0.5;
     clipSpace.z = viewSpace.w * farMult;
 
     return (clipSpace);

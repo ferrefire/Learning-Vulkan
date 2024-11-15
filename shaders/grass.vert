@@ -139,7 +139,7 @@ void main()
 
 	worldPosition = ObjectToWorld(scaledPosition, mat4(1)) + position;
 
-    gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
+    gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
 
 	//grassColor = vec3(0.25, 0.6, 0.1);
 	//grassColor = vec3(0.0916, 0.0866, 0.0125) * 1.5;
@@ -149,5 +149,5 @@ void main()
 
 	uv = vec2(inPosition.x * 10 + 0.5, inPosition.y);
 
-	shadowPosition = variables.shadowLod1Projection * variables.shadowLod1View * vec4(worldPosition, 1.0); 
+	shadowPosition = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
 }

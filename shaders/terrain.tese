@@ -32,8 +32,8 @@ void main()
 	worldPosition = position.xyz;
 	worldPosition.y = ObjectToWorld(vec3(0), objectDatas[pc.chunkIndex].model).y + SampleDynamic(worldPosition.xz) * 5000;
 
-	shadowLod0Position = variables.shadowLod0Projection * variables.shadowLod0View * vec4(worldPosition, 1.0);
-	shadowLod1Position = variables.shadowLod1Projection * variables.shadowLod1View * vec4(worldPosition, 1.0);
+	shadowLod0Position = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
+	shadowLod1Position = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
 
-	gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
+	gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
 }

@@ -171,3 +171,58 @@ void Camera::UpdateRotation(double xpos, double ypos)
 
 	Rotate(Angles() + glm::vec3(yoffset, xoffset, 0.0f));
 }
+
+std::vector<glm::vec4> Camera::GetFrustumCorners()
+{
+	glm::mat4 tempProjection = glm::perspective(glm::radians(FOV), (float)cameraWidth / (float)cameraHeight, near, 10.0f);
+	glm::mat4 inverse = glm::inverse(tempProjection * view);
+    std::vector<glm::vec4> corners;
+
+    std::vector<glm::vec4> clipSpaceCorners = {
+        {-1, -1, -1, 1}, { 1, -1, -1, 1}, { 1,  1, -1, 1}, {-1,  1, -1, 1},
+        {-1, -1,  1, 1}, { 1, -1,  1, 1}, { 1,  1,  1, 1}, {-1,  1,  1, 1}
+    };
+
+    for (const auto& corner : clipSpaceCorners) {
+        glm::vec4 transformedCorner = inverse * corner;
+        transformedCorner /= transformedCorner.w;
+        corners.push_back(transformedCorner);
+    }
+
+    return corners;
+}
+
+glm::mat4 Camera::CreateBoundedOrtho(const glm::mat4 &shadowView)
+{
+	std::vector<glm::vec4> frustumCorners = GetFrustumCorners();
+
+    std::vector<glm::vec4> frustumCornersInLightSpace;
+    for (const auto& corner : frustumCorners) 
+	{
+		frustumCornersInLightSpace.push_back(shadowView * corner);
+    }
+
+    glm::vec3 min(std::numeric_limits<float>::max());
+    glm::vec3 max(std::numeric_limits<float>::lowest());
+
+    for (const auto& corner : frustumCornersInLightSpace) 
+	{
+        glm::vec3 pos = glm::vec3(corner);
+        min = glm::min(min, pos);
+        max = glm::max(max, pos);
+    }
+
+	float zNear = min.z;
+    float zFar = max.z;
+    min.z = 0.0f;
+    max.z = zFar - zNear;
+
+	//if (Time::newSecond)
+	//{
+	//	Utilities::PrintVec(min);
+	//	Utilities::PrintVec(max);
+	//	std::cout << std::endl;
+	//}
+
+    return glm::ortho(min.x, max.x, min.y, max.y, min.z, max.z);
+}

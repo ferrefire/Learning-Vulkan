@@ -269,12 +269,19 @@ void Manager::UpdateShaderVariables()
 	//shaderVariables.lightDirection = glm::normalize(glm::vec3(1, 1, 1));
 
 	shaderVariables.view = camera.View();
-	shaderVariables.shadowLod0View = Shadow::GetShadowView(0);
-	shaderVariables.shadowLod1View = Shadow::GetShadowView(1);
 	shaderVariables.projection = camera.Projection();
+	shaderVariables.viewMatrix = shaderVariables.projection * shaderVariables.view;
+	shaderVariables.shadowLod0View = Shadow::GetShadowView(0);
 	shaderVariables.shadowLod0Projection = Shadow::shadowLod0Projection;
-	shaderVariables.shadowLod1Projection = Shadow::shadowLod1Projection;
-	shaderVariables.cullProjection = Culling::cullProjection;
+	shaderVariables.shadowLod0Matrix = shaderVariables.shadowLod0Projection * shaderVariables.shadowLod0View;
+	shaderVariables.shadowLod1Matrix = Shadow::shadowLod1Projection * Shadow::GetShadowView(1);
+	shaderVariables.cullMatrix = Culling::cullProjection * shaderVariables.view;
+
+	//shaderVariables.shadowLod0View = Shadow::GetShadowView(0);
+	//shaderVariables.shadowLod1View = Shadow::GetShadowView(1);
+	//shaderVariables.shadowLod0Projection = Shadow::shadowLod0Projection;
+	//shaderVariables.shadowLod1Projection = Shadow::shadowLod1Projection;
+	//shaderVariables.cullProjection = Culling::cullProjection;
 
 	shaderVariables.viewPosition = camera.Position();
 	shaderVariables.viewDirection = camera.Front();

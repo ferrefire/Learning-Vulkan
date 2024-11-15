@@ -43,12 +43,18 @@ struct Settings
 struct ShaderVariables
 {
 	alignas(16) glm::mat4 view = glm::mat4(1);
-	alignas(16) glm::mat4 shadowLod0View = glm::mat4(1);
-	alignas(16) glm::mat4 shadowLod1View = glm::mat4(1);
 	alignas(16) glm::mat4 projection = glm::mat4(1);
+	alignas(16) glm::mat4 viewMatrix = glm::mat4(1);
+	alignas(16) glm::mat4 shadowLod0View = glm::mat4(1);
 	alignas(16) glm::mat4 shadowLod0Projection = glm::mat4(1);
-	alignas(16) glm::mat4 shadowLod1Projection = glm::mat4(1);
-	alignas(16) glm::mat4 cullProjection = glm::mat4(1);
+	alignas(16) glm::mat4 shadowLod0Matrix = glm::mat4(1);
+	alignas(16) glm::mat4 shadowLod1Matrix = glm::mat4(1);
+	alignas(16) glm::mat4 cullMatrix = glm::mat4(1);
+	//alignas(16) glm::mat4 shadowLod0View = glm::mat4(1);
+	//alignas(16) glm::mat4 shadowLod1View = glm::mat4(1);
+	//alignas(16) glm::mat4 shadowLod0Projection = glm::mat4(1);
+	//alignas(16) glm::mat4 shadowLod1Projection = glm::mat4(1);
+	//alignas(16) glm::mat4 cullProjection = glm::mat4(1);
 	alignas(16) glm::vec3 viewPosition = glm::vec3(0);
 	alignas(16) glm::vec3 viewDirection = glm::vec3(0);
 	alignas(16) glm::vec3 viewRight = glm::vec3(0);

@@ -49,29 +49,32 @@ float LightDot(vec3 normal)
 	return max(dot(normal, variables.lightDirection), 0.0);
 }
 
-float BlendShadow(vec3 projectionCoordinates, int lod)
+vec2 BlendShadow(vec3 projectionCoordinates, int range, int lod)
 {
 	float shadow = 0.0;
+	float closest = 0;
 	vec2 texelSize;
 	if (lod == 0) texelSize = 1.0 / textureSize(shadowLod0Sampler, 0);
 	else if (lod == 1) texelSize = 1.0 / textureSize(shadowLod1Sampler, 0);
 
-	for(int x = -1; x <= 1; ++x)
+	for(int x = -range; x <= range; ++x)
 	{
-	    for(int y = -1; y <= 1; ++y)
+	    for(int y = -range; y <= range; ++y)
 	    {
-	        float closestDepth;
+	        float closestDepth = 0;
 			if (lod == 0) closestDepth = texture(shadowLod0Sampler, projectionCoordinates.xy + vec2(x, y) * texelSize).r;
 			else if (lod == 1) closestDepth = texture(shadowLod1Sampler, projectionCoordinates.xy + vec2(x, y) * texelSize).r; 
 	        //shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
 
-			float diff = projectionCoordinates.z - closestDepth;
-			if (diff > 0.0) shadow += 1.0;
+			//float diff = projectionCoordinates.z - closestDepth;
+			//if (diff > 0.0) shadow += 1.0;
+			if (x == 0 && y == 0) closest = closestDepth;
+			shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
 	    }
 	}
-	shadow /= 9.0;
+	if (range > 0) shadow /= pow((range * 2) + 1, 2);
 
-	return (shadow);
+	return (vec2(shadow, closest));
 }
 
 float GetShadow(vec4 shadowSpace, int lod)
@@ -80,23 +83,29 @@ float GetShadow(vec4 shadowSpace, int lod)
 	//if (lod == 0) projectionCoordinates = projectionCoordinates * 0.5 + 0.5;
 	//else if (lod == 1) projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
 	//projectionCoordinates = projectionCoordinates * 0.5 + 0.5;
+
+	if (abs(projectionCoordinates.x) > 1.0 || abs(projectionCoordinates.y) > 1.0 || abs(projectionCoordinates.z) > 1.0) return (0.0);
+
+	//if (projectionCoordinates.z > 1.0 || projectionCoordinates.x > 1.0 || projectionCoordinates.x < 0.0 || 
+	//	projectionCoordinates.y > 1.0 || projectionCoordinates.y < 0.0) return (0.0);
+
+	float dis = max(abs(projectionCoordinates.x), abs(projectionCoordinates.y));
 	projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
 
-	if (projectionCoordinates.z > 1.0 || projectionCoordinates.x > 1.0 || projectionCoordinates.x < 0.0 || 
-		projectionCoordinates.y > 1.0 || projectionCoordinates.y < 0.0) return (0.0);
+	//float closestDepth;
+	//if (lod == 0) closestDepth = texture(shadowLod0Sampler, projectionCoordinates.xy).r;
+	//else if (lod == 1) closestDepth = texture(shadowLod1Sampler, projectionCoordinates.xy).r;
+	//float shadow = projectionCoordinates.z > closestDepth ? 1.0 : 0.0;
 
-	float closestDepth;
-	if (lod == 0) closestDepth = texture(shadowLod0Sampler, projectionCoordinates.xy).r;
-	else if (lod == 1) closestDepth = texture(shadowLod1Sampler, projectionCoordinates.xy).r;
-	float currentDepth = projectionCoordinates.z;
-
-	float shadow = 1.0;
-	shadow = BlendShadow(projectionCoordinates, lod);
-	shadow = mix(0.3, 1.0, shadow);
+	//float shadow = 1.0;
+	int range = clamp((dis < 0.25 ? 1 : 0) - lod, 0, 2);
+	vec2 blendResult = BlendShadow(projectionCoordinates, range, lod);
+	float shadow = blendResult.x;
+	//shadow = mix(0.3, 1.0, shadow);
 
 	//float diff = currentDepth - closestDepth;
 
-	//if (diff > 0.0)
+	//if (projectionCoordinates.z > closestDepth)
 	if (shadow > 0.0)
 	{
 		float centerX = (projectionCoordinates.x - 0.5) * 2.0;
@@ -105,16 +114,10 @@ float GetShadow(vec4 shadowSpace, int lod)
 		centerY = abs(centerY);
 		float center = max(centerX, centerY);
 		center = pow(center, 1.5);
-
-		float blend = max(closestDepth, center);
+		float blend = max(blendResult.y, center);
 		shadow = mix(shadow, 0.0, pow(blend, 4));
-
-		return (shadow);
 	}
-	else
-	{
-		return (0.0);
-	}
+	return (shadow);
 }
 
 #endif

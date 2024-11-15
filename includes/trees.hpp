@@ -49,6 +49,8 @@ struct TreeCountData
 {
 	uint32_t lod0Count;
 	uint32_t lod1Count;
+	uint32_t lod2Count;
+	uint32_t lod3Count;
 };
 
 struct TreeData
@@ -56,6 +58,7 @@ struct TreeData
 	uint32_t posxz;
 	uint32_t posyroty;
 	uint32_t scaxcoly;
+	uint32_t life;
 };
 
 struct TreeRenderData
@@ -76,6 +79,10 @@ struct TreeVariables
 	uint32_t treeLod0RenderCount;
 	uint32_t treeLod1RenderBase;
 	uint32_t treeLod1RenderCount;
+	uint32_t treeLod2RenderBase;
+	uint32_t treeLod2RenderCount;
+	uint32_t treeLod3RenderBase;
+	uint32_t treeLod3RenderCount;
 	uint32_t treeTotalRenderBase;
 	uint32_t treeTotalRenderCount;
 
@@ -96,6 +103,10 @@ class Trees
 		static uint32_t treeLod0RenderCount;
 		static uint32_t treeLod1RenderBase;
 		static uint32_t treeLod1RenderCount;
+		static uint32_t treeLod2RenderBase;
+		static uint32_t treeLod2RenderCount;
+		static uint32_t treeLod3RenderBase;
+		static uint32_t treeLod3RenderCount;
 		static uint32_t treeTotalRenderBase;
 		static uint32_t treeTotalRenderCount;
 
@@ -103,6 +114,8 @@ class Trees
 
 		static Mesh treeLod0Mesh;
 		static Mesh treeLod1Mesh;
+		static Mesh treeLod2Mesh;
+		static Mesh treeLod3Mesh;
 
 		static Pipeline graphicsPipeline;
 		static Pipeline shadowPipeline;
@@ -124,6 +137,8 @@ class Trees
 		static std::vector<Buffer> variableBuffers;
 
 		static TreeVariables treeVariables;
+
+		static bool treesComputed;
 
 		static void Create();
 		static void CreateMeshes();

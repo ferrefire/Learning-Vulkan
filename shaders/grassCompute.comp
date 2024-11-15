@@ -146,7 +146,6 @@ void main()
     //if (steepness > 0.5 + (ran - 0.5) * 0.25) return ;
 
 	float steepness = 1.0 - pow(1.0 - GetSteepness(terrainNormal), 15);
-    //steepness = 1.0 - pow(1.0 - steepness, 15);
     if (steepness > 0.5 + (ran - 0.5) * 0.25) return ;
 
 	vec3 rotations = vec3(0);

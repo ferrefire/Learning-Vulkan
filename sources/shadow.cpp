@@ -40,11 +40,8 @@ void Shadow::CreateShadowResources()
 
 	shadowLod0Texture.CreateImage(imageLod0Config, samplerConfig);
 	shadowLod1Texture.CreateImage(imageLod1Config, samplerConfig);
-	if (!Manager::settings.shadows)
-	{
-		shadowLod0Texture.TransitionImageLayout(imageLod0Config);
-		shadowLod1Texture.TransitionImageLayout(imageLod1Config);
-	}
+	shadowLod0Texture.TransitionImageLayout(imageLod0Config);
+	shadowLod1Texture.TransitionImageLayout(imageLod1Config);
 
 	VkFramebufferCreateInfo lod0FramebufferInfo{};
 	lod0FramebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -172,12 +169,20 @@ glm::mat4 Shadow::GetShadowProjection(int lod)
 {
 	if (lod == 0)
 	{
+		//shadowLod0Projection = Manager::camera.CreateBoundedOrtho(GetShadowView(0));
+		//shadowLod0Projection[1][1] *= -1;
+		//return (shadowLod0Projection);
+
 		shadowLod0Projection = glm::ortho(-shadowLod0Distance, shadowLod0Distance, -shadowLod0Distance, shadowLod0Distance, 1.0f, shadowLod0Distance * 2.0f);
 		shadowLod0Projection[1][1] *= -1;
 		return (shadowLod0Projection);
 	}
 	else
 	{
+		//shadowLod1Projection = Manager::camera.CreateBoundedOrtho(GetShadowView(1));
+		//shadowLod1Projection[1][1] *= -1;
+		//return (shadowLod1Projection);
+
 		shadowLod1Projection = glm::ortho(-shadowLod1Distance, shadowLod1Distance, -shadowLod1Distance, shadowLod1Distance, 1.0f, shadowLod1Distance * 2.0f);
 		shadowLod1Projection[1][1] *= -1;
 		return (shadowLod1Projection);

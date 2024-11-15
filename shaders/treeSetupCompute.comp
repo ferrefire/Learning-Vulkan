@@ -7,6 +7,7 @@ struct TreeData
 	uint posxz;
 	uint posyroty;
 	uint scaxcoly;
+	uint life;
 };
 
 layout(std430, set = 1, binding = 0) buffer DataBuffer
@@ -22,6 +23,10 @@ layout(set = 1, binding = 1) uniform TreeVariables
 	uint treeLod0RenderCount;
 	uint treeLod1RenderBase;
 	uint treeLod1RenderCount;
+	uint treeLod2RenderBase;
+	uint treeLod2RenderCount;
+	uint treeLod3RenderBase;
+	uint treeLod3RenderCount;
 	uint treeTotalRenderBase;
 	uint treeTotalRenderCount;
 	float spacing;
@@ -54,14 +59,30 @@ void main()
 
 	float ran = random(gl_GlobalInvocationID.xy);
 
-	float x = (ran - 0.5) * treeVariables.spacing * 0.75;
+	float x = (ran - 0.5) * treeVariables.spacing;
 	ran = random(vec2(index, x));
-	float z = (ran - 0.5) * treeVariables.spacing * 0.75;
+	float z = (ran - 0.5) * treeVariables.spacing;
 	ran = random(vec2(x, z));
 	float y = (ran - 0.5) * treeVariables.spacing * 0.2;
 
 	vec3 position = vec3(x, y, z);
 	//vec3 normal = SampleNormalDynamic(position.xz, 1.0);
+
+	int ix = int(gl_GlobalInvocationID.x) - int(treeVariables.treeBase * 0.5);
+	int iz = int(gl_GlobalInvocationID.y) - int(treeVariables.treeBase * 0.5);
+
+	float px = ix * treeVariables.spacing + position.x;
+	float pz = iz * treeVariables.spacing + position.z;
+
+	uint life = 1;
+
+	vec3 terrainNormal = SampleNormalArray(vec2(px, pz), 1.0);
+	float steepness = 1.0 - pow(1.0 - GetSteepness(terrainNormal), 1.5);
+
+	//vec3 terrainNormal = SampleNormalDynamic(vec2(px, pz), 1.0);
+	//float steepness = 1.0 - pow(1.0 - GetSteepness(terrainNormal), 1.5);
+
+    if (steepness > 0.2) life = 0;
 
 	float scale = 1.0;
 	float color = 1.0;
@@ -72,4 +93,5 @@ void main()
 	data[index].posxz = packHalf2x16(position.xz);
 	data[index].posyroty = packHalf2x16(vec2(position.y, rotation));
 	data[index].scaxcoly = packHalf2x16(vec2(scale, color));
+	data[index].life = life;
 }

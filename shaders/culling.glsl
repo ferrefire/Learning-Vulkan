@@ -64,4 +64,27 @@ int Occluded(vec3 clipSpace, float tolerance)
 	}
 }
 
+int AreaOccluded(vec3 worldSpace, vec2 areaSize)
+{
+	vec3 rightOffset = variables.viewRight * areaSize.x;
+	vec3 upOffset = variables.viewUp * areaSize.y;
+	//float inDistance = pow((areaSize.x * areaSize.y) * 2, 2);
+
+	//if (SquaredDistance(worldSpace, variables.viewPosition) <= inDistance) return (1);
+
+	vec3 areaPosition = worldSpace - rightOffset - upOffset;
+    if (Occluded(WorldToCull(areaPosition), 0) == 0) return (0);
+
+	areaPosition = worldSpace + rightOffset + upOffset;
+    if (Occluded(WorldToCull(areaPosition), 0) == 0) return (0);
+
+	areaPosition = worldSpace + rightOffset - upOffset;
+    if (Occluded(WorldToCull(areaPosition), 0) == 0) return (0);
+
+	areaPosition = worldSpace - rightOffset + upOffset;
+    if (Occluded(WorldToCull(areaPosition), 0) == 0) return (0);
+
+	return (1);
+}
+
 #endif

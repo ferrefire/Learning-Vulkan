@@ -494,7 +494,7 @@ void Grass::RenderShadows(VkCommandBuffer commandBuffer)
 
 	//grassLodMesh.Bind(commandBuffer);
 	//vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
-	//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassLodRenderCounts[Manager::currentFrame], 0, 0, 0);
+	//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassRenderCounts[Manager::currentFrame].lodRenderCount, 0, 0, 0);
 }
 
 void Grass::ComputeGrass()

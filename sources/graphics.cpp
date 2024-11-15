@@ -170,42 +170,40 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 
 	vkCmdEndRenderPass(commandBuffer);
 
-	VkRenderPassBeginInfo lod1RenderPassInfo{};
-	lod1RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	lod1RenderPassInfo.renderPass = Shadow::shadowPass;
-	lod1RenderPassInfo.framebuffer = Shadow::shadowLod1FrameBuffer;
-	lod1RenderPassInfo.renderArea.offset = {0, 0};
-	lod1RenderPassInfo.renderArea.extent.width = Shadow::shadowLod1Resolution;
-	lod1RenderPassInfo.renderArea.extent.height = Shadow::shadowLod1Resolution;
+	if (Manager::settings.trees)
+	{
+		VkRenderPassBeginInfo lod1RenderPassInfo{};
+		lod1RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		lod1RenderPassInfo.renderPass = Shadow::shadowPass;
+		lod1RenderPassInfo.framebuffer = Shadow::shadowLod1FrameBuffer;
+		lod1RenderPassInfo.renderArea.offset = {0, 0};
+		lod1RenderPassInfo.renderArea.extent.width = Shadow::shadowLod1Resolution;
+		lod1RenderPassInfo.renderArea.extent.height = Shadow::shadowLod1Resolution;
 
-	//std::vector<VkClearValue> clearValues(1);
-	//clearValues[0].depthStencil = {1.0f, 0};
+		lod1RenderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		lod1RenderPassInfo.pClearValues = clearValues.data();
 
-	lod1RenderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-	lod1RenderPassInfo.pClearValues = clearValues.data();
+		vkCmdBeginRenderPass(commandBuffer, &lod1RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	vkCmdBeginRenderPass(commandBuffer, &lod1RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+		VkViewport lod1Viewport{};
+		lod1Viewport.x = 0.0f;
+		lod1Viewport.y = 0.0f;
+		lod1Viewport.width = Shadow::shadowLod1Resolution;
+		lod1Viewport.height = Shadow::shadowLod1Resolution;
+		lod1Viewport.minDepth = 0.0f;
+		lod1Viewport.maxDepth = 1.0f;
+		vkCmdSetViewport(commandBuffer, 0, 1, &lod1Viewport);
 
-	VkViewport lod1Viewport{};
-	lod1Viewport.x = 0.0f;
-	lod1Viewport.y = 0.0f;
-	lod1Viewport.width = Shadow::shadowLod1Resolution;
-	lod1Viewport.height = Shadow::shadowLod1Resolution;
-	lod1Viewport.minDepth = 0.0f;
-	lod1Viewport.maxDepth = 1.0f;
-	vkCmdSetViewport(commandBuffer, 0, 1, &lod1Viewport);
+		VkRect2D lod1Scissor{};
+		lod1Scissor.offset = {0, 0};
+		lod1Scissor.extent.width = Shadow::shadowLod1Resolution;
+		lod1Scissor.extent.height = Shadow::shadowLod1Resolution;
+		vkCmdSetScissor(commandBuffer, 0, 1, &lod1Scissor);
 
-	VkRect2D lod1Scissor{};
-	lod1Scissor.offset = {0, 0};
-	lod1Scissor.extent.width = Shadow::shadowLod1Resolution;
-	lod1Scissor.extent.height = Shadow::shadowLod1Resolution;
-	vkCmdSetScissor(commandBuffer, 0, 1, &lod1Scissor);
+		Trees::RecordShadowCommands(commandBuffer);
 
-	//Terrain::RecordCommands(commandBuffer, true);
-	if (Manager::settings.trees) Trees::RecordShadowCommands(commandBuffer);
-	//Grass::RecordShadowCommands(commandBuffer);
-
-	vkCmdEndRenderPass(commandBuffer);
+		vkCmdEndRenderPass(commandBuffer);
+	}
 }
 
 void Graphics::RenderCulling(VkCommandBuffer commandBuffer, uint32_t imageIndex)
@@ -286,13 +284,13 @@ void Graphics::DrawFrame()
 		throw std::runtime_error("failed to acquire swap chain image");
 	}
 
+	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
+	vkResetCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], 0);
+
 	Manager::UpdateShaderVariables();
 	Terrain::PostFrame();
 	if (Manager::settings.trees) Trees::PostFrame();
 	Grass::PostFrame();
-
-	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
-	vkResetCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], 0);
 
 	RecordCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], imageIndex);
 
@@ -446,8 +444,8 @@ void Graphics::Create()
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
 		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[0].imageInfo.imageView = Shadow::shadowLod1Texture.imageView;
-		descriptorConfig[0].imageInfo.sampler = Shadow::shadowLod1Texture.sampler;
+		descriptorConfig[0].imageInfo.imageView = Shadow::shadowLod0Texture.imageView;
+		descriptorConfig[0].imageInfo.sampler = Shadow::shadowLod0Texture.sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}
