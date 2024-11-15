@@ -48,7 +48,7 @@ int AreaInView(vec3 worldSpace, vec2 areaSize)
 
 int Occluded(vec3 clipSpace, float tolerance)
 {
-	//if (clipSpace.z > 1.0 || clipSpace.z < 0.0 || clipSpace.x > 1.0 || clipSpace.x < 0.0 || clipSpace.y > 1.0 || clipSpace.y < 0.0) return (1);
+	//if (clipSpace.x > 1.0 || clipSpace.x < 0.0 || clipSpace.y > 1.0 || clipSpace.y < 0.0) return (0);
 
 	float closestDepth = GetDepth(textureLod(cullSampler, clipSpace.xy, 0).r);
 
@@ -68,9 +68,9 @@ int AreaOccluded(vec3 worldSpace, vec2 areaSize)
 {
 	vec3 rightOffset = variables.viewRight * areaSize.x;
 	vec3 upOffset = variables.viewUp * areaSize.y;
-	//float inDistance = pow((areaSize.x * areaSize.y) * 2, 2);
+	float inDistance = pow((areaSize.x * areaSize.y) * 2, 2);
 
-	//if (SquaredDistance(worldSpace, variables.viewPosition) <= inDistance) return (1);
+	if (SquaredDistance(worldSpace, variables.viewPosition) <= inDistance) return (0);
 
 	vec3 areaPosition = worldSpace - rightOffset - upOffset;
     if (Occluded(WorldToCull(areaPosition), 0) == 0) return (0);

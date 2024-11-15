@@ -28,9 +28,9 @@ class Utilities
 		static glm::vec2 Normalize(const glm::vec2 &vec);
 		static glm::vec3 Normalize(const glm::vec3 &vec);
 		static glm::mat4 GetRotationMatrix(float angle, glm::vec3 axis);
-		static float Utilities::Random01();
+		static float Random01();
 		static float Random01(float seed);
-		static float Utilities::Random11();
+		static float Random11();
 		static float Random11(float seed);
 		static float RandomFloat(float min, float max, float seed);
 		static float RandomFloat(float min, float max);
