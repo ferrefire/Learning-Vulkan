@@ -59,6 +59,7 @@ class Shape
 
         void RecalculateNormals();
         void RecalculateNormal(unsigned int index);
+        void RecalculateCoordinates();
 
         int ClosestMergeIndex(glm::vec3 position, bool closest, bool top);
         glm::vec3 BottomMergePointsCenter();

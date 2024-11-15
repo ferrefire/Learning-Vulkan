@@ -20,7 +20,7 @@ struct BranchConfiguration
 {
 	bool main = false;
 	int iteration = 0;
-	int maxIteration = 10;
+	int maxIteration = 7;
 	float seed = 103.84f;
 
 	int resolution = 24;
@@ -109,6 +109,8 @@ class Trees
 		static Pipeline cullPipeline;
 		static Pipeline computeSetupPipeline;
 		static Pipeline computeRenderPipeline;
+
+		static Texture diffuseTexture;
 
 		static Descriptor graphicsDescriptor;
 		static Descriptor shadowDescriptor;

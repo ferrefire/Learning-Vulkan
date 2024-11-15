@@ -4,9 +4,6 @@
 
 struct TreeRenderData
 {
-	//uint posxz;
-	//uint posyroty;
-	//uint scaxcoly;
 	vec3 position;
 	vec3 rotscacol;
 };
@@ -36,11 +33,11 @@ layout(push_constant, std430) uniform PushConstants
 } pc;
 
 layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec2 inCoordinate;
-layout(location = 2) in vec3 inNormal;
+//layout(location = 1) in vec2 inCoordinate;
+//layout(location = 2) in vec3 inNormal;
 
-layout(location = 0) out vec2 coord;
-layout(location = 1) out vec3 normal;
+//layout(location = 0) out vec2 coord;
+//layout(location = 1) out vec3 normal;
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -51,15 +48,7 @@ void main()
     vec3 position = vec3(0.0);
 	float rotation = 0.0;
 	float scale = 1.0;
-	float color = 1.0;
-
-    //position.xz = unpackHalf2x16(renderData[gl_InstanceIndex].posxz);
-	//vec2 yy = unpackHalf2x16(renderData[gl_InstanceIndex].posyroty);
-	//position.y = yy.x;
-	//rotation = yy.y * 360.0;
-	//vec2 xx = unpackHalf2x16(renderData[gl_InstanceIndex].scaxcoly);
-	//scale = xx.x;
-	//color = xx.y;
+	//float color = 1.0;
 
 	uint dataIndex = gl_InstanceIndex;
 	if (pc.treeLod == 1) dataIndex += treeVariables.treeLod0RenderCount;
@@ -67,26 +56,17 @@ void main()
 	position = renderData[dataIndex].position;
 	rotation = renderData[dataIndex].rotscacol.x * 360.0;
 	scale = renderData[dataIndex].rotscacol.y;
-	color = renderData[dataIndex].rotscacol.z;
+	//color = renderData[dataIndex].rotscacol.z;
 
     position += variables.viewPosition;
 
 	mat4 rotationMatrix = GetRotationMatrix(radians(rotation), vec3(0.0, 1.0, 0.0));
     vec3 objectPosition = (rotationMatrix * vec4(inPosition, 1.0)).xyz;
-    normal = (rotationMatrix * vec4(inNormal, 0.0)).xyz;
+    //normal = (rotationMatrix * vec4(inNormal, 0.0)).xyz;
 
-	coord = inCoordinate;
-
-	//if (gl_InstanceIndex == 0 && pc.treeLod == 0)
-	//{
-	//	position = vec3(-250, 750, -2050);
-	//	objectPosition = inPosition;
-	//	normal = inNormal;
-	//}
-
-    //vec3 worldPosition = ObjectToWorld(inPosition * vec3(1.5, 15, 1.5), mat4(1)) + position + vec3(0, 7.5, 0);
+	//coord = inCoordinate;
     vec3 worldPosition = ObjectToWorld(objectPosition, mat4(1)) + position;
 
-	//normal = inNormal;
-    gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
+    //gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
+    gl_Position = variables.shadowProjection * variables.shadowView * vec4(worldPosition, 1.0);
 }

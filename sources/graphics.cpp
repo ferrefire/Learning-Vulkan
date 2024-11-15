@@ -165,6 +165,7 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 	//Terrain::RecordCommands(commandBuffer, true);
+	if (Manager::settings.trees) Trees::RecordShadowCommands(commandBuffer);
 	Grass::RecordShadowCommands(commandBuffer);
 
 	vkCmdEndRenderPass(commandBuffer);

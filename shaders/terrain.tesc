@@ -55,6 +55,10 @@ void main()
         vec3 p1 = (gl_in[1].gl_Position).xyz;
         vec3 p2 = (gl_in[2].gl_Position).xyz;
 
+        //vec3 p0Clip = WorldToClip(p0);
+        //vec3 p1Clip = WorldToClip(p1);
+        //vec3 p2Clip = WorldToClip(p2);
+
         vec3 center = (p0 + p1 + p2) * (1.0 / 3.0);
 
 		float depth = GetWorldDepth(center);

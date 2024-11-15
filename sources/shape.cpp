@@ -157,6 +157,7 @@ void Shape::SetShape(int type, int resolution)
 	else if (type == CYLINDER)
 	{
 		normal = true;
+		coordinate = true;
 
 		Shape plane = Shape(PLANE, resolution);
 		plane.Rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -210,11 +211,14 @@ void Shape::SetShape(int type, int resolution)
 			centerMergePoint = positions.size();
 			positions.push_back(TopMergePointsCenter() + glm::vec3(0, 0.05, 0));
 			if (normal) normals.push_back(glm::normalize(glm::vec3(0, 0, 0)));
+			if (coordinate) coordinates.push_back(glm::vec2(1));
 			//coordinates.push_back(glm::vec2(0, 1));
 		}
 
 		Move(glm::vec3(0, 0.5, 0));
 		Scale(glm::vec3(1, 15, 1));
+
+		if (coordinate) RecalculateCoordinates();
 	}
 }
 
@@ -435,6 +439,16 @@ void Shape::RecalculateNormals()
 	for (const glm::vec3 &position : positions)
 	{
 		normals.push_back(glm::normalize(glm::vec3(position.x, 0, position.z)));
+	}
+}
+
+void Shape::RecalculateCoordinates()
+{
+	coordinates.clear();
+
+	for (const glm::vec3 &position : positions)
+	{
+		coordinates.push_back(glm::vec2(position.x, position.y));
 	}
 }
 
