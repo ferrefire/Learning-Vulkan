@@ -169,23 +169,21 @@ glm::mat4 Shadow::GetShadowProjection(int lod)
 {
 	if (lod == 0)
 	{
-		//shadowLod0Projection = Manager::camera.CreateBoundedOrtho(GetShadowView(0));
+		shadowLod0Projection = Manager::camera.CreateBoundedOrtho(GetShadowView(0), shadowLod0Distance);
+		return (shadowLod0Projection);
+
+		//shadowLod0Projection = glm::ortho(-shadowLod0Distance, shadowLod0Distance, -shadowLod0Distance, shadowLod0Distance, 1.0f, shadowLod0Distance * 2.0f);
 		//shadowLod0Projection[1][1] *= -1;
 		//return (shadowLod0Projection);
-
-		shadowLod0Projection = glm::ortho(-shadowLod0Distance, shadowLod0Distance, -shadowLod0Distance, shadowLod0Distance, 1.0f, shadowLod0Distance * 2.0f);
-		shadowLod0Projection[1][1] *= -1;
-		return (shadowLod0Projection);
 	}
 	else
 	{
-		//shadowLod1Projection = Manager::camera.CreateBoundedOrtho(GetShadowView(1));
+		shadowLod1Projection = Manager::camera.CreateBoundedOrtho(GetShadowView(1), shadowLod1Distance);
+		return (shadowLod1Projection);
+
+		//shadowLod1Projection = glm::ortho(-shadowLod1Distance, shadowLod1Distance, -shadowLod1Distance, shadowLod1Distance, 1.0f, shadowLod1Distance * 2.0f);
 		//shadowLod1Projection[1][1] *= -1;
 		//return (shadowLod1Projection);
-
-		shadowLod1Projection = glm::ortho(-shadowLod1Distance, shadowLod1Distance, -shadowLod1Distance, shadowLod1Distance, 1.0f, shadowLod1Distance * 2.0f);
-		shadowLod1Projection[1][1] *= -1;
-		return (shadowLod1Projection);
 	}
 }
 
@@ -202,5 +200,5 @@ glm::mat4 Shadow::shadowLod1Projection = glm::mat4(1);
 
 int Shadow::shadowLod0Resolution = 4096;
 float Shadow::shadowLod0Distance = 20;
-int Shadow::shadowLod1Resolution = 4096 * 2;
+int Shadow::shadowLod1Resolution = 4096;
 float Shadow::shadowLod1Distance = 250;

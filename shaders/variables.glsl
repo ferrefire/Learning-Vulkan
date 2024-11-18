@@ -6,8 +6,6 @@ layout(set = 0, binding = 0) uniform Variables
 	mat4 view;
 	mat4 projection;
 	mat4 viewMatrix;
-	mat4 shadowLod0View;
-	mat4 shadowLod0Projection;
 	mat4 shadowLod0Matrix;
 	mat4 shadowLod1Matrix;
 	mat4 cullMatrix;

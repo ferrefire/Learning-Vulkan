@@ -9,12 +9,17 @@ const vec3 lightColor = vec3(1);
 
 #include "depth.glsl"
 
-vec3 DiffuseLighting(vec3 normal, vec3 color)
+vec3 DiffuseLighting(vec3 normal, vec3 color, float ambient)
 {
-	float diffuseStrength = max(dot(normal, variables.lightDirection), 0.1);
+	float diffuseStrength = max(dot(normal, variables.lightDirection), ambient);
 	vec3 diffuse = color * diffuseStrength;
 
 	return diffuse;
+}
+
+vec3 DiffuseLighting(vec3 normal, vec3 color)
+{
+	return DiffuseLighting(normal, color, 0.1);
 }
 
 vec3 SpecularLighting(vec3 normal, vec3 viewDirection, float shininess)
@@ -80,41 +85,27 @@ vec2 BlendShadow(vec3 projectionCoordinates, int range, int lod)
 float GetShadow(vec4 shadowSpace, int lod)
 {
 	vec3 projectionCoordinates = shadowSpace.xyz / shadowSpace.w;
-	//if (lod == 0) projectionCoordinates = projectionCoordinates * 0.5 + 0.5;
-	//else if (lod == 1) projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
-	//projectionCoordinates = projectionCoordinates * 0.5 + 0.5;
 
 	if (abs(projectionCoordinates.x) > 1.0 || abs(projectionCoordinates.y) > 1.0 || abs(projectionCoordinates.z) > 1.0) return (0.0);
 
-	//if (projectionCoordinates.z > 1.0 || projectionCoordinates.x > 1.0 || projectionCoordinates.x < 0.0 || 
-	//	projectionCoordinates.y > 1.0 || projectionCoordinates.y < 0.0) return (0.0);
+	vec4 viewCoordinates = variables.shadowLod1Matrix * vec4(variables.viewPosition, 1.0);
+	viewCoordinates.xyz = viewCoordinates.xyz / viewCoordinates.w;
 
-	float dis = max(abs(projectionCoordinates.x), abs(projectionCoordinates.y));
+	//float xDis = abs(projectionCoordinates.x - viewCoordinates.x);
+	//float yDis = abs(projectionCoordinates.y - viewCoordinates.y);
+	//float dis = max(xDis, yDis) * 0.5;
+
+	float dis = distance(viewCoordinates.xy, projectionCoordinates.xy) * 0.5;
+	
 	projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
 
-	//float closestDepth;
-	//if (lod == 0) closestDepth = texture(shadowLod0Sampler, projectionCoordinates.xy).r;
-	//else if (lod == 1) closestDepth = texture(shadowLod1Sampler, projectionCoordinates.xy).r;
-	//float shadow = projectionCoordinates.z > closestDepth ? 1.0 : 0.0;
-
-	//float shadow = 1.0;
-	int range = clamp((dis < 0.25 ? 1 : 0) - lod, 0, 2);
+	int range = dis < (lod == 0 ? 0.25 : 0.125) ? 1 : 0;
 	vec2 blendResult = BlendShadow(projectionCoordinates, range, lod);
 	float shadow = blendResult.x;
-	//shadow = mix(0.3, 1.0, shadow);
 
-	//float diff = currentDepth - closestDepth;
-
-	//if (projectionCoordinates.z > closestDepth)
 	if (shadow > 0.0)
 	{
-		float centerX = (projectionCoordinates.x - 0.5) * 2.0;
-		centerX = abs(centerX);
-		float centerY = (projectionCoordinates.y - 0.5) * 2.0;
-		centerY = abs(centerY);
-		float center = max(centerX, centerY);
-		center = pow(center, 1.5);
-		float blend = max(blendResult.y, center);
+		float blend = max(blendResult.y, dis);
 		shadow = mix(shadow, 0.0, pow(blend, 4));
 	}
 	return (shadow);

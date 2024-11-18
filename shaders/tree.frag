@@ -16,7 +16,7 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
-	vec3 diffuse = DiffuseLighting(inNormal, vec3(1));
+	vec3 diffuse = DiffuseLighting(inNormal, vec3(1), 0.025);
 	vec3 texColor = texture(treeDiffuseSampler, inCoord * 0.25).xyz;
 	vec3 combinedColor = diffuse * texColor;
 	float shadow = 1.0;

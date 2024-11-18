@@ -172,18 +172,20 @@ void Camera::UpdateRotation(double xpos, double ypos)
 	Rotate(Angles() + glm::vec3(yoffset, xoffset, 0.0f));
 }
 
-std::vector<glm::vec4> Camera::GetFrustumCorners()
+std::vector<glm::vec4> Camera::GetFrustumCorners(float farDis)
 {
-	glm::mat4 tempProjection = glm::perspective(glm::radians(FOV), (float)cameraWidth / (float)cameraHeight, near, 10.0f);
+	glm::mat4 tempProjection = glm::perspective(glm::radians(FOV), (float)cameraWidth / (float)cameraHeight, 1.0f, farDis);
 	glm::mat4 inverse = glm::inverse(tempProjection * view);
     std::vector<glm::vec4> corners;
 
-    std::vector<glm::vec4> clipSpaceCorners = {
+    std::vector<glm::vec4> clipSpaceCorners = 
+	{
         {-1, -1, -1, 1}, { 1, -1, -1, 1}, { 1,  1, -1, 1}, {-1,  1, -1, 1},
         {-1, -1,  1, 1}, { 1, -1,  1, 1}, { 1,  1,  1, 1}, {-1,  1,  1, 1}
     };
 
-    for (const auto& corner : clipSpaceCorners) {
+    for (const glm::vec4& corner : clipSpaceCorners) 
+	{
         glm::vec4 transformedCorner = inverse * corner;
         transformedCorner /= transformedCorner.w;
         corners.push_back(transformedCorner);
@@ -192,9 +194,9 @@ std::vector<glm::vec4> Camera::GetFrustumCorners()
     return corners;
 }
 
-glm::mat4 Camera::CreateBoundedOrtho(const glm::mat4 &shadowView)
+glm::mat4 Camera::CreateBoundedOrtho(const glm::mat4 &shadowView, float farDis)
 {
-	std::vector<glm::vec4> frustumCorners = GetFrustumCorners();
+	std::vector<glm::vec4> frustumCorners = GetFrustumCorners(farDis);
 
     std::vector<glm::vec4> frustumCornersInLightSpace;
     for (const auto& corner : frustumCorners) 
@@ -224,5 +226,5 @@ glm::mat4 Camera::CreateBoundedOrtho(const glm::mat4 &shadowView)
 	//	std::cout << std::endl;
 	//}
 
-    return glm::ortho(min.x, max.x, min.y, max.y, min.z, max.z);
+    return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, farDis * 2);
 }
