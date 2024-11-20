@@ -76,5 +76,5 @@ void main()
     //gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
     //gl_Position = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
     //gl_Position = variables.shadowLod1Matrix * variables.shadowLod1Projection * variables.shadowLod1View * vec4(worldPosition, 1.0);
-    gl_Position = variables.shadowLod1Matrix * variables.shadowLod1Projection * variables.shadowLod1View * vec4(worldPosition, 1.0);
+    gl_Position = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
 }

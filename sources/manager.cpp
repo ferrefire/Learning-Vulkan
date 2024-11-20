@@ -278,9 +278,10 @@ void Manager::UpdateShaderVariables()
 	//shaderVariables.shadowLod0Projection = Shadow::shadowLod0Projection;
 	//shaderVariables.shadowLod0Matrix = shaderVariables.shadowLod0Projection * shaderVariables.shadowLod0View;
 	shaderVariables.shadowLod0Matrix = Shadow::GetShadowProjection(0) * Shadow::GetShadowView(0);
-	shaderVariables.shadowLod1View = Shadow::GetShadowView(1);
-	shaderVariables.shadowLod1Projection = Shadow::GetShadowProjection(1);
-	shaderVariables.shadowLod1Matrix = Shadow::GetShadowTransformation(1);
+	//shaderVariables.shadowLod1View = Shadow::GetShadowView(1);
+	//shaderVariables.shadowLod1Projection = Shadow::GetShadowProjection(1);
+	shaderVariables.shadowLod1Matrix = Shadow::GetShadowTransformation(1) * Shadow::shadowLod1Projection * Shadow::shadowLod1View;
+	//shaderVariables.shadowLod1Projection = Shadow::shadowLod1Projection;
 	//shaderVariables.shadowLod1Matrix = Shadow::shadowLod1Projection * Shadow::shadowLod1View;
 	//shaderVariables.shadowLod1Matrix = Shadow::GetShadowProjection(1) * Shadow::GetShadowView(1);
 	shaderVariables.cullMatrix = Culling::cullProjection * shaderVariables.view;

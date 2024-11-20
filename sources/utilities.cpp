@@ -86,6 +86,11 @@ int Utilities::Fits(float part, float whole)
     return result;
 }
 
+void Utilities::PrintVec(glm::vec4 vec)
+{
+	std::cout << vec.x << "\t" << vec.y << "\t" << vec.z << "\t" << vec.w << std::endl;
+}
+
 void Utilities::PrintVec(glm::vec3 vec)
 {
 	std::cout << vec.x << " | " << vec.y << " | " << vec.z << std::endl;

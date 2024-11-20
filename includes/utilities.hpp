@@ -23,6 +23,7 @@ class Utilities
 		static std::string GetPath();
 		static float SignedFloor(float x);
 		static int Fits(float part, float whole);
+		static void PrintVec(glm::vec4 vec);
 		static void PrintVec(glm::vec3 vec);
 		static void PrintVec(std::string name, glm::vec3 vec);
 		static void PrintVec(glm::vec2 vec);

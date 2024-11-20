@@ -92,7 +92,7 @@ float GetShadow(vec4 shadowSpace, int lod)
 
 	vec4 viewCoordinates;
 	if (lod == 0) viewCoordinates = variables.shadowLod0Matrix * vec4(variables.viewPosition, 1.0);
-	else if (lod == 1) viewCoordinates = variables.shadowLod1Matrix * variables.shadowLod1Projection * variables.shadowLod1View * vec4(variables.viewPosition, 1.0);
+	else if (lod == 1) viewCoordinates = variables.shadowLod1Matrix * vec4(variables.viewPosition, 1.0);
 	viewCoordinates.xyz = viewCoordinates.xyz / viewCoordinates.w;
 
 	//float xDis = abs(projectionCoordinates.x - viewCoordinates.x);
@@ -104,7 +104,7 @@ float GetShadow(vec4 shadowSpace, int lod)
 	projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
 
 	int range = dis < (lod == 0 ? 0.25 : 0.125) ? 1 : 0;
-	if (lod == 1) range = 0;
+	if (lod == 1) range = 1;
 	vec2 blendResult = BlendShadow(projectionCoordinates, range, lod);
 	float shadow = blendResult.x;
 
