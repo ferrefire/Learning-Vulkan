@@ -149,5 +149,5 @@ void main()
 
 	uv = vec2(inPosition.x * 10 + 0.5, inPosition.y);
 
-	shadowPosition = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
+	shadowPosition = variables.shadowLod1Matrix * variables.shadowLod1Projection * variables.shadowLod1View * vec4(worldPosition, 1.0);
 }

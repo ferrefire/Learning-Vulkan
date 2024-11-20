@@ -91,6 +91,53 @@ void Utilities::PrintVec(glm::vec3 vec)
 	std::cout << vec.x << " | " << vec.y << " | " << vec.z << std::endl;
 }
 
+void Utilities::PrintVec(std::string name, glm::vec3 vec)
+{
+	std::cout << name << ": " << vec.x << " | " << vec.y << " | " << vec.z << std::endl;
+}
+
+void Utilities::PrintVec(glm::vec2 vec)
+{
+	std::cout << vec.x << " | " << vec.y << std::endl;
+}
+
+void Utilities::PrintVec(std::string name, glm::vec2 vec)
+{
+	std::cout << name << ": " << vec.x << " | " << vec.y << std::endl;
+}
+
+void Utilities::PrintLine(std::string name, glm::vec2 point, glm::vec2 direction)
+{
+	if (abs(point.x) < 1e-5f) point.x = 0;
+	if (abs(point.y) < 1e-5f) point.y = 0;
+	if (abs(direction.x) < 1e-5f) direction.x = 0;
+	if (abs(direction.y) < 1e-5f) direction.y = 0;
+	std::cout << name << "(y - " << point.y << ") * " << direction.x << " = (x - " << point.x << ") * " << direction.y << std::endl;
+}
+
+void Utilities::PrintPoint(std::string name, glm::vec2 point)
+{
+	std::cout << name << "(" << point.x << ", " << point.y << ")" << std::endl;
+}
+
+void Utilities::PrintPoint(glm::vec2 point)
+{
+	if (abs(point.x) < 1e-5f) point.x = 0;
+	if (abs(point.y) < 1e-5f) point.y = 0;
+
+	std::cout << point.x << "\t" << point.y << std::endl;
+}
+
+void Utilities::PrintPoints(std::string name, const std::vector<glm::vec2> &points)
+{
+	std::cout << name << std::endl;
+	for (const glm::vec2 &point : points)
+	{
+		std::cout << point.x << "\t" << point.y << std::endl;
+	}
+	std::cout << std::endl;
+}
+
 glm::vec3 Utilities::RotateVec(glm::vec3 vec, float angle, glm::vec3 axis)
 {
 	glm::mat4 rotation = glm::mat4(1.0f);

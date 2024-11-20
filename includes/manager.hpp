@@ -45,7 +45,10 @@ struct ShaderVariables
 	alignas(16) glm::mat4 view = glm::mat4(1);
 	alignas(16) glm::mat4 projection = glm::mat4(1);
 	alignas(16) glm::mat4 viewMatrix = glm::mat4(1);
+	alignas(16) glm::mat4 frustumMatrix = glm::mat4(1);
 	alignas(16) glm::mat4 shadowLod0Matrix = glm::mat4(1);
+	alignas(16) glm::mat4 shadowLod1View = glm::mat4(1);
+	alignas(16) glm::mat4 shadowLod1Projection = glm::mat4(1);
 	alignas(16) glm::mat4 shadowLod1Matrix = glm::mat4(1);
 	alignas(16) glm::mat4 cullMatrix = glm::mat4(1);
 	//alignas(16) glm::mat4 shadowLod0View = glm::mat4(1);
@@ -74,6 +77,13 @@ struct ShaderVariables
 
 	alignas(4) uint32_t occlusionCulling;
 	alignas(4) uint32_t shadows;
+
+	//alignas(8) glm::vec2 frustumCorners[4];
+
+	alignas(8) glm::vec2 frustumCorner1;
+	alignas(8) glm::vec2 frustumCorner2;
+	alignas(8) glm::vec2 frustumCorner3;
+	alignas(8) glm::vec2 frustumCorner4;
 };
 
 class Manager

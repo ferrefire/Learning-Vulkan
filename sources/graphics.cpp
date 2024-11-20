@@ -167,6 +167,7 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	//Terrain::RecordCommands(commandBuffer, true);
 	//if (Manager::settings.trees) Trees::RecordShadowCommands(commandBuffer);
 	Grass::RecordShadowCommands(commandBuffer);
+	//Trees::RecordShadowCommands(commandBuffer);
 
 	vkCmdEndRenderPass(commandBuffer);
 
@@ -444,8 +445,8 @@ void Graphics::Create()
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
 		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[0].imageInfo.imageView = Shadow::shadowLod0Texture.imageView;
-		descriptorConfig[0].imageInfo.sampler = Shadow::shadowLod0Texture.sampler;
+		descriptorConfig[0].imageInfo.imageView = Shadow::shadowLod1Texture.imageView;
+		descriptorConfig[0].imageInfo.sampler = Shadow::shadowLod1Texture.sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}

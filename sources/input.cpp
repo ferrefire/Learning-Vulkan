@@ -69,10 +69,16 @@ void Input::Start()
 	Manager::camera.UpdateProjection();
 	//Manager::camera.Move(glm::vec3(0.0, 1000.0, -1000.0));
 	//Manager::camera.Move(glm::vec3(-300.0, 500.65, -2000.0));
-	Manager::camera.Move(glm::vec3(-276.0, 763, -2127.0));
+	//Manager::camera.Move(glm::vec3(-276.0, 763, -2127.0));
+	Manager::camera.Move(glm::vec3(-21.3, 504.7, -2006.0));
+	//Manager::camera.Move(glm::vec3(-21.3, 504.7, -2001.0));
+	//Manager::camera.Move(glm::vec3(-21.3, 504.7, -2001.0));
 	// Rotate(glm::vec3(-25.0, -135.0, 0.0));
-	//Manager::camera.Rotate(glm::vec3(-25.0, 45.0, 0.0));
-	Manager::camera.Rotate(glm::vec3(0.0, 45.0, 0.0));
+	// Manager::camera.Rotate(glm::vec3(-25.0, 45.0, 0.0));
+	//Manager::camera.Rotate(glm::vec3(-25.0, 25.0, 0.0));
+	//Manager::camera.Rotate(glm::vec3(-19, -849.8, 0.0));
+	Manager::camera.Rotate(glm::vec3(-27.6, -135.4, 0.0));
+	// Manager::camera.SetRotation(glm::vec3(1.4, -8.8, 0.0));
 }
 
 void Input::Frame()

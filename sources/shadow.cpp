@@ -1,8 +1,12 @@
 #include "shadow.hpp"
 
 #include "manager.hpp"
+#include "time.hpp"
+#include "utilities.hpp"
 
 #include <stdexcept>
+#include <algorithm>
+#include <iostream>
 
 void Shadow::Create()
 {
@@ -165,26 +169,581 @@ glm::mat4 Shadow::GetShadowView(int lod)
 	}
 }
 
+glm::mat4 Shadow::CreateBoundedProjection(const glm::mat4 &shadowView, float farDis)
+{
+	std::vector<glm::vec4> frustumCorners = Manager::camera.GetFrustumCorners(1.0f, farDis);
+
+	std::vector<glm::vec4> frustumCornersInLightSpace;
+	for (const glm::vec4 &corner : frustumCorners)
+	{
+		frustumCornersInLightSpace.push_back(shadowView * corner);
+	}
+
+	glm::vec3 min(std::numeric_limits<float>::max());
+	glm::vec3 max(std::numeric_limits<float>::lowest());
+
+	for (const glm::vec4 &corner : frustumCornersInLightSpace)
+	{
+		glm::vec3 pos = glm::vec3(corner);
+		min = glm::min(min, pos);
+		max = glm::max(max, pos);
+	}
+
+	return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, farDis * 2);
+}
+
+float Cross(const Point2D &O, const Point2D &A, const Point2D &B)
+{
+	return (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
+}
+
+std::vector<glm::vec2> ComputeConvexHull(std::vector<glm::vec2> convexPoints)
+{
+	if (convexPoints.size() <= 1) return convexPoints;
+
+	std::vector<Point2D> points;
+	for (const glm::vec2 &point : convexPoints)
+	{
+		points.push_back({point.x, point.y});
+	}
+
+	std::sort(points.begin(), points.end());
+
+	std::vector<Point2D> hull;
+
+	for (const auto &point : points)
+	{
+		while (hull.size() >= 2 && Cross(hull[hull.size() - 2], hull.back(), point) <= 0) hull.pop_back();
+
+		hull.push_back(point);
+	}
+
+	size_t lowerSize = hull.size();
+	for (auto it = points.rbegin(); it != points.rend(); ++it)
+	{
+		while (hull.size() > lowerSize && Cross(hull[hull.size() - 2], hull.back(), *it) <= 0) hull.pop_back();
+
+		hull.push_back(*it);
+	}
+
+	hull.pop_back();
+
+	//if (Time::newSecond)
+	//{
+	//	for (Point2D point : hull)
+	//	{
+	//		std::cout << point.x << "\t" << point.y << std::endl;
+	//	}
+	//	std::cout << std::endl;
+	//}
+
+	std::vector<glm::vec2> result;
+	for (const Point2D &point : hull)
+	{
+		result.push_back(glm::vec2(point.x, point.y));
+	}
+
+	return result;
+}
+
+Line ComputeCenterLine(const std::vector<glm::vec2> &frustumCorners)
+{
+	glm::vec2 centerNear(0.0f, 0.0f), centerFar(0.0f, 0.0f);
+
+	for (int i = 0; i < 4; i++)
+	{
+		centerNear += frustumCorners[i];
+	}
+	centerNear /= 4.0f;
+
+	for (int i = 4; i < 8; i++)
+	{
+		centerFar += frustumCorners[i];
+	}
+	centerFar /= 4.0f;
+
+	glm::vec2 direction = glm::normalize(centerFar - centerNear);
+
+	return {(centerNear + centerFar) * 0.5f, direction};
+}
+
+std::pair<Line, Line> ComputeBaseAndTopLines(const std::vector<glm::vec2> &convexHull, const Line &centerLine)
+{
+	glm::vec2 basePoint, topPoint;
+
+	float maxDistance = FLT_MAX, minDistance = FLT_MAX;
+	glm::vec2 maxPoint = centerLine.point + centerLine.normal * 2.0f;
+	glm::vec2 minPoint = centerLine.point - centerLine.normal * 2.0f;
+	for (const glm::vec2 &p : convexHull)
+	{
+		glm::vec2 point(p.x, p.y);
+		//float distance = glm::dot(point - centerLine.point, glm::vec2(-centerLine.normal.y, centerLine.normal.x));
+		float distance = glm::distance(point, maxPoint);
+		if (distance < maxDistance)
+		{
+			maxDistance = distance;
+			basePoint = point;
+		}
+		distance = glm::distance(point, minPoint);
+		if (distance < minDistance)
+		{
+			minDistance = distance;
+			topPoint = point;
+		}
+	}
+
+	glm::vec2 normal = glm::vec2(-centerLine.normal.y, centerLine.normal.x);
+
+	//if (Time::newSecond)
+	//{
+	//	//Utilities::PrintVec("topPoint", topPoint);
+	//	//Utilities::PrintVec("basePoint", basePoint);
+	//	//Utilities::PrintVec("normal", normal);
+	//	Utilities::PrintLine("topLine", topPoint, normal);
+	//	Utilities::PrintLine("baseLine", basePoint, normal);
+	//	std::cout << std::endl;
+	//}
+
+	return {{topPoint, normal}, {basePoint, normal}};
+}
+
+std::pair<Line, Line> ComputeSideLines(const std::vector<glm::vec2> &convexHull, const Line &centerLine, const glm::vec2 &q)
+{
+	glm::vec2 leftPoint, rightPoint;
+
+	/*float maxLeftAngle = FLT_MAX;
+	float maxRightAngle = -FLT_MAX;
+
+	for (const glm::vec2 &point : convexHull)
+	{
+		glm::vec2 dir = glm::normalize(point - q);
+		float angle = atan2(dir.y, dir.x);
+
+		if (angle < maxLeftAngle)
+		{
+			maxLeftAngle = angle;
+			leftPoint = point;
+		}
+		if (angle > maxRightAngle)
+		{
+			maxRightAngle = angle;
+			rightPoint = point;
+		}
+	}*/
+
+	float rightMaxDistance = FLT_MAX, leftMaxDistance = FLT_MAX;
+	glm::vec2 normal = glm::vec2(-centerLine.normal.y, centerLine.normal.x);
+	glm::vec2 rightCheckPoint = centerLine.point + normal * 2.0f;
+	glm::vec2 leftCheckPoint = centerLine.point - normal * 2.0f;
+	for (const glm::vec2 &p : convexHull)
+	{
+		glm::vec2 point(p.x, p.y);
+		// float distance = glm::dot(point - centerLine.point, glm::vec2(-centerLine.normal.y, centerLine.normal.x));
+		float distance = glm::distance(point, rightCheckPoint);
+		if (distance < rightMaxDistance)
+		{
+			rightMaxDistance = distance;
+			rightPoint = point;
+		}
+		distance = glm::distance(point, leftCheckPoint);
+		if (distance < leftMaxDistance)
+		{
+			leftMaxDistance = distance;
+			leftPoint = point;
+		}
+	}
+
+	glm::vec2 normalLeft = glm::normalize(leftPoint - q);
+	glm::vec2 normalRight = glm::normalize(rightPoint - q);
+
+	return {{leftPoint, normalLeft}, {rightPoint, normalRight}};
+}
+
+glm::vec2 IntersectLines(Line line1, Line line2)
+{
+	//glm::mat2 A(glm::vec2(line1.normal), glm::vec2(line2.normal));
+	//glm::vec2 b(glm::dot(line1.point, line1.normal), glm::dot(line2.point, line2.normal));
+
+	//return (glm::inverse(A) * b);
+
+	//line1.normal = glm::vec2(line1.normal.y, -line1.normal.x);
+	//line2.normal = glm::vec2(-line2.normal.y, line2.normal.x);
+	//glm::mat2 A = glm::mat2(line1.normal, line2.normal);
+
+	//float det = glm::determinant(A);
+	//if (glm::abs(det) < 1e-6f)
+	//{
+	//	return glm::vec2(0);
+	//}
+
+	//glm::vec2 b = glm::vec2(glm::dot(line1.normal, line1.point), glm::dot(line2.normal, line2.point));
+
+	//glm::vec2 intersection = glm::inverse(A) * b;
+	//return intersection;
+
+	glm::vec2 p1 = line1.point;
+	//glm::vec2 n1 = line1.normal;
+	glm::vec2 n1 = glm::vec2(-line1.normal.y, line1.normal.x);
+	glm::vec2 p2 = line2.point;
+	//glm::vec2 n2 = line2.normal;
+	glm::vec2 n2 = glm::vec2(-line2.normal.y, line2.normal.x);
+
+	// Compute constants for the line equations
+	float c1 = glm::dot(n1, p1); // n1.x * p1.x + n1.y * p1.y
+	float c2 = glm::dot(n2, p2); // n2.x * p2.x + n2.y * p2.y
+
+	// Matrix determinant
+	float det = n1.x * n2.y - n1.y * n2.x;
+
+	// Check if determinant is zero (parallel lines)
+	if (glm::abs(det) < 1e-6f)
+	{
+		return glm::vec2(0); // Lines are parallel or coincident
+	}
+
+	// Solve using Cramer's rule
+	float x = (c1 * n2.y - c2 * n1.y) / det;
+	float y = (n1.x * c2 - n2.x * c1) / det;
+
+	return glm::vec2(x, y);
+}
+
+Trapezoid ComputeTrapezoid(const std::vector<glm::vec2> &convexHull, const Line &centerLine, float focusRatio)
+{
+	//Line centerLine = ComputeCenterLine(convexHull);
+
+	//auto [topLine, baseLine] = ComputeBaseAndTopLines(convexHull, centerLine);
+
+	//auto [leftLine, rightLine] = ComputeSideLines(convexHull, focusRatio);
+
+	//glm::vec2 topLeft = IntersectLines(topLine, leftLine);
+	//glm::vec2 topRight = IntersectLines(topLine, rightLine);
+	//glm::vec2 bottomLeft = IntersectLines(baseLine, leftLine);
+	//glm::vec2 bottomRight = IntersectLines(baseLine, rightLine);
+
+	//if (Time::newSecond)
+	//{
+	//	std::cout << "centerLine: " << centerLine.normal.x << " | " << centerLine.normal.y << std::endl;
+	//	std::cout << "topLeft: " << topLeft.x << " | " << topLeft.y << std::endl;
+	//	std::cout << "topRight: " << topRight.x << " | " << topRight.y << std::endl;
+	//	std::cout << "bottomLeft: " << bottomLeft.x << " | " << bottomLeft.y << std::endl;
+	//	std::cout << "bottomRight: " << bottomRight.x << " | " << bottomRight.y << std::endl << std::endl;
+	//}
+
+	//return {topLeft, topRight, bottomLeft, bottomRight};
+	return {};
+}
+
+glm::vec2 TransformPoint(const glm::vec2 &point, const glm::mat4 &translate, const glm::mat4 &rotate)
+{
+	glm::vec4 homogenousPoint(point.x, point.y, 0.0f, 1.0f);
+	glm::vec4 transformedPoint = rotate * translate * homogenousPoint;
+
+	return glm::vec2(transformedPoint.x, transformedPoint.y);
+}
+
+glm::mat4 ComputeTrapezoidalMatrix(const Trapezoid &trapezoid, const glm::vec2 &q)
+{
+	/*glm::mat4 translateToOrigin = glm::translate(glm::mat4(1.0f), glm::vec3(-trapezoid.bottomLeft.x, -trapezoid.bottomLeft.y, 0.0f));
+
+	float angle = -atan2(trapezoid.bottomRight.y - trapezoid.bottomLeft.y, trapezoid.bottomRight.x - trapezoid.bottomLeft.x);
+	glm::mat4 rotateToAlign = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 0.0f, 1.0f));
+
+	glm::vec2 topLeftT = TransformPoint(trapezoid.topLeft, translateToOrigin, rotateToAlign);
+	glm::vec2 topRightT = TransformPoint(trapezoid.topRight, translateToOrigin, rotateToAlign);
+	glm::vec2 bottomLeftT = TransformPoint(trapezoid.bottomLeft, translateToOrigin, rotateToAlign);
+	glm::vec2 bottomRightT = TransformPoint(trapezoid.bottomRight, translateToOrigin, rotateToAlign);
+
+	float height = topLeftT.y - bottomLeftT.y;
+	float widthTop = topRightT.x - topLeftT.x;
+
+	glm::mat4 scaleToUnitHeight = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f / height, 1.0f));
+	glm::mat4 scaleToUnitWidth = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f / widthTop, 1.0f, 1.0f));
+
+	return (scaleToUnitWidth * scaleToUnitHeight * rotateToAlign * translateToOrigin);*/
+
+	//glm::vec2 t0 = trapezoid.bottomLeft * 0.5f + 0.5f;
+	//glm::vec2 t1 = trapezoid.bottomRight * 0.5f + 0.5f;
+	//glm::vec2 t2 = trapezoid.topRight * 0.5f + 0.5f;
+	//glm::vec2 t3 = trapezoid.topLeft * 0.5f + 0.5f;
+	glm::vec4 t0 = glm::vec4(trapezoid.bottomLeft, 0.0, 1.0);
+	glm::vec4 t1 = glm::vec4(trapezoid.bottomRight, 0.0, 1.0);
+	glm::vec4 t2 = glm::vec4(trapezoid.topRight, 0.0, 1.0);
+	glm::vec4 t3 = glm::vec4(trapezoid.topLeft, 0.0, 1.0);
+
+	glm::mat4 NT = glm::mat4(1.0f);
+
+	glm::vec4 u = (t2 + t3) / 2.0f;
+
+	glm::mat4 T1 = glm::mat4(
+		1, 0, 0, -u.x,
+		0, 1, 0, -u.y,
+		0, 0, 1, 0,
+		0, 0, 0, 1);
+
+	//NT = glm::translate(NT, -glm::vec3(u));
+
+	u = (t2 - t3) / glm::length(t2 - t3);
+	//u = glm::normalize(t2 - t3);
+
+	glm::mat4 R = glm::mat4(
+		u.x, u.y, 0, 0,
+		u.y, -u.x, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1);
+
+	//NT = glm::rotate(NT, float(atan2(-u.y, u.x)), glm::vec3(0, 1, 0));
+
+	u = R * T1 * glm::vec4(q, 0.0, 1.0);
+
+	glm::mat4 T2 = glm::mat4(
+		1, 0, 0, -u.x,
+		0, 1, 0, -u.y,
+		0, 0, 1, 0,
+		0, 0, 0, 1);
+
+	//T2 = glm::mat4(1.0f);
+
+	u = (T2 * R * T1 * (t2 + t3)) / 2.0f;
+
+	glm::mat4 H = glm::mat4(
+		1, -u.x * u.y, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1);
+
+	H = glm::mat4(1.0f);
+
+	u = H * T2 * R * T1 * t2;
+
+	glm::mat4 S1 = glm::mat4(
+		1.0/u.x, 0, 0, 0,
+		0, 1.0/u.y, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1);
+
+	glm::mat4 N = glm::mat4(
+		1, 0, 0, 0,
+		0, -0.02, 0, 1,
+		0, 0, 1, 0,
+		0, 1, 0, 0);
+
+	//N = glm::mat4(1.0f);
+
+	u = N * S1 * H * T2 * R * T1 * t0;
+	glm::vec4 v = N * S1 * H * T2 * R * T1 * t2;
+
+	glm::mat4 T3 = glm::mat4(
+		1, 0, 0, 0,
+		0, 1, 0, -(u.y / u.w + v.y / v.w) / 2.0f,
+		0, 0, 1, 0,
+		0, 0, 0, 1);
+
+	u = T3 * N * S1 * H * T2 * R * T1 * t0;
+
+	glm::mat4 S2 = glm::mat4(
+		1, 0, 0, 0,
+		0, -u.w / u.y, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1);
+
+	//NT *= T1;
+	//NT *= R;
+	//NT *= T2;
+	//NT *= H;
+	//NT *= S1;
+	//NT *= N;
+	//NT *= T3;
+	//NT *= S2;
+
+	return (S2 * T3 * N * S1 * H * T2 * R * T1);
+	//return (H * T2 * R * T1);
+	return (NT);
+}
+
 glm::mat4 Shadow::GetShadowProjection(int lod)
 {
 	if (lod == 0)
 	{
-		shadowLod0Projection = Manager::camera.CreateBoundedOrtho(GetShadowView(0), shadowLod0Distance);
+		shadowLod0Projection = CreateBoundedProjection(GetShadowView(0), shadowLod0Distance);
 		return (shadowLod0Projection);
 
-		//shadowLod0Projection = glm::ortho(-shadowLod0Distance, shadowLod0Distance, -shadowLod0Distance, shadowLod0Distance, 1.0f, shadowLod0Distance * 2.0f);
-		//shadowLod0Projection[1][1] *= -1;
-		//return (shadowLod0Projection);
+		// shadowLod0Projection = glm::ortho(-shadowLod0Distance, shadowLod0Distance, -shadowLod0Distance, shadowLod0Distance, 1.0f, shadowLod0Distance * 2.0f);
+		// shadowLod0Projection[1][1] *= -1;
+		// return (shadowLod0Projection);
 	}
 	else
 	{
-		shadowLod1Projection = Manager::camera.CreateBoundedOrtho(GetShadowView(1), shadowLod1Distance);
+		//shadowLod1Projection = CreateBoundedProjection(GetShadowView(1), shadowLod1Distance);
+		//return (shadowLod1Projection);
+
+		shadowLod1Projection = glm::ortho(-shadowLod1Distance, shadowLod1Distance, -shadowLod1Distance, 
+			shadowLod1Distance, 1.0f, shadowLod1Distance * 2.0f);
+		//shadowLod1Projection[1][1] *= -1;
 		return (shadowLod1Projection);
 
-		//shadowLod1Projection = glm::ortho(-shadowLod1Distance, shadowLod1Distance, -shadowLod1Distance, shadowLod1Distance, 1.0f, shadowLod1Distance * 2.0f);
-		//shadowLod1Projection[1][1] *= -1;
+		//shadowLod1Projection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, shadowLod1Distance * 2);
 		//return (shadowLod1Projection);
 	}
+}
+
+glm::vec2 Shadow::ComputeQ(const Line &centerLine, const Line &topLine, float delta)
+{
+	//glm::vec3 worldPos = Manager::camera.Position() + Manager::camera.Front() * 2.5f;
+	glm::vec3 worldPos = Manager::camera.Position() + Manager::camera.Front() * 2.5f;
+	glm::vec4 shadowPos = shadowLod1Projection * shadowLod1View * glm::vec4(worldPos, 1.0f);
+	//glm::vec4 shadowPos = shadowLod1View * glm::vec4(worldPos, 1.0f);
+	//glm::vec2 trapezoidPos = (glm::vec2(shadowPos.x, shadowPos.y) / shadowPos.w) * 0.5f + 0.5f;
+	//glm::vec2 trapezoidPos = (glm::vec2(shadowPos.x, shadowPos.y) / shadowPos.w);
+	glm::vec2 trapezoidPos = glm::vec2(shadowPos.x, shadowPos.y);
+
+	float disToTop = glm::distance(topLine.point, trapezoidPos);
+	float mapY = -0.6f;
+
+	float qDis = ((delta * disToTop) + (delta * disToTop * mapY)) / (delta - (2.0f * disToTop) - (delta * mapY));
+
+	glm::vec2 q = trapezoidPos - centerLine.normal * (qDis + disToTop);
+
+	//if (Time::newSecond)
+	//{
+	//	Utilities::PrintPoint("closePoint", trapezoidPos);
+	//	Utilities::PrintPoint("q", q);
+	//	std::cout << std::endl;
+	//}
+
+	//return glm::vec3(q, qDis);
+	return (q);
+}
+
+glm::mat4 Shadow::GetShadowTransformation(int lod)
+{
+	std::vector<glm::vec4> frustumCorners = Manager::camera.GetFrustumCorners(1.0f, 300.0f);
+
+	//std::vector<Point2D> frustumCorners2D;
+	//for (glm::vec4 point : frustumCorners)
+	//{
+	//	glm::vec4 transformedPoint = shadowLod1Projection * shadowLod1View * point;
+	//	transformedPoint /= transformedPoint.w;
+	//	frustumCorners2D.push_back(Point2D{transformedPoint.x, transformedPoint.y});
+	//}
+	//std::vector<Point2D> convexHull = ComputeConvexHull(frustumCorners2D);
+	//Trapezoid trapezoid = ComputeTrapezoid(convexHull, 0.8f);
+	//shadowLod1Transformation = ComputeTrapezoidalMatrix(trapezoid);
+
+	std::vector<glm::vec2> frustumCornersInLightSpace;
+	for (const glm::vec4 &corner : frustumCorners)
+	{
+		glm::vec4 lightSpaceCorner = shadowLod1Projection * shadowLod1View * corner;
+		//glm::vec4 lightSpaceCorner = shadowLod1View * corner;
+		//glm::vec2 postProjectionCorner = glm::vec2(lightSpaceCorner.x, lightSpaceCorner.y) / lightSpaceCorner.w;
+		//glm::vec2 postProjectionCorner = (glm::vec2(lightSpaceCorner.x, lightSpaceCorner.y) / lightSpaceCorner.w) * 0.5f + 0.5f;
+		glm::vec2 postProjectionCorner = glm::vec2(lightSpaceCorner.x, lightSpaceCorner.y);
+		frustumCornersInLightSpace.push_back(postProjectionCorner);
+	}
+
+	//for (int i = 0; i < 8; i++)
+	//{
+	//	Manager::shaderVariables.frustumCorners[i] = frustumCornersInLightSpace[i];
+	//}
+
+	Line centerLine = ComputeCenterLine(frustumCornersInLightSpace);
+
+	std::vector<glm::vec2> convexHull = ComputeConvexHull(frustumCornersInLightSpace);
+
+	auto [topLine, baseLine] = ComputeBaseAndTopLines(convexHull, centerLine);
+
+	float delta = glm::distance(topLine.point, baseLine.point);
+	// glm::vec3 qResult = ComputeQ(centerLine, topLine, delta);
+	// glm::vec2 q = glm::vec2(qResult.x, qResult.y);
+	glm::vec2 q = ComputeQ(centerLine, topLine, delta);
+
+	auto [leftLine, rightLine] = ComputeSideLines(convexHull, centerLine, q);
+
+	glm::vec2 topLeft = IntersectLines(leftLine, topLine);
+	glm::vec2 topRight = IntersectLines(rightLine, topLine);
+	glm::vec2 baseLeft = IntersectLines(leftLine, baseLine);
+	glm::vec2 baseRight = IntersectLines(rightLine, baseLine);
+
+	Trapezoid trapezoid = {topLeft, topRight, baseLeft, baseRight};
+
+	Manager::shaderVariables.frustumCorner1 = topLeft;
+	Manager::shaderVariables.frustumCorner2 = topRight;
+	Manager::shaderVariables.frustumCorner3 = baseLeft;
+	Manager::shaderVariables.frustumCorner4 = baseRight;
+
+	//ComputeTrapezoid(convexHull, l, 0.8f);
+
+	bool logTrapezoid = false;
+	if (logTrapezoid && Time::newSecond)
+	{
+		std::cout << "near plane: " << std::endl;
+		for (int i = 0; i < 4; i++)
+		{
+			//std::cout << frustumCornersInLightSpace[i].x << "\t" << frustumCornersInLightSpace[i].y << std::endl;
+			Utilities::PrintPoint(frustumCornersInLightSpace[i]);
+		}
+		//std::cout << frustumCornersInLightSpace[0].x << "\t" << frustumCornersInLightSpace[0].y << std::endl;
+		Utilities::PrintPoint(frustumCornersInLightSpace[0]);
+		std::cout << std::endl;
+
+		std::cout << "far plane: " << std::endl;
+		for (int i = 4; i < 8; i++)
+		{
+			//std::cout << frustumCornersInLightSpace[i].x << "\t" << frustumCornersInLightSpace[i].y << std::endl;
+			Utilities::PrintPoint(frustumCornersInLightSpace[i]);
+		}
+		//std::cout << frustumCornersInLightSpace[4].x << "\t" << frustumCornersInLightSpace[4].y << std::endl;
+		Utilities::PrintPoint(frustumCornersInLightSpace[4]);
+		std::cout << std::endl;
+
+		std::cout << "frustum lines: " << std::endl;
+		for (int i = 0; i < 4; i++)
+		{
+			//std::cout << frustumCornersInLightSpace[i].x << "\t" << frustumCornersInLightSpace[i].y << std::endl;
+			//std::cout << frustumCornersInLightSpace[i + 4].x << "\t" << frustumCornersInLightSpace[i + 4].y << std::endl;
+			Utilities::PrintPoint(frustumCornersInLightSpace[i]);
+			Utilities::PrintPoint(frustumCornersInLightSpace[i + 4]);
+			std::cout << std::endl;
+		}
+
+		std::cout << "convex hull: " << std::endl;
+		for (int i = 0; i < convexHull.size(); i++)
+		{
+			//std::cout << convexHull[i].x << "\t" << convexHull[i].y << std::endl;
+			Utilities::PrintPoint(convexHull[i]);
+		}
+		//std::cout << convexHull[0].x << "\t" << convexHull[0].y << std::endl;
+		Utilities::PrintPoint(convexHull[0]);
+		std::cout << std::endl;
+
+		Utilities::PrintLine("", centerLine.point, centerLine.normal);
+		Utilities::PrintLine("", topLine.point, topLine.normal);
+		Utilities::PrintLine("", baseLine.point, baseLine.normal);
+		Utilities::PrintLine("", leftLine.point, leftLine.normal);
+		Utilities::PrintLine("", rightLine.point, rightLine.normal);
+		std::cout << std::endl;
+
+		//Utilities::PrintPoint("topLeft", IntersectLines(leftLine, topLine));
+		//Utilities::PrintPoint("topRight", IntersectLines(rightLine, topLine));
+		//Utilities::PrintPoint("baseLeft", IntersectLines(leftLine, baseLine));
+		//Utilities::PrintPoint("baseRight", IntersectLines(rightLine, baseLine));
+		std::cout << "points: " << std::endl;
+		//std::cout << q.x << "\t" << q.y << std::endl;
+		//std::cout << topLeft.x << "\t" << topLeft.y << std::endl;
+		//std::cout << topRight.x << "\t" << topRight.y << std::endl;
+		//std::cout << baseLeft.x << "\t" << baseLeft.y << std::endl;
+		//std::cout << baseRight.x << "\t" << baseRight.y << std::endl;
+		Utilities::PrintPoint(q);
+		Utilities::PrintPoint(topLeft);
+		Utilities::PrintPoint(topRight);
+		Utilities::PrintPoint(baseLeft);
+		Utilities::PrintPoint(baseRight);
+		std::cout << std::endl;
+	}
+
+	shadowLod1Transformation = ComputeTrapezoidalMatrix(trapezoid, q);
+	//shadowLod1Transformation[1][1] *= -1;
+	return (shadowLod1Transformation);
 }
 
 VkRenderPass Shadow::shadowPass = nullptr;
@@ -197,6 +756,7 @@ glm::mat4 Shadow::shadowLod0View = glm::mat4(1);
 glm::mat4 Shadow::shadowLod0Projection = glm::mat4(1);
 glm::mat4 Shadow::shadowLod1View = glm::mat4(1);
 glm::mat4 Shadow::shadowLod1Projection = glm::mat4(1);
+glm::mat4 Shadow::shadowLod1Transformation = glm::mat4(1);
 
 int Shadow::shadowLod0Resolution = 4096;
 float Shadow::shadowLod0Distance = 20;

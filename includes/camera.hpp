@@ -64,6 +64,6 @@ class Camera
 		const glm::mat4 &View();
 		const glm::mat4 &Projection();
 
-		std::vector<glm::vec4> GetFrustumCorners(float farDis);
-		glm::mat4 CreateBoundedOrtho(const glm::mat4 &shadowView, float farDis);
+		std::vector<glm::vec4> GetFrustumCorners(float nearDis, float farDis);
+		glm::mat4 GetTempProjection(float nearDis, float farDis);
 };

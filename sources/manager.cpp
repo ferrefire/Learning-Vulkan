@@ -245,7 +245,9 @@ void Manager::Frame()
 		//camDir2 = glm::normalize(camDir2);
 		//std::cout << "x: " << camDir2.x << " z: " << camDir2.y << std::endl;
 
-		Utilities::PrintVec(camera.Position() + glm::vec3(Terrain::terrainOffset.x, 0, Terrain::terrainOffset.y));
+		//Utilities::PrintVec(camera.Position() + glm::vec3(Terrain::terrainOffset.x, 0, Terrain::terrainOffset.y));
+		//Utilities::PrintVec("angles", camera.Angles());
+		camera.PrintStatus();
 	}
 
 	//if (settings.fullscreen && Time::newSecond)
@@ -271,11 +273,16 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.view = camera.View();
 	shaderVariables.projection = camera.Projection();
 	shaderVariables.viewMatrix = shaderVariables.projection * shaderVariables.view;
+	shaderVariables.frustumMatrix = glm::inverse(camera.GetTempProjection(50.0f, 250.0f) * shaderVariables.view);
 	//shaderVariables.shadowLod0View = Shadow::GetShadowView(0);
 	//shaderVariables.shadowLod0Projection = Shadow::shadowLod0Projection;
 	//shaderVariables.shadowLod0Matrix = shaderVariables.shadowLod0Projection * shaderVariables.shadowLod0View;
 	shaderVariables.shadowLod0Matrix = Shadow::GetShadowProjection(0) * Shadow::GetShadowView(0);
-	shaderVariables.shadowLod1Matrix = Shadow::GetShadowProjection(1) * Shadow::GetShadowView(1);
+	shaderVariables.shadowLod1View = Shadow::GetShadowView(1);
+	shaderVariables.shadowLod1Projection = Shadow::GetShadowProjection(1);
+	shaderVariables.shadowLod1Matrix = Shadow::GetShadowTransformation(1);
+	//shaderVariables.shadowLod1Matrix = Shadow::shadowLod1Projection * Shadow::shadowLod1View;
+	//shaderVariables.shadowLod1Matrix = Shadow::GetShadowProjection(1) * Shadow::GetShadowView(1);
 	shaderVariables.cullMatrix = Culling::cullProjection * shaderVariables.view;
 
 	//shaderVariables.shadowLod0View = Shadow::GetShadowView(0);

@@ -67,8 +67,10 @@ vec2 BlendShadow(vec3 projectionCoordinates, int range, int lod)
 	    for(int y = -range; y <= range; ++y)
 	    {
 	        float closestDepth = 0;
-			if (lod == 0) closestDepth = texture(shadowLod0Sampler, projectionCoordinates.xy + vec2(x, y) * texelSize).r;
-			else if (lod == 1) closestDepth = texture(shadowLod1Sampler, projectionCoordinates.xy + vec2(x, y) * texelSize).r; 
+			vec2 coords = projectionCoordinates.xy + vec2(x, y) * texelSize;
+			if (abs(coords.x - 0.5) > 0.5 || abs(coords.y - 0.5) > 0.5) continue;
+			if (lod == 0) closestDepth = texture(shadowLod0Sampler, coords).r;
+			else if (lod == 1) closestDepth = texture(shadowLod1Sampler, coords).r; 
 	        //shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
 
 			//float diff = projectionCoordinates.z - closestDepth;
@@ -88,7 +90,9 @@ float GetShadow(vec4 shadowSpace, int lod)
 
 	if (abs(projectionCoordinates.x) > 1.0 || abs(projectionCoordinates.y) > 1.0 || abs(projectionCoordinates.z) > 1.0) return (0.0);
 
-	vec4 viewCoordinates = variables.shadowLod1Matrix * vec4(variables.viewPosition, 1.0);
+	vec4 viewCoordinates;
+	if (lod == 0) viewCoordinates = variables.shadowLod0Matrix * vec4(variables.viewPosition, 1.0);
+	else if (lod == 1) viewCoordinates = variables.shadowLod1Matrix * variables.shadowLod1Projection * variables.shadowLod1View * vec4(variables.viewPosition, 1.0);
 	viewCoordinates.xyz = viewCoordinates.xyz / viewCoordinates.w;
 
 	//float xDis = abs(projectionCoordinates.x - viewCoordinates.x);
@@ -100,14 +104,19 @@ float GetShadow(vec4 shadowSpace, int lod)
 	projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
 
 	int range = dis < (lod == 0 ? 0.25 : 0.125) ? 1 : 0;
+	if (lod == 1) range = 0;
 	vec2 blendResult = BlendShadow(projectionCoordinates, range, lod);
 	float shadow = blendResult.x;
 
-	if (shadow > 0.0)
+	if (shadow > 0.0 && lod == 0)
 	{
 		float blend = max(blendResult.y, dis);
 		shadow = mix(shadow, 0.0, pow(blend, 4));
 	}
+	//else if (lod == 1 && blendResult.y > 0.5)
+	//{
+	//	shadow = mix(shadow, 0.0, (blendResult.y - 0.5) * 2.0);
+	//}
 	return (shadow);
 }
 

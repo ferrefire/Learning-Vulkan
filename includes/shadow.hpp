@@ -12,6 +12,27 @@
 
 #include <vector>
 
+struct Point2D
+{
+	float x, y;
+
+	bool operator<(const Point2D &other) const
+	{
+		return x < other.x || (x == other.x && y < other.y);
+	}
+};
+
+struct Line
+{
+	glm::vec2 point;
+	glm::vec2 normal;
+};
+
+struct Trapezoid
+{
+	glm::vec2 topLeft, topRight, bottomLeft, bottomRight;
+};
+
 class Shadow
 {
 	private:
@@ -28,6 +49,7 @@ class Shadow
 		static glm::mat4 shadowLod0Projection;
 		static glm::mat4 shadowLod1View;
 		static glm::mat4 shadowLod1Projection;
+		static glm::mat4 shadowLod1Transformation;
 
 		static int shadowLod0Resolution;
 		static float shadowLod0Distance;
@@ -44,4 +66,8 @@ class Shadow
 
 		static glm::mat4 GetShadowView(int lod);
 		static glm::mat4 GetShadowProjection(int lod);
+		static glm::mat4 GetShadowTransformation(int lod);
+
+		static glm::mat4 CreateBoundedProjection(const glm::mat4 &shadowView, float farDis);
+		static glm::vec2 ComputeQ(const Line &centerLine, const Line &topLine, float delta);
 };

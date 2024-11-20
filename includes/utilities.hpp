@@ -24,6 +24,13 @@ class Utilities
 		static float SignedFloor(float x);
 		static int Fits(float part, float whole);
 		static void PrintVec(glm::vec3 vec);
+		static void PrintVec(std::string name, glm::vec3 vec);
+		static void PrintVec(glm::vec2 vec);
+		static void PrintVec(std::string name, glm::vec2 vec);
+		static void PrintLine(std::string name, glm::vec2 point, glm::vec2 direction);
+		static void PrintPoint(std::string name, glm::vec2 point);
+		static void PrintPoint(glm::vec2 point);
+		static void PrintPoints(std::string name, const std::vector<glm::vec2> &points);
 		static glm::vec3 RotateVec(glm::vec3 vec, float angle, glm::vec3 axis);
 		static glm::vec2 Normalize(const glm::vec2 &vec);
 		static glm::vec3 Normalize(const glm::vec3 &vec);
