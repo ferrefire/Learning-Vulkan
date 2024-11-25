@@ -101,8 +101,8 @@ void main()
 	}
 
 	vec2 flooredViewPosition = vec2(0);
-	flooredViewPosition.x = floor((variables.viewPosition.x) * treeVariables.spacingMult);
-	flooredViewPosition.y = floor((variables.viewPosition.z) * treeVariables.spacingMult);
+	flooredViewPosition.x = round((variables.viewPosition.x) * treeVariables.spacingMult);
+	flooredViewPosition.y = round((variables.viewPosition.z) * treeVariables.spacingMult);
 
 	int ix = int(gl_GlobalInvocationID.x) - int(treeVariables.treeTotalRenderBase * 0.5);
 	int iz = int(gl_GlobalInvocationID.y) - int(treeVariables.treeTotalRenderBase * 0.5);

@@ -91,7 +91,7 @@ void Trees::CreateShadowPipeline()
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
 	pipelineConfiguration.shadow = true;
-	pipelineConfiguration.pushConstantCount = 1;
+	pipelineConfiguration.pushConstantCount = 2;
 	pipelineConfiguration.pushConstantStage = VERTEX_STAGE;
 	pipelineConfiguration.pushConstantSize = sizeof(uint32_t);
 
@@ -522,14 +522,14 @@ void Trees::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 	RenderTrees(commandBuffer);
 }
 
-void Trees::RecordShadowCommands(VkCommandBuffer commandBuffer)
+void Trees::RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade)
 {
 	shadowPipeline.BindGraphics(commandBuffer);
 
 	Manager::globalDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
 	shadowDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
 
-	RenderShadows(commandBuffer);
+	RenderShadows(commandBuffer, cascade);
 }
 
 void Trees::RecordCullCommands(VkCommandBuffer commandBuffer)
@@ -566,18 +566,45 @@ void Trees::RenderTrees(VkCommandBuffer commandBuffer)
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod3Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod3Count, 0, 0, 0);
 }
 
-void Trees::RenderShadows(VkCommandBuffer commandBuffer)
+void Trees::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 {
 	uint32_t lod0 = 0;
 	uint32_t lod1 = 1;
+	uint32_t lod2 = 2;
+	uint32_t lod3 = 3;
 
-	treeLod0Mesh.Bind(commandBuffer);
-	vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod0Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod0Count, 0, 0, 0);
+	if (cascade == 0)
+	{
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, sizeof(uint32_t), sizeof(lod0), &lod0);
 
-	treeLod1Mesh.Bind(commandBuffer);
-	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod1Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod1Count, 0, 0, 0);
+		treeLod0Mesh.Bind(commandBuffer);
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod0Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod0Count, 0, 0, 0);
+
+		treeLod1Mesh.Bind(commandBuffer);
+		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod1Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod1Count, 0, 0, 0);
+	}
+	else if (cascade == 1)
+	{
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, sizeof(uint32_t), sizeof(lod1), &lod1);
+
+		treeLod0Mesh.Bind(commandBuffer);
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod0Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod0Count, 0, 0, 0);
+
+		treeLod1Mesh.Bind(commandBuffer);
+		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod1Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod1Count, 0, 0, 0);
+
+		treeLod2Mesh.Bind(commandBuffer);
+		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod2), &lod2);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod2Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod2Count, 0, 0, 0);
+
+		//treeLod3Mesh.Bind(commandBuffer);
+		//vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod3), &lod3);
+		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod3Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod3Count, 0, 0, 0);
+	}
 }
 
 void Trees::RenderCulling(VkCommandBuffer commandBuffer)

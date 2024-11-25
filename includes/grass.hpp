@@ -115,9 +115,9 @@ class Grass
 		static void Frame();
 		static void PostFrame();
 		static void RecordGraphicsCommands(VkCommandBuffer commandBuffer);
-		static void RecordShadowCommands(VkCommandBuffer commandBuffer);
+		static void RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade);
 		static void RenderGrass(VkCommandBuffer commandBuffer);
-		static void RenderShadows(VkCommandBuffer commandBuffer);
+		static void RenderShadows(VkCommandBuffer commandBuffer, int cascade);
 		static void ComputeGrass();
 		static void ComputeClumping();
 };

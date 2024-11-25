@@ -48,6 +48,7 @@ class Shadow
 
 		static glm::mat4 shadowLod0View;
 		static glm::mat4 shadowLod0Projection;
+		static glm::mat4 shadowLod0Transformation;
 		static glm::mat4 shadowLod1View;
 		static glm::mat4 shadowLod1Projection;
 		static glm::mat4 shadowLod1Transformation;
@@ -65,10 +66,10 @@ class Shadow
 		static void DestroyShadowResources();
 		static void DestroyShadowPass();
 
-		static glm::mat4 GetShadowView(int lod);
+		static glm::mat4 GetShadowView(int lod, float dis);
 		static glm::mat4 GetShadowProjection(int lod);
 		static glm::mat4 GetShadowTransformation(int lod);
 
-		static glm::mat4 CreateBoundedProjection(const glm::mat4 &shadowView, float farDis);
-		static glm::vec2 ComputeQ(const Line &centerLine, const Line &topLine, float delta);
+		static glm::mat4 CreateBoundedProjection(const glm::mat4 &shadowView, float near, float far, bool nearOnly);
+		static glm::vec2 ComputeQ(const Line &centerLine, const Line &topLine, float delta, int lod);
 };

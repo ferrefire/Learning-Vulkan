@@ -8,6 +8,7 @@
 #include "culling.hpp"
 #include "trees.hpp"
 #include "utilities.hpp"
+#include "data.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -211,6 +212,7 @@ void Manager::Start()
 	Terrain::Start();
 	if (Manager::settings.trees) Trees::Start();
 	Grass::Start();
+	Data::Start();
 
 	cinematic.Start();
 }
@@ -277,10 +279,13 @@ void Manager::UpdateShaderVariables()
 	//shaderVariables.shadowLod0View = Shadow::GetShadowView(0);
 	//shaderVariables.shadowLod0Projection = Shadow::shadowLod0Projection;
 	//shaderVariables.shadowLod0Matrix = shaderVariables.shadowLod0Projection * shaderVariables.shadowLod0View;
-	shaderVariables.shadowLod0Matrix = Shadow::GetShadowProjection(0) * Shadow::GetShadowView(0);
+	//shaderVariables.shadowLod0Matrix = Shadow::GetShadowProjection(0) * Shadow::GetShadowView(0);
+	Shadow::GetShadowTransformation(0);
+	shaderVariables.shadowLod0Matrix = Shadow::shadowLod0Transformation * Shadow::shadowLod0Projection * Shadow::shadowLod0View;
 	//shaderVariables.shadowLod1View = Shadow::GetShadowView(1);
 	//shaderVariables.shadowLod1Projection = Shadow::GetShadowProjection(1);
-	shaderVariables.shadowLod1Matrix = Shadow::GetShadowTransformation(1) * Shadow::shadowLod1Projection * Shadow::shadowLod1View;
+	Shadow::GetShadowTransformation(1);
+	shaderVariables.shadowLod1Matrix = Shadow::shadowLod1Transformation * Shadow::shadowLod1Projection * Shadow::shadowLod1View;
 	//shaderVariables.shadowLod1Projection = Shadow::shadowLod1Projection;
 	//shaderVariables.shadowLod1Matrix = Shadow::shadowLod1Projection * Shadow::shadowLod1View;
 	//shaderVariables.shadowLod1Matrix = Shadow::GetShadowProjection(1) * Shadow::GetShadowView(1);
@@ -307,6 +312,20 @@ void Manager::UpdateShaderVariables()
 
 	shaderVariables.occlusionCulling = settings.occlussionCulling ? 1 : 0;
 	shaderVariables.shadows = settings.shadows ? 1 : 0;
+
+	std::vector<glm::vec4> frustumCorners = camera.GetFrustumCorners(1.0f, 1000.0f);
+	shaderVariables.frustumCorner1 = frustumCorners[4];
+	shaderVariables.frustumCorner2 = frustumCorners[5];
+	shaderVariables.frustumCorner3 = frustumCorners[6];
+	shaderVariables.frustumCorner4 = frustumCorners[7];
+	//if (Time::newSecond)
+	//{
+	//	Utilities::PrintVec(shaderVariables.frustumCorner1);
+	//	Utilities::PrintVec(shaderVariables.frustumCorner2);
+	//	Utilities::PrintVec(shaderVariables.frustumCorner3);
+	//	Utilities::PrintVec(shaderVariables.frustumCorner4);
+	//	std::cout << std::endl;
+	//}
 
 	memcpy(shaderVariableBuffers[currentFrame].mappedBuffer, &shaderVariables, sizeof(shaderVariables));
 }

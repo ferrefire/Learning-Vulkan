@@ -41,10 +41,10 @@ void main()
 	//	}
 	//}
 
-	if (distance(inCoordinates, variables.frustumCorner1 * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
-	else if (distance(inCoordinates, variables.frustumCorner2 * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
-	else if (distance(inCoordinates, variables.frustumCorner3 * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
-	else if (distance(inCoordinates, variables.frustumCorner4 * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
+	//if (distance(inCoordinates, variables.frustumCorner1 * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
+	//else if (distance(inCoordinates, variables.frustumCorner2 * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
+	//else if (distance(inCoordinates, variables.frustumCorner3 * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
+	//else if (distance(inCoordinates, variables.frustumCorner4 * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
 
     outColor = vec4(finalColor, 1.0);
 

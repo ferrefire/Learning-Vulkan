@@ -34,6 +34,7 @@ layout(set = 1, binding = 1) uniform TreeVariables
 layout(push_constant, std430) uniform PushConstants
 {
     uint treeLod;
+    uint shadowCascade;
 } pc;
 
 layout(location = 0) in vec3 inPosition;
@@ -76,5 +77,11 @@ void main()
     //gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
     //gl_Position = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
     //gl_Position = variables.shadowLod1Matrix * variables.shadowLod1Projection * variables.shadowLod1View * vec4(worldPosition, 1.0);
-    gl_Position = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
+
+	vec4 shadowPosition;
+
+	if (pc.shadowCascade == 0) shadowPosition = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
+	else if (pc.shadowCascade == 1) shadowPosition = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
+
+	gl_Position = shadowPosition;
 }

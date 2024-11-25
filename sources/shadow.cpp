@@ -3,6 +3,7 @@
 #include "manager.hpp"
 #include "time.hpp"
 #include "utilities.hpp"
+#include "data.hpp"
 
 #include <glm/gtx/transform2.hpp>
 #include <glm/gtx/orthonormalize.hpp>
@@ -13,8 +14,8 @@
 
 void Shadow::Create()
 {
-	GetShadowProjection(0);
-	GetShadowProjection(1);
+	//GetShadowProjection(0);
+	//GetShadowProjection(1);
 	CreateShadowPass();
 	CreateShadowResources();
 }
@@ -148,7 +149,7 @@ void Shadow::DestroyShadowPass()
 	shadowPass = nullptr;
 }
 
-glm::mat4 Shadow::GetShadowView(int lod)
+glm::mat4 Shadow::GetShadowView(int lod, float dis)
 {
 	glm::vec3 direction = Manager::shaderVariables.lightDirection;
 
@@ -160,27 +161,33 @@ glm::mat4 Shadow::GetShadowView(int lod)
 
 	if (lod == 0)
 	{
-		glm::vec3 position = focus + direction * shadowLod0Distance;
+		glm::vec3 position = focus + direction * shadowLod0Distance * dis;
 		shadowLod0View = glm::lookAt(position, position + front, up);
 		return (shadowLod0View);
 	}
 	else
 	{
-		glm::vec3 position = focus + direction * shadowLod1Distance;
+		glm::vec3 position = focus + direction * shadowLod1Distance * dis;
 		shadowLod1View = glm::lookAt(position, position + front, up);
 		return (shadowLod1View);
 	}
 }
 
-glm::mat4 Shadow::CreateBoundedProjection(const glm::mat4 &shadowView, float farDis)
+glm::mat4 Shadow::CreateBoundedProjection(const glm::mat4 &shadowView, float near, float far, bool nearOnly)
 {
-	std::vector<glm::vec4> frustumCorners = Manager::camera.GetFrustumCorners(1.0f, farDis);
+	std::vector<glm::vec4> frustumCorners = Manager::camera.GetFrustumCorners(near, far);
 
 	std::vector<glm::vec4> frustumCornersInLightSpace;
-	for (const glm::vec4 &corner : frustumCorners)
+
+	for (int i = 0; i < (nearOnly ? 4 : 8); i++)
 	{
-		frustumCornersInLightSpace.push_back(shadowView * corner);
+		frustumCornersInLightSpace.push_back(shadowView * frustumCorners[i]);
 	}
+
+	//for (const glm::vec4 &corner : frustumCorners)
+	//{
+	//	frustumCornersInLightSpace.push_back(shadowView * corner);
+	//}
 
 	glm::vec3 min(std::numeric_limits<float>::max());
 	glm::vec3 max(std::numeric_limits<float>::lowest());
@@ -192,7 +199,7 @@ glm::mat4 Shadow::CreateBoundedProjection(const glm::mat4 &shadowView, float far
 		max = glm::max(max, pos);
 	}
 
-	return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, farDis * 2);
+	return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, far * 2);
 }
 
 float Cross(const Point2D &O, const Point2D &A, const Point2D &B)
@@ -313,7 +320,7 @@ std::pair<Line, Line> ComputeBaseAndTopLines(const std::vector<glm::vec2> &conve
 std::pair<Line, Line> ComputeSideLines(const std::vector<glm::vec2> &convexHull, const Line &centerLine, const glm::vec2 &q)
 {
 	glm::vec2 leftPoint, rightPoint;
-	glm::vec2 leftSecondPoint, rightSecondPoint;
+	//glm::vec2 leftSecondPoint, rightSecondPoint;
 
 	/*float maxLeftAngle = FLT_MAX;
 	float maxRightAngle = -FLT_MAX;
@@ -358,7 +365,7 @@ std::pair<Line, Line> ComputeSideLines(const std::vector<glm::vec2> &convexHull,
 	//}
 
 	float rightMaxAngle = -FLT_MAX, leftMaxAngle = FLT_MAX;
-	float rightSecondAngle = -FLT_MAX, leftSecondAngle = FLT_MAX;
+	//float rightSecondAngle = -FLT_MAX, leftSecondAngle = FLT_MAX;
 	//glm::vec2 normal = glm::vec2(-centerLine.normal.y, centerLine.normal.x);
 	//glm::vec2 rightCheckPoint = centerLine.point + normal * 0.5f;
 	//glm::vec2 leftCheckPoint = centerLine.point - normal * 0.5f;
@@ -385,39 +392,39 @@ std::pair<Line, Line> ComputeSideLines(const std::vector<glm::vec2> &convexHull,
 
 		if (angle > rightMaxAngle)
 		{
-			if (rightMaxAngle > rightSecondAngle)
-			{
-				rightSecondAngle = rightMaxAngle;
-				rightSecondPoint = rightPoint;
-			}
+			//if (rightMaxAngle > rightSecondAngle)
+			//{
+			//	rightSecondAngle = rightMaxAngle;
+			//	rightSecondPoint = rightPoint;
+			//}
 
 			rightMaxAngle = angle;
 			rightPoint = point;
 			rightSpacing = spacing;
 		}
-		else if (angle > rightSecondAngle)
-		{
-			rightSecondAngle = angle;
-			rightSecondPoint = point;
-		}
+		//else if (angle > rightSecondAngle)
+		//{
+		//	rightSecondAngle = angle;
+		//	rightSecondPoint = point;
+		//}
 		//distance = glm::distance(point, leftCheckPoint);
 		if (angle < leftMaxAngle)
 		{
-			if (leftMaxAngle < leftSecondAngle)
-			{
-				leftSecondAngle = leftMaxAngle;
-				leftSecondPoint = leftPoint;
-			}
+			//if (leftMaxAngle < leftSecondAngle)
+			//{
+			//	leftSecondAngle = leftMaxAngle;
+			//	leftSecondPoint = leftPoint;
+			//}
 
 			leftMaxAngle = angle;
 			leftPoint = point;
 			leftSpacing = spacing;
 		}
-		else if (angle < leftSecondAngle)
-		{
-			leftSecondAngle = angle;
-			leftSecondPoint = point;
-		}
+		//else if (angle < leftSecondAngle)
+		//{
+		//	leftSecondAngle = angle;
+		//	leftSecondPoint = point;
+		//}
 	}
 
 	//if (rightSpacing > 62.0f) rightPoint = rightSecondPoint;
@@ -685,7 +692,12 @@ glm::mat4 Shadow::GetShadowProjection(int lod)
 {
 	if (lod == 0)
 	{
-		shadowLod0Projection = CreateBoundedProjection(GetShadowView(0), shadowLod0Distance);
+		//shadowLod0Projection = CreateBoundedProjection(GetShadowView(0), shadowLod0Distance);
+		//return (shadowLod0Projection);
+
+		shadowLod0Projection = glm::ortho(-shadowLod0Distance, shadowLod0Distance, -shadowLod0Distance, 
+			shadowLod0Distance, 1.0f, shadowLod0Distance * 2.0f);
+		shadowLod0Projection[1][1] *= -1;
 		return (shadowLod0Projection);
 
 		// shadowLod0Projection = glm::ortho(-shadowLod0Distance, shadowLod0Distance, -shadowLod0Distance, shadowLod0Distance, 1.0f, shadowLod0Distance * 2.0f);
@@ -707,11 +719,26 @@ glm::mat4 Shadow::GetShadowProjection(int lod)
 	}
 }
 
-glm::vec2 Shadow::ComputeQ(const Line &centerLine, const Line &topLine, float delta)
+glm::vec2 Shadow::ComputeQ(const Line &centerLine, const Line &topLine, float delta, int lod)
 {
 	//glm::vec3 worldPos = Manager::camera.Position() + Manager::camera.Front() * 2.5f;
-	glm::vec3 worldPos = Manager::camera.Position() + Manager::camera.Front() * 100.0f;
-	glm::vec4 shadowPos = shadowLod1Projection * shadowLod1View * glm::vec4(worldPos, 1.0f);
+	//glm::vec3 worldPos = Manager::camera.Position() + Manager::camera.Front() * 100.0f;
+
+	glm::vec3 worldPos;
+	glm::vec4 shadowPos;
+
+	if (lod == 0)
+	{
+		worldPos = Manager::camera.Position() + Manager::camera.Front() * (shadowLod0Distance * 0.2f);
+		shadowPos = shadowLod0Projection * shadowLod0View * glm::vec4(worldPos, 1.0f);
+	}
+	else if (lod == 1)
+	{
+		//worldPos = Manager::camera.Position() + Manager::camera.Front() * (shadowLod0Distance * 0.5f + (shadowLod1Distance * 0.2f));
+		worldPos = Manager::camera.Position() + Manager::camera.Front() * (shadowLod1Distance * 0.2f);
+		shadowPos = shadowLod1Projection * shadowLod1View * glm::vec4(worldPos, 1.0f);
+	}
+
 	//glm::vec4 shadowPos = shadowLod1View * glm::vec4(worldPos, 1.0f);
 	//glm::vec2 trapezoidPos = (glm::vec2(shadowPos.x, shadowPos.y) / shadowPos.w) * 0.5f + 0.5f;
 	//glm::vec2 trapezoidPos = (glm::vec2(shadowPos.x, shadowPos.y) / shadowPos.w);
@@ -737,10 +764,20 @@ glm::vec2 Shadow::ComputeQ(const Line &centerLine, const Line &topLine, float de
 
 glm::mat4 Shadow::GetShadowTransformation(int lod)
 {
-	GetShadowView(1);
-	GetShadowProjection(1);
+	GetShadowView(lod, 1.0f);
+	GetShadowProjection(lod);
 
-	std::vector<glm::vec4> frustumCorners = Manager::camera.GetFrustumCorners(1.0f, 300.0f);
+	std::vector<glm::vec4> frustumCorners;
+
+	if (lod == 0)
+	{
+		frustumCorners = Manager::camera.GetFrustumCorners(1.0f, shadowLod0Distance * 0.5f);
+	}
+	else if (lod == 1)
+	{
+		//frustumCorners = Manager::camera.GetFrustumCorners(shadowLod0Distance * 0.5f, shadowLod1Distance * 0.5f);
+		frustumCorners = Manager::camera.GetFrustumCorners(1.0f, shadowLod1Distance * 0.5f);
+	}
 
 	//std::vector<Point2D> frustumCorners2D;
 	//for (glm::vec4 point : frustumCorners)
@@ -756,10 +793,14 @@ glm::mat4 Shadow::GetShadowTransformation(int lod)
 	std::vector<glm::vec2> frustumCornersInLightSpace;
 	for (const glm::vec4 &corner : frustumCorners)
 	{
-		glm::vec4 lightSpaceCorner = shadowLod1Projection * shadowLod1View * corner;
 		//glm::vec4 lightSpaceCorner = shadowLod1View * corner;
 		//glm::vec2 postProjectionCorner = glm::vec2(lightSpaceCorner.x, lightSpaceCorner.y) / lightSpaceCorner.w;
 		//glm::vec2 postProjectionCorner = (glm::vec2(lightSpaceCorner.x, lightSpaceCorner.y) / lightSpaceCorner.w) * 0.5f + 0.5f;
+
+		glm::vec4 lightSpaceCorner;
+		if (lod == 0) lightSpaceCorner = shadowLod0Projection * shadowLod0View * corner;
+		else if (lod == 1) lightSpaceCorner = shadowLod1Projection * shadowLod1View * corner;
+
 		glm::vec2 postProjectionCorner = glm::vec2(lightSpaceCorner.x, lightSpaceCorner.y);
 		frustumCornersInLightSpace.push_back(postProjectionCorner);
 	}
@@ -773,43 +814,60 @@ glm::mat4 Shadow::GetShadowTransformation(int lod)
 
 	std::vector<glm::vec2> convexHull = ComputeConvexHull(frustumCornersInLightSpace);
 
-	/*if (convexHull.size() == 4)
+	float dualFrusta = abs(glm::dot(Manager::shaderVariables.lightDirection, Manager::camera.Front()));
+
+	//if (Time::newSecond)
+	//{
+	//	std::cout << dualFrusta << std::endl;
+	//}
+
+	if (dualFrusta > 0.8f)
 	{
-		glm::mat4 inverseShadow = glm::inverse(shadowLod1Projection);
-		std::vector<glm::vec2> bounds;
-		//for (const glm::vec2 &point : convexHull)
-		for (int i = 0; i < 4; i++)
+		//if (Time::newSecond)
+		//{
+		//	std::cout << Data::GetData().frustumIntersectAverage << std::endl;
+		//}
+
+		//Trapezoid trapezoid = {convexHull[0], convexHull[1], convexHull[2], convexHull[3]};
+		//glm::vec2 q = (convexHull[0] + convexHull[1]) * 0.5f;
+
+		Manager::shaderVariables.shadowBounding = 1;
+
+		if (lod == 0)
 		{
-			glm::vec4 lightSpaceCorner = shadowLod1View * frustumCorners[i];
-			// glm::vec4 lightSpaceCorner = shadowLod1View * corner;
-			// glm::vec4 lightSpaceCorner = inverseShadow * glm::vec4(point, 0.0, 1.0);
-
-			glm::vec2 postProjectionCorner = glm::vec2(lightSpaceCorner.x, lightSpaceCorner.y);
-			bounds.push_back(postProjectionCorner);
+			//shadowLod0Transformation = ComputeTrapezoidalMatrix(trapezoid, q);
+			float range = 0.1f;
+			//float height = Manager::camera.Position().y - Data::GetData().viewHeight * 5000.0f;
+			//range = glm::clamp(height / 50.0f, 0.01f, 1.0f);
+			//float depth = Data::GetData().frustumIntersectAverage;
+			//range = glm::clamp(depth / 100.0f, 0.01f, 1.0f);
+			shadowLod0View = GetShadowView(0, range);
+			shadowLod0Projection = CreateBoundedProjection(shadowLod0View, 1.0f, shadowLod0Distance * range, false);
+			shadowLod0Transformation = glm::mat4(1.0f);
+			return (shadowLod0Transformation);
 		}
-
-		glm::vec2 min = glm::vec2(MAXFLOAT);
-		glm::vec2 max = glm::vec2(-MAXFLOAT);
-
-		for (const glm::vec2 &point : bounds)
+		else if (lod == 1)
 		{
-			if (point.x < min.x) min.x = point.x;
-			if (point.y < min.y) min.y = point.y;
-			if (point.x > max.x) max.x = point.x;
-			if (point.y > max.y) max.y = point.y;
+			//shadowLod1Transformation = ComputeTrapezoidalMatrix(trapezoid, q);
+			float range = 1.0f;
+			//float height = Manager::camera.Position().y - Data::GetData().viewHeight * 5000.0f;
+			//range = glm::clamp(height / 100.0f, 0.1f, 1.0f);
+			float depth = Data::GetData().frustumIntersectAverage;
+			range = glm::clamp(depth / 500.0f, 0.1f, 1.0f);
+			shadowLod1View = GetShadowView(1, range);
+			shadowLod1Projection = CreateBoundedProjection(shadowLod1View, 1.0f, shadowLod1Distance * range, false);
+			shadowLod1Transformation = glm::mat4(1.0f);
+			return (shadowLod1Transformation);
 		}
-
-		shadowLod1Projection = glm::ortho(min.x, max.x, min.y, max.y, 1.0f, shadowLod1Distance * 2.0f);
-		shadowLod1Transformation = glm::mat4(1.0f);
-		return (shadowLod1Transformation);
-	}*/
+	}
+	Manager::shaderVariables.shadowBounding = 0;
 
 	auto [topLine, baseLine] = ComputeBaseAndTopLines(convexHull, centerLine);
 
 	float delta = glm::distance(topLine.point, baseLine.point);
 	// glm::vec3 qResult = ComputeQ(centerLine, topLine, delta);
 	// glm::vec2 q = glm::vec2(qResult.x, qResult.y);
-	glm::vec2 q = ComputeQ(centerLine, topLine, delta);
+	glm::vec2 q = ComputeQ(centerLine, topLine, delta, lod);
 
 	auto [leftLine, rightLine] = ComputeSideLines(convexHull, centerLine, q);
 
@@ -820,10 +878,10 @@ glm::mat4 Shadow::GetShadowTransformation(int lod)
 
 	Trapezoid trapezoid = {topLeft, topRight, baseLeft, baseRight};
 
-	Manager::shaderVariables.frustumCorner1 = topLeft;
-	Manager::shaderVariables.frustumCorner2 = topRight;
-	Manager::shaderVariables.frustumCorner3 = baseLeft;
-	Manager::shaderVariables.frustumCorner4 = baseRight;
+	//Manager::shaderVariables.frustumCorner1 = topLeft;
+	//Manager::shaderVariables.frustumCorner2 = topRight;
+	//Manager::shaderVariables.frustumCorner3 = baseLeft;
+	//Manager::shaderVariables.frustumCorner4 = baseRight;
 
 	//ComputeTrapezoid(convexHull, l, 0.8f);
 
@@ -895,9 +953,20 @@ glm::mat4 Shadow::GetShadowTransformation(int lod)
 		std::cout << std::endl;
 	}
 
-	shadowLod1Transformation = ComputeTrapezoidalMatrix(trapezoid, q);
-	//shadowLod1Transformation[1][1] *= -1;
-	return (shadowLod1Transformation);
+	if (lod == 0)
+	{
+		shadowLod0Transformation = ComputeTrapezoidalMatrix(trapezoid, q);
+		//shadowLod0Transformation[1][1] *= -1;
+		return (shadowLod0Transformation);
+	}
+	else if (lod == 1)
+	{
+		shadowLod1Transformation = ComputeTrapezoidalMatrix(trapezoid, q);
+		//shadowLod1Transformation[1][1] *= -1;
+		return (shadowLod1Transformation);
+	}
+	
+	return (glm::mat4(1.0f));
 }
 
 VkRenderPass Shadow::shadowPass = nullptr;
@@ -908,11 +977,12 @@ Texture Shadow::shadowLod1Texture;
 
 glm::mat4 Shadow::shadowLod0View = glm::mat4(1);
 glm::mat4 Shadow::shadowLod0Projection = glm::mat4(1);
+glm::mat4 Shadow::shadowLod0Transformation = glm::mat4(1);
 glm::mat4 Shadow::shadowLod1View = glm::mat4(1);
 glm::mat4 Shadow::shadowLod1Projection = glm::mat4(1);
 glm::mat4 Shadow::shadowLod1Transformation = glm::mat4(1);
 
 int Shadow::shadowLod0Resolution = 4096;
-float Shadow::shadowLod0Distance = 20;
+float Shadow::shadowLod0Distance = 200;
 int Shadow::shadowLod1Resolution = 4096;
-float Shadow::shadowLod1Distance = 500;
+float Shadow::shadowLod1Distance = 1000;

@@ -41,6 +41,7 @@ layout(set = 1, binding = 1) uniform GrassVariables
 layout(push_constant, std430) uniform PushConstants
 {
     uint grassLod;
+	uint shadowCascade;
 } pc;
 
 layout(location = 0) in vec3 inPosition;
@@ -140,9 +141,17 @@ void main()
 	//vec4 viewSpace = variables.viewMatrix * vec4(worldPosition, 1.0);
 	//vec4 shadowSpace = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
 
-    gl_Position = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
+    //gl_Position = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
+	//gl_Position = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
 
 	//grassColor = vec3(0.0916, 0.1, 0.0125) * (1.0 + (colorVal * 0.35 - 0.175));
 
 	//uv = vec2(inPosition.x * 10 + 0.5, inPosition.y);
+
+	vec4 shadowPosition;
+
+	if (pc.shadowCascade == 0) shadowPosition = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
+	else if (pc.shadowCascade == 1) shadowPosition = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
+
+	gl_Position = shadowPosition;
 }

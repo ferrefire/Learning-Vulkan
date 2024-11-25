@@ -70,13 +70,14 @@ struct ShaderVariables
 
 	alignas(4) uint32_t occlusionCulling;
 	alignas(4) uint32_t shadows;
+	alignas(4) uint32_t shadowBounding;
 
 	//alignas(8) glm::vec2 frustumCorners[4];
 
-	alignas(8) glm::vec2 frustumCorner1;
-	alignas(8) glm::vec2 frustumCorner2;
-	alignas(8) glm::vec2 frustumCorner3;
-	alignas(8) glm::vec2 frustumCorner4;
+	alignas(16) glm::vec3 frustumCorner1;
+	alignas(16) glm::vec3 frustumCorner2;
+	alignas(16) glm::vec3 frustumCorner3;
+	alignas(16) glm::vec3 frustumCorner4;
 };
 
 class Manager

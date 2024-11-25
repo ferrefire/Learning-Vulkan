@@ -225,8 +225,9 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	{
 		pushConstantRange.stageFlags = pipelineConfig.pushConstantStage;
 		pushConstantRange.offset = 0;
-		pushConstantRange.size = pipelineConfig.pushConstantSize;
-		pipelineLayoutInfo.pushConstantRangeCount = pipelineConfig.pushConstantCount;
+		pushConstantRange.size = pipelineConfig.pushConstantSize * pipelineConfig.pushConstantCount;
+		//pipelineLayoutInfo.pushConstantRangeCount = pipelineConfig.pushConstantCount;
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
 		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 	}
 
@@ -256,9 +257,9 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	if (pipelineConfig.shadow)
 	{
 		//if (!pipelineConfig.foliage) pipelineConfig.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
-		//pipelineConfig.rasterization.depthBiasEnable = VK_TRUE;
-		//pipelineConfig.rasterization.depthBiasConstantFactor = 4.0f;
-		//pipelineConfig.rasterization.depthBiasSlopeFactor = 1.5f;
+		pipelineConfig.rasterization.depthBiasEnable = VK_TRUE;
+		pipelineConfig.rasterization.depthBiasConstantFactor = 4.0f;
+		pipelineConfig.rasterization.depthBiasSlopeFactor = 1.5f;
 	}
 
 	VkGraphicsPipelineCreateInfo graphicsPipelineInfo{};

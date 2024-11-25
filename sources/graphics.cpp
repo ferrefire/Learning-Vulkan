@@ -9,6 +9,7 @@
 #include "shadow.hpp"
 #include "culling.hpp"
 #include "trees.hpp"
+#include "data.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -164,10 +165,8 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	lod0Scissor.extent.height = Shadow::shadowLod0Resolution;
 	vkCmdSetScissor(commandBuffer, 0, 1, &lod0Scissor);
 
-	//Terrain::RecordCommands(commandBuffer, true);
-	//if (Manager::settings.trees) Trees::RecordShadowCommands(commandBuffer);
-	Grass::RecordShadowCommands(commandBuffer);
-	//Trees::RecordShadowCommands(commandBuffer);
+	Grass::RecordShadowCommands(commandBuffer, 0);
+	//Trees::RecordShadowCommands(commandBuffer, 0);
 
 	vkCmdEndRenderPass(commandBuffer);
 
@@ -201,7 +200,8 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 		lod1Scissor.extent.height = Shadow::shadowLod1Resolution;
 		vkCmdSetScissor(commandBuffer, 0, 1, &lod1Scissor);
 
-		Trees::RecordShadowCommands(commandBuffer);
+		Trees::RecordShadowCommands(commandBuffer, 1);
+		//Grass::RecordShadowCommands(commandBuffer, 1);
 
 		vkCmdEndRenderPass(commandBuffer);
 	}
@@ -292,6 +292,7 @@ void Graphics::DrawFrame()
 	Terrain::PostFrame();
 	if (Manager::settings.trees) Trees::PostFrame();
 	Grass::PostFrame();
+	Data::SetData();
 
 	RecordCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], imageIndex);
 
@@ -422,6 +423,7 @@ void Graphics::Create()
 	Manager::CreateDescriptor();
 	Grass::Create();
 	if (Manager::settings.trees) Trees::Create();
+	Data::Create();
 
 	if (Manager::settings.screenQuad)
 	{
@@ -492,6 +494,7 @@ void Graphics::Destroy()
 	Terrain::Destroy();
 	Grass::Destroy();
 	Trees::Destroy();
+	Data::Destroy();
 	Manager::screenQuadDescriptor.Destroy();
 	Manager::Clean();
 

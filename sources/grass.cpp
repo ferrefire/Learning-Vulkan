@@ -79,7 +79,7 @@ void Grass::CreateShadowPipeline()
 	pipelineConfiguration.foliage = true;
 	//pipelineConfiguration.cullFront = true;
 	pipelineConfiguration.shadow = true;
-	pipelineConfiguration.pushConstantCount = 1;
+	pipelineConfiguration.pushConstantCount = 2;
 	pipelineConfiguration.pushConstantStage = VERTEX_STAGE;
 	pipelineConfiguration.pushConstantSize = sizeof(uint32_t);
 
@@ -458,14 +458,14 @@ void Grass::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 	RenderGrass(commandBuffer);
 }
 
-void Grass::RecordShadowCommands(VkCommandBuffer commandBuffer)
+void Grass::RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade)
 {
 	shadowPipeline.BindGraphics(commandBuffer);
 
 	Manager::globalDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
 	shadowDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
 
-	RenderShadows(commandBuffer);
+	RenderShadows(commandBuffer, cascade);
 }
 
 void Grass::RenderGrass(VkCommandBuffer commandBuffer)
@@ -483,18 +483,31 @@ void Grass::RenderGrass(VkCommandBuffer commandBuffer)
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassRenderCounts[Manager::currentFrame].lodRenderCount, 0, 0, 0);
 }
 
-void Grass::RenderShadows(VkCommandBuffer commandBuffer)
+void Grass::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 {
 	uint32_t lod0 = 0;
-	//uint32_t lod1 = 1;
+	uint32_t lod1 = 1;
 
-	grassMesh.Bind(commandBuffer);
-	vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), grassRenderCounts[Manager::currentFrame].renderCount, 0, 0, 0);
+	if (cascade == 0)
+	{
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, sizeof(uint32_t), sizeof(lod0), &lod0);
 
-	//grassLodMesh.Bind(commandBuffer);
-	//vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
-	//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassRenderCounts[Manager::currentFrame].lodRenderCount, 0, 0, 0);
+		grassMesh.Bind(commandBuffer);
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), grassRenderCounts[Manager::currentFrame].renderCount, 0, 0, 0);
+
+		grassLodMesh.Bind(commandBuffer);
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassRenderCounts[Manager::currentFrame].lodRenderCount, 0, 0, 0);
+	}
+	else if (cascade == 1)
+	{
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, sizeof(uint32_t), sizeof(lod1), &lod1);
+
+		grassLodMesh.Bind(commandBuffer);
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassRenderCounts[Manager::currentFrame].lodRenderCount, 0, 0, 0);
+	}
 }
 
 void Grass::ComputeGrass()

@@ -20,7 +20,7 @@ void main()
 	vec3 texColor = texture(treeDiffuseSampler, inCoord * 0.25).xyz;
 	vec3 combinedColor = diffuse * texColor;
 	float shadow = 1.0;
-	if (variables.shadows == 1) shadow = clamp(1.0 - GetShadow(shadowPosition, 1), 0.3, 1.0);
+	if (variables.shadows == 1) shadow = clamp(1.0 - GetShadow(shadowPosition, 1, 0), 0.3, 1.0);
 	combinedColor *= shadow;
 	combinedColor = Fog(combinedColor, GetDepth(gl_FragCoord.z));
 

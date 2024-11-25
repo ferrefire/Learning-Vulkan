@@ -84,31 +84,49 @@ vec2 BlendShadow(vec3 projectionCoordinates, int range, int lod)
 	return (vec2(shadow, closest));
 }
 
-float GetShadow(vec4 shadowSpace, int lod)
+float GetShadow(vec4 shadowSpace, int lod, int range)
 {
 	vec3 projectionCoordinates = shadowSpace.xyz / shadowSpace.w;
 
 	if (abs(projectionCoordinates.x) > 1.0 || abs(projectionCoordinates.y) > 1.0 || abs(projectionCoordinates.z) > 1.0) return (0.0);
 
-	vec4 viewCoordinates;
-	if (lod == 0) viewCoordinates = variables.shadowLod0Matrix * vec4(variables.viewPosition, 1.0);
-	else if (lod == 1) viewCoordinates = variables.shadowLod1Matrix * vec4(variables.viewPosition, 1.0);
-	viewCoordinates.xyz = viewCoordinates.xyz / viewCoordinates.w;
+	float dis = 0;
+	if (variables.shadowBounding == 1 && lod == 0)
+	{
+		vec4 viewCoordinates = variables.shadowLod0Matrix * vec4(variables.viewPosition, 1.0);
+		viewCoordinates.xyz = viewCoordinates.xyz / viewCoordinates.w;
+
+		dis = distance(viewCoordinates.xy, projectionCoordinates.xy) * 0.5;
+	}
+	//else if (lod == 1) viewCoordinates = variables.shadowLod1Matrix * vec4(variables.viewPosition, 1.0);
+	//viewCoordinates.xyz = viewCoordinates.xyz / viewCoordinates.w;
 
 	//float xDis = abs(projectionCoordinates.x - viewCoordinates.x);
 	//float yDis = abs(projectionCoordinates.y - viewCoordinates.y);
 	//float dis = max(xDis, yDis) * 0.5;
 
-	float dis = distance(viewCoordinates.xy, projectionCoordinates.xy) * 0.5;
+	//float dis = distance(viewCoordinates.xy, projectionCoordinates.xy) * 0.5;
 	
 	projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
 
-	int range = dis < (lod == 0 ? 0.25 : 0.125) ? 1 : 0;
-	if (lod == 1) range = 1;
+	//int range = dis < (lod == 0 ? 0.25 : 0.125) ? 1 : 0;
+	//if (lod == 1) range = 1;
+
+	if (variables.shadowBounding == 1) range = 0;
+
+	if (range < 0)
+	{
+		int newRange = abs(range);
+		range = 0;
+		if (projectionCoordinates.y > 0.25)
+		{
+			range = int(round(mix(0, newRange, projectionCoordinates.y)));
+		}
+	}
 	vec2 blendResult = BlendShadow(projectionCoordinates, range, lod);
 	float shadow = blendResult.x;
 
-	if (shadow > 0.0 && lod == 0)
+	if (variables.shadowBounding == 1 && shadow > 0.0 && lod == 0)
 	{
 		float blend = max(blendResult.y, dis);
 		shadow = mix(shadow, 0.0, pow(blend, 4));

@@ -98,4 +98,5 @@ void main()
     gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
 
 	shadowPosition = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
+	//shadowPosition = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
 }

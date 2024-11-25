@@ -26,10 +26,11 @@ layout(set = 0, binding = 0) uniform Variables
 	float time;
 	uint occlusionCulling;
 	uint shadows;
-	vec2 frustumCorner1;
-	vec2 frustumCorner2;
-	vec2 frustumCorner3;
-	vec2 frustumCorner4;
+	uint shadowBounding;
+	vec3 frustumCorner1;
+	vec3 frustumCorner2;
+	vec3 frustumCorner3;
+	vec3 frustumCorner4;
 } variables;
 
 #endif
