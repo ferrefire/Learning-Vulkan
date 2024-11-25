@@ -69,8 +69,8 @@ vec2 BlendShadow(vec3 projectionCoordinates, int range, int lod)
 	        float closestDepth = 0;
 			vec2 coords = projectionCoordinates.xy + vec2(x, y) * texelSize;
 			if (abs(coords.x - 0.5) > 0.5 || abs(coords.y - 0.5) > 0.5) continue;
-			if (lod == 0) closestDepth = texture(shadowLod0Sampler, coords).r;
-			else if (lod == 1) closestDepth = texture(shadowLod1Sampler, coords).r; 
+			if (lod == 0) closestDepth = textureLod(shadowLod0Sampler, coords, 0).r;
+			else if (lod == 1) closestDepth = textureLod(shadowLod1Sampler, coords, 0).r; 
 	        //shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
 
 			//float diff = projectionCoordinates.z - closestDepth;
