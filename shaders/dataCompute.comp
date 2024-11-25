@@ -19,7 +19,7 @@ layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 #include "variables.glsl"
 #include "heightmap.glsl"
 
-#define CORNER_COUNT 4
+#define CORNER_COUNT 9
 #define ITERATIONS 100
 
 void main()
@@ -46,26 +46,27 @@ void main()
     corners[1] = variables.frustumCorner2;
     corners[2] = variables.frustumCorner3;
     corners[3] = variables.frustumCorner4;
-    //corners[4] = frustumCorner12;
-    //corners[5] = frustumCorner13;
-    //corners[6] = frustumCorner34;
-    //corners[7] = frustumCorner24;
-    //corners[8] = frustumCorner1234;
+    corners[4] = frustumCorner12;
+    corners[5] = frustumCorner13;
+    corners[6] = frustumCorner34;
+    corners[7] = frustumCorner24;
+    corners[8] = frustumCorner1234;
 
     float intersects[CORNER_COUNT];
     intersects[0] = 1000;
     intersects[1] = 1000;
     intersects[2] = 1000;
     intersects[3] = 1000;
-    //intersects[4] = 1000;
-    //intersects[5] = 1000;
-    //intersects[6] = 1000;
-    //intersects[7] = 1000;
-    //intersects[8] = 1000;
+    intersects[4] = 1000;
+    intersects[5] = 1000;
+    intersects[6] = 1000;
+    intersects[7] = 1000;
+    intersects[8] = 1000;
 
     for (int i = 0; i < ITERATIONS; i++)
     {
-        float iter = float(i) / ITERATIONS;
+        //float iter = float(i) / ITERATIONS;
+        float iter = pow(float(i) / ITERATIONS, 2);
 
         //if (corner1Intersect >= 1000)
         //{

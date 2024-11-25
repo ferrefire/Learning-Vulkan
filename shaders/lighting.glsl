@@ -91,12 +91,17 @@ float GetShadow(vec4 shadowSpace, int lod, int range)
 	if (abs(projectionCoordinates.x) > 1.0 || abs(projectionCoordinates.y) > 1.0 || abs(projectionCoordinates.z) > 1.0) return (0.0);
 
 	float dis = 0;
-	if (variables.shadowBounding == 1 && lod == 0)
+	if (variables.shadowBounding == 1)
 	{
-		vec4 viewCoordinates = variables.shadowLod0Matrix * vec4(variables.viewPosition, 1.0);
+		vec4 viewCoordinates;
+		if (lod == 0) viewCoordinates = variables.shadowLod0Matrix * vec4(variables.viewPosition, 1.0);
+		else if (lod == 1) viewCoordinates = variables.shadowLod1Matrix * vec4(variables.viewPosition, 1.0);
 		viewCoordinates.xyz = viewCoordinates.xyz / viewCoordinates.w;
 
 		dis = distance(viewCoordinates.xy, projectionCoordinates.xy) * 0.5;
+
+		range = (dis < 0.1 ? 1 : 0);
+		//range = 0;
 	}
 	//else if (lod == 1) viewCoordinates = variables.shadowLod1Matrix * vec4(variables.viewPosition, 1.0);
 	//viewCoordinates.xyz = viewCoordinates.xyz / viewCoordinates.w;
@@ -112,7 +117,7 @@ float GetShadow(vec4 shadowSpace, int lod, int range)
 	//int range = dis < (lod == 0 ? 0.25 : 0.125) ? 1 : 0;
 	//if (lod == 1) range = 1;
 
-	if (variables.shadowBounding == 1) range = 0;
+	//range = 0;
 
 	if (range < 0)
 	{

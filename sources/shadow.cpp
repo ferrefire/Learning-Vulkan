@@ -719,7 +719,7 @@ glm::mat4 Shadow::GetShadowProjection(int lod)
 	}
 }
 
-glm::vec2 Shadow::ComputeQ(const Line &centerLine, const Line &topLine, float delta, int lod)
+glm::vec2 Shadow::ComputeQ(const Line &centerLine, const Line &topLine, float delta, int lod, float far)
 {
 	//glm::vec3 worldPos = Manager::camera.Position() + Manager::camera.Front() * 2.5f;
 	//glm::vec3 worldPos = Manager::camera.Position() + Manager::camera.Front() * 100.0f;
@@ -729,13 +729,13 @@ glm::vec2 Shadow::ComputeQ(const Line &centerLine, const Line &topLine, float de
 
 	if (lod == 0)
 	{
-		worldPos = Manager::camera.Position() + Manager::camera.Front() * (shadowLod0Distance * 0.2f);
+		worldPos = Manager::camera.Position() + Manager::camera.Front() * (far * 0.4f);
 		shadowPos = shadowLod0Projection * shadowLod0View * glm::vec4(worldPos, 1.0f);
 	}
 	else if (lod == 1)
 	{
 		//worldPos = Manager::camera.Position() + Manager::camera.Front() * (shadowLod0Distance * 0.5f + (shadowLod1Distance * 0.2f));
-		worldPos = Manager::camera.Position() + Manager::camera.Front() * (shadowLod1Distance * 0.2f);
+		worldPos = Manager::camera.Position() + Manager::camera.Front() * (far * 0.4f);
 		shadowPos = shadowLod1Projection * shadowLod1View * glm::vec4(worldPos, 1.0f);
 	}
 
@@ -767,16 +767,19 @@ glm::mat4 Shadow::GetShadowTransformation(int lod)
 	GetShadowView(lod, 1.0f);
 	GetShadowProjection(lod);
 
+	float maxDepth = Data::GetData().frustumIntersect;
+	float frustumFar;
 	std::vector<glm::vec4> frustumCorners;
-
 	if (lod == 0)
 	{
-		frustumCorners = Manager::camera.GetFrustumCorners(1.0f, shadowLod0Distance * 0.5f);
+		frustumFar = glm::min(shadowLod0Distance * 0.5f, glm::clamp(maxDepth, shadowLod0Distance * 0.25f, shadowLod0Distance));
+		frustumCorners = Manager::camera.GetFrustumCorners(1.0f, frustumFar);
 	}
 	else if (lod == 1)
 	{
 		//frustumCorners = Manager::camera.GetFrustumCorners(shadowLod0Distance * 0.5f, shadowLod1Distance * 0.5f);
-		frustumCorners = Manager::camera.GetFrustumCorners(1.0f, shadowLod1Distance * 0.5f);
+		frustumFar = glm::min(shadowLod1Distance * 0.5f, glm::clamp(maxDepth, shadowLod1Distance * 0.1f, shadowLod1Distance));
+		frustumCorners = Manager::camera.GetFrustumCorners(1.0f, frustumFar);
 	}
 
 	//std::vector<Point2D> frustumCorners2D;
@@ -850,10 +853,11 @@ glm::mat4 Shadow::GetShadowTransformation(int lod)
 		{
 			//shadowLod1Transformation = ComputeTrapezoidalMatrix(trapezoid, q);
 			float range = 1.0f;
-			//float height = Manager::camera.Position().y - Data::GetData().viewHeight * 5000.0f;
-			//range = glm::clamp(height / 100.0f, 0.1f, 1.0f);
-			float depth = Data::GetData().frustumIntersectAverage;
-			range = glm::clamp(depth / 500.0f, 0.1f, 1.0f);
+			float height = Manager::camera.Position().y - Data::GetData().viewHeight * 5000.0f;
+			range = glm::clamp(height / 100.0f, 0.05f, 1.0f);
+			range = 1.0f - pow(1.0f - range, 2.0f);
+			//float depth = Data::GetData().frustumIntersectAverage;
+			//range = glm::clamp(depth / 500.0f, 0.1f, 1.0f);
 			shadowLod1View = GetShadowView(1, range);
 			shadowLod1Projection = CreateBoundedProjection(shadowLod1View, 1.0f, shadowLod1Distance * range, false);
 			shadowLod1Transformation = glm::mat4(1.0f);
@@ -867,7 +871,7 @@ glm::mat4 Shadow::GetShadowTransformation(int lod)
 	float delta = glm::distance(topLine.point, baseLine.point);
 	// glm::vec3 qResult = ComputeQ(centerLine, topLine, delta);
 	// glm::vec2 q = glm::vec2(qResult.x, qResult.y);
-	glm::vec2 q = ComputeQ(centerLine, topLine, delta, lod);
+	glm::vec2 q = ComputeQ(centerLine, topLine, delta, lod, frustumFar);
 
 	auto [leftLine, rightLine] = ComputeSideLines(convexHull, centerLine, q);
 
@@ -983,6 +987,6 @@ glm::mat4 Shadow::shadowLod1Projection = glm::mat4(1);
 glm::mat4 Shadow::shadowLod1Transformation = glm::mat4(1);
 
 int Shadow::shadowLod0Resolution = 4096;
-float Shadow::shadowLod0Distance = 200;
+float Shadow::shadowLod0Distance = 150;
 int Shadow::shadowLod1Resolution = 4096;
 float Shadow::shadowLod1Distance = 1000;

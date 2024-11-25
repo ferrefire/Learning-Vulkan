@@ -126,7 +126,7 @@ void Cinematic::AddKey(glm::vec3 position, glm::vec3 rotation, float duration)
 
 	if (keyPositions.size() == 0 || keyRotations.size() == 0) duration = 0;
 
-	AddKeyPosition(position, duration);
+	AddKeyPosition(position + glm::vec3(Terrain::terrainOffset.x, 0, Terrain::terrainOffset.y), duration);
 	AddKeyRotation(rotation, duration);
 }
 

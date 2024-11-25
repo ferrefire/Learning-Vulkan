@@ -515,9 +515,9 @@ void Grass::ComputeGrass()
 	//vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
 
 	uint32_t computeCount = ceil((float)grassTotalBase / 8.0);
-	grassVariables.flooredViewPosition = glm::vec3(floor(Manager::camera.Position().x * grassVariables.spacingMult) * 
-		grassVariables.spacing, floor(Manager::camera.Position().y * grassVariables.spacingMult) * grassVariables.spacing, 
-		floor(Manager::camera.Position().z * grassVariables.spacingMult) * grassVariables.spacing);
+	//grassVariables.flooredViewPosition = glm::vec3(round(Manager::camera.Position().x * grassVariables.spacingMult) * 
+	//	grassVariables.spacing, round(Manager::camera.Position().y * grassVariables.spacingMult) * grassVariables.spacing, 
+	//	round(Manager::camera.Position().z * grassVariables.spacingMult) * grassVariables.spacing);
 
 	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
 
