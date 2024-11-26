@@ -6,6 +6,7 @@ struct ComputeData
 {
 	float viewHeight;
     float frustumIntersect;
+    float frustumIntersectSecond;
     float frustumIntersectAverage;
 };
 
@@ -19,8 +20,8 @@ layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 #include "variables.glsl"
 #include "heightmap.glsl"
 
-#define CORNER_COUNT 9
-#define ITERATIONS 100
+#define CORNER_COUNT 13
+#define ITERATIONS 25
 
 void main()
 {
@@ -40,28 +41,39 @@ void main()
     vec3 frustumCorner34 = (variables.frustumCorner3 + variables.frustumCorner4) * 0.5;
     vec3 frustumCorner24 = (variables.frustumCorner2 + variables.frustumCorner4) * 0.5;
     vec3 frustumCorner1234 = (variables.frustumCorner1 + variables.frustumCorner2 + variables.frustumCorner3 + variables.frustumCorner4) * 0.25;
+    vec3 frustumCornerCTR = (frustumCorner1234 + variables.frustumCorner1) * 0.5;
+    vec3 frustumCornerCTL = (frustumCorner1234 + variables.frustumCorner2) * 0.5;
+    vec3 frustumCornerCBR = (frustumCorner1234 + variables.frustumCorner3) * 0.5;
+    vec3 frustumCornerCBL = (frustumCorner1234 + variables.frustumCorner4) * 0.5;
 
+    int corner = 0;
     vec3 corners[CORNER_COUNT];
-    corners[0] = variables.frustumCorner1;
-    corners[1] = variables.frustumCorner2;
-    corners[2] = variables.frustumCorner3;
-    corners[3] = variables.frustumCorner4;
-    corners[4] = frustumCorner12;
-    corners[5] = frustumCorner13;
-    corners[6] = frustumCorner34;
-    corners[7] = frustumCorner24;
-    corners[8] = frustumCorner1234;
+    corners[corner++] = variables.frustumCorner1;
+    corners[corner++] = variables.frustumCorner2;
+    corners[corner++] = variables.frustumCorner3;
+    corners[corner++] = variables.frustumCorner4;
+    if (CORNER_COUNT >= 9)
+    {
+        corners[corner++] = frustumCorner12;
+        corners[corner++] = frustumCorner13;
+        corners[corner++] = frustumCorner34;
+        corners[corner++] = frustumCorner24;
+        corners[corner++] = frustumCorner1234;
+
+        if (CORNER_COUNT >= 13)
+        {
+            corners[corner++] = frustumCornerCTR;
+            corners[corner++] = frustumCornerCTL;
+            corners[corner++] = frustumCornerCBR;
+            corners[corner++] = frustumCornerCBL;
+        }
+    }
 
     float intersects[CORNER_COUNT];
-    intersects[0] = 1000;
-    intersects[1] = 1000;
-    intersects[2] = 1000;
-    intersects[3] = 1000;
-    intersects[4] = 1000;
-    intersects[5] = 1000;
-    intersects[6] = 1000;
-    intersects[7] = 1000;
-    intersects[8] = 1000;
+    for (int i = 0; i < CORNER_COUNT; i++)
+    {
+        intersects[i] = 1000;
+    }
 
     for (int i = 0; i < ITERATIONS; i++)
     {
@@ -109,21 +121,31 @@ void main()
             }
         }
 
-        if (exitLoop == 0) break;
+        if (exitLoop <= 0) break;
     }
 
     //float furthestIntersect = max(max(max(corner1Intersect, corner2Intersect), corner3Intersect), corner4Intersect);
     //float furthestIntersect = max(corner1Intersect, corner2Intersect);
 
     float furthestIntersect = -1;
+    float secondFurthestIntersect = -1;
     float averageIntersect = 0;
     for (int i = 0; i < CORNER_COUNT; i++)
     {
-        if (intersects[i] > furthestIntersect) furthestIntersect = intersects[i];
+        if (intersects[i] > furthestIntersect)
+        {
+            secondFurthestIntersect = furthestIntersect;
+            furthestIntersect = intersects[i];
+        }
+        else if (intersects[i] > secondFurthestIntersect)
+        {
+            secondFurthestIntersect = intersects[i];
+        }
         averageIntersect += intersects[i];
     }
 
     computeData.frustumIntersect = furthestIntersect;
+    computeData.frustumIntersectSecond = secondFurthestIntersect;
     computeData.frustumIntersectAverage = averageIntersect / CORNER_COUNT;
 
     //computeData.frustumIntersectAverage = (corner1Intersect + corner2Intersect + corner3Intersect + corner4Intersect) * 0.25;

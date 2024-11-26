@@ -8,7 +8,8 @@ struct GrassData
 	uint normxz;
 	uint posynormy;
 	uint rot;
-	uint scaxcoly;
+	uint scaxy;
+	uint coly;
 };
 
 struct CountData
@@ -131,7 +132,8 @@ void main()
 
 	if (lod == 0 && InView(position + vec3(0, 0.5, 0), 0) == 0 && InView(position, 0) == 0) return ;
 
-	if (variables.occlusionCulling == 1 && squaredDistance > 100)
+	//if (variables.occlusionCulling == 1 && squaredDistance > 100)
+	if (variables.occlusionCulling == 1)
 	{
 		//vec3 clipPosition = WorldToClip(position);
 		vec3 clipPosition = WorldToCull(position);
@@ -160,8 +162,22 @@ void main()
 
 	//clumping.w = textureLod(clumpingSampler, position.xz * 0.01 * 0.375, 0).w;
 	//float scale = pow(1.0 - GenerateNoise(position.xz * 0.375, 2), 0.5);
-	float scale = pow(1.0 - clumping.z, 0.5);
+	//squaredDistance = SquaredDistance(position, variables.viewPosition);
+
+	//float scale = clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult;
+	//scale = 1.0 - pow(1.0 - scale, 4);
+	//scale = 1.0 + scale * 2;
+	//scale *= 0.5;
+
+	float disNorm = pow(clamp(clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult, 0.0, 1.0), 1.0);
+	float scale = mix(1.0, 4.0, disNorm);
+	//float scaleY = pow(1.0 - clumping.z, 0.5);
+	//float scaleX = scaleY * mix(1.0, 2.0, disNorm);
+	//float scaleX = scale * 0.5;
 	//float scale = 1;
+	float scaleX = 0.3 * pow(scale, 2.0);
+	float scaleY = pow(1.0 - clumping.z, 1.0) * scale;
+
 	float colorVal = random(position.xz * ranMult);
 
 	if (lod == 0)
@@ -171,22 +187,18 @@ void main()
 		data[index].normxz = packHalf2x16(terrainNormal.xz);
 		data[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
 		data[index].rot = packHalf2x16(rotations.xy);
-		data[index].scaxcoly = packHalf2x16(vec2(scale, colorVal));
+		data[index].scaxy = packHalf2x16(vec2(scaleX, scaleY));
+		data[index].coly = packHalf2x16(vec2(colorVal, colorVal));
 	}
 	else if (lod == 1)
 	{
 		uint index = atomicAdd(countData.lodRenderCount, 1) + grassVariables.grassCount;
-		//lodData[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
-		//lodData[index].normxz = packHalf2x16(terrainNormal.xz);
-		//lodData[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
-		//lodData[index].rot = packHalf2x16(rotations.xy);
-		//lodData[index].scaxcoly = packHalf2x16(vec2(scale, colorVal));
-
 		data[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
 		data[index].normxz = packHalf2x16(terrainNormal.xz);
 		data[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
 		data[index].rot = packHalf2x16(rotations.xy);
-		data[index].scaxcoly = packHalf2x16(vec2(scale, colorVal));
+		data[index].scaxy = packHalf2x16(vec2(scaleX, scaleY));
+		data[index].coly = packHalf2x16(vec2(colorVal, colorVal));
 	}
 
 	

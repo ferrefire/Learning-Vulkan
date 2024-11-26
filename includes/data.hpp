@@ -17,6 +17,7 @@ struct ComputeData
 {
     float viewHeight = 0;
     float frustumIntersect = 0;
+    float frustumIntersectSecond = 0;
     float frustumIntersectAverage = 0;
 };
 

@@ -92,6 +92,8 @@ int Inside(vec2 pos)
 
 void main()
 {
+	if (gl_GlobalInvocationID.x >= treeVariables.treeTotalRenderBase || gl_GlobalInvocationID.y >= treeVariables.treeTotalRenderBase) return;
+
 	if (gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.y == 0)
 	{
 		atomicExchange(countData.lod0Count, 0);
