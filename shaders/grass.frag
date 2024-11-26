@@ -33,7 +33,7 @@ void main()
 			if (tempShadow < shadow) shadow = tempShadow;
 		}
 	}
-
+	vec3 bladeDiffuse = DiffuseLighting(normal, vec3(1), 0.0);
 	//float shadow = 1.0;
 	if (!gl_FrontFacing)
 	{
@@ -47,13 +47,21 @@ void main()
 
 	vec3 bladeColor = mix(grassColor.xyz * 0.5, grassColor.xyz, uv.y);
 
-	vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
-
-	vec3 diffuse = DiffuseLighting(terrainNormal, vec3(1));
-	vec3 bladeSpecular = SpecularLighting(normal, viewDirection, 16);
-	vec3 terrainSpecular = SpecularLighting(terrainNormal, viewDirection, 32);
-	vec3 combinedColor = (diffuse * bladeColor) + (bladeSpecular * terrainSpecular);
-	combinedColor *= shadow;
+	vec3 terrainDiffuse = DiffuseLighting(terrainNormal, vec3(1), 0.1);
+	
+	vec3 diffuse = clamp(terrainDiffuse + bladeDiffuse, vec3(0.0), vec3(1.0));
+	vec3 combinedColor = (diffuse * bladeColor);
+	if (shadow >= 1.0)
+	{
+		vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
+		vec3 bladeSpecular = SpecularLighting(normal, viewDirection, 16);
+		vec3 terrainSpecular = SpecularLighting(terrainNormal, viewDirection, 32);
+		combinedColor += (bladeSpecular * terrainSpecular);
+	}
+	else
+	{
+		combinedColor *= shadow;
+	}
 
 	outColor = vec4(combinedColor, 1.0);
 }

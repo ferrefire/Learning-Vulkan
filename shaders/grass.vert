@@ -65,7 +65,7 @@ float random(vec2 st)
 
 void main()
 {
-	vec3 normal = normalize(mix(vec3(0, 0, -1), vec3(sign(inPosition.x) * 0.5, 0, 0), clamp(abs(inPosition.x) * 10, 0.0, 1.0)));
+	vec3 normal = normalize(mix(vec3(0, 0, -1), vec3(sign(inPosition.x) * 0.5, 0, 0), clamp(abs(inPosition.x) * 10.0, 0.0, 1.0)));
 
 	//vec3 samplePos = vec3(0);
 	vec3 position = vec3(0);
@@ -137,6 +137,7 @@ void main()
 	angle = radians(ran);
 	scaledPosition = Rotate(scaledPosition, angle, vec3(0, 1, 0));
 	normal = Rotate(normal, angle, vec3(0, 1, 0));
+	//terrainNormal = Rotate(terrainNormal, angle, vec3(0, 1, 0));
 
 	objectNormal = normal;
 

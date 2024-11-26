@@ -845,7 +845,7 @@ glm::mat4 Shadow::GetShadowTransformation(int lod)
 			//float depth = Data::GetData().frustumIntersectAverage;
 			//range = glm::clamp(depth / 100.0f, 0.01f, 1.0f);
 			float depth = Data::GetData().frustumIntersectAverage;
-			range = glm::clamp(depth / 75.0f, 0.01f, 0.2f);
+			range = glm::clamp(depth / (shadowLod0Distance * 0.5f), 0.01f, 0.2f);
 			shadowLod0View = GetShadowView(0, range);
 			shadowLod0Projection = CreateBoundedProjection(shadowLod0View, 1.0f, shadowLod0Distance * range, false);
 			shadowLod0Transformation = glm::mat4(1.0f);
@@ -859,7 +859,7 @@ glm::mat4 Shadow::GetShadowTransformation(int lod)
 			//float heightRange = glm::clamp(height / 100.0f, 0.05f, 1.0f);
 			//heightRange = 1.0f - pow(1.0f - heightRange, 2.0f);
 			float depth = Data::GetData().frustumIntersectAverage;
-			float depthRange = glm::clamp(depth / 500.0f, 0.1f, 1.0f);
+			float depthRange = glm::clamp(depth / (shadowLod1Distance * 0.5f), 0.1f, 1.0f);
 			//range = glm::min(heightRange, depthRange);
 			range = depthRange;
 			shadowLod1View = GetShadowView(1, range);
@@ -991,6 +991,6 @@ glm::mat4 Shadow::shadowLod1Projection = glm::mat4(1);
 glm::mat4 Shadow::shadowLod1Transformation = glm::mat4(1);
 
 int Shadow::shadowLod0Resolution = 4096;
-float Shadow::shadowLod0Distance = 150;
+float Shadow::shadowLod0Distance = 200;
 int Shadow::shadowLod1Resolution = 4096;
 float Shadow::shadowLod1Distance = 1000;

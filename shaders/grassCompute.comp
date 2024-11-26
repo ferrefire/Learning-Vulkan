@@ -169,14 +169,15 @@ void main()
 	//scale = 1.0 + scale * 2;
 	//scale *= 0.5;
 
-	float disNorm = pow(clamp(clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult, 0.0, 1.0), 1.0);
+	float disNorm = clamp(clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult, 0.0, 1.0);
 	float scale = mix(1.0, 4.0, disNorm);
 	//float scaleY = pow(1.0 - clumping.z, 0.5);
 	//float scaleX = scaleY * mix(1.0, 2.0, disNorm);
 	//float scaleX = scale * 0.5;
 	//float scale = 1;
-	float scaleX = 0.3 * pow(scale, 2.0);
-	float scaleY = pow(1.0 - clumping.z, 1.0) * scale;
+	float scaleX = 0.5 * pow(scale, 2.0);
+	//float scaleY = 1 * scale;
+	float scaleY = pow(1.0 - clumping.z, 0.5) * scale;
 
 	float colorVal = random(position.xz * ranMult);
 
