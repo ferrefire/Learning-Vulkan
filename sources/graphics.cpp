@@ -409,6 +409,30 @@ void Graphics::Create()
 	device.CreateCommandBuffers();
 	device.CreateSyncObjects();
 
+	if (Manager::settings.performanceMode)
+	{
+		Shadow::shadowLod0Resolution = int(Shadow::shadowLod0Resolution * 0.5f);
+		Shadow::shadowLod1Resolution = int(Shadow::shadowLod1Resolution * 0.5f);
+		Shadow::shadowLod0Distance = Shadow::shadowLod0Distance * 0.5f;
+		Shadow::shadowLod1Distance = Shadow::shadowLod1Distance * 0.5f;
+		Grass::grassBase = int(Grass::grassBase * 0.5f);
+		Grass::grassCount = Grass::grassBase * Grass::grassBase;
+		Grass::grassLodBase = int(Grass::grassLodBase * 0.5f);
+		Grass::grassLodCount = Grass::grassLodBase * Grass::grassLodBase;
+		Grass::grassTotalBase = Grass::grassBase + Grass::grassLodBase;
+		Grass::grassTotalCount = Grass::grassTotalBase * Grass::grassTotalBase;
+		Trees::treeLod0RenderBase = int(Trees::treeLod0RenderBase * 0.5f);
+		Trees::treeLod0RenderCount = Trees::treeLod0RenderBase * Trees::treeLod0RenderBase;
+		Trees::treeLod1RenderBase = int(Trees::treeLod1RenderBase * 0.5f);
+		Trees::treeLod1RenderCount = Trees::treeLod1RenderBase * Trees::treeLod1RenderBase;
+		Trees::treeLod2RenderBase = int(Trees::treeLod2RenderBase * 0.5f);
+		Trees::treeLod2RenderCount = Trees::treeLod2RenderBase * Trees::treeLod2RenderBase;
+		Trees::treeLod3RenderBase = int(Trees::treeLod3RenderBase * 0.5f);
+		Trees::treeLod3RenderCount = Trees::treeLod3RenderBase * Trees::treeLod3RenderBase;
+		Trees::treeTotalRenderBase = Trees::treeLod0RenderBase + Trees::treeLod1RenderBase + Trees::treeLod2RenderBase + Trees::treeLod3RenderBase;
+		Trees::treeTotalRenderCount = Trees::treeTotalRenderBase * Trees::treeTotalRenderBase;
+	}
+
 	Culling::Create();
 	Shadow::Create();
 

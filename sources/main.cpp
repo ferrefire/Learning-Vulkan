@@ -45,6 +45,10 @@ void Setup(int argc, char **argv)
 		{
 			Manager::settings.uncappedFPS = true;
 		}
+		else if (std::string(argv[i]).compare("pf") == 0)
+		{
+			Manager::settings.performanceMode = true;
+		}
 		else if (std::string(argv[i]).compare(0, 4, "cin=") == 0)
 		{
 			std::string arg = argv[i];

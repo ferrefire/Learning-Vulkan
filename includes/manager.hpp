@@ -38,6 +38,7 @@ struct Settings
 	bool occlussionCulling = true;
 	bool trees = true;
 	bool shadows = true;
+	bool performanceMode = false;
 };
 
 struct ShaderVariables
