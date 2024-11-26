@@ -772,13 +772,13 @@ glm::mat4 Shadow::GetShadowTransformation(int lod)
 	std::vector<glm::vec4> frustumCorners;
 	if (lod == 0)
 	{
-		frustumFar = glm::min(shadowLod0Distance * 0.5f, glm::clamp(maxDepth, shadowLod0Distance * 0.25f, shadowLod0Distance));
+		frustumFar = glm::min(shadowLod0Distance * 0.5f, glm::clamp(maxDepth, shadowLod0Distance * 0.375f, shadowLod0Distance));
 		frustumCorners = Manager::camera.GetFrustumCorners(1.0f, frustumFar);
 	}
 	else if (lod == 1)
 	{
 		//frustumCorners = Manager::camera.GetFrustumCorners(shadowLod0Distance * 0.5f, shadowLod1Distance * 0.5f);
-		frustumFar = glm::min(shadowLod1Distance * 0.5f, glm::clamp(maxDepth, shadowLod1Distance * 0.1f, shadowLod1Distance));
+		frustumFar = glm::min(shadowLod1Distance * 0.5f, glm::clamp(maxDepth, shadowLod1Distance * 0.25f, shadowLod1Distance));
 		frustumCorners = Manager::camera.GetFrustumCorners(1.0f, frustumFar);
 	}
 

@@ -144,10 +144,15 @@ void main()
 	vec3 worldPosition = vec3(x, y, z);
 
 	float viewFactor = 50.0 / float(lod + 1);
-	if (AreaInView(worldPosition + vec3(0, viewFactor, 0), vec2(viewFactor * 0.25, viewFactor)) == 0) return;
+	float inDis = 1.75;
+	if (lod == 0) inDis = 1.35;
+	if (lod == 1) inDis = 1.8;
+	if (lod == 2) inDis = 1.5;
+	if (lod == 3) inDis = 1.25;
+	if (AreaInView(worldPosition + vec3(0, viewFactor, 0), vec2(viewFactor * 0.5, viewFactor), inDis) == 0) return;
 
 	float occludeFactor = 50.0 / float(clamp(lod, 1, 3));
-	if (AreaOccluded(worldPosition + vec3(0, occludeFactor, 0), vec2(occludeFactor * 0.25, occludeFactor)) == 1) return;
+	if (AreaOccluded(worldPosition + vec3(0, occludeFactor, 0), vec2(occludeFactor * 0.25, occludeFactor), 2.0) == 1) return;
 
 	//ix += int(flooredViewPosition.x + treeBase * 0.5);
 	//iz += int(flooredViewPosition.y + treeBase * 0.5);

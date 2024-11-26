@@ -35,7 +35,7 @@ void Grass::CreateTextures()
 
 void Grass::CreateMeshes()
 {
-	grassMesh.shape.SetShape(BLADE, 2);
+	grassMesh.shape.SetShape(BLADE, 3);
 	grassMesh.RecalculateVertices();
 	grassMesh.Create();
 
@@ -552,11 +552,11 @@ void Grass::ComputeClumping()
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
 
-uint32_t Grass::grassBase = 512;
+uint32_t Grass::grassBase = 384;
 uint32_t Grass::grassCount = Grass::grassBase * Grass::grassBase;
 std::vector<CountData> Grass::grassRenderCounts;
 
-uint32_t Grass::grassLodBase = 2048;
+uint32_t Grass::grassLodBase = 2176;
 uint32_t Grass::grassLodCount = Grass::grassLodBase * Grass::grassLodBase;
 //std::vector<uint32_t> Grass::grassLodRenderCounts;
 

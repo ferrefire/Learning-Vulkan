@@ -206,16 +206,17 @@ void main()
 	float shadow = 1.0;
 	if (variables.shadows == 1)
 	{
-		shadow = clamp(1.0 - GetShadow(shadowLod1Position, 1, -1), 0.3, 1.0);
+		shadow = clamp(1.0 - GetShadow(shadowLod1Position, 1, -2), 0.3, 1.0);
 		if (shadow > 0.3)
 		{
-			float tempShadow = clamp(1.0 - GetShadow(shadowLod0Position, 0, -1), 0.3, 1.0);
+			float tempShadow = clamp(1.0 - GetShadow(shadowLod0Position, 0, -2), 0.3, 1.0);
 			if (tempShadow < shadow) shadow = tempShadow;
 		}
 	}
 
 	vec3 combinedColor = textureColor * diffuse * shadow;
-	vec3 endColor = Fog(combinedColor, depth);
+	//vec3 endColor = Fog(combinedColor, depth);
+	vec3 endColor = GroundFog(combinedColor, depth, inPosition.y);
 
 	outColor = vec4(endColor, 1.0);
 	//outColor = vec4(vec3(steepness), 1.0);

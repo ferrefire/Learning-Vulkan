@@ -46,6 +46,7 @@ layout(location = 2) in vec3 inNormal;
 layout(location = 0) out vec2 coord;
 layout(location = 1) out vec3 normal;
 layout(location = 2) out vec4 shadowPosition;
+layout(location = 3) out vec3 worldPosition;
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -92,7 +93,7 @@ void main()
 	//}
 
     //vec3 worldPosition = ObjectToWorld(inPosition * vec3(1.5, 15, 1.5), mat4(1)) + position + vec3(0, 7.5, 0);
-    vec3 worldPosition = ObjectToWorld(objectPosition, mat4(1)) + position;
+    worldPosition = ObjectToWorld(objectPosition, mat4(1)) + position;
 
 	//normal = inNormal;
     gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);

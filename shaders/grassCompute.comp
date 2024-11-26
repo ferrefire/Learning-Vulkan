@@ -132,8 +132,8 @@ void main()
 
 	if (lod == 0 && InView(position + vec3(0, 0.5, 0), 0) == 0 && InView(position, 0) == 0) return ;
 
-	//if (variables.occlusionCulling == 1 && squaredDistance > 100)
-	if (variables.occlusionCulling == 1)
+	if (variables.occlusionCulling == 1 && squaredDistance > 100)
+	//if (variables.occlusionCulling == 1)
 	{
 		//vec3 clipPosition = WorldToClip(position);
 		vec3 clipPosition = WorldToCull(position);
