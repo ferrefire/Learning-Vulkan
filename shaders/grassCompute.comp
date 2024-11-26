@@ -181,26 +181,34 @@ void main()
 
 	float colorVal = random(position.xz * ranMult);
 
-	if (lod == 0)
-	{
-		uint index = atomicAdd(countData.renderCount, 1);
-		data[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
-		data[index].normxz = packHalf2x16(terrainNormal.xz);
-		data[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
-		data[index].rot = packHalf2x16(rotations.xy);
-		data[index].scaxy = packHalf2x16(vec2(scaleX, scaleY));
-		data[index].coly = packHalf2x16(vec2(colorVal, colorVal));
-	}
-	else if (lod == 1)
-	{
-		uint index = atomicAdd(countData.lodRenderCount, 1) + grassVariables.grassCount;
-		data[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
-		data[index].normxz = packHalf2x16(terrainNormal.xz);
-		data[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
-		data[index].rot = packHalf2x16(rotations.xy);
-		data[index].scaxy = packHalf2x16(vec2(scaleX, scaleY));
-		data[index].coly = packHalf2x16(vec2(colorVal, colorVal));
-	}
+	uint index;
+	if (lod == 0) index = atomicAdd(countData.renderCount, 1);
+	else if (lod == 1) index = atomicAdd(countData.lodRenderCount, 1) + grassVariables.grassCount;
+	data[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
+	data[index].normxz = packHalf2x16(terrainNormal.xz);
+	data[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
+	data[index].rot = packHalf2x16(rotations.xy);
+	data[index].scaxy = packHalf2x16(vec2(scaleX, scaleY));
+	data[index].coly = packHalf2x16(vec2(colorVal, colorVal));
 
-	
+	//if (lod == 0)
+	//{
+	//	uint index = atomicAdd(countData.renderCount, 1);
+	//	data[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
+	//	data[index].normxz = packHalf2x16(terrainNormal.xz);
+	//	data[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
+	//	data[index].rot = packHalf2x16(rotations.xy);
+	//	data[index].scaxy = packHalf2x16(vec2(scaleX, scaleY));
+	//	data[index].coly = packHalf2x16(vec2(colorVal, colorVal));
+	//}
+	//else if (lod == 1)
+	//{
+	//	uint index = atomicAdd(countData.lodRenderCount, 1) + grassVariables.grassCount;
+	//	data[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
+	//	data[index].normxz = packHalf2x16(terrainNormal.xz);
+	//	data[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
+	//	data[index].rot = packHalf2x16(rotations.xy);
+	//	data[index].scaxy = packHalf2x16(vec2(scaleX, scaleY));
+	//	data[index].coly = packHalf2x16(vec2(colorVal, colorVal));
+	//}
 }
