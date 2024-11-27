@@ -38,8 +38,9 @@ vec3 Fog(vec3 color, float depth)
 
 vec3 GroundFog(vec3 color, float depth, float height)
 {
-	float heightFactor = pow(1.0 - (height / 5000.0), 8.0);
-	return mix(color, vec3(1), depth + (depth * heightFactor));	
+	return (Fog(color, depth));
+	//float heightFactor = pow(1.0 - (height / 5000.0), 8.0);
+	//return mix(color, vec3(1), depth + (depth * heightFactor));	
 }
 
 vec3 NormalPower(vec3 normal, float power)
@@ -114,7 +115,7 @@ float GetShadow(vec4 shadowSpace, int lod, int range, float rangeDis)
 		range = 0;
 		if (projectionCoordinates.y > rangeDis)
 		{
-			range = int(round(mix(0, newRange, (projectionCoordinates.y - rangeDis) / (1.0 - rangeDis))));
+			range = int(round(mix(0, newRange, clamp((projectionCoordinates.y - rangeDis) / (1.0 - rangeDis), 0.0, 1.0))));
 		}
 	}
 	vec2 blendResult = BlendShadow(projectionCoordinates, range, lod);

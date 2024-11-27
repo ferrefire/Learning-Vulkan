@@ -209,7 +209,7 @@ void main()
 		shadow = clamp(1.0 - GetShadow(shadowLod1Position, 1, -2), 0.3, 1.0);
 		if (shadow > 0.3)
 		{
-			float tempShadow = clamp(1.0 - GetShadow(shadowLod0Position, 0, -2), 0.3, 1.0);
+			float tempShadow = clamp(1.0 - GetShadow(shadowLod0Position, 0, -1), 0.3, 1.0);
 			if (tempShadow < shadow) shadow = tempShadow;
 		}
 	}

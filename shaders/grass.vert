@@ -53,6 +53,7 @@ layout(location = 3) out vec3 grassColor;
 layout(location = 4) out vec2 uv;
 layout(location = 5) out vec4 shadowLod0Position;
 layout(location = 6) out vec4 shadowLod1Position;
+//layout(location = 7) out float ao;
 
 #include "variables.glsl"
 #include "functions.glsl"

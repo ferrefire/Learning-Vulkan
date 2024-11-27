@@ -9,11 +9,13 @@ layout(location = 3) in vec3 grassColor;
 layout(location = 4) in vec2 uv;
 layout(location = 5) in vec4 shadowLod0Position;
 layout(location = 6) in vec4 shadowLod1Position;
+//layout(location = 7) in float ao;
 
 layout(location = 0) out vec4 outColor;
 
 #include "variables.glsl"
 #include "lighting.glsl"
+#include "depth.glsl"
 
 void main()
 {
@@ -41,7 +43,15 @@ void main()
 
 	if (!gl_FrontFacing) normal *= -1;
 
-	vec3 bladeColor = mix(grassColor.xyz * 0.5, grassColor.xyz, uv.y);
+	float ao = clamp(GetDepth(gl_FragCoord.z) * 100.0, 0.0, 1.0);
+	
+	//if (variables.shadowBounding == 0)
+	//{
+	//	vec3 shadowSpace = shadowLod0Position.xyz / shadowLod0Position.w;
+	//	shadowSpace.xy = shadowSpace.xy * 0.5 + 0.5;
+	//	ao = pow(1.0 - shadowSpace.y, 4.0);
+	//}
+	vec3 bladeColor = mix(grassColor.xyz * mix(0.3, 0.5, ao), grassColor.xyz, uv.y);
 
 	vec3 terrainDiffuse = DiffuseLighting(terrainNormal, vec3(1), 0.1);
 	
