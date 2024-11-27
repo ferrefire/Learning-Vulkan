@@ -66,6 +66,7 @@ float random(vec2 st)
 void main()
 {
 	vec3 normal = normalize(mix(vec3(0, 0, -1), vec3(sign(inPosition.x) * 0.5, 0, 0), clamp(abs(inPosition.x) * 10.0, 0.0, 1.0)));
+	//vec3 faceNormal = vec3(0, 0, -1);
 
 	//vec3 samplePos = vec3(0);
 	vec3 position = vec3(0);
@@ -141,29 +142,41 @@ void main()
 	float angle = radians(ran * (inPosition.y + 0.25));
 	scaledPosition = Rotate(scaledPosition, angle, vec3(1, 0, 0));
 	normal = Rotate(normal, angle, vec3(1, 0, 0));
+	//faceNormal = Rotate(faceNormal, angle, vec3(1, 0, 0));
 
 	ran = rotation.y;
 
 	angle = radians(ran);
 	scaledPosition = Rotate(scaledPosition, angle, vec3(0, 1, 0));
 	normal = Rotate(normal, angle, vec3(0, 1, 0));
+	//faceNormal = Rotate(faceNormal, angle, vec3(0, 1, 0));
 	//terrainNormal = Rotate(terrainNormal, angle, vec3(0, 1, 0));
 
 	objectNormal = normal;
 
 	worldPosition = ObjectToWorld(scaledPosition, mat4(1)) + position;
 
-    gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
+	uv = vec2(inPosition.x * 10.0 + 0.5, inPosition.y);
+
+	
 
 	//grassColor = vec3(0.25, 0.6, 0.1);
 	//grassColor = vec3(0.0916, 0.0866, 0.0125) * 1.5;
 	grassColor = vec3(0.0916, 0.1, 0.0125) * (1.0 + (colorVal * 0.35 - 0.175));
-	//grassColor = vec3(0.1375, 0.13, 0.01875);
-	//grassColor = vec3(0.1375, 0.15, 0.01875);
 
-	uv = vec2(inPosition.x * 10 + 0.5, inPosition.y);
+	vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
+	float viewDotNormal = clamp(dot(normal, viewDirection), -1.0, 1.0);
+	float upDotNormal = dot(normal, vec3(0, -1, 0)) * 0.5 + 0.5;
+	float dotSign = sign(viewDotNormal);
+	if (dotSign == 0.0) dotSign = 1.0;
+	float thickenFactor = (1.0 - pow(1.0 - abs(viewDotNormal), 4.0)) * dotSign;
+	worldPosition += viewDotNormal * variables.viewRight * 0.025 * (1.0 - upDotNormal);
+	worldPosition += viewDotNormal * variables.viewUp * 0.025 * (upDotNormal);
 
-	//shadowPosition = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
+	gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
+
 	shadowLod0Position = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
 	shadowLod1Position = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
+
+	//shadowPosition = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
 }

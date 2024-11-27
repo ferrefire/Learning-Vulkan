@@ -76,11 +76,7 @@ vec2 BlendShadow(vec3 projectionCoordinates, int range, int lod)
 			vec2 coords = projectionCoordinates.xy + vec2(x, y) * texelSize;
 			if (abs(coords.x - 0.5) > 0.5 || abs(coords.y - 0.5) > 0.5) continue;
 			if (lod == 0) closestDepth = textureLod(shadowLod0Sampler, coords, 0).r;
-			else if (lod == 1) closestDepth = textureLod(shadowLod1Sampler, coords, 0).r; 
-	        //shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
-
-			//float diff = projectionCoordinates.z - closestDepth;
-			//if (diff > 0.0) shadow += 1.0;
+			else if (lod == 1) closestDepth = textureLod(shadowLod1Sampler, coords, 0).r;
 			if (x == 0 && y == 0) closest = closestDepth;
 			shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
 	    }
@@ -90,7 +86,7 @@ vec2 BlendShadow(vec3 projectionCoordinates, int range, int lod)
 	return (vec2(shadow, closest));
 }
 
-float GetShadow(vec4 shadowSpace, int lod, int range)
+float GetShadow(vec4 shadowSpace, int lod, int range, float rangeDis)
 {
 	vec3 projectionCoordinates = shadowSpace.xyz / shadowSpace.w;
 
@@ -109,29 +105,16 @@ float GetShadow(vec4 shadowSpace, int lod, int range)
 		range = (dis < 0.1 ? 1 : 0);
 		//range = 0;
 	}
-	//else if (lod == 1) viewCoordinates = variables.shadowLod1Matrix * vec4(variables.viewPosition, 1.0);
-	//viewCoordinates.xyz = viewCoordinates.xyz / viewCoordinates.w;
-
-	//float xDis = abs(projectionCoordinates.x - viewCoordinates.x);
-	//float yDis = abs(projectionCoordinates.y - viewCoordinates.y);
-	//float dis = max(xDis, yDis) * 0.5;
-
-	//float dis = distance(viewCoordinates.xy, projectionCoordinates.xy) * 0.5;
 	
 	projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
-
-	//int range = dis < (lod == 0 ? 0.25 : 0.125) ? 1 : 0;
-	//if (lod == 1) range = 1;
-
-	//range = 0;
 
 	if (range < 0)
 	{
 		int newRange = abs(range);
 		range = 0;
-		if (projectionCoordinates.y > 0.5)
+		if (projectionCoordinates.y > rangeDis)
 		{
-			range = int(round(mix(0, newRange, (projectionCoordinates.y - 0.5) * 2.0)));
+			range = int(round(mix(0, newRange, (projectionCoordinates.y - rangeDis) / (1.0 - rangeDis))));
 		}
 	}
 	vec2 blendResult = BlendShadow(projectionCoordinates, range, lod);
@@ -142,11 +125,12 @@ float GetShadow(vec4 shadowSpace, int lod, int range)
 		float blend = max(blendResult.y, dis);
 		shadow = mix(shadow, 0.0, pow(blend, 4));
 	}
-	//else if (lod == 1 && blendResult.y > 0.5)
-	//{
-	//	shadow = mix(shadow, 0.0, (blendResult.y - 0.5) * 2.0);
-	//}
 	return (shadow);
+}
+
+float GetShadow(vec4 shadowSpace, int lod, int range)
+{
+	return (GetShadow(shadowSpace, lod, range, 0.5));
 }
 
 #endif

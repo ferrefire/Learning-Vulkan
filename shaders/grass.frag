@@ -23,6 +23,9 @@ void main()
 	//float shadow = 1.0;
 	//if (variables.shadows == 1) shadow = clamp(1.0 - GetShadow(shadowLod0Position, 0), 0.3, 1.0);
 
+	//outColor = vec4(grassColor, 1.0);
+	//return;
+
 	float shadow = 1.0;
 	if (variables.shadows == 1)
 	{
@@ -33,24 +36,18 @@ void main()
 			if (tempShadow < shadow) shadow = tempShadow;
 		}
 	}
+
 	vec3 bladeDiffuse = DiffuseLighting(normal, vec3(1), 0.0);
-	//float shadow = 1.0;
-	if (!gl_FrontFacing)
-	{
-		normal *= -1;
-		//shadow = GetShadow(shadowPosition);
-	}
-	//else
-	//{
-	//	shadow = GetShadow(shadowPosition);
-	//}
+
+	if (!gl_FrontFacing) normal *= -1;
 
 	vec3 bladeColor = mix(grassColor.xyz * 0.5, grassColor.xyz, uv.y);
 
 	vec3 terrainDiffuse = DiffuseLighting(terrainNormal, vec3(1), 0.1);
 	
-	vec3 diffuse = clamp(terrainDiffuse + bladeDiffuse, vec3(0.0), vec3(1.0));
+	vec3 diffuse = clamp(terrainDiffuse * 0.9 + bladeDiffuse, vec3(0.0), vec3(1.0));
 	vec3 combinedColor = (diffuse * bladeColor);
+
 	if (shadow >= 1.0)
 	{
 		vec3 viewDirection = normalize(variables.viewPosition - worldPosition);

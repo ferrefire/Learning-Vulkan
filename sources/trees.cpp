@@ -644,14 +644,14 @@ void Trees::ComputeTreeRender()
 
 	treeRenderCounts[Manager::currentFrame] = *(TreeCountData *)countBuffers[Manager::currentFrame].mappedBuffer;
 
-	if (!Manager::settings.fullscreen && Time::newSecond)
-	{
-		std::cout << "lod 0 count: " << treeRenderCounts[Manager::currentFrame].lod0Count << std::endl;
-		std::cout << "lod 1 count: " << treeRenderCounts[Manager::currentFrame].lod1Count << std::endl;
-		std::cout << "lod 2 count: " << treeRenderCounts[Manager::currentFrame].lod2Count << std::endl;
-		std::cout << "lod 3 count: " << treeRenderCounts[Manager::currentFrame].lod3Count << std::endl;
-		std::cout << std::endl;
-	}
+	//if (!Manager::settings.fullscreen && Time::newSecond)
+	//{
+	//	std::cout << "lod 0 count: " << treeRenderCounts[Manager::currentFrame].lod0Count << std::endl;
+	//	std::cout << "lod 1 count: " << treeRenderCounts[Manager::currentFrame].lod1Count << std::endl;
+	//	std::cout << "lod 2 count: " << treeRenderCounts[Manager::currentFrame].lod2Count << std::endl;
+	//	std::cout << "lod 3 count: " << treeRenderCounts[Manager::currentFrame].lod3Count << std::endl;
+	//	std::cout << std::endl;
+	//}
 }
 
 void Trees::GenerateTrunkMesh(Mesh &mesh, BranchConfiguration config)
