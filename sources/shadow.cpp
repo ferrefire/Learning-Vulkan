@@ -16,6 +16,10 @@ void Shadow::Create()
 {
 	//GetShadowProjection(0);
 	//GetShadowProjection(1);
+
+	shadowCascadeViews.resize(cascadeCount);
+	shadowCascadeProjections.resize(cascadeCount);
+
 	CreateShadowPass();
 	CreateShadowResources();
 }
@@ -23,6 +27,7 @@ void Shadow::Create()
 void Shadow::CreateShadowResources()
 {
 	if (trapezoidal) CreateTrapezoidResources();
+	if (!trapezoidal) CreateCascadeResources();
 }
 
 void Shadow::CreateTrapezoidResources()
@@ -87,23 +92,23 @@ void Shadow::CreateTrapezoidResources()
 
 void Shadow::CreateCascadeResources()
 {
-	ImageConfiguration imageConfig;
-	imageConfig.width = shadowCascadeResolution;
-	imageConfig.height = shadowCascadeResolution;
-	imageConfig.format = Manager::currentDevice.FindDepthFormat();
-	imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-	imageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
-	imageConfig.transitionLayout = LAYOUT_READ_ONLY;
-
-	SamplerConfiguration samplerConfig;
-	samplerConfig.repeatMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-	samplerConfig.borderColor = VK_BORDER_COLOR_INT_OPAQUE_WHITE;
-	samplerConfig.anisotrophic = VK_FALSE;
-
 	shadowCascadeTextures.resize(cascadeCount);
 	shadowCascadeFrameBuffers.resize(cascadeCount);
 	for (int i = 0; i < cascadeCount; i++)
 	{
+		ImageConfiguration imageConfig;
+		imageConfig.width = shadowCascadeResolutions[i];
+		imageConfig.height = shadowCascadeResolutions[i];
+		imageConfig.format = Manager::currentDevice.FindDepthFormat();
+		imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		imageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
+		imageConfig.transitionLayout = LAYOUT_READ_ONLY;
+
+		SamplerConfiguration samplerConfig;
+		samplerConfig.repeatMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		samplerConfig.borderColor = VK_BORDER_COLOR_INT_OPAQUE_WHITE;
+		samplerConfig.anisotrophic = VK_FALSE;
+
 		shadowCascadeTextures[i].CreateImage(imageConfig, samplerConfig);
 
 		VkFramebufferCreateInfo cascadeFramebufferInfo{};
@@ -111,8 +116,8 @@ void Shadow::CreateCascadeResources()
 		cascadeFramebufferInfo.renderPass = shadowCascadePass;
 		cascadeFramebufferInfo.attachmentCount = 1;
 		cascadeFramebufferInfo.pAttachments = &shadowCascadeTextures[i].imageView;
-		cascadeFramebufferInfo.width = shadowCascadeResolution;
-		cascadeFramebufferInfo.height = shadowCascadeResolution;
+		cascadeFramebufferInfo.width = shadowCascadeResolutions[i];
+		cascadeFramebufferInfo.height = shadowCascadeResolutions[i];
 		cascadeFramebufferInfo.layers = 1;
 
 		if (vkCreateFramebuffer(Manager::currentDevice.logicalDevice, &cascadeFramebufferInfo, nullptr, &shadowCascadeFrameBuffers[i]) != VK_SUCCESS)
@@ -125,6 +130,7 @@ void Shadow::CreateCascadeResources()
 void Shadow::CreateShadowPass()
 {
 	if (trapezoidal) CreateTrapezoidPass();
+	if (!trapezoidal) CreateCascadePass();
 }
 
 void Shadow::CreateTrapezoidPass()
@@ -274,28 +280,30 @@ glm::mat4 Shadow::GetTrapezoidView(int lod, float dis)
 	}
 }
 
-glm::mat4 Shadow::GetCascadeView()
+void Shadow::SetCascadeViews()
 {
-	glm::vec3 direction = Manager::shaderVariables.lightDirection;
+	for (int i = 0; i < cascadeCount; i++)
+	{
+		glm::vec3 direction = Manager::shaderVariables.lightDirection;
 
-	glm::vec3 focus = Manager::camera.Position();
+		glm::vec3 focus = Manager::camera.Position();
 
-	glm::vec3 front = glm::normalize(-direction);
-	glm::vec3 side = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
-	glm::vec3 up = glm::normalize(glm::cross(side, front));
+		glm::vec3 front = glm::normalize(-direction);
+		glm::vec3 side = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
+		glm::vec3 up = glm::normalize(glm::cross(side, front));
 
-	glm::vec3 position = focus + direction * shadowCascadeDistance;
-	shadowCascadeView = glm::lookAt(position, position + front, up);
-	return (shadowCascadeView);
+		glm::vec3 position = focus + direction * shadowCascadeDistances[i] * (i == 0 ? 4.0f : 1.0f);
+		shadowCascadeViews[i] = glm::lookAt(position, position + front, up);
+	}
 }
 
-glm::mat4 Shadow::CreateBoundedProjection(const glm::mat4 &shadowView, float near, float far, bool nearOnly)
+glm::mat4 Shadow::CreateBoundedProjection(const glm::mat4 &shadowView, float near, float far, float depthMult)
 {
 	std::vector<glm::vec4> frustumCorners = Manager::camera.GetFrustumCorners(near, far);
 
 	std::vector<glm::vec4> frustumCornersInLightSpace;
 
-	for (int i = 0; i < (nearOnly ? 4 : 8); i++)
+	for (int i = 0; i < 8; i++)
 	{
 		frustumCornersInLightSpace.push_back(shadowView * frustumCorners[i]);
 	}
@@ -315,7 +323,7 @@ glm::mat4 Shadow::CreateBoundedProjection(const glm::mat4 &shadowView, float nea
 		max = glm::max(max, pos);
 	}
 
-	return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, far * 2);
+	return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, far * depthMult);
 }
 
 float Cross(const Point2D &O, const Point2D &A, const Point2D &B)
@@ -835,12 +843,12 @@ glm::mat4 Shadow::GetTrapezoidProjection(int lod)
 	}
 }
 
-glm::mat4 Shadow::GetCascadeProjection()
+void Shadow::SetCascadeProjections()
 {
-	shadowCascadeProjection = glm::ortho(-shadowCascadeDistance, shadowCascadeDistance, -shadowCascadeDistance,
-		shadowCascadeDistance, 1.0f, shadowCascadeDistance * 2.0f);
-	shadowCascadeProjection[1][1] *= -1;
-	return (shadowCascadeProjection);
+	for (int i = 0; i < cascadeCount; i++)
+	{
+		shadowCascadeProjections[i] = CreateBoundedProjection(shadowCascadeViews[i], 1.0f, shadowCascadeDistances[i], (i == 0 ? 8.0f : 2.0f));
+	}
 }
 
 glm::vec2 Shadow::ComputeQ(const Line &centerLine, const Line &topLine, float delta, int lod, float far)
@@ -1103,16 +1111,16 @@ glm::mat4 Shadow::GetTrapezoidTransformation(int lod)
 	return (glm::mat4(1.0f));
 }
 
-int Shadow::cascadeCount = 1;
+int Shadow::cascadeCount = 2;
 VkRenderPass Shadow::shadowCascadePass = nullptr;
 std::vector<VkFramebuffer> Shadow::shadowCascadeFrameBuffers;
 std::vector<Texture> Shadow::shadowCascadeTextures;
-glm::mat4 Shadow::shadowCascadeView = glm::mat4(1);
-glm::mat4 Shadow::shadowCascadeProjection = glm::mat4(1);
-int Shadow::shadowCascadeResolution = 4096;
-float Shadow::shadowCascadeDistance = 100;
+std::vector<glm::mat4> Shadow::shadowCascadeViews;
+std::vector<glm::mat4> Shadow::shadowCascadeProjections;
+std::vector<float> Shadow::shadowCascadeDistances = {25, 100};
+std::vector<int> Shadow::shadowCascadeResolutions = {2048, 2048};
 
-bool Shadow::trapezoidal = true;
+bool Shadow::trapezoidal = false;
 
 VkRenderPass Shadow::shadowTrapezoidPass = nullptr;
 VkFramebuffer Shadow::shadowLod0FrameBuffer = nullptr;

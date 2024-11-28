@@ -9,7 +9,7 @@ layout(set = 0, binding = 0) uniform Variables
 	mat4 frustumMatrix;
 	mat4 shadowLod0Matrix;
 	mat4 shadowLod1Matrix;
-	mat4 shadowCascadeMatrix;
+	mat4 shadowCascadeMatrix[2];
 	mat4 cullMatrix;
     vec3 viewPosition;
     vec3 viewDirection;

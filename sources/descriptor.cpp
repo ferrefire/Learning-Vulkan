@@ -177,6 +177,16 @@ void Descriptor::Update()
 				descriptorWrites[index].descriptorCount = 1;
 				descriptorWrites[index].pBufferInfo = &config.buffersInfo[maxIndex];
 			}
+			else if (config.type == IMAGE_SAMPLER && config.imageInfos.size() > 0)
+			{
+				descriptorWrites[index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				descriptorWrites[index].dstSet = descriptorSets[i];
+				descriptorWrites[index].dstBinding = index;
+				descriptorWrites[index].dstArrayElement = 0;
+				descriptorWrites[index].descriptorType = config.type;
+				descriptorWrites[index].descriptorCount = config.count;
+				descriptorWrites[index].pImageInfo = config.imageInfos.data();
+			}
 			else if (config.type == IMAGE_SAMPLER || config.type == IMAGE_STORAGE)
 			{
 				descriptorWrites[index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

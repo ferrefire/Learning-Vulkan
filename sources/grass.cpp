@@ -496,13 +496,17 @@ void Grass::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), grassRenderCounts[Manager::currentFrame].renderCount, 0, 0, 0);
 
-		grassLodMesh.Bind(commandBuffer);
-		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassRenderCounts[Manager::currentFrame].lodRenderCount, 0, 0, 0);
+		//grassLodMesh.Bind(commandBuffer);
+		//vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
+		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassRenderCounts[Manager::currentFrame].lodRenderCount, 0, 0, 0);
 	}
 	else if (cascade == 1)
 	{
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, sizeof(uint32_t), sizeof(lod1), &lod1);
+
+		grassMesh.Bind(commandBuffer);
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), grassRenderCounts[Manager::currentFrame].renderCount, 0, 0, 0);
 
 		grassLodMesh.Bind(commandBuffer);
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
@@ -556,11 +560,11 @@ uint32_t Grass::grassBase = 384;
 uint32_t Grass::grassCount = Grass::grassBase * Grass::grassBase;
 std::vector<CountData> Grass::grassRenderCounts;
 
-uint32_t Grass::grassLodBase = 2176;
-uint32_t Grass::grassLodCount = Grass::grassLodBase * Grass::grassLodBase;
+uint32_t Grass::grassLodBase = Grass::grassBase + 1792;
+uint32_t Grass::grassLodCount = Grass::grassLodBase * Grass::grassLodBase - Grass::grassCount;
 //std::vector<uint32_t> Grass::grassLodRenderCounts;
 
-uint32_t Grass::grassTotalBase = Grass::grassBase + Grass::grassLodBase;
+uint32_t Grass::grassTotalBase = Grass::grassLodBase;
 uint32_t Grass::grassTotalCount = Grass::grassTotalBase * Grass::grassTotalBase;
 
 Mesh Grass::grassMesh;

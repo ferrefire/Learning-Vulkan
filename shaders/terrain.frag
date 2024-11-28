@@ -21,8 +21,9 @@ layout(set = 1, binding = 2) uniform sampler2D rockDiffuseSampler;
 layout(set = 1, binding = 3) uniform sampler2D dirtDiffuseSampler;
 
 layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec4 shadowLod0Position;
-layout(location = 2) in vec4 shadowLod1Position;
+layout(location = 1) in vec4 shadowPositions[2];
+//layout(location = 1) in vec4 shadowLod0Position;
+//layout(location = 2) in vec4 shadowLod1Position;
 //layout(location = 1) in mat3 tbn;
 //layout(location = 1) in vec2 inTexCoord;
 
@@ -205,17 +206,23 @@ void main()
 	{
 		if (variables.shadowCascades == 1)
 		{
-			shadow = GetCascadedShadow(shadowLod0Position);
+			shadow = GetCascadedShadow(shadowPositions, 1, 2.0);
+			//shadow = GetCascadedShadow(shadowPositions[1], 1, 0, 2.0);
+			//if (shadow < 1.0)
+			//{
+			//	float tempShadow = GetCascadedShadow(shadowPositions[0], 0, 1, 2.0);
+			//	if (tempShadow > shadow) shadow = tempShadow;
+			//}
 		}
-		else
-		{
-			shadow = GetShadow(shadowLod1Position, 1, -2);
-			if (shadow < 1.0)
-			{
-				float tempShadow = GetShadow(shadowLod0Position, 0, -1);
-				if (tempShadow > shadow) shadow = tempShadow;
-			}
-		}
+		//else
+		//{
+		//	shadow = GetShadow(shadowLod1Position, 1, -2);
+		//	if (shadow < 1.0)
+		//	{
+		//		float tempShadow = GetShadow(shadowLod0Position, 0, -1);
+		//		if (tempShadow > shadow) shadow = tempShadow;
+		//	}
+		//}
 	}
 
 	vec3 diffuse = DiffuseLighting(terrainNormal, shadow);

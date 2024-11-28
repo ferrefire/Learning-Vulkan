@@ -45,8 +45,8 @@ layout(location = 2) in vec3 inNormal;
 
 layout(location = 0) out vec2 coord;
 layout(location = 1) out vec3 normal;
-layout(location = 2) out vec4 shadowPosition;
-layout(location = 3) out vec3 worldPosition;
+layout(location = 2) out vec3 worldPosition;
+layout(location = 3) out vec4 shadowPositions[2];
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -98,7 +98,13 @@ void main()
 	//normal = inNormal;
     gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
 
-	if (variables.shadowCascades == 1) shadowPosition = variables.shadowCascadeMatrix * vec4(worldPosition, 1.0);
-	else shadowPosition = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
+	if (variables.shadowCascades == 1)
+	{
+		for (int i = 0; i < 2; i++)
+		{
+			shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
+		}
+	}
+	//else shadowPosition = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
 	//shadowPosition = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
 }

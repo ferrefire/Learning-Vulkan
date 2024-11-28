@@ -104,21 +104,23 @@ void Manager::CreateShaderVariableBuffers()
 
 void Manager::CreateDescriptorSetLayout()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(7);
-	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
-	descriptorLayoutConfig[0].stages = ALL_STAGE;
-	descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[1].stages = ALL_STAGE;
-	descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[2].stages = ALL_STAGE;
-	descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[3].stages = ALL_STAGE;
-	descriptorLayoutConfig[4].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[4].stages = FRAGMENT_STAGE;
-	descriptorLayoutConfig[5].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[5].stages = FRAGMENT_STAGE;
-	descriptorLayoutConfig[6].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[6].stages = ALL_STAGE;
+	int i = 0;
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(6);
+	descriptorLayoutConfig[i].type = UNIFORM_BUFFER;
+	descriptorLayoutConfig[i++].stages = ALL_STAGE;
+	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[i++].stages = ALL_STAGE;
+	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[i++].stages = ALL_STAGE;
+	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[i++].stages = ALL_STAGE;
+	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[i++].stages = ALL_STAGE;
+	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[i++].count = Shadow::cascadeCount;
+	//descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	//descriptorLayoutConfig[i++].stages = FRAGMENT_STAGE;
 
 	Pipeline::CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
 }
@@ -136,63 +138,71 @@ void Manager::CreateDescriptor()
 	//descriptorLayoutConfig[3].stages = ALL_STAGE;
 	//Pipeline::CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
 
-	std::vector<DescriptorConfiguration> descriptorConfig(7);
-
-	descriptorConfig[0].type = UNIFORM_BUFFER;
-	descriptorConfig[0].stages = ALL_STAGE;
-	descriptorConfig[0].buffersInfo.resize(shaderVariableBuffers.size());
+	int j = 0;
+	std::vector<DescriptorConfiguration> descriptorConfig(6);
+	descriptorConfig[j].type = UNIFORM_BUFFER;
+	descriptorConfig[j].stages = ALL_STAGE;
+	descriptorConfig[j].buffersInfo.resize(shaderVariableBuffers.size());
 	int i = 0;
 	for (Buffer &buffer : shaderVariableBuffers)
 	{
-		descriptorConfig[0].buffersInfo[i].buffer = buffer.buffer;
-		descriptorConfig[0].buffersInfo[i].range = sizeof(ShaderVariables);
-		descriptorConfig[0].buffersInfo[i].offset = 0;
+		descriptorConfig[j].buffersInfo[i].buffer = buffer.buffer;
+		descriptorConfig[j].buffersInfo[i].range = sizeof(ShaderVariables);
+		descriptorConfig[j].buffersInfo[i].offset = 0;
 		i++;
 	}
+	j++;
 
-	descriptorConfig[1].type = IMAGE_SAMPLER;
-	descriptorConfig[1].stages = ALL_STAGE;
-	descriptorConfig[1].imageInfo.imageLayout = LAYOUT_GENERAL;
-	descriptorConfig[1].imageInfo.imageView = Terrain::heightMapArrayTexture.imageView;
-	descriptorConfig[1].imageInfo.sampler = Terrain::heightMapArrayTexture.sampler;
+	descriptorConfig[j].type = IMAGE_SAMPLER;
+	descriptorConfig[j].stages = ALL_STAGE;
+	descriptorConfig[j].imageInfo.imageLayout = LAYOUT_GENERAL;
+	descriptorConfig[j].imageInfo.imageView = Terrain::heightMapArrayTexture.imageView;
+	descriptorConfig[j++].imageInfo.sampler = Terrain::heightMapArrayTexture.sampler;
 
-	descriptorConfig[2].type = IMAGE_SAMPLER;
-	descriptorConfig[2].stages = ALL_STAGE;
-	descriptorConfig[2].imageInfo.imageLayout = LAYOUT_GENERAL;
-	descriptorConfig[2].imageInfo.imageView = Terrain::heightMapLod0Texture.imageView;
-	descriptorConfig[2].imageInfo.sampler = Terrain::heightMapLod0Texture.sampler;
+	descriptorConfig[j].type = IMAGE_SAMPLER;
+	descriptorConfig[j].stages = ALL_STAGE;
+	descriptorConfig[j].imageInfo.imageLayout = LAYOUT_GENERAL;
+	descriptorConfig[j].imageInfo.imageView = Terrain::heightMapLod0Texture.imageView;
+	descriptorConfig[j++].imageInfo.sampler = Terrain::heightMapLod0Texture.sampler;
 
-	descriptorConfig[3].type = IMAGE_SAMPLER;
-	descriptorConfig[3].stages = ALL_STAGE;
-	descriptorConfig[3].imageInfo.imageLayout = LAYOUT_GENERAL;
-	descriptorConfig[3].imageInfo.imageView = Terrain::heightMapLod1Texture.imageView;
-	descriptorConfig[3].imageInfo.sampler = Terrain::heightMapLod1Texture.sampler;
+	descriptorConfig[j].type = IMAGE_SAMPLER;
+	descriptorConfig[j].stages = ALL_STAGE;
+	descriptorConfig[j].imageInfo.imageLayout = LAYOUT_GENERAL;
+	descriptorConfig[j].imageInfo.imageView = Terrain::heightMapLod1Texture.imageView;
+	descriptorConfig[j++].imageInfo.sampler = Terrain::heightMapLod1Texture.sampler;
 
-	descriptorConfig[4].type = IMAGE_SAMPLER;
-	descriptorConfig[4].stages = FRAGMENT_STAGE;
-	descriptorConfig[4].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	if (Shadow::trapezoidal)
+	descriptorConfig[j].type = IMAGE_SAMPLER;
+	descriptorConfig[j].stages = ALL_STAGE;
+	descriptorConfig[j].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	descriptorConfig[j].imageInfo.imageView = Culling::cullTexture.imageView;
+	descriptorConfig[j++].imageInfo.sampler = Culling::cullTexture.sampler;
+
+	/*descriptorConfig[j].type = IMAGE_SAMPLER;
+	descriptorConfig[j].stages = FRAGMENT_STAGE;
+	descriptorConfig[j].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	descriptorConfig[j].imageInfo.imageView = Shadow::shadowLod0Texture.imageView;
+	descriptorConfig[j++].imageInfo.sampler = Shadow::shadowLod0Texture.sampler;
+
+	descriptorConfig[j].type = IMAGE_SAMPLER;
+	descriptorConfig[j].stages = FRAGMENT_STAGE;
+	descriptorConfig[j].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	descriptorConfig[j].imageInfo.imageView = Shadow::shadowLod1Texture.imageView;
+	descriptorConfig[j++].imageInfo.sampler = Shadow::shadowLod1Texture.sampler;*/
+
+	descriptorConfig[j].type = IMAGE_SAMPLER;
+	descriptorConfig[j].stages = FRAGMENT_STAGE;
+	descriptorConfig[j].count = Shadow::cascadeCount;
+	descriptorConfig[j].imageInfos.resize(Shadow::cascadeCount);
+	for (int k = 0; k < Shadow::cascadeCount; k++)
 	{
-		descriptorConfig[4].imageInfo.imageView = Shadow::shadowLod0Texture.imageView;
-		descriptorConfig[4].imageInfo.sampler = Shadow::shadowLod0Texture.sampler;
+		descriptorConfig[j].imageInfos[k].imageLayout = LAYOUT_READ_ONLY;
+		descriptorConfig[j].imageInfos[k].imageView = Shadow::shadowCascadeTextures[k].imageView;
+		descriptorConfig[j].imageInfos[k].sampler = Shadow::shadowCascadeTextures[k].sampler;
 	}
-	else
-	{
-		descriptorConfig[4].imageInfo.imageView = Shadow::shadowCascadeTextures[0].imageView;
-		descriptorConfig[4].imageInfo.sampler = Shadow::shadowCascadeTextures[0].sampler;
-	}
-
-	descriptorConfig[5].type = IMAGE_SAMPLER;
-	descriptorConfig[5].stages = FRAGMENT_STAGE;
-	descriptorConfig[5].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[5].imageInfo.imageView = Shadow::shadowLod1Texture.imageView;
-	descriptorConfig[5].imageInfo.sampler = Shadow::shadowLod1Texture.sampler;
-
-	descriptorConfig[6].type = IMAGE_SAMPLER;
-	descriptorConfig[6].stages = ALL_STAGE;
-	descriptorConfig[6].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[6].imageInfo.imageView = Culling::cullTexture.imageView;
-	descriptorConfig[6].imageInfo.sampler = Culling::cullTexture.sampler;
+	j++;
+	//descriptorConfig[j].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	//descriptorConfig[j].imageInfo.imageView = Shadow::shadowCascadeTextures[0].imageView;
+	//descriptorConfig[j++].imageInfo.sampler = Shadow::shadowCascadeTextures[0].sampler;
 
 	globalDescriptor.Create(descriptorConfig, globalDescriptorSetLayout);
 }
@@ -294,7 +304,13 @@ void Manager::UpdateShaderVariables()
 	}
 	else
 	{
-		shaderVariables.shadowCascadeMatrix = Shadow::GetCascadeProjection() * Shadow::GetCascadeView();
+		Shadow::SetCascadeProjections();
+		Shadow::SetCascadeViews();
+		for (int i = 0; i < Shadow::cascadeCount; i++)
+		{
+			shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
+		}
+		//shaderVariables.shadowCascadeMatrix = Shadow::GetCascadeProjection() * Shadow::GetCascadeView();
 	}
 
 	shaderVariables.cullMatrix = Culling::cullProjection * shaderVariables.view;

@@ -21,6 +21,7 @@ struct DescriptorConfiguration
 	std::vector<VkDescriptorBufferInfo> buffersInfo;
 
 	VkDescriptorImageInfo imageInfo;
+	std::vector<VkDescriptorImageInfo> imageInfos;
 };
 
 class Descriptor

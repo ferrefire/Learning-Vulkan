@@ -7,8 +7,9 @@ layout(location = 1) in vec3 objectNormal;
 layout(location = 2) in vec3 terrainNormal;
 layout(location = 3) in vec3 grassColor;
 layout(location = 4) in vec2 uv;
-layout(location = 5) in vec4 shadowLod0Position;
-layout(location = 6) in vec4 shadowLod1Position;
+layout(location = 5) in vec4 shadowPositions[2];
+//layout(location = 5) in vec4 shadowLod0Position;
+//layout(location = 6) in vec4 shadowLod1Position;
 //layout(location = 7) in float ao;
 
 layout(location = 0) out vec4 outColor;
@@ -33,17 +34,23 @@ void main()
 	{
 		if (variables.shadowCascades == 1)
 		{
-			shadow = GetCascadedShadow(shadowLod0Position);
+			shadow = GetCascadedShadow(shadowPositions, 1, 2.0);
+			//shadow = GetCascadedShadow(shadowPositions[1], 1, 0, 2.0);
+			//if (shadow < 1.0)
+			//{
+			//	float tempShadow = GetCascadedShadow(shadowPositions[0], 0, 1, 2.0);
+			//	if (tempShadow > shadow) shadow = tempShadow;
+			//}
 		}
-		else
-		{
-			shadow = GetShadow(shadowLod1Position, 1, -1, 0.75);
-			if (shadow < 1.0) //change for better performance
-			{
-				float tempShadow = GetShadow(shadowLod0Position, 0, -2);
-				if (tempShadow > shadow) shadow = tempShadow;
-			}
-		}
+		//else
+		//{
+		//	shadow = GetShadow(shadowLod1Position, 1, -1, 0.75);
+		//	if (shadow < 1.0) //change for better performance
+		//	{
+		//		float tempShadow = GetShadow(shadowLod0Position, 0, -2);
+		//		if (tempShadow > shadow) shadow = tempShadow;
+		//	}
+		//}
 	}
 
 	vec3 bladeDiffuse = DiffuseLighting(normal, shadow, 0.0, ambient);

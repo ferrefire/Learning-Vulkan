@@ -45,10 +45,10 @@ class Shadow
 		static VkRenderPass shadowCascadePass;
 		static std::vector<VkFramebuffer> shadowCascadeFrameBuffers;
 		static std::vector<Texture> shadowCascadeTextures;
-		static glm::mat4 shadowCascadeView;
-		static glm::mat4 shadowCascadeProjection;
-		static int shadowCascadeResolution;
-		static float shadowCascadeDistance;
+		static std::vector<glm::mat4> shadowCascadeViews;
+		static std::vector<glm::mat4> shadowCascadeProjections;
+		static std::vector<float> shadowCascadeDistances;
+		static std::vector<int> shadowCascadeResolutions;
 
 		static VkRenderPass shadowTrapezoidPass;
 		static VkFramebuffer shadowLod0FrameBuffer;
@@ -84,12 +84,12 @@ class Shadow
 
 		static glm::mat4 GetTrapezoidView(int lod, float dis);
 		//static glm::mat4 GetTrapezoidView(int lod, float dis);
-		static glm::mat4 GetCascadeView();
+		static void SetCascadeViews();
 		static glm::mat4 GetTrapezoidProjection(int lod);
 		//static glm::mat4 GetTrapezoidProjection(int lod);
-		static glm::mat4 GetCascadeProjection();
+		static void SetCascadeProjections();
 		static glm::mat4 GetTrapezoidTransformation(int lod);
 
-		static glm::mat4 CreateBoundedProjection(const glm::mat4 &shadowView, float near, float far, bool nearOnly);
+		static glm::mat4 CreateBoundedProjection(const glm::mat4 &shadowView, float near, float far, float depthMult);
 		static glm::vec2 ComputeQ(const Line &centerLine, const Line &topLine, float delta, int lod, float far);
 };

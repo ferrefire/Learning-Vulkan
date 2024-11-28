@@ -80,7 +80,7 @@ void main()
 
 	vec4 shadowPosition;
 
-	if (variables.shadowCascades == 1) shadowPosition = variables.shadowCascadeMatrix * vec4(worldPosition, 1.0);
+	if (variables.shadowCascades == 1) shadowPosition = variables.shadowCascadeMatrix[pc.shadowCascade] * vec4(worldPosition, 1.0);
 	else if (pc.shadowCascade == 0) shadowPosition = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
 	else if (pc.shadowCascade == 1) shadowPosition = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
 

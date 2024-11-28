@@ -51,8 +51,9 @@ layout(location = 1) out vec3 objectNormal;
 layout(location = 2) out vec3 terrainNormal;
 layout(location = 3) out vec3 grassColor;
 layout(location = 4) out vec2 uv;
-layout(location = 5) out vec4 shadowLod0Position;
-layout(location = 6) out vec4 shadowLod1Position;
+layout(location = 5) out vec4 shadowPositions[2];
+//layout(location = 5) out vec4 shadowLod0Position;
+//layout(location = 6) out vec4 shadowLod1Position;
 //layout(location = 7) out float ao;
 
 #include "variables.glsl"
@@ -159,7 +160,20 @@ void main()
 
 	uv = vec2(inPosition.x * 10.0 + 0.5, inPosition.y);
 
-	
+	if (variables.shadowCascades == 1)
+	{
+		for (int i = 0; i < 2; i++)
+		{
+			shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
+		}
+		//shadowLod0Position = variables.shadowCascadeMatrix[1] * vec4(worldPosition, 1.0);
+		//shadowLod1Position = vec4(0);
+	}
+	//else
+	//{
+	//	shadowLod0Position = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
+	//	shadowLod1Position = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
+	//}
 
 	//grassColor = vec3(0.25, 0.6, 0.1);
 	//grassColor = vec3(0.0916, 0.0866, 0.0125) * 1.5;
@@ -176,8 +190,7 @@ void main()
 
 	gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
 
-	shadowLod0Position = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
-	shadowLod1Position = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
+	
 
 	//shadowPosition = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
 }

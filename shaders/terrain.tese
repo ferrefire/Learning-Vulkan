@@ -16,8 +16,9 @@ layout(push_constant, std430) uniform PushConstants
 layout(triangles, fractional_odd_spacing, cw) in;
 
 layout(location = 0) out vec3 worldPosition;
-layout(location = 1) out vec4 shadowLod0Position;
-layout(location = 2) out vec4 shadowLod1Position;
+layout(location = 1) out vec4 shadowPositions[2];
+//layout(location = 1) out vec4 shadowLod0Position;
+//layout(location = 2) out vec4 shadowLod1Position;
 //layout(location = 1) out mat3 tbn;
 
 #include "variables.glsl"
@@ -34,14 +35,18 @@ void main()
 
 	if (variables.shadowCascades == 1)
 	{
-		shadowLod0Position = variables.shadowCascadeMatrix * vec4(worldPosition, 1.0);
-		shadowLod1Position = vec4(0);
+		for (int i = 0; i < 2; i++)
+		{
+			shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
+		}
+		//shadowLod0Position = variables.shadowCascadeMatrix[1] * vec4(worldPosition, 1.0);
+		//shadowLod1Position = vec4(0);
 	}
-	else
-	{
-		shadowLod0Position = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
-		shadowLod1Position = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
-	}
+	//else
+	//{
+	//	shadowLod0Position = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
+	//	shadowLod1Position = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
+	//}
 	
 
 	gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
