@@ -147,4 +147,42 @@ float GetShadow(vec4 shadowSpace, int lod, int range)
 	return (GetShadow(shadowSpace, lod, range, 0.5));
 }
 
+vec2 BlendCascadedShadow(vec3 projectionCoordinates, int range)
+{
+	float shadow = 0.0;
+	float closest = 0.0;
+	vec2 texelSize = 1.0 / textureSize(shadowLod0Sampler, 0);
+
+	for(int x = -range; x <= range; ++x)
+	{
+	    for(int y = -range; y <= range; ++y)
+	    {
+	        float closestDepth = 0.0;
+			vec2 coords = projectionCoordinates.xy + vec2(x, y) * texelSize;
+
+			if (abs(coords.x - 0.5) > 0.5 || abs(coords.y - 0.5) > 0.5) continue;
+
+			closestDepth = textureLod(shadowLod0Sampler, coords, 0).r;
+			if (x == 0 && y == 0) closest = closestDepth;
+
+			shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
+	    }
+	}
+	if (range > 0) shadow /= pow((range * 2) + 1, 2);
+
+	return (vec2(shadow, closest));
+}
+
+float GetCascadedShadow(vec4 shadowSpace)
+{
+	vec3 projectionCoordinates = shadowSpace.xyz / shadowSpace.w;
+	if (abs(projectionCoordinates.x) > 1.0 || abs(projectionCoordinates.y) > 1.0 || abs(projectionCoordinates.z) > 1.0) return (0.0);
+	projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
+
+	vec2 blendResult = BlendCascadedShadow(projectionCoordinates, 0);
+	float shadow = blendResult.x;
+
+	return (shadow);
+}
+
 #endif

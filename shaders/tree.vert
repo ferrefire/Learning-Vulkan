@@ -68,9 +68,9 @@ void main()
 	//color = xx.y;
 
 	uint dataIndex = gl_InstanceIndex;
-	if (pc.treeLod > 0) dataIndex += treeVariables.treeLod0RenderCount;
-	if (pc.treeLod > 1) dataIndex += treeVariables.treeLod1RenderCount;
-	if (pc.treeLod > 2) dataIndex += treeVariables.treeLod2RenderCount;
+	if (pc.treeLod == 1) dataIndex += treeVariables.treeLod0RenderCount;
+	else if (pc.treeLod == 2) dataIndex += treeVariables.treeLod1RenderCount;
+	else if (pc.treeLod == 3) dataIndex += treeVariables.treeLod2RenderCount;
 
 	position = renderData[dataIndex].position;
 	rotation = renderData[dataIndex].rotscacol.x * 360.0;
@@ -98,6 +98,7 @@ void main()
 	//normal = inNormal;
     gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
 
-	shadowPosition = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
+	if (variables.shadowCascades == 1) shadowPosition = variables.shadowCascadeMatrix * vec4(worldPosition, 1.0);
+	else shadowPosition = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
 	//shadowPosition = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
 }

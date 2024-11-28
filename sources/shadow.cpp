@@ -22,7 +22,12 @@ void Shadow::Create()
 
 void Shadow::CreateShadowResources()
 {
-	//if (shadowTexture.image != nullptr || shadowTexture.imageMemory != nullptr || shadowTexture.imageView != nullptr)
+	if (trapezoidal) CreateTrapezoidResources();
+}
+
+void Shadow::CreateTrapezoidResources()
+{
+	// if (shadowTexture.image != nullptr || shadowTexture.imageMemory != nullptr || shadowTexture.imageView != nullptr)
 	//	throw std::runtime_error("cannot create shadow resources because they already exist");
 
 	ImageConfiguration imageLod0Config;
@@ -53,7 +58,7 @@ void Shadow::CreateShadowResources()
 
 	VkFramebufferCreateInfo lod0FramebufferInfo{};
 	lod0FramebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-	lod0FramebufferInfo.renderPass = shadowPass;
+	lod0FramebufferInfo.renderPass = shadowTrapezoidPass;
 	lod0FramebufferInfo.attachmentCount = 1;
 	lod0FramebufferInfo.pAttachments = &shadowLod0Texture.imageView;
 	lod0FramebufferInfo.width = shadowLod0Resolution;
@@ -67,7 +72,7 @@ void Shadow::CreateShadowResources()
 
 	VkFramebufferCreateInfo lod1FramebufferInfo{};
 	lod1FramebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-	lod1FramebufferInfo.renderPass = shadowPass;
+	lod1FramebufferInfo.renderPass = shadowTrapezoidPass;
 	lod1FramebufferInfo.attachmentCount = 1;
 	lod1FramebufferInfo.pAttachments = &shadowLod1Texture.imageView;
 	lod1FramebufferInfo.width = shadowLod1Resolution;
@@ -80,7 +85,49 @@ void Shadow::CreateShadowResources()
 	}
 }
 
+void Shadow::CreateCascadeResources()
+{
+	ImageConfiguration imageConfig;
+	imageConfig.width = shadowCascadeResolution;
+	imageConfig.height = shadowCascadeResolution;
+	imageConfig.format = Manager::currentDevice.FindDepthFormat();
+	imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	imageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
+	imageConfig.transitionLayout = LAYOUT_READ_ONLY;
+
+	SamplerConfiguration samplerConfig;
+	samplerConfig.repeatMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+	samplerConfig.borderColor = VK_BORDER_COLOR_INT_OPAQUE_WHITE;
+	samplerConfig.anisotrophic = VK_FALSE;
+
+	shadowCascadeTextures.resize(cascadeCount);
+	shadowCascadeFrameBuffers.resize(cascadeCount);
+	for (int i = 0; i < cascadeCount; i++)
+	{
+		shadowCascadeTextures[i].CreateImage(imageConfig, samplerConfig);
+
+		VkFramebufferCreateInfo cascadeFramebufferInfo{};
+		cascadeFramebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		cascadeFramebufferInfo.renderPass = shadowCascadePass;
+		cascadeFramebufferInfo.attachmentCount = 1;
+		cascadeFramebufferInfo.pAttachments = &shadowCascadeTextures[i].imageView;
+		cascadeFramebufferInfo.width = shadowCascadeResolution;
+		cascadeFramebufferInfo.height = shadowCascadeResolution;
+		cascadeFramebufferInfo.layers = 1;
+
+		if (vkCreateFramebuffer(Manager::currentDevice.logicalDevice, &cascadeFramebufferInfo, nullptr, &shadowCascadeFrameBuffers[i]) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create shadow cascade framebuffer");
+		}
+	}
+}
+
 void Shadow::CreateShadowPass()
+{
+	if (trapezoidal) CreateTrapezoidPass();
+}
+
+void Shadow::CreateTrapezoidPass()
 {
 	VkAttachmentDescription depthAttachment{};
 	depthAttachment.format = Manager::currentDevice.FindDepthFormat();
@@ -112,9 +159,45 @@ void Shadow::CreateShadowPass()
 	// renderPassInfo.dependencyCount = 1;
 	// renderPassInfo.pDependencies = &dependency;
 
-	if (vkCreateRenderPass(Manager::currentDevice.logicalDevice, &renderPassInfo, nullptr, &shadowPass) != VK_SUCCESS)
+	if (vkCreateRenderPass(Manager::currentDevice.logicalDevice, &renderPassInfo, nullptr, &shadowTrapezoidPass) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create shadow pass");
+	}
+}
+
+void Shadow::CreateCascadePass()
+{
+	VkAttachmentDescription depthAttachment{};
+	depthAttachment.format = Manager::currentDevice.FindDepthFormat();
+	depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	depthAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	VkAttachmentReference depthAttachmentRef{};
+	depthAttachmentRef.attachment = 0;
+	depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+	std::vector<VkAttachmentDescription> attachments(1);
+	attachments[0] = depthAttachment;
+
+	VkSubpassDescription subpass{};
+	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+	VkRenderPassCreateInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+	renderPassInfo.pAttachments = attachments.data();
+	renderPassInfo.subpassCount = 1;
+	renderPassInfo.pSubpasses = &subpass;
+
+	if (vkCreateRenderPass(Manager::currentDevice.logicalDevice, &renderPassInfo, nullptr, &shadowCascadePass) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create cascade shadow pass");
 	}
 }
 
@@ -139,17 +222,35 @@ void Shadow::DestroyShadowResources()
 
 	shadowLod0Texture.Destroy();
 	shadowLod1Texture.Destroy();
+
+	for (VkFramebuffer &frameBuffer : shadowCascadeFrameBuffers)
+	{
+		vkDestroyFramebuffer(Manager::currentDevice.logicalDevice, frameBuffer, nullptr);
+	}
+	shadowCascadeFrameBuffers.clear();
+	for (Texture &texture : shadowCascadeTextures)
+	{
+		texture.Destroy();
+	}
+	shadowCascadeTextures.clear();
 }
 
 void Shadow::DestroyShadowPass()
 {
-	if (!shadowPass) return;
+	if (shadowTrapezoidPass)
+	{
+		vkDestroyRenderPass(Manager::currentDevice.logicalDevice, shadowTrapezoidPass, nullptr);
+		shadowTrapezoidPass = nullptr;
+	}
 
-	vkDestroyRenderPass(Manager::currentDevice.logicalDevice, shadowPass, nullptr);
-	shadowPass = nullptr;
+	if (shadowCascadePass)
+	{
+		vkDestroyRenderPass(Manager::currentDevice.logicalDevice, shadowCascadePass, nullptr);
+		shadowCascadePass = nullptr;
+	}
 }
 
-glm::mat4 Shadow::GetShadowView(int lod, float dis)
+glm::mat4 Shadow::GetTrapezoidView(int lod, float dis)
 {
 	glm::vec3 direction = Manager::shaderVariables.lightDirection;
 
@@ -171,6 +272,21 @@ glm::mat4 Shadow::GetShadowView(int lod, float dis)
 		shadowLod1View = glm::lookAt(position, position + front, up);
 		return (shadowLod1View);
 	}
+}
+
+glm::mat4 Shadow::GetCascadeView()
+{
+	glm::vec3 direction = Manager::shaderVariables.lightDirection;
+
+	glm::vec3 focus = Manager::camera.Position();
+
+	glm::vec3 front = glm::normalize(-direction);
+	glm::vec3 side = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
+	glm::vec3 up = glm::normalize(glm::cross(side, front));
+
+	glm::vec3 position = focus + direction * shadowCascadeDistance;
+	shadowCascadeView = glm::lookAt(position, position + front, up);
+	return (shadowCascadeView);
 }
 
 glm::mat4 Shadow::CreateBoundedProjection(const glm::mat4 &shadowView, float near, float far, bool nearOnly)
@@ -688,7 +804,7 @@ glm::mat4 ComputeTrapezoidalMatrix(const Trapezoid &trapezoid, const glm::vec2 &
 	return (NT);
 }
 
-glm::mat4 Shadow::GetShadowProjection(int lod)
+glm::mat4 Shadow::GetTrapezoidProjection(int lod)
 {
 	if (lod == 0)
 	{
@@ -717,6 +833,14 @@ glm::mat4 Shadow::GetShadowProjection(int lod)
 		//shadowLod1Projection = glm::perspective(glm::radians(90.0f), 1.0f, 1.0f, shadowLod1Distance * 2);
 		//return (shadowLod1Projection);
 	}
+}
+
+glm::mat4 Shadow::GetCascadeProjection()
+{
+	shadowCascadeProjection = glm::ortho(-shadowCascadeDistance, shadowCascadeDistance, -shadowCascadeDistance,
+		shadowCascadeDistance, 1.0f, shadowCascadeDistance * 2.0f);
+	shadowCascadeProjection[1][1] *= -1;
+	return (shadowCascadeProjection);
 }
 
 glm::vec2 Shadow::ComputeQ(const Line &centerLine, const Line &topLine, float delta, int lod, float far)
@@ -762,23 +886,25 @@ glm::vec2 Shadow::ComputeQ(const Line &centerLine, const Line &topLine, float de
 	return (q);
 }
 
-glm::mat4 Shadow::GetShadowTransformation(int lod)
+glm::mat4 Shadow::GetTrapezoidTransformation(int lod)
 {
-	GetShadowView(lod, 1.0f);
-	GetShadowProjection(lod);
+	GetTrapezoidView(lod, 1.0f);
+	GetTrapezoidProjection(lod);
 
 	float maxDepth = Data::GetData().frustumIntersect;
 	float frustumFar;
 	std::vector<glm::vec4> frustumCorners;
 	if (lod == 0)
 	{
-		frustumFar = glm::min(shadowLod0Distance * 0.5f, glm::clamp(maxDepth, shadowLod0Distance * 0.375f, shadowLod0Distance));
+		//frustumFar = glm::min(shadowLod0Distance * 0.5f, glm::clamp(maxDepth, shadowLod0Distance * 0.375f, shadowLod0Distance));
+		frustumFar = shadowLod0Distance * 0.5f;
 		frustumCorners = Manager::camera.GetFrustumCorners(1.0f, frustumFar);
 	}
 	else if (lod == 1)
 	{
 		//frustumCorners = Manager::camera.GetFrustumCorners(shadowLod0Distance * 0.5f, shadowLod1Distance * 0.5f);
-		frustumFar = glm::min(shadowLod1Distance * 0.5f, glm::clamp(maxDepth, shadowLod1Distance * 0.25f, shadowLod1Distance));
+		//frustumFar = glm::min(shadowLod1Distance * 0.5f, glm::clamp(maxDepth, shadowLod1Distance * 0.25f, shadowLod1Distance));
+		frustumFar = shadowLod1Distance * 0.5f;
 		frustumCorners = Manager::camera.GetFrustumCorners(1.0f, frustumFar);
 	}
 
@@ -846,7 +972,7 @@ glm::mat4 Shadow::GetShadowTransformation(int lod)
 			//range = glm::clamp(depth / 100.0f, 0.01f, 1.0f);
 			float depth = Data::GetData().frustumIntersectAverage;
 			range = glm::clamp(depth / (shadowLod0Distance * 0.5f), 0.01f, 0.2f);
-			shadowLod0View = GetShadowView(0, range);
+			shadowLod0View = GetTrapezoidView(0, range);
 			shadowLod0Projection = CreateBoundedProjection(shadowLod0View, 1.0f, shadowLod0Distance * range, false);
 			shadowLod0Transformation = glm::mat4(1.0f);
 			return (shadowLod0Transformation);
@@ -862,7 +988,7 @@ glm::mat4 Shadow::GetShadowTransformation(int lod)
 			float depthRange = glm::clamp(depth / (shadowLod1Distance * 0.5f), 0.1f, 1.0f);
 			//range = glm::min(heightRange, depthRange);
 			range = depthRange;
-			shadowLod1View = GetShadowView(1, range);
+			shadowLod1View = GetTrapezoidView(1, range);
 			shadowLod1Projection = CreateBoundedProjection(shadowLod1View, 1.0f, shadowLod1Distance * range, false);
 			shadowLod1Transformation = glm::mat4(1.0f);
 			return (shadowLod1Transformation);
@@ -977,7 +1103,18 @@ glm::mat4 Shadow::GetShadowTransformation(int lod)
 	return (glm::mat4(1.0f));
 }
 
-VkRenderPass Shadow::shadowPass = nullptr;
+int Shadow::cascadeCount = 1;
+VkRenderPass Shadow::shadowCascadePass = nullptr;
+std::vector<VkFramebuffer> Shadow::shadowCascadeFrameBuffers;
+std::vector<Texture> Shadow::shadowCascadeTextures;
+glm::mat4 Shadow::shadowCascadeView = glm::mat4(1);
+glm::mat4 Shadow::shadowCascadeProjection = glm::mat4(1);
+int Shadow::shadowCascadeResolution = 4096;
+float Shadow::shadowCascadeDistance = 100;
+
+bool Shadow::trapezoidal = true;
+
+VkRenderPass Shadow::shadowTrapezoidPass = nullptr;
 VkFramebuffer Shadow::shadowLod0FrameBuffer = nullptr;
 VkFramebuffer Shadow::shadowLod1FrameBuffer = nullptr;
 Texture Shadow::shadowLod0Texture;

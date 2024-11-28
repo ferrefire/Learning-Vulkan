@@ -171,8 +171,16 @@ void Manager::CreateDescriptor()
 	descriptorConfig[4].type = IMAGE_SAMPLER;
 	descriptorConfig[4].stages = FRAGMENT_STAGE;
 	descriptorConfig[4].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[4].imageInfo.imageView = Shadow::shadowLod0Texture.imageView;
-	descriptorConfig[4].imageInfo.sampler = Shadow::shadowLod0Texture.sampler;
+	if (Shadow::trapezoidal)
+	{
+		descriptorConfig[4].imageInfo.imageView = Shadow::shadowLod0Texture.imageView;
+		descriptorConfig[4].imageInfo.sampler = Shadow::shadowLod0Texture.sampler;
+	}
+	else
+	{
+		descriptorConfig[4].imageInfo.imageView = Shadow::shadowCascadeTextures[0].imageView;
+		descriptorConfig[4].imageInfo.sampler = Shadow::shadowCascadeTextures[0].sampler;
+	}
 
 	descriptorConfig[5].type = IMAGE_SAMPLER;
 	descriptorConfig[5].stages = FRAGMENT_STAGE;
@@ -276,26 +284,20 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.projection = camera.Projection();
 	shaderVariables.viewMatrix = shaderVariables.projection * shaderVariables.view;
 	shaderVariables.frustumMatrix = glm::inverse(camera.GetTempProjection(50.0f, 250.0f) * shaderVariables.view);
-	//shaderVariables.shadowLod0View = Shadow::GetShadowView(0);
-	//shaderVariables.shadowLod0Projection = Shadow::shadowLod0Projection;
-	//shaderVariables.shadowLod0Matrix = shaderVariables.shadowLod0Projection * shaderVariables.shadowLod0View;
-	//shaderVariables.shadowLod0Matrix = Shadow::GetShadowProjection(0) * Shadow::GetShadowView(0);
-	Shadow::GetShadowTransformation(0);
-	shaderVariables.shadowLod0Matrix = Shadow::shadowLod0Transformation * Shadow::shadowLod0Projection * Shadow::shadowLod0View;
-	//shaderVariables.shadowLod1View = Shadow::GetShadowView(1);
-	//shaderVariables.shadowLod1Projection = Shadow::GetShadowProjection(1);
-	Shadow::GetShadowTransformation(1);
-	shaderVariables.shadowLod1Matrix = Shadow::shadowLod1Transformation * Shadow::shadowLod1Projection * Shadow::shadowLod1View;
-	//shaderVariables.shadowLod1Projection = Shadow::shadowLod1Projection;
-	//shaderVariables.shadowLod1Matrix = Shadow::shadowLod1Projection * Shadow::shadowLod1View;
-	//shaderVariables.shadowLod1Matrix = Shadow::GetShadowProjection(1) * Shadow::GetShadowView(1);
-	shaderVariables.cullMatrix = Culling::cullProjection * shaderVariables.view;
 
-	//shaderVariables.shadowLod0View = Shadow::GetShadowView(0);
-	//shaderVariables.shadowLod1View = Shadow::GetShadowView(1);
-	//shaderVariables.shadowLod0Projection = Shadow::shadowLod0Projection;
-	//shaderVariables.shadowLod1Projection = Shadow::shadowLod1Projection;
-	//shaderVariables.cullProjection = Culling::cullProjection;
+	if (Shadow::trapezoidal)
+	{
+		Shadow::GetTrapezoidTransformation(0);
+		shaderVariables.shadowLod0Matrix = Shadow::shadowLod0Transformation * Shadow::shadowLod0Projection * Shadow::shadowLod0View;
+		Shadow::GetTrapezoidTransformation(1);
+		shaderVariables.shadowLod1Matrix = Shadow::shadowLod1Transformation * Shadow::shadowLod1Projection * Shadow::shadowLod1View;
+	}
+	else
+	{
+		shaderVariables.shadowCascadeMatrix = Shadow::GetCascadeProjection() * Shadow::GetCascadeView();
+	}
+
+	shaderVariables.cullMatrix = Culling::cullProjection * shaderVariables.view;
 
 	shaderVariables.viewPosition = camera.Position();
 	shaderVariables.viewDirection = camera.Front();
@@ -312,20 +314,13 @@ void Manager::UpdateShaderVariables()
 
 	shaderVariables.occlusionCulling = settings.occlussionCulling ? 1 : 0;
 	shaderVariables.shadows = settings.shadows ? 1 : 0;
+	shaderVariables.shadowCascades = Shadow::trapezoidal ? 0 : 1;
 
 	std::vector<glm::vec4> frustumCorners = camera.GetFrustumCorners(1.0f, 1000.0f);
 	shaderVariables.frustumCorner1 = frustumCorners[4];
 	shaderVariables.frustumCorner2 = frustumCorners[5];
 	shaderVariables.frustumCorner3 = frustumCorners[6];
 	shaderVariables.frustumCorner4 = frustumCorners[7];
-	//if (Time::newSecond)
-	//{
-	//	Utilities::PrintVec(shaderVariables.frustumCorner1);
-	//	Utilities::PrintVec(shaderVariables.frustumCorner2);
-	//	Utilities::PrintVec(shaderVariables.frustumCorner3);
-	//	Utilities::PrintVec(shaderVariables.frustumCorner4);
-	//	std::cout << std::endl;
-	//}
 
 	memcpy(shaderVariableBuffers[currentFrame].mappedBuffer, &shaderVariables, sizeof(shaderVariables));
 }

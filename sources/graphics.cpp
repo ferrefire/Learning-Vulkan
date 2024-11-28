@@ -134,9 +134,15 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 
 void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
+	if (Shadow::trapezoidal) RenderTrapezoidShadows(commandBuffer, imageIndex);
+	else RenderCascadeShadows(commandBuffer, imageIndex);
+}
+
+void Graphics::RenderTrapezoidShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+{
 	VkRenderPassBeginInfo lod0RenderPassInfo{};
 	lod0RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	lod0RenderPassInfo.renderPass = Shadow::shadowPass;
+	lod0RenderPassInfo.renderPass = Shadow::shadowTrapezoidPass;
 	lod0RenderPassInfo.framebuffer = Shadow::shadowLod0FrameBuffer;
 	lod0RenderPassInfo.renderArea.offset = {0, 0};
 	lod0RenderPassInfo.renderArea.extent.width = Shadow::shadowLod0Resolution;
@@ -174,7 +180,7 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	{
 		VkRenderPassBeginInfo lod1RenderPassInfo{};
 		lod1RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		lod1RenderPassInfo.renderPass = Shadow::shadowPass;
+		lod1RenderPassInfo.renderPass = Shadow::shadowTrapezoidPass;
 		lod1RenderPassInfo.framebuffer = Shadow::shadowLod1FrameBuffer;
 		lod1RenderPassInfo.renderArea.offset = {0, 0};
 		lod1RenderPassInfo.renderArea.extent.width = Shadow::shadowLod1Resolution;
@@ -205,6 +211,45 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 
 		vkCmdEndRenderPass(commandBuffer);
 	}
+}
+
+void Graphics::RenderCascadeShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+{
+	VkRenderPassBeginInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassInfo.renderPass = Shadow::shadowCascadePass;
+	renderPassInfo.framebuffer = Shadow::shadowCascadeFrameBuffers[0];
+	renderPassInfo.renderArea.offset = {0, 0};
+	renderPassInfo.renderArea.extent.width = Shadow::shadowCascadeResolution;
+	renderPassInfo.renderArea.extent.height = Shadow::shadowCascadeResolution;
+
+	std::vector<VkClearValue> clearValues(1);
+	clearValues[0].depthStencil = {1.0f, 0};
+
+	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+	renderPassInfo.pClearValues = clearValues.data();
+
+	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = Shadow::shadowCascadeResolution;
+	viewport.height = Shadow::shadowCascadeResolution;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+	VkRect2D scissor{};
+	scissor.offset = {0, 0};
+	scissor.extent.width = Shadow::shadowCascadeResolution;
+	scissor.extent.height = Shadow::shadowCascadeResolution;
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+	Grass::RecordShadowCommands(commandBuffer, 0);
+	Trees::RecordShadowCommands(commandBuffer, 0);
+
+	vkCmdEndRenderPass(commandBuffer);
 }
 
 void Graphics::RenderCulling(VkCommandBuffer commandBuffer, uint32_t imageIndex)

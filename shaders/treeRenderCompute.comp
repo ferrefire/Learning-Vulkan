@@ -177,8 +177,8 @@ void main()
 
 	if (lod == 0) index = atomicAdd(countData.lod0Count, 1);
 	else if (lod == 1) index = atomicAdd(countData.lod1Count, 1) + treeVariables.treeLod0RenderCount;
-	else if (lod == 2) index = atomicAdd(countData.lod2Count, 1) + treeVariables.treeLod0RenderCount + treeVariables.treeLod1RenderCount;
-	else if (lod == 3) index = atomicAdd(countData.lod3Count, 1) + treeVariables.treeLod0RenderCount + treeVariables.treeLod1RenderCount + treeVariables.treeLod2RenderCount;
+	else if (lod == 2) index = atomicAdd(countData.lod2Count, 1) + treeVariables.treeLod1RenderCount;
+	else if (lod == 3) index = atomicAdd(countData.lod3Count, 1) + treeVariables.treeLod2RenderCount;
 
 	renderData[index].position = worldPosition - variables.viewPosition;
 	renderData[index].rotscacol = vec3(rotation, scale, color);

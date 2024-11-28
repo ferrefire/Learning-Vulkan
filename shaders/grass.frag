@@ -31,13 +31,18 @@ void main()
 	float shadow = 0.0;
 	if (variables.shadows == 1)
 	{
-		//shadow = clamp(1.0 - GetShadow(shadowLod1Position, 1, 0), 0.3, 1.0);
-		shadow = GetShadow(shadowLod1Position, 1, 0);
-		if (shadow < 1.0) //change for better performance
+		if (variables.shadowCascades == 1)
 		{
-			//float tempShadow = clamp(1.0 - GetShadow(shadowLod0Position, 0, -2), 0.3, 1.0);
-			float tempShadow = GetShadow(shadowLod0Position, 0, -2);
-			if (tempShadow > shadow) shadow = tempShadow;
+			shadow = GetCascadedShadow(shadowLod0Position);
+		}
+		else
+		{
+			shadow = GetShadow(shadowLod1Position, 1, -1, 0.75);
+			if (shadow < 1.0) //change for better performance
+			{
+				float tempShadow = GetShadow(shadowLod0Position, 0, -2);
+				if (tempShadow > shadow) shadow = tempShadow;
+			}
 		}
 	}
 

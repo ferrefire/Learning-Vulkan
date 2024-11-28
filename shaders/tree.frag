@@ -20,7 +20,12 @@ void main()
 	float shadow = 1.0;
 	vec3 normal = normalize(inNormal);
 	//if (variables.shadows == 1) shadow = clamp(1.0 - GetShadow(shadowPosition, 1, 0), 0.3, 1.0);
-	if (variables.shadows == 1) shadow = GetShadow(shadowPosition, 1, -1, 0.25);
+	if (variables.shadows == 1)
+	{
+		if (variables.shadowCascades == 1) shadow = GetCascadedShadow(shadowPosition);
+		else shadow = GetShadow(shadowPosition, 1, -1, 0.25);
+	}
+	
 	vec3 diffuse = DiffuseLighting(normal, shadow, 0.025);
 	vec3 texColor = texture(treeDiffuseSampler, inCoord * 0.25).xyz;
 	vec3 combinedColor = diffuse * texColor;

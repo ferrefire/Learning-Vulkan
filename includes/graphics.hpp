@@ -33,6 +33,8 @@ class Graphics
 		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		void RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		void RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		void RenderTrapezoidShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		void RenderCascadeShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		void RenderCulling(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		bool CheckValidationLayerSupport();
 		std::vector<const char*> GetRequiredExtensions();
