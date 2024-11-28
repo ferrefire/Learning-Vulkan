@@ -27,7 +27,7 @@ struct BranchConfiguration
 	int splitCount = 3;
 	float splitChance = 0;
 	float fallChance = 0;
-	int blendRange = 4;
+	int blendRange = 2;
 	float minSize = 0.1f;
 	float angleRandomness = 0.25f;
 	float reach = 2.0f;

@@ -200,21 +200,24 @@ void main()
 	//vec3 textureColor = BlendSteepness(steepness, distanceSqrd) * 1.5;
 	vec3 textureColor = BlendSteepness(steepness, distanceSqrd);
 
-	vec3 diffuse = DiffuseLighting(terrainNormal, vec3(1));
-	
-	//vec4 shadowSpace = variables.shadowProjection * variables.shadowView * vec4(inPosition, 1.0);
-	float shadow = 1.0;
+	float shadow = 0.0;
 	if (variables.shadows == 1)
 	{
-		shadow = clamp(1.0 - GetShadow(shadowLod1Position, 1, -2), 0.3, 1.0);
-		if (shadow > 0.3)
+		//shadow = clamp(1.0 - GetShadow(shadowLod1Position, 1, -2), 0.3, 1.0);
+		shadow = GetShadow(shadowLod1Position, 1, -2);
+		if (shadow < 1.0)
 		{
-			float tempShadow = clamp(1.0 - GetShadow(shadowLod0Position, 0, -1), 0.3, 1.0);
-			if (tempShadow < shadow) shadow = tempShadow;
+			//float tempShadow = clamp(1.0 - GetShadow(shadowLod0Position, 0, -1), 0.3, 1.0);
+			float tempShadow = GetShadow(shadowLod0Position, 0, -1);
+			if (tempShadow > shadow) shadow = tempShadow;
 		}
 	}
 
-	vec3 combinedColor = textureColor * diffuse * shadow;
+	vec3 diffuse = DiffuseLighting(terrainNormal, shadow);
+	
+	//vec4 shadowSpace = variables.shadowProjection * variables.shadowView * vec4(inPosition, 1.0);
+
+	vec3 combinedColor = textureColor * diffuse;
 	//vec3 endColor = Fog(combinedColor, depth);
 	vec3 endColor = GroundFog(combinedColor, depth, inPosition.y);
 

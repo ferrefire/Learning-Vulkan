@@ -28,18 +28,20 @@ void main()
 	//outColor = vec4(grassColor, 1.0);
 	//return;
 
-	float shadow = 1.0;
+	float shadow = 0.0;
 	if (variables.shadows == 1)
 	{
-		shadow = clamp(1.0 - GetShadow(shadowLod1Position, 1, 0), 0.3, 1.0);
-		if (shadow > 0.3)
+		//shadow = clamp(1.0 - GetShadow(shadowLod1Position, 1, 0), 0.3, 1.0);
+		shadow = GetShadow(shadowLod1Position, 1, 0);
+		if (shadow < 1.0) //change for better performance
 		{
-			float tempShadow = clamp(1.0 - GetShadow(shadowLod0Position, 0, -2), 0.3, 1.0);
-			if (tempShadow < shadow) shadow = tempShadow;
+			//float tempShadow = clamp(1.0 - GetShadow(shadowLod0Position, 0, -2), 0.3, 1.0);
+			float tempShadow = GetShadow(shadowLod0Position, 0, -2);
+			if (tempShadow > shadow) shadow = tempShadow;
 		}
 	}
 
-	vec3 bladeDiffuse = DiffuseLighting(normal, vec3(1), 0.0);
+	vec3 bladeDiffuse = DiffuseLighting(normal, shadow, 0.0, ambient);
 
 	if (!gl_FrontFacing) normal *= -1;
 
@@ -53,22 +55,22 @@ void main()
 	//}
 	vec3 bladeColor = mix(grassColor.xyz * mix(0.3, 0.5, ao), grassColor.xyz, uv.y);
 
-	vec3 terrainDiffuse = DiffuseLighting(terrainNormal, vec3(1), 0.1);
+	vec3 terrainDiffuse = DiffuseLighting(terrainNormal, shadow);
 	
-	vec3 diffuse = clamp(terrainDiffuse * 0.9 + bladeDiffuse, vec3(0.0), vec3(1.0));
+	vec3 diffuse = clamp(terrainDiffuse * 0.9 + bladeDiffuse, vec3(0.0), lightColor);
 	vec3 combinedColor = (diffuse * bladeColor);
 
-	if (shadow >= 1.0)
+	if (shadow == 0.0)
 	{
 		vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
 		vec3 bladeSpecular = SpecularLighting(normal, viewDirection, 16);
 		vec3 terrainSpecular = SpecularLighting(terrainNormal, viewDirection, 32);
 		combinedColor += (bladeSpecular * terrainSpecular);
 	}
-	else
-	{
-		combinedColor *= shadow;
-	}
+	//else
+	//{
+	//	combinedColor *= shadow;
+	//}
 
 	outColor = vec4(combinedColor, 1.0);
 }

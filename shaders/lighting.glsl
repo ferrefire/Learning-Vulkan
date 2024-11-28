@@ -4,22 +4,35 @@
 layout(set = 0, binding = 4) uniform sampler2D shadowLod0Sampler;
 layout(set = 0, binding = 5) uniform sampler2D shadowLod1Sampler;
 
-const vec3 lightColor = vec3(1);
+//const vec3 lightColor = vec3(2);
+const vec3 lightColor = vec3(1.0, 0.933, 0.89) * 2.0;
 //const vec3 lightDirection = vec3(0.25, 0.5, 0.25);
+
+const float ambient = 0.1;
 
 #include "depth.glsl"
 
-vec3 DiffuseLighting(vec3 normal, vec3 color, float ambient)
+vec3 DiffuseLighting(vec3 normal, float shadow, float ao, float ao2)
 {
-	float diffuseStrength = max(dot(normal, variables.lightDirection), ambient);
-	vec3 diffuse = color * diffuseStrength;
+	float diffuseStrength = mix(max(dot(normal, variables.lightDirection), ao), ao2, shadow);
+	vec3 diffuse = lightColor * diffuseStrength;
 
 	return diffuse;
 }
 
-vec3 DiffuseLighting(vec3 normal, vec3 color)
+vec3 DiffuseLighting(vec3 normal, float shadow, float ao)
 {
-	return DiffuseLighting(normal, color, 0.1);
+	return DiffuseLighting(normal, shadow, ao, ao);
+}
+
+vec3 DiffuseLighting(vec3 normal, float shadow)
+{
+	return DiffuseLighting(normal, shadow, ambient);
+}
+
+vec3 DiffuseLighting(vec3 normal)
+{
+	return DiffuseLighting(normal, 0.0, ambient);
 }
 
 vec3 SpecularLighting(vec3 normal, vec3 viewDirection, float shininess)

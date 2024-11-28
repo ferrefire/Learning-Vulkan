@@ -17,12 +17,16 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
-	vec3 diffuse = DiffuseLighting(inNormal, vec3(1), 0.025);
+	float shadow = 1.0;
+	vec3 normal = normalize(inNormal);
+	//if (variables.shadows == 1) shadow = clamp(1.0 - GetShadow(shadowPosition, 1, 0), 0.3, 1.0);
+	if (variables.shadows == 1) shadow = GetShadow(shadowPosition, 1, -1, 0.25);
+	vec3 diffuse = DiffuseLighting(normal, shadow, 0.025);
 	vec3 texColor = texture(treeDiffuseSampler, inCoord * 0.25).xyz;
 	vec3 combinedColor = diffuse * texColor;
-	float shadow = 1.0;
-	if (variables.shadows == 1) shadow = clamp(1.0 - GetShadow(shadowPosition, 1, 0), 0.3, 1.0);
-	combinedColor *= shadow;
+	
+	
+	//combinedColor *= shadow;
 	combinedColor = GroundFog(combinedColor, GetDepth(gl_FragCoord.z), worldPosition.y);
 
 	outColor = vec4(combinedColor, 1.0);

@@ -787,7 +787,8 @@ Shape BranchConfiguration::Generate()
 		if (!main) subOffset = Utilities::RotateVec(subOffset, subAngle, glm::vec3(1, 0, 0));
 		subOffset = Utilities::RotateVec(subOffset, sideAngle, glm::vec3(0, 1, 0));
 
-		int subBlendRange = glm::floor(blendRange * 0.75f);
+		//int subBlendRange = glm::floor(blendRange * 0.75f);
+		int subBlendRange = blendRange;
 
 		BranchConfiguration subBranchConfig;
 		subBranchConfig.seed = seed;
@@ -825,7 +826,7 @@ Shape BranchConfiguration::Generate()
 		//}
 
 		Shape subBranch = subBranchConfig.Generate();
-		branch.Merge(subBranch, main ? 2 : 0, blendRange);
+		branch.Merge(subBranch, main ? 1 : 0, blendRange);
 
 		// futures[i] = promises[i].get_future();
 		// threads[i] = std::thread(GenerateBranchThreaded, subResolution, subBase, subOffset, subScale, subAngles, tsbc, false, &promises[i]);

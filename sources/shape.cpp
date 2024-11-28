@@ -210,7 +210,7 @@ void Shape::SetShape(int type, int resolution)
 		{
 			centerMergePoint = positions.size();
 			positions.push_back(TopMergePointsCenter() + glm::vec3(0, 0.05, 0));
-			if (normal) normals.push_back(glm::normalize(glm::vec3(0, 0, 0)));
+			if (normal) normals.push_back(glm::vec3(0, 1, 0));
 			if (coordinate) coordinates.push_back(glm::vec2(1));
 			//coordinates.push_back(glm::vec2(0, 1));
 		}
@@ -326,7 +326,7 @@ void Shape::Merge(Shape &joinShape, int mainBlendRange, int joinBlendRange)
 		indices.push_back(mergeTopPoints[mi2]);
 
 		int mergeJoinRange = glm::clamp(joinBlendRange, 1, joinShape.createResolution);
-		int mergeMainRange = glm::clamp(mainBlendRange, 1, createResolution);
+		int mergeMainRange = glm::clamp(mainBlendRange, 0, createResolution);
 		float mergeAmount = 1.0 / ((mergeJoinRange + mergeMainRange) + 1);
 
 		glm::vec3 direction = joinShape.positions[joinShape.mergeBottomPoints[i1]] - positions[mergeTopPoints[mi1]];
