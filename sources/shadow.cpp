@@ -308,11 +308,6 @@ glm::mat4 Shadow::CreateBoundedProjection(const glm::mat4 &shadowView, float nea
 		frustumCornersInLightSpace.push_back(shadowView * frustumCorners[i]);
 	}
 
-	//for (const glm::vec4 &corner : frustumCorners)
-	//{
-	//	frustumCornersInLightSpace.push_back(shadowView * corner);
-	//}
-
 	glm::vec3 min(std::numeric_limits<float>::max());
 	glm::vec3 max(std::numeric_limits<float>::lowest());
 
@@ -323,7 +318,13 @@ glm::mat4 Shadow::CreateBoundedProjection(const glm::mat4 &shadowView, float nea
 		max = glm::max(max, pos);
 	}
 
+	//float zNear = min.z;
+	//float zFar = max.z;
+	//min.z = 0.0f;
+	//max.z = zFar - zNear;
+
 	return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, far * depthMult);
+	//return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, max.z * depthMult);
 }
 
 float Cross(const Point2D &O, const Point2D &A, const Point2D &B)
@@ -848,7 +849,27 @@ void Shadow::SetCascadeProjections()
 	for (int i = 0; i < cascadeCount; i++)
 	{
 		shadowCascadeProjections[i] = CreateBoundedProjection(shadowCascadeViews[i], 1.0f, shadowCascadeDistances[i], (i == 0 ? 8.0f : 2.0f));
+		//shadowCascadeProjections[i][1][1] *= -1;
 	}
+
+	/*std::vector<glm::vec4> frustumCornersInLightSpace;
+
+	for (int i = 0; i < 4; i++)
+	{
+		frustumCornersInLightSpace.push_back(shadowCascadeViews[0] * glm::vec4(Manager::cameraIntersects[i], 1.0f));
+	}
+
+	glm::vec3 min(std::numeric_limits<float>::max());
+	glm::vec3 max(std::numeric_limits<float>::lowest());
+
+	for (const glm::vec4 &corner : frustumCornersInLightSpace)
+	{
+		glm::vec3 pos = glm::vec3(corner);
+		min = glm::min(min, pos);
+		max = glm::max(max, pos);
+	}
+
+	shadowCascadeProjections[0] = glm::ortho(min.x, max.x, min.y, max.y, 1.0f, shadowCascadeDistances[0] * 8.0f);*/
 }
 
 glm::vec2 Shadow::ComputeQ(const Line &centerLine, const Line &topLine, float delta, int lod, float far)
@@ -899,7 +920,8 @@ glm::mat4 Shadow::GetTrapezoidTransformation(int lod)
 	GetTrapezoidView(lod, 1.0f);
 	GetTrapezoidProjection(lod);
 
-	float maxDepth = Data::GetData().frustumIntersect;
+	//float maxDepth = Data::GetData().frustumIntersect;
+	float maxDepth = 0;
 	float frustumFar;
 	std::vector<glm::vec4> frustumCorners;
 	if (lod == 0)
@@ -978,7 +1000,9 @@ glm::mat4 Shadow::GetTrapezoidTransformation(int lod)
 			//range = glm::clamp(height / 50.0f, 0.01f, 1.0f);
 			//float depth = Data::GetData().frustumIntersectAverage;
 			//range = glm::clamp(depth / 100.0f, 0.01f, 1.0f);
-			float depth = Data::GetData().frustumIntersectAverage;
+
+			//float depth = Data::GetData().frustumIntersectAverage;
+			float depth = 0;
 			range = glm::clamp(depth / (shadowLod0Distance * 0.5f), 0.01f, 0.2f);
 			shadowLod0View = GetTrapezoidView(0, range);
 			shadowLod0Projection = CreateBoundedProjection(shadowLod0View, 1.0f, shadowLod0Distance * range, false);
@@ -992,7 +1016,9 @@ glm::mat4 Shadow::GetTrapezoidTransformation(int lod)
 			//float height = Manager::camera.Position().y - Data::GetData().viewHeight * 5000.0f;
 			//float heightRange = glm::clamp(height / 100.0f, 0.05f, 1.0f);
 			//heightRange = 1.0f - pow(1.0f - heightRange, 2.0f);
-			float depth = Data::GetData().frustumIntersectAverage;
+
+			// float depth = Data::GetData().frustumIntersectAverage;
+			float depth = 0;
 			float depthRange = glm::clamp(depth / (shadowLod1Distance * 0.5f), 0.1f, 1.0f);
 			//range = glm::min(heightRange, depthRange);
 			range = depthRange;
@@ -1117,8 +1143,8 @@ std::vector<VkFramebuffer> Shadow::shadowCascadeFrameBuffers;
 std::vector<Texture> Shadow::shadowCascadeTextures;
 std::vector<glm::mat4> Shadow::shadowCascadeViews;
 std::vector<glm::mat4> Shadow::shadowCascadeProjections;
-std::vector<float> Shadow::shadowCascadeDistances = {25, 100};
-std::vector<int> Shadow::shadowCascadeResolutions = {2048, 2048};
+std::vector<float> Shadow::shadowCascadeDistances = {50, 200};
+std::vector<int> Shadow::shadowCascadeResolutions = {4096, 4096};
 
 bool Shadow::trapezoidal = false;
 

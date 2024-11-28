@@ -177,15 +177,19 @@ vec2 BlendCascadedShadow(vec3 projectionCoordinates, int lod, int range)
 float GetCascadedShadow(vec4 shadowSpaces[2], int range, float rangePower)
 {
 	vec3 projectionCoordinates;
-	int lod = -1;
+	int lod = 0;
 	for (int i = 0; i < 2; i++)
 	{
 		projectionCoordinates = shadowSpaces[i].xyz / shadowSpaces[i].w;
-		projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
+		
 		lod = i;
-		if (abs(projectionCoordinates.x - 0.5) <= 0.5 && abs(projectionCoordinates.y - 0.5) <= 0.5 && abs(projectionCoordinates.z) <= 1.0) break;
+		//if (abs(projectionCoordinates.x - 0.5) <= 0.5 && abs(projectionCoordinates.y - 0.5) <= 0.5 && abs(projectionCoordinates.z) <= 1.0) break;
+		if (abs(projectionCoordinates.x) < 1.0 && abs(projectionCoordinates.y) < 1.0 && abs(projectionCoordinates.z) < 1.0) break;
 	}
-	if (lod == -1 || abs(projectionCoordinates.x - 0.5) > 0.5 || abs(projectionCoordinates.y - 0.5) > 0.5 || abs(projectionCoordinates.z) > 1.0) return (0.0);
+	projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
+	//projectionCoordinates = shadowSpaces[lod].xyz / shadowSpaces[lod].w;
+	//if (abs(projectionCoordinates.x) > 1.0 || abs(projectionCoordinates.y) > 1.0 || abs(projectionCoordinates.z) > 1.0) return (0.0);
+	//projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
 
 	//vec3 projectionCoordinates = shadowSpace.xyz / shadowSpace.w;
 	//if (abs(projectionCoordinates.x) > 1.0 || abs(projectionCoordinates.y) > 1.0 || abs(projectionCoordinates.z) > 1.0) return (0.0);

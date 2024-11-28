@@ -184,9 +184,9 @@ std::vector<glm::vec4> Camera::GetFrustumCorners(float nearDis, float farDis)
         {-1, -1,  1, 1}, { 1, -1,  1, 1}, { 1,  1,  1, 1}, {-1,  1,  1, 1}
     };
 
-    for (const glm::vec4& corner : clipSpaceCorners) 
+    for (const glm::vec4& corner : clipSpaceCorners)
 	{
-        glm::vec4 transformedCorner = inverse * corner;
+		glm::vec4 transformedCorner = inverse * corner;
         transformedCorner /= transformedCorner.w;
         corners.push_back(transformedCorner);
     }

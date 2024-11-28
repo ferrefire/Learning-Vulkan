@@ -226,6 +226,9 @@ void Manager::CreateOcclusionTexture()
 
 void Manager::Start()
 {
+	cameraIntersects.resize(4);
+	cameraIntersectIndexes.resize(4);
+
 	Input::Start();
 	Terrain::Start();
 	if (Manager::settings.trees) Trees::Start();
@@ -238,6 +241,8 @@ void Manager::Start()
 void Manager::PreFrame()
 {
 	//Terrain::CheckTerrainOffset();
+
+	
 }
 
 void Manager::Frame()
@@ -278,6 +283,16 @@ void Manager::Frame()
 	Terrain::Frame();
 	if (Manager::settings.trees) Trees::Frame();
 	Grass::Frame();
+
+	//Data::AddIntersect(camera.Position() + camera.Front() * 1000.0f);
+	//std::vector<glm::vec4> frustumCorners = camera.GetFrustumCorners(1.0f, 50.0f);
+	//for (int i = 0; i < 4; i++)
+	//{
+	//	cameraIntersects[i] = Data::GetIntersectData(cameraIntersectIndexes[i]).position;
+	//	cameraIntersectIndexes[i] = Data::AddIntersect(frustumCorners[i + 4]);
+	//	//if (Time::newSecond) std::cout << glm::distance(camera.Position(), cameraIntersects[i]) << std::endl;
+	//}
+	//if (Time::newSecond) std::cout << std::endl;
 }
 
 void Manager::PostFrame()
@@ -499,3 +514,6 @@ Object Manager::screenQuad;
 Descriptor Manager::screenQuadDescriptor;
 
 Texture Manager::occlusionTexture;
+
+std::vector<glm::vec3> Manager::cameraIntersects;
+std::vector<int> Manager::cameraIntersectIndexes;

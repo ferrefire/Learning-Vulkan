@@ -340,7 +340,7 @@ void Graphics::DrawFrame()
 	Terrain::PostFrame();
 	if (Manager::settings.trees) Trees::PostFrame();
 	Grass::PostFrame();
-	Data::SetData();
+	//Data::SetData();
 
 	RecordCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], imageIndex);
 
@@ -519,8 +519,8 @@ void Graphics::Create()
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
 		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[0].imageInfo.imageView = Shadow::shadowLod1Texture.imageView;
-		descriptorConfig[0].imageInfo.sampler = Shadow::shadowLod1Texture.sampler;
+		descriptorConfig[0].imageInfo.imageView = Shadow::shadowCascadeTextures[0].imageView;
+		descriptorConfig[0].imageInfo.sampler = Shadow::shadowCascadeTextures[0].sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}

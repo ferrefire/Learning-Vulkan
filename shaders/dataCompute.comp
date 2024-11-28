@@ -2,17 +2,23 @@
 
 #extension GL_ARB_shading_language_include : require
 
-struct ComputeData
+//struct ComputeData
+//{
+//	float viewHeight;
+//    float frustumIntersect;
+//    float frustumIntersectSecond;
+//    float frustumIntersectAverage;
+//};
+
+struct IntersectData
 {
-	float viewHeight;
-    float frustumIntersect;
-    float frustumIntersectSecond;
-    float frustumIntersectAverage;
+	vec3 position;
+    uint check;
 };
 
 layout(std430, set = 1, binding = 0) buffer Data
 {
-	ComputeData computeData;
+	IntersectData intersectData[];
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
@@ -25,16 +31,7 @@ layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 void main()
 {
-    computeData.viewHeight = SampleDynamic(variables.viewPosition.xz);
-
-    //float corner1Intersect = 1000;
-    //float corner2Intersect = 1000;
-    //float corner3Intersect = 1000;
-    //float corner4Intersect = 1000;
-    //float corner12Intersect = 1000;
-    //float corner34Intersect = 1000;
-    //float corner13Intersect = 1000;
-    //float corner24Intersect = 1000;
+    /*computeData.viewHeight = SampleDynamic(variables.viewPosition.xz);
 
     vec3 frustumCorner12 = (variables.frustumCorner1 + variables.frustumCorner2) * 0.5;
     vec3 frustumCorner13 = (variables.frustumCorner1 + variables.frustumCorner3) * 0.5;
@@ -80,32 +77,6 @@ void main()
         //float iter = float(i) / ITERATIONS;
         float iter = pow(float(i) / ITERATIONS, 2);
 
-        //if (corner1Intersect >= 1000)
-        //{
-        //    vec3 intersectPos = mix(variables.viewPosition, variables.frustumCorner1, iter);
-        //    float intersectHeight = SampleDynamic(intersectPos.xz) * 5000.0;
-        //    if (intersectHeight >= intersectPos.y) corner1Intersect = iter * 1000.0;
-        //}
-        //if (corner2Intersect >= 1000)
-        //{
-        //    vec3 intersectPos = mix(variables.viewPosition, variables.frustumCorner2, iter);
-        //    float intersectHeight = SampleDynamic(intersectPos.xz) * 5000.0;
-        //    if (intersectHeight >= intersectPos.y) corner2Intersect = iter * 1000.0;
-        //}
-        //if (corner3Intersect >= 1000)
-        //{
-        //    vec3 intersectPos = mix(variables.viewPosition, variables.frustumCorner3, iter);
-        //    float intersectHeight = SampleDynamic(intersectPos.xz) * 5000.0;
-        //    if (intersectHeight >= intersectPos.y) corner3Intersect = iter * 1000.0;
-        //}
-        //if (corner4Intersect >= 1000)
-        //{
-        //    vec3 intersectPos = mix(variables.viewPosition, variables.frustumCorner4, iter);
-        //    float intersectHeight = SampleDynamic(intersectPos.xz) * 5000.0;
-        //    if (intersectHeight >= intersectPos.y) corner4Intersect = iter * 1000.0;
-        //}
-        //if (corner1Intersect < 1000 && corner2Intersect < 1000 && corner3Intersect < 1000 && corner4Intersect < 1000) break;
-
         int exitLoop = CORNER_COUNT;
         for (int j = 0; j < CORNER_COUNT; j++)
         {
@@ -146,17 +117,24 @@ void main()
 
     computeData.frustumIntersect = furthestIntersect;
     computeData.frustumIntersectSecond = secondFurthestIntersect;
-    computeData.frustumIntersectAverage = averageIntersect / CORNER_COUNT;
+    computeData.frustumIntersectAverage = averageIntersect / CORNER_COUNT;*/
 
-    //computeData.frustumIntersectAverage = (corner1Intersect + corner2Intersect + corner3Intersect + corner4Intersect) * 0.25;
+    uint index = gl_GlobalInvocationID.x;
+    if (intersectData[index].check == 1)
+    {
+        vec3 target = intersectData[index].position;
+        for (int i = 0; i < ITERATIONS; i++)
+        {
+            //float iter = float(i) / ITERATIONS;
+            float iter = pow(float(i) / ITERATIONS, 2);
 
-    //for (int i = 0; i < 1; i++)
-    //{
-    //    float c1Mult = 1.0 - pow(abs(corner1Intersect - computeData.frustumIntersectAverage) * 0.001, 2);
-    //    float c2Mult = 1.0 - pow(abs(corner2Intersect - computeData.frustumIntersectAverage) * 0.001, 2);
-    //    float c3Mult = 1.0 - pow(abs(corner3Intersect - computeData.frustumIntersectAverage) * 0.001, 2);
-    //    float c4Mult = 1.0 - pow(abs(corner4Intersect - computeData.frustumIntersectAverage) * 0.001, 2);
-    //    float totalMult = c1Mult + c2Mult + c3Mult + c4Mult;
-    //    computeData.frustumIntersectAverage = (corner1Intersect * c1Mult + corner2Intersect * c2Mult + corner3Intersect * c3Mult + corner4Intersect * c4Mult) / totalMult;
-    //}
+            vec3 intersectPos = mix(variables.viewPosition, target, iter);
+            float intersectHeight = SampleDynamic(intersectPos.xz) * 5000.0;
+            if (intersectHeight >= intersectPos.y)
+            {
+                intersectData[index].position = intersectPos;
+                break;
+            }
+        }
+    }
 }

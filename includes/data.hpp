@@ -13,14 +13,19 @@
 
 #include <vector>
 
-struct ComputeData
-{
-    float viewHeight = 0;
-    float frustumIntersect = 0;
-    float frustumIntersectSecond = 0;
-    float frustumIntersectAverage = 0;
-};
+//struct ComputeData
+//{
+//    float viewHeight = 0;
+//    float frustumIntersect = 0;
+//    float frustumIntersectSecond = 0;
+//    float frustumIntersectAverage = 0;
+//};
 
+struct IntersectData
+{
+    glm::vec3 position = glm::vec3(0);
+    uint32_t active = 0;
+};
 
 class Data
 {
@@ -30,9 +35,14 @@ class Data
     public:
         static Pipeline computePipeline;
         static Descriptor computeDescriptor;
-        static std::vector<Buffer> computeBuffers;
+        //static std::vector<Buffer> computeBuffers;
+        static Buffer intersectBuffer;
 
-        static std::vector<ComputeData> computeData;
+        //static std::vector<ComputeData> computeData;
+        static std::vector<IntersectData> intersectData;
+
+        static int intersectCount;
+        static int activeIntersectCount;
 
         static void Create();
         static void CreatePipelines();
@@ -46,5 +56,7 @@ class Data
 
         static void Start();
         static void SetData();
-        static ComputeData GetData();
+        static int AddIntersect(glm::vec3 position);
+        //static ComputeData GetComputeData();
+        static IntersectData GetIntersectData(int index);
 };
