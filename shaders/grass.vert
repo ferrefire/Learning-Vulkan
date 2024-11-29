@@ -2,7 +2,7 @@
 
 #extension GL_ARB_shading_language_include : require
 
-#define CASCADE_COUNT 2
+#define CASCADE_COUNT 4
 
 struct GrassData
 {
@@ -162,20 +162,7 @@ void main()
 
 	uv = vec2(inPosition.x * 10.0 + 0.5, inPosition.y);
 
-	if (variables.shadowCascades == 1)
-	{
-		for (int i = 0; i < CASCADE_COUNT; i++)
-		{
-			shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
-		}
-		//shadowLod0Position = variables.shadowCascadeMatrix[1] * vec4(worldPosition, 1.0);
-		//shadowLod1Position = vec4(0);
-	}
-	//else
-	//{
-	//	shadowLod0Position = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
-	//	shadowLod1Position = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
-	//}
+	for (int i = 0; i < variables.shadowCascades; i++) shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
 
 	//grassColor = vec3(0.25, 0.6, 0.1);
 	//grassColor = vec3(0.0916, 0.0866, 0.0125) * 1.5;

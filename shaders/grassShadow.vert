@@ -157,11 +157,5 @@ void main()
 
 	//uv = vec2(inPosition.x * 10 + 0.5, inPosition.y);
 
-	vec4 shadowPosition;
-
-	if (variables.shadowCascades == 1) shadowPosition = variables.shadowCascadeMatrix[pc.shadowCascade] * vec4(worldPosition, 1.0);
-	else if (pc.shadowCascade == 0) shadowPosition = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
-	else if (pc.shadowCascade == 1) shadowPosition = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
-
-	gl_Position = shadowPosition;
+	gl_Position = variables.shadowCascadeMatrix[pc.shadowCascade] * vec4(worldPosition, 1.0);
 }

@@ -2,7 +2,7 @@
 
 #extension GL_ARB_shading_language_include : require
 
-#define CASCADE_COUNT 2
+#define CASCADE_COUNT 4
 
 struct TreeRenderData
 {
@@ -100,13 +100,8 @@ void main()
 	//normal = inNormal;
     gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
 
-	if (variables.shadowCascades == 1)
+	for (int i = 0; i < variables.shadowCascades; i++)
 	{
-		for (int i = 0; i < CASCADE_COUNT; i++)
-		{
-			shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
-		}
+		shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
 	}
-	//else shadowPosition = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);
-	//shadowPosition = variables.shadowLod0Matrix * vec4(worldPosition, 1.0);
 }

@@ -2,7 +2,7 @@
 
 #extension GL_ARB_shading_language_include : require
 
-#define CASCADE_COUNT 2
+#define CASCADE_COUNT 4
 
 layout(set = 1, binding = 2) uniform sampler2D treeDiffuseSampler;
 
@@ -21,21 +21,9 @@ void main()
 {
 	float shadow = 1.0;
 	vec3 normal = normalize(inNormal);
+	float depth = GetDepth(gl_FragCoord.z);
 	//if (variables.shadows == 1) shadow = clamp(1.0 - GetShadow(shadowPosition, 1, 0), 0.3, 1.0);
-	if (variables.shadows == 1)
-	{
-		if (variables.shadowCascades == 1)
-		{
-			shadow = GetCascadedShadow(shadowPositions, 1, 4.0);
-			//shadow = GetCascadedShadow(shadowPositions[1], 1, 0, 2.0);
-			//if (shadow < 1.0)
-			//{
-			//	float tempShadow = GetCascadedShadow(shadowPositions[0], 0, 1, 2.0);
-			//	if (tempShadow > shadow) shadow = tempShadow;
-			//}
-		}
-		//else shadow = GetShadow(shadowPosition, 1, -1, 0.25);
-	}
+	if (variables.shadows == 1) shadow = GetCascadedShadow(shadowPositions, depth);
 
 	vec3 diffuse = DiffuseLighting(normal, shadow, 0.025);
 	vec3 texColor = texture(treeDiffuseSampler, inCoord * 0.25).xyz;
@@ -43,7 +31,7 @@ void main()
 	
 	
 	//combinedColor *= shadow;
-	combinedColor = GroundFog(combinedColor, GetDepth(gl_FragCoord.z), worldPosition.y);
+	combinedColor = GroundFog(combinedColor, depth, worldPosition.y);
 
 	outColor = vec4(combinedColor, 1.0);
 

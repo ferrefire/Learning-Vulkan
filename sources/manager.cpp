@@ -348,7 +348,8 @@ void Manager::UpdateShaderVariables()
 
 	shaderVariables.occlusionCulling = settings.occlussionCulling ? 1 : 0;
 	shaderVariables.shadows = settings.shadows ? 1 : 0;
-	shaderVariables.shadowCascades = Shadow::trapezoidal ? 0 : 1;
+	//shaderVariables.shadowCascades = Shadow::trapezoidal ? 0 : 1;
+	shaderVariables.shadowCascades = Shadow::cascadeCount;
 
 	//std::vector<glm::vec4> frustumCorners = camera.GetFrustumCorners(1.0f, 1000.0f);
 	//shaderVariables.frustumCorner1 = frustumCorners[4];

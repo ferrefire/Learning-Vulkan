@@ -1,7 +1,7 @@
 #ifndef VARIABLES_INCLUDED
 #define VARIABLES_INCLUDED
 
-#define CASCADE_COUNT 2
+#define CASCADE_COUNT 4
 
 layout(set = 0, binding = 0) uniform Variables 
 {

@@ -2,7 +2,7 @@
 
 #extension GL_ARB_shading_language_include : require
 
-#define CASCADE_COUNT 2
+#define CASCADE_COUNT 4
 
 //#define OBJECT_DATA_COUNT 25
 //layout(set = 1, binding = 0) uniform ObjectData
@@ -204,28 +204,7 @@ void main()
 	vec3 textureColor = BlendSteepness(steepness, distanceSqrd);
 
 	float shadow = 0.0;
-	if (variables.shadows == 1)
-	{
-		if (variables.shadowCascades == 1)
-		{
-			shadow = GetCascadedShadow(shadowPositions, 1, 2.0);
-			//shadow = GetCascadedShadow(shadowPositions[1], 1, 0, 2.0);
-			//if (shadow < 1.0)
-			//{
-			//	float tempShadow = GetCascadedShadow(shadowPositions[0], 0, 1, 2.0);
-			//	if (tempShadow > shadow) shadow = tempShadow;
-			//}
-		}
-		//else
-		//{
-		//	shadow = GetShadow(shadowLod1Position, 1, -2);
-		//	if (shadow < 1.0)
-		//	{
-		//		float tempShadow = GetShadow(shadowLod0Position, 0, -1);
-		//		if (tempShadow > shadow) shadow = tempShadow;
-		//	}
-		//}
-	}
+	if (variables.shadows == 1) shadow = GetCascadedShadow(shadowPositions, depth);
 
 	vec3 diffuse = DiffuseLighting(terrainNormal, shadow);
 	

@@ -460,6 +460,8 @@ void Grass::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 
 void Grass::RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade)
 {
+	if (cascade > 1) return;
+
 	shadowPipeline.BindGraphics(commandBuffer);
 
 	Manager::globalDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);

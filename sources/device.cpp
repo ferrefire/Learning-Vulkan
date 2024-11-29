@@ -208,6 +208,7 @@ void Device::CreateLogicalDevice(VkSurfaceKHR surface)
     VkPhysicalDeviceFeatures deviceFeatures{};
 	//deviceFeatures.samplerAnisotropy = VK_TRUE;
 	deviceFeatures.tessellationShader = VK_TRUE;
+	//deviceFeatures.shaderFloat64 = VK_TRUE;
 	//deviceFeatures.shaderStorageImageMultisample = VK_TRUE;
 	if (Manager::settings.wireframe)
 	{

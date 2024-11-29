@@ -56,6 +56,9 @@ void Shadow::CreateTrapezoidResources()
 	samplerConfig.repeatMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
 	samplerConfig.borderColor = VK_BORDER_COLOR_INT_OPAQUE_WHITE;
 	samplerConfig.anisotrophic = VK_FALSE;
+	//samplerConfig.maxLod = 0.25f;
+	//samplerConfig.magFilter = VK_FILTER_NEAREST;
+	//samplerConfig.minFilter = VK_FILTER_NEAREST;
 
 	shadowLod0Texture.CreateImage(imageLod0Config, samplerConfig);
 	shadowLod1Texture.CreateImage(imageLod1Config, samplerConfig);
@@ -288,7 +291,8 @@ void Shadow::SetCascadeViews()
 		glm::vec3 direction = Manager::shaderVariables.lightDirection;
 
 		float near = 1.0f;
-		if (i > 0) near = shadowCascadeDistances[i - 1];
+		for (int j = i; j > 0; j--) near += shadowCascadeDistances[j - 1];
+		//if (i > 0) near = shadowCascadeDistances[i - 1];
 		glm::vec3 focus = Manager::camera.Position() + Manager::camera.Front() * (near + shadowCascadeDistances[i]);
 		//glm::vec3 focus = Manager::camera.Position();
 
@@ -296,7 +300,7 @@ void Shadow::SetCascadeViews()
 		glm::vec3 side = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
 		glm::vec3 up = glm::normalize(glm::cross(side, front));
 
-		glm::vec3 position = focus + direction * shadowCascadeDistances[i] * 3.0f;
+		glm::vec3 position = focus + direction * shadowCascadeDistances[i] * 3.25f;
 		shadowCascadeViews[i] = glm::lookAt(position, position + front, up);
 	}
 }
@@ -1188,15 +1192,15 @@ glm::mat4 Shadow::GetTrapezoidTransformation(int lod)
 	return (glm::mat4(1.0f));
 }
 
-int Shadow::cascadeCount = 2;
+int Shadow::cascadeCount = 4;
 VkRenderPass Shadow::shadowCascadePass = nullptr;
 std::vector<VkFramebuffer> Shadow::shadowCascadeFrameBuffers;
 std::vector<Texture> Shadow::shadowCascadeTextures;
 std::vector<glm::mat4> Shadow::shadowCascadeViews;
 std::vector<glm::mat4> Shadow::shadowCascadeProjections;
 std::vector<glm::mat4> Shadow::shadowCascadeTransformations;
-std::vector<float> Shadow::shadowCascadeDistances = {25, 100};
-std::vector<int> Shadow::shadowCascadeResolutions = {4096, 4096};
+std::vector<float> Shadow::shadowCascadeDistances = {25, 75, 200, 250};
+std::vector<int> Shadow::shadowCascadeResolutions = {4096, 4096, 2048, 2048};
 
 bool Shadow::trapezoidal = false;
 

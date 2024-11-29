@@ -519,8 +519,8 @@ void Graphics::Create()
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
 		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[0].imageInfo.imageView = Shadow::shadowCascadeTextures[1].imageView;
-		descriptorConfig[0].imageInfo.sampler = Shadow::shadowCascadeTextures[1].sampler;
+		descriptorConfig[0].imageInfo.imageView = Shadow::shadowCascadeTextures[3].imageView;
+		descriptorConfig[0].imageInfo.sampler = Shadow::shadowCascadeTextures[3].sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}

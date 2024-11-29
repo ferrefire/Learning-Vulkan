@@ -2,7 +2,7 @@
 
 #extension GL_ARB_shading_language_include : require
 
-#define CASCADE_COUNT 2
+#define CASCADE_COUNT 4
 
 layout(location = 0) in vec3 worldPosition;
 layout(location = 1) in vec3 objectNormal;
@@ -24,6 +24,7 @@ void main()
 {
 	vec3 normal = normalize(objectNormal);
 	vec3 terrainNormal = normalize(terrainNormal);
+	float depth = GetDepth(gl_FragCoord.z);
 	//vec3 diffuseNormal = NormalPower(terrainNormal, 0.5);
 	//float shadow = 1.0;
 	//if (variables.shadows == 1) shadow = clamp(1.0 - GetShadow(shadowLod0Position, 0), 0.3, 1.0);
@@ -32,34 +33,13 @@ void main()
 	//return;
 
 	float shadow = 0.0;
-	if (variables.shadows == 1)
-	{
-		if (variables.shadowCascades == 1)
-		{
-			shadow = GetCascadedShadow(shadowPositions, 1, 2.0);
-			//shadow = GetCascadedShadow(shadowPositions[1], 1, 0, 2.0);
-			//if (shadow < 1.0)
-			//{
-			//	float tempShadow = GetCascadedShadow(shadowPositions[0], 0, 1, 2.0);
-			//	if (tempShadow > shadow) shadow = tempShadow;
-			//}
-		}
-		//else
-		//{
-		//	shadow = GetShadow(shadowLod1Position, 1, -1, 0.75);
-		//	if (shadow < 1.0) //change for better performance
-		//	{
-		//		float tempShadow = GetShadow(shadowLod0Position, 0, -2);
-		//		if (tempShadow > shadow) shadow = tempShadow;
-		//	}
-		//}
-	}
+	if (variables.shadows == 1) shadow = GetCascadedShadow(shadowPositions, depth);
 
 	vec3 bladeDiffuse = DiffuseLighting(normal, shadow, 0.0, ambient);
 
 	if (!gl_FrontFacing) normal *= -1;
 
-	float ao = clamp(GetDepth(gl_FragCoord.z) * 100.0, 0.0, 1.0);
+	float ao = clamp(depth * 100.0, 0.0, 1.0);
 	
 	//if (variables.shadowBounding == 0)
 	//{
@@ -74,12 +54,13 @@ void main()
 	vec3 diffuse = clamp(terrainDiffuse * 0.9 + bladeDiffuse, vec3(0.0), lightColor);
 	vec3 combinedColor = (diffuse * bladeColor);
 
-	if (shadow == 0.0)
+	if (shadow < 0.9)
 	{
 		vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
 		vec3 bladeSpecular = SpecularLighting(normal, viewDirection, 16);
 		vec3 terrainSpecular = SpecularLighting(terrainNormal, viewDirection, 32);
-		combinedColor += (bladeSpecular * terrainSpecular);
+		//combinedColor += (bladeSpecular * terrainSpecular);
+		combinedColor += (bladeSpecular * terrainSpecular) * (1.0 - shadow);
 	}
 	//else
 	//{
