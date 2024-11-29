@@ -289,26 +289,27 @@ void Shadow::SetCascadeViews()
 
 		float near = 1.0f;
 		if (i > 0) near = shadowCascadeDistances[i - 1];
-		glm::vec3 focus = Manager::camera.Position() + Manager::camera.Front() * (near + shadowCascadeDistances[i] * 0.5f);
+		glm::vec3 focus = Manager::camera.Position() + Manager::camera.Front() * (near + shadowCascadeDistances[i]);
+		//glm::vec3 focus = Manager::camera.Position();
 
 		glm::vec3 front = glm::normalize(-direction);
 		glm::vec3 side = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
 		glm::vec3 up = glm::normalize(glm::cross(side, front));
 
-		glm::vec3 position = focus + direction * shadowCascadeDistances[i] * 4.0f;
+		glm::vec3 position = focus + direction * shadowCascadeDistances[i] * 3.0f;
 		shadowCascadeViews[i] = glm::lookAt(position, position + front, up);
 	}
 }
 
-glm::mat4 Shadow::CreateBoundedProjection(const glm::mat4 &shadowView, float near, float far, float depthMult)
+glm::mat4 Shadow::CreateBoundedProjection(int lod, float near, float far, float depthMult)
 {
-	std::vector<glm::vec4> frustumCorners = Manager::camera.GetFrustumCorners(near, far);
+	std::vector<glm::vec4> frustumCorners = Manager::camera.GetFrustumCorners(near, near + far);
 
 	std::vector<glm::vec4> frustumCornersInLightSpace;
 
 	for (int i = 0; i < 8; i++)
 	{
-		frustumCornersInLightSpace.push_back(shadowView * frustumCorners[i]);
+		frustumCornersInLightSpace.push_back(shadowCascadeViews[lod] * frustumCorners[i]);
 	}
 
 	glm::vec3 min(std::numeric_limits<float>::max());
@@ -326,7 +327,12 @@ glm::mat4 Shadow::CreateBoundedProjection(const glm::mat4 &shadowView, float nea
 	//min.z = 0.0f;
 	//max.z = zFar - zNear;
 
+	//glm::vec3 center = (min + max) * 0.5f;
+	//float diff = glm::d
+	//float offset = glm::max(max.x, max.y);
+
 	return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, far * depthMult);
+	//return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, far * depthMult);
 	//return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, max.z * depthMult);
 }
 
@@ -344,10 +350,10 @@ std::vector<glm::vec2> GetBoundedPoints(std::vector<glm::vec2> points)
 		max = glm::max(max, corner);
 	}
 
-	result[0] = glm::vec2(min.x, max.y);
-	result[1] = glm::vec2(max.x, max.y);
-	result[2] = glm::vec2(min.x, min.y);
-	result[3] = glm::vec2(max.x, min.y);
+	result[0] = glm::vec2(min.x, min.y);
+	result[1] = glm::vec2(max.x, min.y);
+	result[2] = glm::vec2(min.x, max.y);
+	result[3] = glm::vec2(max.x, max.y);
 
 	return (result);
 }
@@ -861,10 +867,13 @@ void Shadow::SetCascadeProjections()
 {
 	for (int i = 0; i < cascadeCount; i++)
 	{
+		float near = 1.0f;
+		if (i > 0) near = shadowCascadeDistances[i - 1];
+
 		shadowCascadeProjections[i] = glm::ortho(-shadowCascadeDistances[i], shadowCascadeDistances[i], -shadowCascadeDistances[i], shadowCascadeDistances[i], 1.0f, shadowCascadeDistances[i] * 6.0f);
 		shadowCascadeProjections[i][1][1] *= -1;
 
-		//shadowCascadeProjections[i] = CreateBoundedProjection(shadowCascadeViews[i], 1.0f, shadowCascadeDistances[i], (i == 0 ? 8.0f : 2.0f));
+		//shadowCascadeProjections[i] = CreateBoundedProjection(i, near, shadowCascadeDistances[i], 2.0f);
 		//shadowCascadeProjections[i][1][1] *= -1;
 	}
 }
@@ -916,7 +925,7 @@ void Shadow::SetCascadeTransformations()
 {
 	for (int i = 0; i < cascadeCount; i++)
 	{
-		float near = 1.0f;
+		/*float near = 1.0f;
 		if (i > 0) near = shadowCascadeDistances[i - 1];
 		std::vector<glm::vec4> frustumCorners = Manager::camera.GetFrustumCorners(near, shadowCascadeDistances[i]);
 		std::vector<glm::vec2> frustumCornersInLightSpace;
@@ -931,9 +940,11 @@ void Shadow::SetCascadeTransformations()
 
 		glm::vec2 u = (boundedPoints[0] + boundedPoints[1] + boundedPoints[2] + boundedPoints[3]) / 4.0f;
 
-		glm::mat4 T1 = glm::translate(glm::mat4(1.0f), glm::vec3(-u.x, -u.y, 0));
+		glm::mat4 T1 = glm::translate(glm::mat4(1.0f), glm::vec3(-u.x, -u.y, 0));*/
 
-		shadowCascadeTransformations[i] = T1;
+		glm::mat4 R = glm::rotate(glm::mat4(1.0f), glm::radians(-Manager::camera.Angles().y + 45.0f), glm::vec3(0, 0, 1));
+
+		shadowCascadeTransformations[i] = R;
 	}
 }
 
@@ -1063,7 +1074,7 @@ glm::mat4 Shadow::GetTrapezoidTransformation(int lod)
 			//range = glm::min(heightRange, depthRange);
 			range = depthRange;
 			shadowLod1View = GetTrapezoidView(1, range);
-			shadowLod1Projection = CreateBoundedProjection(shadowLod1View, 1.0f, shadowLod1Distance * range, false);
+			//shadowLod1Projection = CreateBoundedProjection(shadowLod1View, 1.0f, shadowLod1Distance * range, false);
 			shadowLod1Transformation = glm::mat4(1.0f);
 			return (shadowLod1Transformation);
 		}

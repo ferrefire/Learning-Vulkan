@@ -41,10 +41,11 @@ void main()
 	//	}
 	//}
 
-	if (distance(inCoordinates, variables.frustumCorner1.xy * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
-	else if (distance(inCoordinates, variables.frustumCorner2.xy * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
-	else if (distance(inCoordinates, variables.frustumCorner3.xy * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
-	else if (distance(inCoordinates, variables.frustumCorner4.xy * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
+	if (distance(inCoordinates, (variables.shadowCascadeMatrix[1] * vec4(variables.viewPosition, 1.0)).xy * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
+	//if (distance(inCoordinates, variables.frustumCorner1.xy * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
+	//else if (distance(inCoordinates, variables.frustumCorner2.xy * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
+	//else if (distance(inCoordinates, variables.frustumCorner3.xy * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
+	//else if (distance(inCoordinates, variables.frustumCorner4.xy * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
 
     outColor = vec4(finalColor, 1.0);
 

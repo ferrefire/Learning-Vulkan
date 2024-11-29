@@ -161,7 +161,7 @@ vec2 BlendCascadedShadow(vec3 projectionCoordinates, int lod, int range)
 	{
 	    for(int y = -range; y <= range; ++y)
 	    {
-			if (abs(x) + abs(y) > range) continue;
+			//if (abs(x) + abs(y) > range) continue;
 
 			samples++;
 
@@ -176,7 +176,7 @@ vec2 BlendCascadedShadow(vec3 projectionCoordinates, int lod, int range)
 			shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
 	    }
 	}
-	if (range > 0) shadow /= samples;
+	if (range > 0) shadow /= float(samples);
 
 	return (vec2(shadow, closest));
 }
@@ -195,7 +195,7 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], int range, float range
 	projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
 
 	//projectionCoordinates = shadowSpaces[lod].xyz / shadowSpaces[lod].w;
-	//if (abs(projectionCoordinates.x) > 1.0 || abs(projectionCoordinates.y) > 1.0 || abs(projectionCoordinates.z) > 1.0) return (0.0);
+	//if (abs(projectionCoordinates.x) > 1.0 || abs(projectionCoordinates.y) > 1.0 || projectionCoordinates.z > 1.0 || projectionCoordinates.z < 0.0) return (0.0);
 	//projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
 
 	//vec3 projectionCoordinates = shadowSpace.xyz / shadowSpace.w;
@@ -205,11 +205,8 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], int range, float range
 	vec4 viewCoordinates = variables.shadowCascadeMatrix[lod] * vec4(variables.viewPosition, 1.0);
 	viewCoordinates.xyz = viewCoordinates.xyz / viewCoordinates.w;
 	viewCoordinates.xy = viewCoordinates.xy * 0.5 + 0.5;
-
 	float dis = pow(1.0 - distance(viewCoordinates.xy, projectionCoordinates.xy), rangePower);
-
 	range = int(floor(dis * (range * 2.0)));
-
 	range = clamp(range - lod, 0, 2);
 
 	//range = 0;

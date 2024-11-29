@@ -92,6 +92,6 @@ class Shadow
 		static glm::mat4 GetTrapezoidTransformation(int lod);
 		static void SetCascadeTransformations();
 
-		static glm::mat4 CreateBoundedProjection(const glm::mat4 &shadowView, float near, float far, float depthMult);
+		static glm::mat4 CreateBoundedProjection(int lod, float near, float far, float depthMult);
 		static glm::vec2 ComputeQ(const Line &centerLine, const Line &topLine, float delta, int lod, float far);
 };

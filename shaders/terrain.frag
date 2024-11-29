@@ -208,7 +208,7 @@ void main()
 	{
 		if (variables.shadowCascades == 1)
 		{
-			shadow = GetCascadedShadow(shadowPositions, 2, 2.0);
+			shadow = GetCascadedShadow(shadowPositions, 1, 2.0);
 			//shadow = GetCascadedShadow(shadowPositions[1], 1, 0, 2.0);
 			//if (shadow < 1.0)
 			//{

@@ -180,7 +180,7 @@ std::vector<glm::vec4> Camera::GetFrustumCorners(float nearDis, float farDis)
 
     std::vector<glm::vec4> clipSpaceCorners = 
 	{
-        {-1, -1, -1, 1}, { 1, -1, -1, 1}, { 1,  1, -1, 1}, {-1,  1, -1, 1},
+        {-1, -1, 0, 1}, { 1, -1, 0, 1}, { 1,  1, 0, 1}, {-1,  1, 0, 1},
         {-1, -1,  1, 1}, { 1, -1,  1, 1}, { 1,  1,  1, 1}, {-1,  1,  1, 1}
     };
 
