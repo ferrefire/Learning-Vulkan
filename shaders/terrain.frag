@@ -204,7 +204,7 @@ void main()
 	vec3 textureColor = BlendSteepness(steepness, distanceSqrd);
 
 	float shadow = 0.0;
-	if (variables.shadows == 1) shadow = GetCascadedShadow(shadowPositions, depth);
+	if (variables.shadows == 1) shadow = GetCascadedShadow(shadowPositions);
 
 	vec3 diffuse = DiffuseLighting(terrainNormal, shadow);
 	

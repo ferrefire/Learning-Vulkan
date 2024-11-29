@@ -300,7 +300,7 @@ void Shadow::SetCascadeViews()
 		glm::vec3 side = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
 		glm::vec3 up = glm::normalize(glm::cross(side, front));
 
-		glm::vec3 position = focus + direction * shadowCascadeDistances[i] * 3.25f;
+		glm::vec3 position = focus + direction * shadowCascadeDistances[i] * 3.5f;
 		shadowCascadeViews[i] = glm::lookAt(position, position + front, up);
 	}
 }
@@ -1199,7 +1199,7 @@ std::vector<Texture> Shadow::shadowCascadeTextures;
 std::vector<glm::mat4> Shadow::shadowCascadeViews;
 std::vector<glm::mat4> Shadow::shadowCascadeProjections;
 std::vector<glm::mat4> Shadow::shadowCascadeTransformations;
-std::vector<float> Shadow::shadowCascadeDistances = {25, 75, 200, 250};
+std::vector<float> Shadow::shadowCascadeDistances = {25, 75, 200, 200};
 std::vector<int> Shadow::shadowCascadeResolutions = {4096, 4096, 2048, 2048};
 
 bool Shadow::trapezoidal = false;

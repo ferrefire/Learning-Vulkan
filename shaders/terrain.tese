@@ -35,7 +35,7 @@ void main()
 	worldPosition = position.xyz;
 	worldPosition.y = ObjectToWorld(vec3(0), objectDatas[pc.chunkIndex].model).y + SampleDynamic(worldPosition.xz) * 5000;
 
-	for (int i = 0; i < variables.shadowCascades; i++) shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
+	for (int i = 0; i < CASCADE_COUNT; i++) shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
 	
 
 	gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
