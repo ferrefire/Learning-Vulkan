@@ -321,12 +321,13 @@ void Manager::UpdateShaderVariables()
 	{
 		Shadow::SetCascadeProjections();
 		Shadow::SetCascadeViews();
+		Shadow::SetCascadeTransformations();
 		for (int i = 0; i < Shadow::cascadeCount; i++)
 		{
-			shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
+			shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeTransformations[i] * Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
 		}
-		Shadow::GetTrapezoidTransformation(0);
-		shaderVariables.shadowCascadeMatrix[0] = Shadow::shadowLod0Transformation * Shadow::shadowLod0Projection * Shadow::shadowLod0View;
+		//Shadow::GetTrapezoidTransformation(0);
+		//shaderVariables.shadowCascadeMatrix[0] = Shadow::shadowLod0Transformation * Shadow::shadowCascadeProjections[0] * Shadow::shadowCascadeViews[0];
 		//shaderVariables.shadowCascadeMatrix = Shadow::GetCascadeProjection() * Shadow::GetCascadeView();
 	}
 

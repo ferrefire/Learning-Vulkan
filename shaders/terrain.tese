@@ -2,6 +2,8 @@
 
 #extension GL_ARB_shading_language_include : require
 
+#define CASCADE_COUNT 2
+
 #define OBJECT_DATA_COUNT 49
 layout(set = 1, binding = 0) uniform ObjectData
 {
@@ -16,7 +18,7 @@ layout(push_constant, std430) uniform PushConstants
 layout(triangles, fractional_odd_spacing, cw) in;
 
 layout(location = 0) out vec3 worldPosition;
-layout(location = 1) out vec4 shadowPositions[2];
+layout(location = 1) out vec4 shadowPositions[CASCADE_COUNT];
 //layout(location = 1) out vec4 shadowLod0Position;
 //layout(location = 2) out vec4 shadowLod1Position;
 //layout(location = 1) out mat3 tbn;
@@ -35,7 +37,7 @@ void main()
 
 	if (variables.shadowCascades == 1)
 	{
-		for (int i = 0; i < 2; i++)
+		for (int i = 0; i < CASCADE_COUNT; i++)
 		{
 			shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
 		}

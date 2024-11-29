@@ -47,6 +47,7 @@ class Shadow
 		static std::vector<Texture> shadowCascadeTextures;
 		static std::vector<glm::mat4> shadowCascadeViews;
 		static std::vector<glm::mat4> shadowCascadeProjections;
+		static std::vector<glm::mat4> shadowCascadeTransformations;
 		static std::vector<float> shadowCascadeDistances;
 		static std::vector<int> shadowCascadeResolutions;
 
@@ -89,6 +90,7 @@ class Shadow
 		//static glm::mat4 GetTrapezoidProjection(int lod);
 		static void SetCascadeProjections();
 		static glm::mat4 GetTrapezoidTransformation(int lod);
+		static void SetCascadeTransformations();
 
 		static glm::mat4 CreateBoundedProjection(const glm::mat4 &shadowView, float near, float far, float depthMult);
 		static glm::vec2 ComputeQ(const Line &centerLine, const Line &topLine, float delta, int lod, float far);

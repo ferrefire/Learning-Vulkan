@@ -2,12 +2,14 @@
 
 #extension GL_ARB_shading_language_include : require
 
+#define CASCADE_COUNT 2
+
 layout(location = 0) in vec3 worldPosition;
 layout(location = 1) in vec3 objectNormal;
 layout(location = 2) in vec3 terrainNormal;
 layout(location = 3) in vec3 grassColor;
 layout(location = 4) in vec2 uv;
-layout(location = 5) in vec4 shadowPositions[2];
+layout(location = 5) in vec4 shadowPositions[CASCADE_COUNT];
 //layout(location = 5) in vec4 shadowLod0Position;
 //layout(location = 6) in vec4 shadowLod1Position;
 //layout(location = 7) in float ao;
@@ -34,7 +36,7 @@ void main()
 	{
 		if (variables.shadowCascades == 1)
 		{
-			shadow = GetCascadedShadow(shadowPositions, 1, 2.0);
+			shadow = GetCascadedShadow(shadowPositions, 2, 2.0);
 			//shadow = GetCascadedShadow(shadowPositions[1], 1, 0, 2.0);
 			//if (shadow < 1.0)
 			//{
