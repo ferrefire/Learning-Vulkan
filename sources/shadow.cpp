@@ -327,6 +327,28 @@ glm::mat4 Shadow::CreateBoundedProjection(const glm::mat4 &shadowView, float nea
 	//return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, max.z * depthMult);
 }
 
+std::vector<glm::vec2> GetBoundedPoints(std::vector<glm::vec2> points)
+{
+	std::vector<glm::vec2> result;
+	result.resize(4);
+
+	glm::vec2 min(std::numeric_limits<float>::max());
+	glm::vec2 max(std::numeric_limits<float>::lowest());
+
+	for (glm::vec2 corner : points)
+	{
+		min = glm::min(min, corner);
+		max = glm::max(max, corner);
+	}
+
+	result[0] = glm::vec2(min.x, max.y);
+	result[1] = glm::vec2(max.x, max.y);
+	result[2] = glm::vec2(min.x, min.y);
+	result[3] = glm::vec2(max.x, min.y);
+
+	return (result);
+}
+
 float Cross(const Point2D &O, const Point2D &A, const Point2D &B)
 {
 	return (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
@@ -664,7 +686,7 @@ glm::vec2 TransformPoint(const glm::vec2 &point, const glm::mat4 &translate, con
 	return glm::vec2(transformedPoint.x, transformedPoint.y);
 }
 
-glm::mat4 ComputeTrapezoidalMatrix(const Trapezoid &trapezoid, const glm::vec2 &q)
+glm::mat4 ComputeTrapezoidalMatrix(const Trapezoid &trapezoid, const glm::vec2 &q, bool useQ)
 {
 	/*glm::mat4 translateToOrigin = glm::translate(glm::mat4(1.0f), glm::vec3(-trapezoid.bottomLeft.x, -trapezoid.bottomLeft.y, 0.0f));
 
@@ -693,66 +715,63 @@ glm::mat4 ComputeTrapezoidalMatrix(const Trapezoid &trapezoid, const glm::vec2 &
 	glm::vec4 t2 = glm::vec4(trapezoid.topRight, 0.0, 1.0);
 	glm::vec4 t3 = glm::vec4(trapezoid.topLeft, 0.0, 1.0);
 
-	glm::mat4 NT = glm::mat4(1.0f);
+	//glm::mat4 NT = glm::mat4(1.0f);
 
-	glm::vec4 center = (t2 + t3) / 2.0f;
-	glm::vec4 centerBase = (t0 + t1) / 2.0f;
+	if (!useQ)
+	{
+		glm::vec4 u = (t0 + t1 + t2 + t3) / 4.0f;
+
+		glm::mat4 T1 = glm::translate(glm::mat4(1.0f), glm::vec3(-u.x, -u.y, 0));
+		//glm::mat4 T1 = glm::mat4(1.0f);
+
+		//u = glm::normalize(t2 - t3);
+		//float angle = atan2(-u.y, u.x);
+
+		u = T1 * t2;
+
+		glm::mat4 S1 = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f / u.x, 1.0f / u.y, 1.0));
+
+		glm::mat4 N = glm::mat4(
+			1, 0, 0, 0,
+			0, 1, 0, 1,
+			0, 0, 1, 0,
+			0, 1, 0, 0);
+
+		u = T1 * t0;
+		glm::vec4 v = T1 * t2;
+
+		glm::mat4 T3 = glm::translate(glm::mat4(1.0f), glm::vec3(0, -(u.y / u.w + v.y / v.w) / 2.0f, 0));
+
+		//glm::mat4 R = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 0, 1));
+
+		u = T3 * S1 * T1 * t0;
+
+		glm::mat4 S2 = glm::scale(glm::mat4(1.0f), glm::vec3(1, -u.w / u.y, 1));
+
+		return (S2 * T3 * S1 * T1);
+	}
+
+	//glm::vec4 center = (t2 + t3) / 2.0f;
+	//glm::vec4 centerBase = (t0 + t1) / 2.0f;
 
 	glm::vec4 u = (t2 + t3) / 2.0f;
 
-	//glm::mat4 T1 = glm::mat4(
-	//	1, 0, 0, -u.x,
-	//	0, 1, 0, -u.y,
-	//	0, 0, 1, 0,
-	//	0, 0, 0, 1);
-
 	glm::mat4 T1 = glm::translate(glm::mat4(1.0f), glm::vec3(-u.x, -u.y, 0));
 
-	//NT = glm::translate(NT, -glm::vec3(u));
-
-	//u = (t2 - t3) / glm::length(t2 - t3);
 	u = glm::normalize(t2 - t3);
 	float angle = atan2(-u.y, u.x);
 
-	//glm::mat4 R = glm::mat4(
-	//	u.x, u.y, 0, 0,
-	//	u.y, -u.x, 0, 0,
-	//	0, 0, 1, 0,
-	//	0, 0, 0, 1);
-
 	glm::mat4 R = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0, 0, 1));
 
-	//NT = glm::rotate(NT, float(atan2(-u.y, u.x)), glm::vec3(0, 1, 0));
-
 	u = R * T1 * glm::vec4(q, 0.0, 1.0);
-
-	//glm::mat4 T2 = glm::mat4(
-	//	1, 0, 0, -u.x,
-	//	0, 1, 0, -u.y,
-	//	0, 0, 1, 0,
-	//	0, 0, 0, 1);
 
 	glm::mat4 T2 = glm::translate(glm::mat4(1.0f), glm::vec3(-u.x, -u.y, 0));
 
 	u = (T2 * R * T1 * (t2 + t3)) / 2.0f;
 
-	//glm::mat4 H = glm::mat4(
-	//	1, (-u.x / u.y), 0, 0,
-	//	0, 1, 0, 0,
-	//	0, 0, 1, 0,
-	//	0, 0, 0, 1);
-
 	glm::mat4 H = glm::shearX2D(glm::mat3(1.0f), -u.x / u.y);
 
-	//H = glm::mat4(1.0f);
-
 	u = H * T2 * R * T1 * t2;
-
-	//glm::mat4 S1 = glm::mat4(
-	//	1.0/u.x, 0, 0, 0,
-	//	0, 1.0/u.y, 0, 0,
-	//	0, 0, 1, 0,
-	//	0, 0, 0, 1);
 
 	glm::mat4 S1 = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f/u.x, 1.0f/u.y, 1.0));
 
@@ -762,55 +781,17 @@ glm::mat4 ComputeTrapezoidalMatrix(const Trapezoid &trapezoid, const glm::vec2 &
 		0, 0, 1, 0,
 		0, 1, 0, 0);
 
-	//glm::mat4 N = glm::orthonormalize()
-
-	//N = glm::mat4(1.0f);
-
 	u = N * S1 * H * T2 * R * T1 * t0;
 	glm::vec4 v = N * S1 * H * T2 * R * T1 * t2;
-
-	//glm::mat4 T3 = glm::mat4(
-	//	1, 0, 0, 0,
-	//	0, 1, 0, -(u.y / u.w + v.y / v.w) / 2.0f,
-	//	0, 0, 1, 0,
-	//	0, 0, 0, 1);
 
 	glm::mat4 T3 = glm::translate(glm::mat4(1.0f), glm::vec3(0, -(u.y / u.w + v.y / v.w) / 2.0f, 0));
 
 	u = T3 * N * S1 * H * T2 * R * T1 * t0;
 
-	//glm::mat4 S2 = glm::mat4(
-	//	1, 0, 0, 0,
-	//	0, -u.w / u.y, 0, 0,
-	//	0, 0, 1, 0,
-	//	0, 0, 0, 1);
-
 	glm::mat4 S2 = glm::scale(glm::mat4(1.0f), glm::vec3(1, -u.w / u.y, 1));
 
-	//NT *= T1;
-	//NT *= R;
-	//NT *= T2;
-	//NT *= H;
-	//NT *= S1;
-	//NT *= N;
-	//NT *= T3;
-	//NT *= S2;
-
-	//if (Time::newSecond)
-	//{
-	//	//u = (H * T2 * R * T1 * center);
-	//	//Utilities::PrintVec(u);
-	//	//glm::mat3 temp = S1 * H * T2 * R * T1;
-	//	//glm::mat4 tempN = glm::orthonormalize(temp);
-	//	u = (T3 * N * S1 * H * T2 * R * T1 * centerBase);
-	//	//u = (tempN * t2);
-	//	Utilities::PrintVec(u);
-	//	std::cout << std::endl;
-	//}
-
-	//return (S2 * T3 * N * S1 * H * T2 * R * T1);
 	return (S2 * T3 * N * S1 * H * T2 * R * T1);
-	return (NT);
+	//return (R * T1);
 }
 
 glm::mat4 Shadow::GetTrapezoidProjection(int lod)
@@ -980,7 +961,8 @@ glm::mat4 Shadow::GetTrapezoidTransformation(int lod)
 	//	std::cout << dualFrusta << std::endl;
 	//}
 
-	if (dualFrusta > 0.8f)
+	if (dualFrusta > 0.75f)
+	//if (convexHull.size() == 4)
 	{
 		//if (Time::newSecond)
 		//{
@@ -1002,11 +984,28 @@ glm::mat4 Shadow::GetTrapezoidTransformation(int lod)
 			//range = glm::clamp(depth / 100.0f, 0.01f, 1.0f);
 
 			//float depth = Data::GetData().frustumIntersectAverage;
-			float depth = 0;
-			range = glm::clamp(depth / (shadowLod0Distance * 0.5f), 0.01f, 0.2f);
-			shadowLod0View = GetTrapezoidView(0, range);
-			shadowLod0Projection = CreateBoundedProjection(shadowLod0View, 1.0f, shadowLod0Distance * range, false);
-			shadowLod0Transformation = glm::mat4(1.0f);
+			//float depth = 0;
+			//range = glm::clamp(depth / (shadowLod0Distance * 0.5f), 0.01f, 0.2f);
+			//shadowLod0View = GetTrapezoidView(0, range);
+			//shadowLod0Projection = CreateBoundedProjection(shadowLod0View, 1.0f, shadowLod0Distance * range, false);
+			//shadowLod0Transformation = glm::mat4(1.0f);
+			//if (Time::newSecond)
+			//{
+			//	for (glm::vec2 point : convexHull) Utilities::PrintVec(point);
+			//	std::cout << std::endl;
+			//} //t3 t2 t0 t1
+			std::vector<glm::vec2> farPoints;
+			farPoints.push_back(frustumCornersInLightSpace[4]);
+			farPoints.push_back(frustumCornersInLightSpace[5]);
+			farPoints.push_back(frustumCornersInLightSpace[6]);
+			farPoints.push_back(frustumCornersInLightSpace[7]);
+			std::vector<glm::vec2> boundedPoints = GetBoundedPoints(farPoints);
+			Trapezoid trapezoid = {boundedPoints[2], boundedPoints[3], boundedPoints[0], boundedPoints[1]};
+			Manager::shaderVariables.frustumCorner1 = glm::vec3(trapezoid.topLeft, 0.0f);
+			Manager::shaderVariables.frustumCorner2 = glm::vec3(trapezoid.topRight, 0.0f);
+			Manager::shaderVariables.frustumCorner3 = glm::vec3(trapezoid.bottomLeft, 0.0f);
+			Manager::shaderVariables.frustumCorner4 = glm::vec3(trapezoid.bottomRight, 0.0f);
+			shadowLod0Transformation = ComputeTrapezoidalMatrix(trapezoid, glm::vec2(0), false);
 			return (shadowLod0Transformation);
 		}
 		else if (lod == 1)
@@ -1046,10 +1045,10 @@ glm::mat4 Shadow::GetTrapezoidTransformation(int lod)
 
 	Trapezoid trapezoid = {topLeft, topRight, baseLeft, baseRight};
 
-	//Manager::shaderVariables.frustumCorner1 = topLeft;
-	//Manager::shaderVariables.frustumCorner2 = topRight;
-	//Manager::shaderVariables.frustumCorner3 = baseLeft;
-	//Manager::shaderVariables.frustumCorner4 = baseRight;
+	Manager::shaderVariables.frustumCorner1 = glm::vec3(topLeft, 0.0f);
+	Manager::shaderVariables.frustumCorner2 = glm::vec3(topRight, 0.0f);
+	Manager::shaderVariables.frustumCorner3 = glm::vec3(baseLeft, 0.0f);
+	Manager::shaderVariables.frustumCorner4 = glm::vec3(baseRight, 0.0f);
 
 	//ComputeTrapezoid(convexHull, l, 0.8f);
 
@@ -1123,13 +1122,13 @@ glm::mat4 Shadow::GetTrapezoidTransformation(int lod)
 
 	if (lod == 0)
 	{
-		shadowLod0Transformation = ComputeTrapezoidalMatrix(trapezoid, q);
+		shadowLod0Transformation = ComputeTrapezoidalMatrix(trapezoid, q, true);
 		//shadowLod0Transformation[1][1] *= -1;
 		return (shadowLod0Transformation);
 	}
 	else if (lod == 1)
 	{
-		shadowLod1Transformation = ComputeTrapezoidalMatrix(trapezoid, q);
+		shadowLod1Transformation = ComputeTrapezoidalMatrix(trapezoid, q, true);
 		//shadowLod1Transformation[1][1] *= -1;
 		return (shadowLod1Transformation);
 	}
@@ -1143,7 +1142,7 @@ std::vector<VkFramebuffer> Shadow::shadowCascadeFrameBuffers;
 std::vector<Texture> Shadow::shadowCascadeTextures;
 std::vector<glm::mat4> Shadow::shadowCascadeViews;
 std::vector<glm::mat4> Shadow::shadowCascadeProjections;
-std::vector<float> Shadow::shadowCascadeDistances = {50, 200};
+std::vector<float> Shadow::shadowCascadeDistances = {100, 300};
 std::vector<int> Shadow::shadowCascadeResolutions = {4096, 4096};
 
 bool Shadow::trapezoidal = false;

@@ -325,6 +325,8 @@ void Manager::UpdateShaderVariables()
 		{
 			shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
 		}
+		Shadow::GetTrapezoidTransformation(0);
+		shaderVariables.shadowCascadeMatrix[0] = Shadow::shadowLod0Transformation * Shadow::shadowLod0Projection * Shadow::shadowLod0View;
 		//shaderVariables.shadowCascadeMatrix = Shadow::GetCascadeProjection() * Shadow::GetCascadeView();
 	}
 
@@ -347,11 +349,11 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.shadows = settings.shadows ? 1 : 0;
 	shaderVariables.shadowCascades = Shadow::trapezoidal ? 0 : 1;
 
-	std::vector<glm::vec4> frustumCorners = camera.GetFrustumCorners(1.0f, 1000.0f);
-	shaderVariables.frustumCorner1 = frustumCorners[4];
-	shaderVariables.frustumCorner2 = frustumCorners[5];
-	shaderVariables.frustumCorner3 = frustumCorners[6];
-	shaderVariables.frustumCorner4 = frustumCorners[7];
+	//std::vector<glm::vec4> frustumCorners = camera.GetFrustumCorners(1.0f, 1000.0f);
+	//shaderVariables.frustumCorner1 = frustumCorners[4];
+	//shaderVariables.frustumCorner2 = frustumCorners[5];
+	//shaderVariables.frustumCorner3 = frustumCorners[6];
+	//shaderVariables.frustumCorner4 = frustumCorners[7];
 
 	memcpy(shaderVariableBuffers[currentFrame].mappedBuffer, &shaderVariables, sizeof(shaderVariables));
 }
