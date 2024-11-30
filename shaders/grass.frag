@@ -2,7 +2,9 @@
 
 #extension GL_ARB_shading_language_include : require
 
-#define CASCADE_COUNT 4
+#ifndef CASCADE_COUNT
+#define CASCADE_COUNT 3
+#endif
 
 layout(location = 0) in vec3 worldPosition;
 layout(location = 1) in vec3 objectNormal;

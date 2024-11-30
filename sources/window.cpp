@@ -107,7 +107,7 @@ void Window::CreateSwapChain()
     VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
     VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
 
-    uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+    uint32_t imageCount = swapChainSupport.capabilities.minImageCount + Manager::settings.extraFrames;
     if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)
     {
         imageCount = swapChainSupport.capabilities.maxImageCount;
@@ -539,6 +539,7 @@ void Window::RecreateSwapChain()
 		glfwWaitEvents();
 	}
 
+	//vkWaitForFences(Manager::currentDevice.logicalDevice, Manager::settings.maxFramesInFlight, Manager::currentDevice.inFlightFences.data(), VK_TRUE, UINT64_MAX);
 	device.WaitForIdle();
 
 	DestroyDepthResources();

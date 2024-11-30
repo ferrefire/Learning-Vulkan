@@ -1,7 +1,9 @@
 #ifndef LIGHTING_INCLUDED
 #define LIGHTING_INCLUDED
 
-#define CASCADE_COUNT 4
+#ifndef CASCADE_COUNT
+#define CASCADE_COUNT 3
+#endif
 
 layout(set = 0, binding = 5) uniform sampler2D shadowSamplers[2];
 //layout(set = 0, binding = 6) uniform sampler2D shadowLod1Sampler;

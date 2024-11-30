@@ -10,6 +10,16 @@
 
 void Trees::Create()
 {
+	treeLod0RenderCount = treeLod0RenderBase * treeLod0RenderBase;
+	treeLod1RenderBase = treeLod0RenderBase + treeLod1RenderBase;
+	treeLod1RenderCount = treeLod1RenderBase * treeLod1RenderBase - treeLod0RenderCount;
+	treeLod2RenderBase = treeLod1RenderBase + treeLod2RenderBase;
+	treeLod2RenderCount = treeLod2RenderBase * treeLod2RenderBase - treeLod0RenderCount - treeLod1RenderCount;
+	treeLod3RenderBase = treeLod2RenderBase + treeLod3RenderBase;
+	treeLod3RenderCount = treeLod3RenderBase * treeLod3RenderBase - treeLod0RenderCount - treeLod1RenderCount - treeLod2RenderCount;
+	treeTotalRenderBase = treeLod3RenderBase;
+	treeTotalRenderCount = treeTotalRenderBase * treeTotalRenderBase;
+
 	CreateMeshes();
 	CreateGraphicsPipeline();
 	if (Manager::settings.shadows) CreateShadowPipeline();
@@ -35,7 +45,8 @@ void Trees::CreateMeshes()
 	BranchConfiguration branchConfig;
 	branchConfig.main = true;
 	branchConfig.splitCount = 3;
-	branchConfig.resolution = 32;
+	//branchConfig.resolution = 32;
+	branchConfig.resolution = 24;
 	//branchConfig.blendRange = 8;
 	//branchConfig.minSize = 0.75;
 
@@ -892,11 +903,11 @@ uint32_t Trees::treeCount = Trees::treeBase * Trees::treeBase;
 
 uint32_t Trees::treeLod0RenderBase = 8;
 uint32_t Trees::treeLod0RenderCount = Trees::treeLod0RenderBase * Trees::treeLod0RenderBase;
-uint32_t Trees::treeLod1RenderBase = Trees::treeLod0RenderBase + 8;
+uint32_t Trees::treeLod1RenderBase = 8;
 uint32_t Trees::treeLod1RenderCount = Trees::treeLod1RenderBase * Trees::treeLod1RenderBase - Trees::treeLod0RenderCount;
-uint32_t Trees::treeLod2RenderBase = Trees::treeLod1RenderBase + 16;
+uint32_t Trees::treeLod2RenderBase = 16;
 uint32_t Trees::treeLod2RenderCount = Trees::treeLod2RenderBase * Trees::treeLod2RenderBase - Trees::treeLod0RenderCount - Trees::treeLod1RenderCount;
-uint32_t Trees::treeLod3RenderBase = Trees::treeLod2RenderBase + 128;
+uint32_t Trees::treeLod3RenderBase = 64;
 uint32_t Trees::treeLod3RenderCount = Trees::treeLod3RenderBase * Trees::treeLod3RenderBase - Trees::treeLod0RenderCount - Trees::treeLod1RenderCount - Trees::treeLod2RenderCount;
 uint32_t Trees::treeTotalRenderBase = Trees::treeLod3RenderBase;
 uint32_t Trees::treeTotalRenderCount = Trees::treeTotalRenderBase * Trees::treeTotalRenderBase;

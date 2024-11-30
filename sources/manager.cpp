@@ -233,7 +233,7 @@ void Manager::Start()
 	Terrain::Start();
 	if (Manager::settings.trees) Trees::Start();
 	Grass::Start();
-	Data::Start();
+	//Data::Start();
 
 	cinematic.Start();
 }
@@ -310,25 +310,33 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.viewMatrix = shaderVariables.projection * shaderVariables.view;
 	shaderVariables.frustumMatrix = glm::inverse(camera.GetTempProjection(50.0f, 250.0f) * shaderVariables.view);
 
-	if (Shadow::trapezoidal)
+	//if (Shadow::trapezoidal)
+	//{
+	//	Shadow::GetTrapezoidTransformation(0);
+	//	shaderVariables.shadowLod0Matrix = Shadow::shadowLod0Transformation * Shadow::shadowLod0Projection * Shadow::shadowLod0View;
+	//	Shadow::GetTrapezoidTransformation(1);
+	//	shaderVariables.shadowLod1Matrix = Shadow::shadowLod1Transformation * Shadow::shadowLod1Projection * Shadow::shadowLod1View;
+	//}
+	//else
+	//{
+	//	Shadow::SetCascadeProjections();
+	//	Shadow::SetCascadeViews();
+	//	Shadow::SetCascadeTransformations();
+	//	for (int i = 0; i < Shadow::cascadeCount; i++)
+	//	{
+	//		shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeTransformations[i] * Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
+	//	}
+	//	//Shadow::GetTrapezoidTransformation(0);
+	//	//shaderVariables.shadowCascadeMatrix[0] = Shadow::shadowLod0Transformation * Shadow::shadowCascadeProjections[0] * Shadow::shadowCascadeViews[0];
+	//	//shaderVariables.shadowCascadeMatrix = Shadow::GetCascadeProjection() * Shadow::GetCascadeView();
+	//}
+
+	Shadow::SetCascadeProjections();
+	Shadow::SetCascadeViews();
+	Shadow::SetCascadeTransformations();
+	for (int i = 0; i < Shadow::cascadeCount; i++)
 	{
-		Shadow::GetTrapezoidTransformation(0);
-		shaderVariables.shadowLod0Matrix = Shadow::shadowLod0Transformation * Shadow::shadowLod0Projection * Shadow::shadowLod0View;
-		Shadow::GetTrapezoidTransformation(1);
-		shaderVariables.shadowLod1Matrix = Shadow::shadowLod1Transformation * Shadow::shadowLod1Projection * Shadow::shadowLod1View;
-	}
-	else
-	{
-		Shadow::SetCascadeProjections();
-		Shadow::SetCascadeViews();
-		Shadow::SetCascadeTransformations();
-		for (int i = 0; i < Shadow::cascadeCount; i++)
-		{
-			shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeTransformations[i] * Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
-		}
-		//Shadow::GetTrapezoidTransformation(0);
-		//shaderVariables.shadowCascadeMatrix[0] = Shadow::shadowLod0Transformation * Shadow::shadowCascadeProjections[0] * Shadow::shadowCascadeViews[0];
-		//shaderVariables.shadowCascadeMatrix = Shadow::GetCascadeProjection() * Shadow::GetCascadeView();
+		shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeTransformations[i] * Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
 	}
 
 	shaderVariables.cullMatrix = Culling::cullProjection * shaderVariables.view;

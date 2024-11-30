@@ -27,8 +27,8 @@ void Shadow::Create()
 
 void Shadow::CreateShadowResources()
 {
-	if (trapezoidal) CreateTrapezoidResources();
-	if (!trapezoidal) CreateCascadeResources();
+	//if (trapezoidal) CreateTrapezoidResources();
+	CreateCascadeResources();
 }
 
 void Shadow::CreateTrapezoidResources()

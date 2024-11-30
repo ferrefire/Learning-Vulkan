@@ -134,8 +134,8 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 
 void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
-	if (Shadow::trapezoidal) RenderTrapezoidShadows(commandBuffer, imageIndex);
-	else RenderCascadeShadows(commandBuffer, imageIndex);
+	//if (Shadow::trapezoidal) RenderTrapezoidShadows(commandBuffer, imageIndex);
+	RenderCascadeShadows(commandBuffer, imageIndex);
 }
 
 void Graphics::RenderTrapezoidShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
@@ -298,7 +298,7 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	beginInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	beginInfo.pInheritanceInfo = nullptr;
 
 	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
@@ -340,28 +340,35 @@ void Graphics::DrawFrame()
 	Terrain::PostFrame();
 	if (Manager::settings.trees) Trees::PostFrame();
 	Grass::PostFrame();
-	//Data::SetData();
+	// Data::SetData();
 
 	RecordCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], imageIndex);
+
+	//std::cout << "buffer recorded" << std::endl;
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-	//VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame]};
+	VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame]};
 	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
 	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &device.imageAvailableSemaphores[Manager::currentFrame];
+	//submitInfo.pWaitSemaphores = &device.imageAvailableSemaphores[Manager::currentFrame];
+	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &device.graphicsCommandBuffers[Manager::currentFrame];
 
-	//VkSemaphore signalSemaphores[] = {device.renderFinishedSemaphores[Manager::currentFrame]};
+	VkSemaphore signalSemaphores[] = {device.renderFinishedSemaphores[Manager::currentFrame]};
 	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &device.renderFinishedSemaphores[Manager::currentFrame];
+	//submitInfo.pSignalSemaphores = &device.renderFinishedSemaphores[Manager::currentFrame];
+	submitInfo.pSignalSemaphores = signalSemaphores;
+
+	//std::cout << "buffer recorderd" << std::endl;
 
 	if (vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, device.inFlightFences[Manager::currentFrame]) != VK_SUCCESS)
 	{
+		std::cout << "error!!!!!!!!!!!!" << std::endl;
 		throw std::runtime_error("failed to submit draw command buffer");
 	}
 
@@ -380,6 +387,7 @@ void Graphics::DrawFrame()
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.framebufferResized)
 	{
+		std::cout << "doing this" << std::endl;
 		window.framebufferResized = false;
 		window.RecreateSwapChain();
 	}
@@ -457,45 +465,43 @@ void Graphics::Create()
 	device.CreateCommandBuffers();
 	device.CreateSyncObjects();
 
+	std::cout << "default stuff created" << std::endl;
+
 	if (Manager::settings.performanceMode)
 	{
-		Shadow::shadowLod0Resolution = int(Shadow::shadowLod0Resolution * 0.5f);
-		Shadow::shadowLod1Resolution = int(Shadow::shadowLod1Resolution * 0.5f);
-		Shadow::shadowLod0Distance = Shadow::shadowLod0Distance * 0.5f;
-		Shadow::shadowLod1Distance = Shadow::shadowLod1Distance * 0.5f;
-		Grass::grassBase = int(Grass::grassBase * 0.5f);
-		Grass::grassCount = Grass::grassBase * Grass::grassBase;
-		Grass::grassLodBase = int(Grass::grassLodBase * 0.5f);
-		Grass::grassLodCount = Grass::grassLodBase * Grass::grassLodBase;
-		Grass::grassTotalBase = Grass::grassBase + Grass::grassLodBase;
-		Grass::grassTotalCount = Grass::grassTotalBase * Grass::grassTotalBase;
-		Trees::treeLod0RenderBase = int(Trees::treeLod0RenderBase * 0.5f);
-		Trees::treeLod0RenderCount = Trees::treeLod0RenderBase * Trees::treeLod0RenderBase;
-		Trees::treeLod1RenderBase = int(Trees::treeLod1RenderBase * 0.5f);
-		Trees::treeLod1RenderCount = Trees::treeLod1RenderBase * Trees::treeLod1RenderBase;
-		Trees::treeLod2RenderBase = int(Trees::treeLod2RenderBase * 0.5f);
-		Trees::treeLod2RenderCount = Trees::treeLod2RenderBase * Trees::treeLod2RenderBase;
-		Trees::treeLod3RenderBase = int(Trees::treeLod3RenderBase * 0.5f);
-		Trees::treeLod3RenderCount = Trees::treeLod3RenderBase * Trees::treeLod3RenderBase;
-		Trees::treeTotalRenderBase = Trees::treeLod0RenderBase + Trees::treeLod1RenderBase + Trees::treeLod2RenderBase + Trees::treeLod3RenderBase;
-		Trees::treeTotalRenderCount = Trees::treeTotalRenderBase * Trees::treeTotalRenderBase;
+		Grass::grassBase = 128;
+		Grass::grassLodBase = 512;
+		Trees::treeLod0RenderBase = 4;
+		Trees::treeLod1RenderBase = 4;
+		Trees::treeLod2RenderBase = 8;
+		Trees::treeLod3RenderBase = 32;
 	}
 
 	Culling::Create();
+	std::cout << "culling created" << std::endl;
 	Shadow::Create();
+	std::cout << "shadow created" << std::endl;
 
 	//Manager::Create();
 	Manager::CreateShaderVariableBuffers();
 	Manager::CreateDescriptorSetLayout();
 
+	std::cout << "manager descriptor created" << std::endl;
+
 	Texture::CreateDefaults();
 	Mesh::CreateDefaults();
 
+	std::cout << "defaults created" << std::endl;
+
 	Terrain::Create();
+	std::cout << "terrain created" << std::endl;
 	Manager::CreateDescriptor();
+	std::cout << "manager real descriptor created" << std::endl;
 	Grass::Create();
+	std::cout << "grass created" << std::endl;
 	if (Manager::settings.trees) Trees::Create();
-	Data::Create();
+	std::cout << "trees created" << std::endl;
+	//Data::Create();
 
 	if (Manager::settings.screenQuad)
 	{

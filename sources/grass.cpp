@@ -8,6 +8,12 @@
 
 void Grass::Create()
 {
+	grassCount = grassBase * grassBase;
+	grassLodBase = grassBase + grassLodBase;
+	grassLodCount = grassLodBase * grassLodBase - grassCount;
+	grassTotalBase = grassLodBase;
+	grassTotalCount = grassTotalBase * grassTotalBase;
+
 	CreateMeshes();
 	CreateGraphicsPipeline();
 	if (Manager::settings.shadows) CreateShadowPipeline();
@@ -558,11 +564,11 @@ void Grass::ComputeClumping()
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
 
-uint32_t Grass::grassBase = 384;
+uint32_t Grass::grassBase = 256;
 uint32_t Grass::grassCount = Grass::grassBase * Grass::grassBase;
 std::vector<CountData> Grass::grassRenderCounts;
 
-uint32_t Grass::grassLodBase = Grass::grassBase + 1920;
+uint32_t Grass::grassLodBase = 2048;
 uint32_t Grass::grassLodCount = Grass::grassLodBase * Grass::grassLodBase - Grass::grassCount;
 //std::vector<uint32_t> Grass::grassLodRenderCounts;
 

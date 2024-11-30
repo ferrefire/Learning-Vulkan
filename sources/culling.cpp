@@ -6,8 +6,8 @@
 
 void Culling::Create()
 {
-	cullResolutionWidth = int(Manager::currentWindow.width * 0.5);
-	cullResolutionHeight = int(Manager::currentWindow.height * 0.5);
+	//cullResolutionWidth = int(Manager::currentWindow.width * 0.5);
+	//cullResolutionHeight = int(Manager::currentWindow.height * 0.5);
 
 	cullProjection = glm::perspective(glm::radians(Manager::camera.FOV), (float)cullResolutionWidth / 
 		(float)cullResolutionHeight, Manager::camera.near, Manager::camera.far);
