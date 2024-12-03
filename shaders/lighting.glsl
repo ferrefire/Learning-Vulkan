@@ -293,7 +293,7 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth)
 {
 	vec3 projectionCoordinates;
 	int lod = -1;
-	int range = 0;
+	int range = 1;
 	for (int i = 0; i < CASCADE_COUNT; i++)
 	{
 		if (lod != -1) break;
@@ -320,8 +320,8 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth)
 
 	depth = clamp(depth, 0.0, shadowDepth);
 	depth *= shadowDepthMult;
-	if (depth < 0.075) range = 1;
-	if (depth < 0.025) range = 2;
+	if (depth < 0.075) range = 2;
+	if (depth < 0.025) range = 3;
 	//if (depth < 0.002) range = 3;
 	//range = 2;
 	//if (lod == 3) range = 0;
