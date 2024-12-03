@@ -469,12 +469,20 @@ void Graphics::Create()
 
 	if (Manager::settings.performanceMode)
 	{
-		Grass::grassBase = 128;
-		Grass::grassLodBase = 512;
+		Grass::grassBase = 256;
+		Grass::grassLodBase = 1536;
 		Trees::treeLod0RenderBase = 4;
 		Trees::treeLod1RenderBase = 4;
 		Trees::treeLod2RenderBase = 8;
 		Trees::treeLod3RenderBase = 32;
+		Shadow::shadowCascadeResolutions[0] = 2048;
+		Shadow::shadowCascadeResolutions[1] = 2048;
+		Shadow::shadowCascadeResolutions[2] = 1024;
+		Shadow::shadowCascadeResolutions[3] = 1024;
+		Shadow::shadowCascadeDistances[0] *= 0.75;
+		Shadow::shadowCascadeDistances[1] *= 0.75;
+		Shadow::shadowCascadeDistances[2] *= 0.75;
+		Shadow::shadowCascadeDistances[3] *= 0.75;
 	}
 
 	Culling::Create();
