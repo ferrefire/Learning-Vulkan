@@ -341,7 +341,7 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 void Graphics::Frame()
 {
 	if (window.recreatingSwapchain) return;
-	//vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
+	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, 1000000000);
 	Manager::UpdateShaderVariables();
 
 	ComputeFrame();
@@ -384,12 +384,12 @@ void Graphics::ComputeFrame()
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &device.computeCommandBuffers[0];
 
-	VkSemaphore signalSemaphores[] = {device.computeFinishedSemaphore};
-	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = signalSemaphores;
+	//VkSemaphore signalSemaphores[] = {device.computeFinishedSemaphore};
+	//submitInfo.signalSemaphoreCount = 1;
+	//submitInfo.pSignalSemaphores = signalSemaphores;
 
-	//submitInfo.signalSemaphoreCount = 0;
-	//submitInfo.pSignalSemaphores = nullptr;
+	submitInfo.signalSemaphoreCount = 0;
+	submitInfo.pSignalSemaphores = nullptr;
 
 	if (vkQueueSubmit(device.computeQueue, 1, &submitInfo, device.computeFences[0]) != VK_SUCCESS)
 	//if (vkQueueSubmit(device.computeQueue, 1, &submitInfo, nullptr) != VK_SUCCESS)
@@ -405,21 +405,21 @@ void Graphics::ComputeFrame()
 
 void Graphics::DrawFrame() 
 {
-	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, 1000000000);
+	//vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, 1000000000);
 	//Manager::UpdateShaderVariables();
 
 	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, 1000000000, device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-	if (result == VK_ERROR_OUT_OF_DATE_KHR)
-	{
-		window.RecreateSwapChain();
-		return;
-	}
-	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
-	{
-		throw std::runtime_error("failed to acquire swap chain image");
-	}
+	//if (result == VK_ERROR_OUT_OF_DATE_KHR)
+	//{
+	//	window.RecreateSwapChain();
+	//	return;
+	//}
+	//else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+	//{
+	//	throw std::runtime_error("failed to acquire swap chain image");
+	//}
 
 	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
 	vkResetCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], 0);
@@ -428,11 +428,11 @@ void Graphics::DrawFrame()
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-	//VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame]};
-	VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame], device.computeFinishedSemaphore};
+	VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame]};
+	//VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame], device.computeFinishedSemaphore};
 	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
-	submitInfo.waitSemaphoreCount = 2;
+	submitInfo.waitSemaphoreCount = 1;
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.commandBufferCount = 1;
@@ -463,16 +463,16 @@ void Graphics::DrawFrame()
 
 	vkQueuePresentKHR(device.presentationQueue, &presentInfo);
 
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.framebufferResized)
-	{
-		std::cout << "doing this" << std::endl;
-		window.framebufferResized = false;
-		window.RecreateSwapChain();
-	}
-	else if (result != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to present swap chain image!");
-	}
+	//if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || window.framebufferResized)
+	//{
+	//	std::cout << "doing this" << std::endl;
+	//	window.framebufferResized = false;
+	//	window.RecreateSwapChain();
+	//}
+	//else if (result != VK_SUCCESS)
+	//{
+	//	throw std::runtime_error("failed to present swap chain image!");
+	//}
 }
 
 bool Graphics::CheckValidationLayerSupport()
