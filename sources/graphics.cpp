@@ -340,32 +340,30 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 
 void Graphics::Frame()
 {
-	//vkWaitForFences(device.logicalDevice, 1, &device.computeFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
-	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
-	//Manager::UpdateShaderVariables();
-
+	//vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
 	Manager::UpdateShaderVariables();
+
 	ComputeFrame();
 	DrawFrame();
 	
-	//Manager::previousFrame = Manager::currentFrame;
 	Manager::currentFrame = (Manager::currentFrame + 1) % Manager::settings.maxFramesInFlight;
 }
 
 void Graphics::ComputeFrame()
 {
-	Terrain::PostFrame();
-	Trees::PostFrame();
-	Grass::PostFrame();
-	// Data::SetData();
-	return;
+	//Terrain::PostFrame();
+	//Trees::PostFrame();
+	//Grass::PostFrame();
+	//// Data::SetData();
+	//return;
 
-	vkWaitForFences(device.logicalDevice, 1, &device.computeFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
+	//vkWaitForFences(device.logicalDevice, 1, &device.computeFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
 	//Manager::UpdateShaderVariables();
 
-	vkResetFences(device.logicalDevice, 1, &device.computeFences[Manager::currentFrame]);
-	vkResetCommandBuffer(device.computeCommandBuffers[Manager::currentFrame], 0);
-	RecordComputeCommands(device.computeCommandBuffers[Manager::currentFrame]);
+	//vkResetFences(device.logicalDevice, 1, &device.computeFences[Manager::currentFrame]);
+	vkResetFences(device.logicalDevice, 1, &device.computeFences[0]);
+	vkResetCommandBuffer(device.computeCommandBuffers[0], 0);
+	RecordComputeCommands(device.computeCommandBuffers[0]);
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -383,26 +381,30 @@ void Graphics::ComputeFrame()
 	submitInfo.pWaitSemaphores = nullptr;
 	submitInfo.pWaitDstStageMask = nullptr;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &device.computeCommandBuffers[Manager::currentFrame];
+	submitInfo.pCommandBuffers = &device.computeCommandBuffers[0];
 
-	//VkSemaphore signalSemaphores[] = {device.renderFinishedSemaphores[Manager::currentFrame]};
+	//VkSemaphore signalSemaphores[] = {device.renderFinishedSemaphores[0]};
 	//submitInfo.signalSemaphoreCount = 1;
 	//submitInfo.pSignalSemaphores = signalSemaphores;
 
 	submitInfo.signalSemaphoreCount = 0;
 	submitInfo.pSignalSemaphores = nullptr;
 
-	if (vkQueueSubmit(device.computeQueue, 1, &submitInfo, device.computeFences[Manager::currentFrame]) != VK_SUCCESS)
+	if (vkQueueSubmit(device.computeQueue, 1, &submitInfo, device.computeFences[0]) != VK_SUCCESS)
 	//if (vkQueueSubmit(device.computeQueue, 1, &submitInfo, nullptr) != VK_SUCCESS)
 	{
 		std::cout << "error!!!!!!!!!!!!" << std::endl;
 		throw std::runtime_error("failed to submit compute command buffer");
 	}
+
+	vkWaitForFences(device.logicalDevice, 1, &device.computeFences[0], VK_TRUE, UINT64_MAX);
+	Trees::SetData();
+	Grass::SetData();
 }
 
 void Graphics::DrawFrame() 
 {
-	//vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
+	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
 	//Manager::UpdateShaderVariables();
 
 	uint32_t imageIndex;
@@ -535,6 +537,8 @@ void Graphics::Create()
 	device.CreateCommandBuffers();
 	device.CreateSyncObjects();
 
+
+
 	std::cout << "default stuff created" << std::endl;
 
 	if (Manager::settings.performanceMode)
@@ -556,29 +560,19 @@ void Graphics::Create()
 	}
 
 	Culling::Create();
-	std::cout << "culling created" << std::endl;
 	Shadow::Create();
-	std::cout << "shadow created" << std::endl;
 
 	//Manager::Create();
 	Manager::CreateShaderVariableBuffers();
 	Manager::CreateDescriptorSetLayout();
 
-	std::cout << "manager descriptor created" << std::endl;
-
 	Texture::CreateDefaults();
 	Mesh::CreateDefaults();
 
-	std::cout << "defaults created" << std::endl;
-
 	Terrain::Create();
-	std::cout << "terrain created" << std::endl;
 	Manager::CreateDescriptor();
-	std::cout << "manager real descriptor created" << std::endl;
 	Grass::Create();
-	std::cout << "grass created" << std::endl;
 	if (Manager::settings.trees) Trees::Create();
-	std::cout << "trees created" << std::endl;
 	//Data::Create();
 
 	if (Manager::settings.screenQuad)

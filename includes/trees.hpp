@@ -174,6 +174,7 @@ class Trees
 		static void RenderCulling(VkCommandBuffer commandBuffer);
 		static void ComputeTreeSetup();
 		static void ComputeTreeRender(VkCommandBuffer commandBuffer);
+		static void SetData();
 
 		static void GenerateTrunkMesh(Mesh &mesh, BranchConfiguration config);
 		//static Shape GenerateBranchShape(BranchConfiguration branchConfig);

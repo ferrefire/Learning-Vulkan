@@ -120,4 +120,5 @@ class Grass
 		static void RenderShadows(VkCommandBuffer commandBuffer, int cascade);
 		static void ComputeGrass(VkCommandBuffer commandBuffer);
 		static void ComputeClumping();
+		static void SetData();
 };

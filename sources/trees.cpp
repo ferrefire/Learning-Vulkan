@@ -694,7 +694,6 @@ void Trees::ComputeTreeRender(VkCommandBuffer commandBuffer)
 	//VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
 	bool oneTimeBuffer = commandBuffer == nullptr;
 	if (oneTimeBuffer) commandBuffer = Manager::currentDevice.BeginComputeCommand();
-	else treeRenderCounts[Manager::currentFrame] = *(TreeCountData *)countBuffers[Manager::currentFrame].mappedBuffer;
 
 	computeRenderPipeline.BindCompute(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, computeRenderPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
@@ -716,6 +715,11 @@ void Trees::ComputeTreeRender(VkCommandBuffer commandBuffer)
 	//	std::cout << "lod 3 count: " << treeRenderCounts[Manager::currentFrame].lod3Count << std::endl;
 	//	std::cout << std::endl;
 	//}
+}
+
+void Trees::SetData()
+{
+	treeRenderCounts[Manager::currentFrame] = *(TreeCountData *)countBuffers[Manager::currentFrame].mappedBuffer;
 }
 
 void Trees::GenerateTrunkMesh(Mesh &mesh, BranchConfiguration config)

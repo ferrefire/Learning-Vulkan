@@ -536,7 +536,6 @@ void Grass::ComputeGrass(VkCommandBuffer commandBuffer)
 	//VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
 	bool oneTimeBuffer = commandBuffer == nullptr;
 	if (oneTimeBuffer) commandBuffer = Manager::currentDevice.BeginComputeCommand();
-	else grassRenderCounts[Manager::currentFrame] = *(CountData *)countBuffers[Manager::currentFrame].mappedBuffer;
 
 	computePipeline.BindCompute(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
@@ -550,8 +549,11 @@ void Grass::ComputeGrass(VkCommandBuffer commandBuffer)
 		Manager::currentDevice.EndComputeCommand(commandBuffer);
 		grassRenderCounts[Manager::currentFrame] = *(CountData *)countBuffers[Manager::currentFrame].mappedBuffer;
 	}
+}
 
-	
+void Grass::SetData()
+{
+	grassRenderCounts[Manager::currentFrame] = *(CountData *)countBuffers[Manager::currentFrame].mappedBuffer;
 }
 
 void Grass::ComputeClumping()
