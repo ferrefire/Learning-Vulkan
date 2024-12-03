@@ -328,7 +328,7 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 		throw std::runtime_error("failed to begin recording command buffer");
 	}
 
-	Terrain::RecordComputeCommands(commandBuffer);
+	//Terrain::RecordComputeCommands(commandBuffer);
 	Trees::RecordComputeCommands(commandBuffer);
 	Grass::RecordComputeCommands(commandBuffer);
 
@@ -340,8 +340,8 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 
 void Graphics::Frame()
 {
-	if (window.recreatingSwapchain) return;
-	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, 1000000000);
+	//if (window.recreatingSwapchain) return;
+	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, uint64_t(1000000000));
 	Manager::UpdateShaderVariables();
 
 	ComputeFrame();
@@ -352,7 +352,7 @@ void Graphics::Frame()
 
 void Graphics::ComputeFrame()
 {
-	//Terrain::PostFrame();
+	Terrain::PostFrame();
 	//Trees::PostFrame();
 	//Grass::PostFrame();
 	//// Data::SetData();
@@ -398,18 +398,18 @@ void Graphics::ComputeFrame()
 		throw std::runtime_error("failed to submit compute command buffer");
 	}
 
-	vkWaitForFences(device.logicalDevice, 1, &device.computeFences[0], VK_TRUE, 1000000000);
+	vkWaitForFences(device.logicalDevice, 1, &device.computeFences[0], VK_TRUE, uint64_t(1000000000));
 	Trees::SetData();
 	Grass::SetData();
 }
 
 void Graphics::DrawFrame() 
 {
-	//vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, 1000000000);
+	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, uint64_t(1000000000));
 	//Manager::UpdateShaderVariables();
 
 	uint32_t imageIndex;
-	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, 1000000000, device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, uint64_t(1000000000), device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
 
 	//if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	//{
