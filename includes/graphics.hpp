@@ -28,9 +28,12 @@ class Graphics
 		void DestroyInstance();
 		void Destroy();
 
+		void Frame();
 		void DrawFrame();
+		void ComputeFrame();
 
-		void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		void RecordGraphicsCommands(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		void RecordComputeCommands(VkCommandBuffer commandBuffer);
 		void RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		void RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		void RenderTrapezoidShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex);

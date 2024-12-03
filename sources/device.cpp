@@ -386,7 +386,7 @@ void Device::CreateCommandBuffers()
 
 	if (computeCommandBuffers.size() != 0) throw std::runtime_error("cannot create compute command buffers because they already exists");
 
-	computeCommandBuffers.resize(1);
+	computeCommandBuffers.resize(Manager::settings.maxFramesInFlight);
 
 	VkCommandBufferAllocateInfo computeAllocInfo{};
 	computeAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;

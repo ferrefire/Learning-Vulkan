@@ -166,7 +166,7 @@ float BlendCascadedShadow(vec3 projectionCoordinates, int lod)
 	//vec2 texelSize = 1.0 / textureSize(shadowSamplers[lod], 0);
 	//vec2 texelSize = vec2(texelSizes[lod]);
 	vec2 texelSize = 1.0 / textureSize(shadowSamplers[lod], 0);
-	int samples = 1;
+	int samples = 3 - lod;
 
 	/*for(int x = -range; x <= range; ++x)
 	{

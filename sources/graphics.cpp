@@ -294,7 +294,7 @@ void Graphics::RenderCulling(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	vkCmdEndRenderPass(commandBuffer);
 }
 
-void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+void Graphics::RecordGraphicsCommands(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
 	VkCommandBufferBeginInfo beginInfo{};
 	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -316,10 +316,81 @@ void Graphics::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t image
 	}
 }
 
-void Graphics::DrawFrame()
+void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
+{
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = 0;
+	beginInfo.pInheritanceInfo = nullptr;
+
+	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to begin recording command buffer");
+	}
+
+	Terrain::RecordComputeCommands(commandBuffer);
+
+	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to record command buffer");
+	}
+}
+
+void Graphics::Frame()
 {
 	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
 
+	ComputeFrame();
+	DrawFrame();
+
+	Manager::currentFrame = (Manager::currentFrame + 1) % Manager::settings.maxFramesInFlight;
+}
+
+void Graphics::ComputeFrame()
+{
+	Manager::UpdateShaderVariables();
+	//Terrain::PostFrame();
+	if (Manager::settings.trees) Trees::PostFrame();
+	Grass::PostFrame();
+	// Data::SetData();
+
+	vkResetCommandBuffer(device.computeCommandBuffers[Manager::currentFrame], 0);
+	RecordComputeCommands(device.computeCommandBuffers[Manager::currentFrame]);
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+	//VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame]};
+	//VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+
+	//submitInfo.waitSemaphoreCount = 1;
+	//submitInfo.pWaitSemaphores = waitSemaphores;
+	//submitInfo.pWaitDstStageMask = waitStages;
+	//submitInfo.commandBufferCount = 1;
+	//submitInfo.pCommandBuffers = &device.graphicsCommandBuffers[Manager::currentFrame];
+
+	submitInfo.waitSemaphoreCount = 0;
+	submitInfo.pWaitSemaphores = nullptr;
+	submitInfo.pWaitDstStageMask = nullptr;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &device.computeCommandBuffers[Manager::currentFrame];
+
+	//VkSemaphore signalSemaphores[] = {device.renderFinishedSemaphores[Manager::currentFrame]};
+	//submitInfo.signalSemaphoreCount = 1;
+	//submitInfo.pSignalSemaphores = signalSemaphores;
+
+	submitInfo.signalSemaphoreCount = 0;
+	submitInfo.pSignalSemaphores = nullptr;
+
+	if (vkQueueSubmit(device.computeQueue, 1, &submitInfo, nullptr) != VK_SUCCESS)
+	{
+		std::cout << "error!!!!!!!!!!!!" << std::endl;
+		throw std::runtime_error("failed to submit compute command buffer");
+	}
+}
+
+void Graphics::DrawFrame() 
+{
 	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, UINT64_MAX, device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
 
@@ -335,16 +406,7 @@ void Graphics::DrawFrame()
 
 	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
 	vkResetCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], 0);
-
-	Manager::UpdateShaderVariables();
-	Terrain::PostFrame();
-	if (Manager::settings.trees) Trees::PostFrame();
-	Grass::PostFrame();
-	// Data::SetData();
-
-	RecordCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], imageIndex);
-
-	//std::cout << "buffer recorded" << std::endl;
+	RecordGraphicsCommands(device.graphicsCommandBuffers[Manager::currentFrame], imageIndex);
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -353,7 +415,6 @@ void Graphics::DrawFrame()
 	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
 	submitInfo.waitSemaphoreCount = 1;
-	//submitInfo.pWaitSemaphores = &device.imageAvailableSemaphores[Manager::currentFrame];
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.commandBufferCount = 1;
@@ -361,10 +422,7 @@ void Graphics::DrawFrame()
 
 	VkSemaphore signalSemaphores[] = {device.renderFinishedSemaphores[Manager::currentFrame]};
 	submitInfo.signalSemaphoreCount = 1;
-	//submitInfo.pSignalSemaphores = &device.renderFinishedSemaphores[Manager::currentFrame];
 	submitInfo.pSignalSemaphores = signalSemaphores;
-
-	//std::cout << "buffer recorderd" << std::endl;
 
 	if (vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, device.inFlightFences[Manager::currentFrame]) != VK_SUCCESS)
 	{
@@ -395,8 +453,6 @@ void Graphics::DrawFrame()
 	{
 		throw std::runtime_error("failed to present swap chain image!");
 	}
-
-	Manager::currentFrame = (Manager::currentFrame + 1) % Manager::settings.maxFramesInFlight;
 }
 
 bool Graphics::CheckValidationLayerSupport()
