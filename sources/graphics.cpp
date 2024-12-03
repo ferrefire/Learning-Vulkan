@@ -341,7 +341,7 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 void Graphics::Frame()
 {
 	//vkWaitForFences(device.logicalDevice, 1, &device.computeFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
-	//vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
+	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
 	//Manager::UpdateShaderVariables();
 
 	Manager::UpdateShaderVariables();
@@ -402,7 +402,7 @@ void Graphics::ComputeFrame()
 
 void Graphics::DrawFrame() 
 {
-	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
+	//vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
 	//Manager::UpdateShaderVariables();
 
 	uint32_t imageIndex;

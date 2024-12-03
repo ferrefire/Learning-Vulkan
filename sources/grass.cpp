@@ -45,7 +45,7 @@ void Grass::CreateMeshes()
 	grassMesh.RecalculateVertices();
 	grassMesh.Create();
 
-	grassLodMesh.shape.SetShape(BLADE, 0);
+	grassLodMesh.shape.SetShape(BLADE, 1);
 	grassLodMesh.RecalculateVertices();
 	grassLodMesh.Create();
 }

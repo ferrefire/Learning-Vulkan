@@ -13,8 +13,9 @@ const vec3 lightColor = vec3(1.0, 0.933, 0.89) * 2.0;
 //const vec3 lightDirection = vec3(0.25, 0.5, 0.25);
 
 const float ambient = 0.1;
-const float shadowDepth = 1000.0 / 25000.0;
-const float shadowDepthMult = 1.0 / (1000.0 / 25000.0);
+const float shadowDis = 250.0;
+const float shadowDepth = shadowDis / 25000.0;
+const float shadowDepthMult = 1.0 / (shadowDis / 25000.0);
 //const float rangeMults[] = {1.0 / 9.0, 1.0 / 25.0, 1.0 / 49.0};
 const float rangeMults[] = {1.0 / 4.0, 1.0 / 8.0, 1.0 / 12.0};
 const float texelSizes[] = {1.0 / 4096.0, 1.0 / 4096.0, 1.0 / 2048.0, 1.0 / 2048.0};
@@ -319,9 +320,9 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth)
 
 	depth = clamp(depth, 0.0, shadowDepth);
 	depth *= shadowDepthMult;
-	if (depth < 0.05) range = 1;
-	if (depth < 0.01) range = 2;
-	if (depth < 0.002) range = 3;
+	if (depth < 0.1) range = 1;
+	if (depth < 0.025) range = 2;
+	//if (depth < 0.002) range = 3;
 	//range = 2;
 	//if (lod == 3) range = 0;
 

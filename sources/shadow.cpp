@@ -1199,8 +1199,8 @@ std::vector<Texture> Shadow::shadowCascadeTextures;
 std::vector<glm::mat4> Shadow::shadowCascadeViews;
 std::vector<glm::mat4> Shadow::shadowCascadeProjections;
 std::vector<glm::mat4> Shadow::shadowCascadeTransformations;
-std::vector<float> Shadow::shadowCascadeDistances = {25, 75, 200, 200};
-std::vector<int> Shadow::shadowCascadeResolutions = {4096, 4096, 2048, 2048};
+std::vector<float> Shadow::shadowCascadeDistances = {25, 75, 150, 200};
+std::vector<int> Shadow::shadowCascadeResolutions = {4096, 3072, 2048, 1024};
 
 bool Shadow::trapezoidal = false;
 

@@ -544,7 +544,7 @@ void Terrain::RenderCulling(VkCommandBuffer commandBuffer)
 
 void Terrain::ComputeHeightMap(VkCommandBuffer commandBuffer, uint32_t lod)
 {
-	// vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
+	vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
 	// VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
 
 	bool oneTimeBuffer = commandBuffer == nullptr;
