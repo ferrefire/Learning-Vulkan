@@ -165,7 +165,7 @@ float BlendCascadedShadow(vec3 projectionCoordinates, int lod)
 	vec2 coords = vec2(0);
 	//vec2 texelSize = 1.0 / textureSize(shadowSamplers[lod], 0);
 	vec2 texelSize = vec2(texelSizes[lod]);
-	//int samples = 0;
+	int samples = 0;
 
 	/*for(int x = -range; x <= range; ++x)
 	{
@@ -194,7 +194,7 @@ float BlendCascadedShadow(vec3 projectionCoordinates, int lod)
 	//	return (shadow);
 	//}
 
-	for (int x = 0; x <= 1; x++)
+	/*for (int x = 0; x <= 1; x++)
 	{
 		for (int y = 0; y <= 1; y++)
 		{
@@ -231,9 +231,9 @@ float BlendCascadedShadow(vec3 projectionCoordinates, int lod)
 				shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
 			}
 		}
-	}
+	}*/
 
-	/*for (int x = 0; x <= 1; x++)
+	for (int x = 0; x <= 1; x++)
 	{
 		for (int y = 0; y <= 1; y++)
 		{
@@ -243,6 +243,8 @@ float BlendCascadedShadow(vec3 projectionCoordinates, int lod)
 			shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
 		}
 	}
+
+	if (samples <= 0) return (shadow * rangeMults[0]);
 
 	for (int x = 0; x <= 1; x++)
 	{
@@ -260,6 +262,8 @@ float BlendCascadedShadow(vec3 projectionCoordinates, int lod)
 		shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
 	}
 
+	if (samples <= 1) return (shadow * rangeMults[1]);
+
 	for (int x = 0; x <= 1; x++)
 	{
 		for (int y = 0; y <= 1; y++)
@@ -269,11 +273,9 @@ float BlendCascadedShadow(vec3 projectionCoordinates, int lod)
 			closestDepth = textureLod(shadowSamplers[lod], coords, 0).r;
 			shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
 		}
-	}*/
+	}
 
-	shadow *= rangeMults[2];
-
-	return (shadow);
+	return (shadow * rangeMults[2]);
 }
 
 float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT])

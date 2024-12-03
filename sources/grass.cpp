@@ -12,7 +12,7 @@ void Grass::Create()
 	grassLodBase = grassBase + grassLodBase;
 	grassLodCount = grassLodBase * grassLodBase - grassCount;
 	grassTotalBase = grassLodBase;
-	grassTotalCount = grassTotalBase * grassTotalBase;
+	grassTotalCount = grassCount + grassLodCount;
 
 	CreateMeshes();
 	CreateGraphicsPipeline();

@@ -1192,7 +1192,7 @@ glm::mat4 Shadow::GetTrapezoidTransformation(int lod)
 	return (glm::mat4(1.0f));
 }
 
-int Shadow::cascadeCount = 4;
+int Shadow::cascadeCount = 3;
 VkRenderPass Shadow::shadowCascadePass = nullptr;
 std::vector<VkFramebuffer> Shadow::shadowCascadeFrameBuffers;
 std::vector<Texture> Shadow::shadowCascadeTextures;

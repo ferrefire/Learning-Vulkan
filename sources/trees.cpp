@@ -18,7 +18,10 @@ void Trees::Create()
 	treeLod3RenderBase = treeLod2RenderBase + treeLod3RenderBase;
 	treeLod3RenderCount = treeLod3RenderBase * treeLod3RenderBase - treeLod0RenderCount - treeLod1RenderCount - treeLod2RenderCount;
 	treeTotalRenderBase = treeLod3RenderBase;
-	treeTotalRenderCount = treeTotalRenderBase * treeTotalRenderBase;
+	//treeTotalRenderCount = treeTotalRenderBase * treeTotalRenderBase;
+	treeTotalRenderCount = treeLod0RenderCount + treeLod1RenderCount + treeLod2RenderCount + treeLod3RenderCount;
+
+	std::cout << treeTotalRenderCount << std::endl;
 
 	CreateMeshes();
 	CreateGraphicsPipeline();
