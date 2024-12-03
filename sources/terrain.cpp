@@ -352,22 +352,22 @@ void Terrain::Start()
 	Manager::shaderVariables.terrainChunksLength = heightMapLength;
 	Manager::shaderVariables.terrainChunksLengthMult = 1.0 / float(heightMapLength);
 
-	//ComputeHeightMap(1);
-	//ComputeHeightMap(0);
+	ComputeHeightMap(nullptr, 1);
+	ComputeHeightMap(nullptr, 0);
 }
 
 void Terrain::Frame()
 {
-	//if (Time::newFrameTick)
-	//{
-	//	if (heightMapArrayLayersGenerated < heightMapCount)
-	//	{
-	//		ComputeHeightMapArray(heightMapArrayLayersGenerated);
-	//		heightMapArrayLayersGenerated++;
-	//		if (heightMapArrayLayersGenerated == heightMapCount)
-	//			std::cout << "All height map array layers generated" << std::endl;
-	//	}
-	//}
+	if (Time::newFrameTick)
+	{
+		if (heightMapArrayLayersGenerated < heightMapCount)
+		{
+			ComputeHeightMapArray(nullptr, heightMapArrayLayersGenerated);
+			heightMapArrayLayersGenerated++;
+			if (heightMapArrayLayersGenerated == heightMapCount)
+				std::cout << "All height map array layers generated" << std::endl;
+		}
+	}
 
 	//if (Time::newSubTick)
 	//{
@@ -377,10 +377,10 @@ void Terrain::Frame()
 
 void Terrain::PostFrame()
 {
-	//if (Time::newSubTick)
-	//{
-	//	CheckTerrainOffset();
-	//}
+	if (Time::newSubTick)
+	{
+		CheckTerrainOffset(nullptr);
+	}
 }
 
 void Terrain::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
@@ -544,9 +544,11 @@ void Terrain::RenderCulling(VkCommandBuffer commandBuffer)
 
 void Terrain::ComputeHeightMap(VkCommandBuffer commandBuffer, uint32_t lod)
 {
-	//vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
+	// vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
+	// VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
 
-	//VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
+	bool oneTimeBuffer = commandBuffer == nullptr;
+	if (oneTimeBuffer) commandBuffer = Manager::currentDevice.BeginComputeCommand();
 	heightMapComputePipeline.BindCompute(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, heightMapComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
 
@@ -561,7 +563,7 @@ void Terrain::ComputeHeightMap(VkCommandBuffer commandBuffer, uint32_t lod)
 	heightMapComputeVariables.mapOffset = (lod == 0 ? ((terrainLod0Offset + terrainOffset) / terrainLod0Size) : ((terrainLod1Offset + terrainOffset) / terrainLod1Size));
 	memcpy(heightMapComputeVariablesBuffer.mappedBuffer, &heightMapComputeVariables, sizeof(heightMapComputeVariables));
 	vkCmdDispatch(commandBuffer, 128, 128, 1); //Change dispatch count
-	//Manager::currentDevice.EndComputeCommand(commandBuffer);
+	if (oneTimeBuffer) Manager::currentDevice.EndComputeCommand(commandBuffer);
 
 	currentBoundHeightMap = lod;
 }
@@ -574,6 +576,8 @@ void Terrain::ComputeHeightMapArray(VkCommandBuffer commandBuffer, uint32_t inde
 	//vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
 
 	//VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
+	bool oneTimeBuffer = commandBuffer == nullptr;
+	if (oneTimeBuffer) commandBuffer = Manager::currentDevice.BeginComputeCommand();
 	heightMapArrayComputePipeline.BindCompute(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, heightMapArrayComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
 	//Manager::UpdateShaderVariables();
@@ -584,7 +588,7 @@ void Terrain::ComputeHeightMapArray(VkCommandBuffer commandBuffer, uint32_t inde
 	heightMapArrayComputeVariables.mapOffset = glm::vec2(y, x);
 	memcpy(heightMapArrayComputeVariablesBuffer.mappedBuffer, &heightMapArrayComputeVariables, sizeof(heightMapArrayComputeVariables));
 	vkCmdDispatch(commandBuffer, 128, 128, 1); // Change dispatch count
-	//Manager::currentDevice.EndComputeCommand(commandBuffer);
+	if (oneTimeBuffer) Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
 
 void Terrain::CheckTerrainOffset(VkCommandBuffer commandBuffer)

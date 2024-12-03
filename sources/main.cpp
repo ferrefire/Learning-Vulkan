@@ -83,7 +83,7 @@ int main(int argc, char **argv)
 		Input::Frame();
 		Manager::Frame();
 
-		Manager::currentGraphics.DrawFrame();
+		Manager::currentGraphics.Frame();
 
 		Manager::PostFrame();
 

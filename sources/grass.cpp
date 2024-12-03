@@ -451,7 +451,7 @@ void Grass::Frame()
 
 void Grass::PostFrame()
 {
-	ComputeGrass();
+	ComputeGrass(nullptr);
 
 	//if (Time::newFrameTick) ComputeGrass();
 }
@@ -462,6 +462,11 @@ void Grass::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
 	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
 	RenderGrass(commandBuffer);
+}
+
+void Grass::RecordComputeCommands(VkCommandBuffer commandBuffer)
+{
+	ComputeGrass(commandBuffer);
 }
 
 void Grass::RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade)
@@ -522,16 +527,16 @@ void Grass::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 	}
 }
 
-void Grass::ComputeGrass()
+void Grass::ComputeGrass(VkCommandBuffer commandBuffer)
 {
 	//vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
 
 	uint32_t computeCount = ceil((float)grassTotalBase / 8.0);
-	//grassVariables.flooredViewPosition = glm::vec3(round(Manager::camera.Position().x * grassVariables.spacingMult) * 
-	//	grassVariables.spacing, round(Manager::camera.Position().y * grassVariables.spacingMult) * grassVariables.spacing, 
-	//	round(Manager::camera.Position().z * grassVariables.spacingMult) * grassVariables.spacing);
 
-	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
+	//VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
+	bool oneTimeBuffer = commandBuffer == nullptr;
+	if (oneTimeBuffer) commandBuffer = Manager::currentDevice.BeginComputeCommand();
+	else grassRenderCounts[Manager::currentFrame] = *(CountData *)countBuffers[Manager::currentFrame].mappedBuffer;
 
 	computePipeline.BindCompute(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
@@ -540,15 +545,13 @@ void Grass::ComputeGrass()
 	
 	vkCmdDispatch(commandBuffer, computeCount, computeCount, 1);
 
-	Manager::currentDevice.EndComputeCommand(commandBuffer);
+	if (oneTimeBuffer)
+	{
+		Manager::currentDevice.EndComputeCommand(commandBuffer);
+		grassRenderCounts[Manager::currentFrame] = *(CountData *)countBuffers[Manager::currentFrame].mappedBuffer;
+	}
 
-	//grassRenderCounts[Manager::currentFrame] = *(uint32_t *)countBuffers[Manager::currentFrame].mappedBuffer;
-	//grassLodRenderCounts[Manager::currentFrame] = *(uint32_t *)lodCountBuffers[Manager::currentFrame].mappedBuffer;
-
-	grassRenderCounts[Manager::currentFrame] = *(CountData *)countBuffers[Manager::currentFrame].mappedBuffer;
-
-	//if (Time::newSecond) std::cout << "Total count: " << grassRenderCounts[Manager::currentFrame] + 
-	//	grassLodRenderCounts[Manager::currentFrame] << std::endl;
+	
 }
 
 void Grass::ComputeClumping()

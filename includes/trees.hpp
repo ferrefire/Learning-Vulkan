@@ -166,13 +166,14 @@ class Trees
 		static void Frame();
 		static void PostFrame();
 		static void RecordGraphicsCommands(VkCommandBuffer commandBuffer);
+		static void RecordComputeCommands(VkCommandBuffer commandBuffer);
 		static void RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade);
 		static void RecordCullCommands(VkCommandBuffer commandBuffer);
 		static void RenderTrees(VkCommandBuffer commandBuffer);
 		static void RenderShadows(VkCommandBuffer commandBuffer, int cascade);
 		static void RenderCulling(VkCommandBuffer commandBuffer);
 		static void ComputeTreeSetup();
-		static void ComputeTreeRender();
+		static void ComputeTreeRender(VkCommandBuffer commandBuffer);
 
 		static void GenerateTrunkMesh(Mesh &mesh, BranchConfiguration config);
 		//static Shape GenerateBranchShape(BranchConfiguration branchConfig);

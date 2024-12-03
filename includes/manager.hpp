@@ -109,6 +109,7 @@ class Manager
 		static Camera camera;
 
 		static uint32_t currentFrame;
+		static uint32_t previousFrame;
 		//static VkCommandBuffer currentBuffer;
 
 		static std::vector<Buffer> shaderVariableBuffers;

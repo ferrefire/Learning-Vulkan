@@ -13,11 +13,12 @@ const vec3 lightColor = vec3(1.0, 0.933, 0.89) * 2.0;
 //const vec3 lightDirection = vec3(0.25, 0.5, 0.25);
 
 const float ambient = 0.1;
-const float shadowDepth = 200.0 / 25000.0;
-const float shadowDepthMult = 1.0 / (200.0 / 25000.0);
+const float shadowDepth = 1000.0 / 25000.0;
+const float shadowDepthMult = 1.0 / (1000.0 / 25000.0);
 //const float rangeMults[] = {1.0 / 9.0, 1.0 / 25.0, 1.0 / 49.0};
 const float rangeMults[] = {1.0 / 4.0, 1.0 / 8.0, 1.0 / 12.0};
 const float texelSizes[] = {1.0 / 4096.0, 1.0 / 4096.0, 1.0 / 2048.0, 1.0 / 2048.0};
+//const int samples = 2;
 
 #include "depth.glsl"
 
@@ -157,7 +158,7 @@ float GetShadow(vec4 shadowSpace, int lod, int range)
 }
 */
 
-float BlendCascadedShadow(vec3 projectionCoordinates, int lod)
+float BlendCascadedShadow(vec3 projectionCoordinates, int lod, int samples)
 {
 	float shadow = 0.0;
 	//float closest = 0.0;
@@ -166,7 +167,8 @@ float BlendCascadedShadow(vec3 projectionCoordinates, int lod)
 	//vec2 texelSize = 1.0 / textureSize(shadowSamplers[lod], 0);
 	//vec2 texelSize = vec2(texelSizes[lod]);
 	vec2 texelSize = 1.0 / textureSize(shadowSamplers[lod], 0);
-	int samples = 3 - lod;
+	//int samples = 3 - lod;
+	//int samples = 1;
 
 	/*for(int x = -range; x <= range; ++x)
 	{
@@ -286,7 +288,7 @@ float BlendCascadedShadow(vec3 projectionCoordinates, int lod)
 	return (shadow * rangeMults[2]);
 }
 
-float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT])
+float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth)
 {
 	vec3 projectionCoordinates;
 	int lod = -1;
@@ -315,13 +317,15 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT])
 	//range = int(floor(dis * (range * 2.0)));
 	//range = clamp(range - lod, 0, 2);
 
-	//depth = clamp(depth, 0.0, shadowDepth);
-	//depth *= shadowDepthMult;
-	//if (depth < 0.05) range = 1;
-	range = 2;
+	depth = clamp(depth, 0.0, shadowDepth);
+	depth *= shadowDepthMult;
+	if (depth < 0.05) range = 1;
+	if (depth < 0.01) range = 2;
+	if (depth < 0.002) range = 3;
+	//range = 2;
 	//if (lod == 3) range = 0;
 
-	float shadow = BlendCascadedShadow(projectionCoordinates, lod);
+	float shadow = BlendCascadedShadow(projectionCoordinates, lod, range);
 
 	return (shadow);
 }

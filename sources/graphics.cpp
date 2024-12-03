@@ -329,6 +329,8 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 	}
 
 	Terrain::RecordComputeCommands(commandBuffer);
+	Trees::RecordComputeCommands(commandBuffer);
+	Grass::RecordComputeCommands(commandBuffer);
 
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
 	{
@@ -338,22 +340,30 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 
 void Graphics::Frame()
 {
-	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
+	//vkWaitForFences(device.logicalDevice, 1, &device.computeFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
+	//vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
+	//Manager::UpdateShaderVariables();
 
+	Manager::UpdateShaderVariables();
 	ComputeFrame();
 	DrawFrame();
-
+	
+	//Manager::previousFrame = Manager::currentFrame;
 	Manager::currentFrame = (Manager::currentFrame + 1) % Manager::settings.maxFramesInFlight;
 }
 
 void Graphics::ComputeFrame()
 {
-	Manager::UpdateShaderVariables();
-	//Terrain::PostFrame();
-	if (Manager::settings.trees) Trees::PostFrame();
+	Terrain::PostFrame();
+	Trees::PostFrame();
 	Grass::PostFrame();
 	// Data::SetData();
+	return;
 
+	vkWaitForFences(device.logicalDevice, 1, &device.computeFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
+	//Manager::UpdateShaderVariables();
+
+	vkResetFences(device.logicalDevice, 1, &device.computeFences[Manager::currentFrame]);
 	vkResetCommandBuffer(device.computeCommandBuffers[Manager::currentFrame], 0);
 	RecordComputeCommands(device.computeCommandBuffers[Manager::currentFrame]);
 
@@ -382,7 +392,8 @@ void Graphics::ComputeFrame()
 	submitInfo.signalSemaphoreCount = 0;
 	submitInfo.pSignalSemaphores = nullptr;
 
-	if (vkQueueSubmit(device.computeQueue, 1, &submitInfo, nullptr) != VK_SUCCESS)
+	if (vkQueueSubmit(device.computeQueue, 1, &submitInfo, device.computeFences[Manager::currentFrame]) != VK_SUCCESS)
+	//if (vkQueueSubmit(device.computeQueue, 1, &submitInfo, nullptr) != VK_SUCCESS)
 	{
 		std::cout << "error!!!!!!!!!!!!" << std::endl;
 		throw std::runtime_error("failed to submit compute command buffer");
@@ -391,6 +402,9 @@ void Graphics::ComputeFrame()
 
 void Graphics::DrawFrame() 
 {
+	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
+	//Manager::UpdateShaderVariables();
+
 	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, UINT64_MAX, device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
 

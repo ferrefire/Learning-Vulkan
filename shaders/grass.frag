@@ -35,7 +35,7 @@ void main()
 	//return;
 
 	float shadow = 0.0;
-	if (variables.shadows == 1) shadow = GetCascadedShadow(shadowPositions);
+	if (variables.shadows == 1) shadow = GetCascadedShadow(shadowPositions, depth);
 
 	vec3 bladeDiffuse = DiffuseLighting(normal, shadow, 0.0, ambient);
 

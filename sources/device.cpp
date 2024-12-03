@@ -250,6 +250,7 @@ void Device::CreateSyncObjects()
 	imageAvailableSemaphores.resize(Manager::settings.maxFramesInFlight);
 	renderFinishedSemaphores.resize(Manager::settings.maxFramesInFlight);
 	inFlightFences.resize(Manager::settings.maxFramesInFlight);
+	computeFences.resize(Manager::settings.maxFramesInFlight);
 
 	VkSemaphoreCreateInfo semaphoreInfo{};
 	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -262,7 +263,8 @@ void Device::CreateSyncObjects()
 	{
 		if (vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
 			vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-			vkCreateFence(logicalDevice, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS)
+			vkCreateFence(logicalDevice, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS ||
+			vkCreateFence(logicalDevice, &fenceInfo, nullptr, &computeFences[i]) != VK_SUCCESS)
 		{
 
 			throw std::runtime_error("failed to create synchronization objects for a frame");
@@ -289,6 +291,12 @@ void Device::DestroySyncObjects()
 		vkDestroyFence(logicalDevice, fence, nullptr);
 	}
 	inFlightFences.clear();
+
+	for (VkFence &fence : computeFences)
+	{
+		vkDestroyFence(logicalDevice, fence, nullptr);
+	}
+	computeFences.clear();
 }
 
 void Device::WaitForIdle()

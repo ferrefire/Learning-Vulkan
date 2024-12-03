@@ -523,7 +523,7 @@ void Trees::Frame()
 
 void Trees::PostFrame()
 {
-	ComputeTreeRender();
+	ComputeTreeRender(nullptr);
 }
 
 void Trees::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
@@ -534,6 +534,11 @@ void Trees::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
 
 	RenderTrees(commandBuffer);
+}
+
+void Trees::RecordComputeCommands(VkCommandBuffer commandBuffer)
+{
+	ComputeTreeRender(commandBuffer);
 }
 
 void Trees::RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade)
@@ -682,11 +687,14 @@ void Trees::ComputeTreeSetup()
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
 
-void Trees::ComputeTreeRender()
+void Trees::ComputeTreeRender(VkCommandBuffer commandBuffer)
 {
 	uint32_t computeCount = ceil(float(treeTotalRenderBase) / 8.0f);
 
-	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
+	//VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
+	bool oneTimeBuffer = commandBuffer == nullptr;
+	if (oneTimeBuffer) commandBuffer = Manager::currentDevice.BeginComputeCommand();
+	else treeRenderCounts[Manager::currentFrame] = *(TreeCountData *)countBuffers[Manager::currentFrame].mappedBuffer;
 
 	computeRenderPipeline.BindCompute(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, computeRenderPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
@@ -694,9 +702,11 @@ void Trees::ComputeTreeRender()
 
 	vkCmdDispatch(commandBuffer, computeCount, computeCount, 1);
 
-	Manager::currentDevice.EndComputeCommand(commandBuffer);
-
-	treeRenderCounts[Manager::currentFrame] = *(TreeCountData *)countBuffers[Manager::currentFrame].mappedBuffer;
+	if (oneTimeBuffer)
+	{
+		Manager::currentDevice.EndComputeCommand(commandBuffer);
+		treeRenderCounts[Manager::currentFrame] = *(TreeCountData *)countBuffers[Manager::currentFrame].mappedBuffer;
+	}
 
 	//if (!Manager::settings.fullscreen && Time::newSecond)
 	//{

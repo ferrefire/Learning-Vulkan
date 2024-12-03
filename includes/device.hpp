@@ -62,8 +62,9 @@ class Device
 		std::vector<VkSemaphore> imageAvailableSemaphores;
 		std::vector<VkSemaphore> renderFinishedSemaphores;
 		std::vector<VkFence> inFlightFences;
+		std::vector<VkFence> computeFences;
 
-        SwapChainSupportDetails swapChainSupportDetails;
+		SwapChainSupportDetails swapChainSupportDetails;
         const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
         void Create(VkInstance instance, VkSurfaceKHR surface);

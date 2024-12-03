@@ -515,6 +515,7 @@ VkDescriptorSetLayout Manager::globalDescriptorSetLayout = nullptr;
 Descriptor Manager::globalDescriptor;
 
 uint32_t Manager::currentFrame = 0;
+uint32_t Manager::previousFrame = 0;
 //VkCommandBuffer Manager::currentBuffer = nullptr;
 
 std::vector<Object *> Manager::objects;
