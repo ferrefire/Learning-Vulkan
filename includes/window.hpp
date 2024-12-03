@@ -42,6 +42,7 @@ class Window
 		bool framebufferResized = false;
 		bool isResizeable = true;
 		bool mouseVisible = false;
+		bool recreatingSwapchain = false;
 
 		void Create();
 		void Destroy();

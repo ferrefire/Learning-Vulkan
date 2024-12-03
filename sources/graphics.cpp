@@ -340,6 +340,7 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 
 void Graphics::Frame()
 {
+	if (window.recreatingSwapchain) return;
 	//vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
 	Manager::UpdateShaderVariables();
 
@@ -383,12 +384,12 @@ void Graphics::ComputeFrame()
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &device.computeCommandBuffers[0];
 
-	//VkSemaphore signalSemaphores[] = {device.renderFinishedSemaphores[0]};
-	//submitInfo.signalSemaphoreCount = 1;
-	//submitInfo.pSignalSemaphores = signalSemaphores;
+	VkSemaphore signalSemaphores[] = {device.computeFinishedSemaphore};
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = signalSemaphores;
 
-	submitInfo.signalSemaphoreCount = 0;
-	submitInfo.pSignalSemaphores = nullptr;
+	//submitInfo.signalSemaphoreCount = 0;
+	//submitInfo.pSignalSemaphores = nullptr;
 
 	if (vkQueueSubmit(device.computeQueue, 1, &submitInfo, device.computeFences[0]) != VK_SUCCESS)
 	//if (vkQueueSubmit(device.computeQueue, 1, &submitInfo, nullptr) != VK_SUCCESS)
@@ -397,18 +398,18 @@ void Graphics::ComputeFrame()
 		throw std::runtime_error("failed to submit compute command buffer");
 	}
 
-	vkWaitForFences(device.logicalDevice, 1, &device.computeFences[0], VK_TRUE, UINT64_MAX);
+	vkWaitForFences(device.logicalDevice, 1, &device.computeFences[0], VK_TRUE, 1000000000);
 	Trees::SetData();
 	Grass::SetData();
 }
 
 void Graphics::DrawFrame() 
 {
-	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
+	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, 1000000000);
 	//Manager::UpdateShaderVariables();
 
 	uint32_t imageIndex;
-	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, UINT64_MAX, device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, 1000000000, device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
@@ -427,10 +428,11 @@ void Graphics::DrawFrame()
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-	VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame]};
+	//VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame]};
+	VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame], device.computeFinishedSemaphore};
 	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
-	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.waitSemaphoreCount = 2;
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.commandBufferCount = 1;
@@ -446,14 +448,16 @@ void Graphics::DrawFrame()
 		throw std::runtime_error("failed to submit draw command buffer");
 	}
 
+	VkSemaphore presentWaitSemaphores[] = {device.renderFinishedSemaphores[Manager::currentFrame]};
+
 	VkPresentInfoKHR presentInfo{};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &device.renderFinishedSemaphores[Manager::currentFrame];
+	presentInfo.pWaitSemaphores = presentWaitSemaphores;
 
-	//VkSwapchainKHR swapChains[] = {window.swapChain};
+	VkSwapchainKHR swapChains[] = {window.swapChain};
 	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = &window.swapChain;
+	presentInfo.pSwapchains = swapChains;
 	presentInfo.pImageIndices = &imageIndex;
 	presentInfo.pResults = nullptr;
 
@@ -545,14 +549,14 @@ void Graphics::Create()
 	{
 		Grass::grassBase = 256;
 		Grass::grassLodBase = 1536;
-		Trees::treeLod0RenderBase = 4;
-		Trees::treeLod1RenderBase = 4;
+		Trees::treeLod0RenderBase = 8;
+		Trees::treeLod1RenderBase = 8;
 		Trees::treeLod2RenderBase = 8;
 		Trees::treeLod3RenderBase = 32;
-		Shadow::shadowCascadeResolutions[0] = 2048;
-		Shadow::shadowCascadeResolutions[1] = 2048;
-		Shadow::shadowCascadeResolutions[2] = 1024;
-		Shadow::shadowCascadeResolutions[3] = 1024;
+		Shadow::shadowCascadeResolutions[0] = ceil(Shadow::shadowCascadeResolutions[0] * 0.5f);
+		Shadow::shadowCascadeResolutions[1] = ceil(Shadow::shadowCascadeResolutions[1] * 0.5f);
+		Shadow::shadowCascadeResolutions[2] = ceil(Shadow::shadowCascadeResolutions[2] * 0.5f);
+		Shadow::shadowCascadeResolutions[3] = ceil(Shadow::shadowCascadeResolutions[3] * 0.5f);
 		Shadow::shadowCascadeDistances[0] *= 0.75;
 		Shadow::shadowCascadeDistances[1] *= 0.75;
 		Shadow::shadowCascadeDistances[2] *= 0.75;

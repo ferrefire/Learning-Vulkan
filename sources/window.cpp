@@ -531,6 +531,8 @@ void Window::RecreateSwapChain()
 {
 	std::cout << "recreating swap chain" << std::endl;
 
+	recreatingSwapchain = true;
+
 	int tempWidth = 0, tempHeight = 0;
 	glfwGetFramebufferSize(data, &tempWidth, &tempHeight);
 	while (tempWidth == 0 || tempHeight == 0)
@@ -540,7 +542,8 @@ void Window::RecreateSwapChain()
 	}
 
 	//vkWaitForFences(Manager::currentDevice.logicalDevice, Manager::settings.maxFramesInFlight, Manager::currentDevice.inFlightFences.data(), VK_TRUE, UINT64_MAX);
-	device.WaitForIdle();
+	//device.WaitForIdle();
+	vkQueueWaitIdle(device.graphicsQueue);
 
 	DestroyDepthResources();
 	DestroyColorResources();
@@ -556,6 +559,8 @@ void Window::RecreateSwapChain()
 	CreateColorResources();
 	CreateDepthResources();
 	CreateFramebuffers();
+
+	recreatingSwapchain = false;
 }
 
 void Window::DestroyResources()

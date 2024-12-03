@@ -59,6 +59,7 @@ class Device
 		VkCommandPool computeCommandPool = nullptr;
 		std::vector<VkCommandBuffer> computeCommandBuffers;
 
+		VkSemaphore computeFinishedSemaphore = nullptr;
 		std::vector<VkSemaphore> imageAvailableSemaphores;
 		std::vector<VkSemaphore> renderFinishedSemaphores;
 		std::vector<VkFence> inFlightFences;
