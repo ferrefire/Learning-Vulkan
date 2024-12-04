@@ -107,11 +107,14 @@ void Shadow::CreateCascadeResources()
 		imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		imageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
 		imageConfig.transitionLayout = LAYOUT_READ_ONLY;
+		//imageConfig.tiling = VK_IMAGE_TILING_LINEAR;
 
 		SamplerConfiguration samplerConfig;
-		samplerConfig.repeatMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-		samplerConfig.borderColor = VK_BORDER_COLOR_INT_OPAQUE_WHITE;
+		samplerConfig.repeatMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		samplerConfig.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 		samplerConfig.anisotrophic = VK_FALSE;
+		samplerConfig.magFilter = VK_FILTER_NEAREST;
+		samplerConfig.minFilter = VK_FILTER_NEAREST;
 
 		shadowCascadeTextures[i].CreateImage(imageConfig, samplerConfig);
 
@@ -290,7 +293,7 @@ void Shadow::SetCascadeViews()
 	{
 		glm::vec3 direction = Manager::shaderVariables.lightDirection;
 
-		float near = 1.0f;
+		float near = 0.0f;
 		for (int j = i; j > 0; j--) near += shadowCascadeDistances[j - 1];
 		//if (i > 0) near = shadowCascadeDistances[i - 1];
 		glm::vec3 focus = Manager::camera.Position() + Manager::camera.Front() * (near + shadowCascadeDistances[i]) * 0.5f;
@@ -302,7 +305,7 @@ void Shadow::SetCascadeViews()
 		glm::vec3 side = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
 		glm::vec3 up = glm::normalize(glm::cross(side, front));
 
-		glm::vec3 position = focus + direction * shadowCascadeDistances[i] * 2.0f;
+		glm::vec3 position = focus + direction * shadowCascadeDistances[i] * 3.0f;
 		shadowCascadeViews[i] = glm::lookAt(position, position + front, up);
 	}
 }
@@ -876,7 +879,7 @@ void Shadow::SetCascadeProjections()
 		//float near = 1.0f;
 		//if (i > 0) near = shadowCascadeDistances[i - 1];
 
-		shadowCascadeProjections[i] = glm::ortho(-shadowCascadeDistances[i] * 0.5f, shadowCascadeDistances[i] * 0.5f, -shadowCascadeDistances[i] * 0.5f, shadowCascadeDistances[i] * 0.5f, 1.0f, shadowCascadeDistances[i] * 4.0f);
+		shadowCascadeProjections[i] = glm::ortho(-shadowCascadeDistances[i] * 0.5f, shadowCascadeDistances[i] * 0.5f, -shadowCascadeDistances[i] * 0.5f, shadowCascadeDistances[i] * 0.5f, 1.0f, shadowCascadeDistances[i] * 6.0f);
 		shadowCascadeProjections[i][1][1] *= -1;
 
 		//shadowCascadeProjections[i] = CreateBoundedProjection(i, near, shadowCascadeDistances[i], 2.0f);
@@ -1201,7 +1204,7 @@ std::vector<Texture> Shadow::shadowCascadeTextures;
 std::vector<glm::mat4> Shadow::shadowCascadeViews;
 std::vector<glm::mat4> Shadow::shadowCascadeProjections;
 std::vector<glm::mat4> Shadow::shadowCascadeTransformations;
-std::vector<float> Shadow::shadowCascadeDistances = {50, 150, 300, 500};
+std::vector<float> Shadow::shadowCascadeDistances = {50, 250, 750, 500};
 std::vector<int> Shadow::shadowCascadeResolutions = {4096, 3072, 2048, 1024};
 
 bool Shadow::trapezoidal = false;
