@@ -89,11 +89,7 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 {
     if (graphicsPipeline) throw std::runtime_error("cannot create graphics pipeline because it already exists");
 
-	if (pipelineConfig.shadow)
-	{
-		if (Shadow::trapezoidal) pipelineConfig.renderPass = Shadow::shadowTrapezoidPass;
-		else pipelineConfig.renderPass = Shadow::shadowCascadePass;
-	}
+	if (pipelineConfig.shadow) pipelineConfig.renderPass = Shadow::shadowCascadePass;
 	else if (pipelineConfig.cull) pipelineConfig.renderPass = Culling::cullPass;
 	else pipelineConfig.renderPass = Manager::currentWindow.renderPass;
 

@@ -10,9 +10,6 @@ layout(set = 0, binding = 0) uniform Variables
 	mat4 view;
 	mat4 projection;
 	mat4 viewMatrix;
-	mat4 frustumMatrix;
-	mat4 shadowLod0Matrix;
-	mat4 shadowLod1Matrix;
 	mat4 shadowCascadeMatrix[CASCADE_COUNT];
 	mat4 cullMatrix;
     vec3 viewPosition;
@@ -33,10 +30,6 @@ layout(set = 0, binding = 0) uniform Variables
 	uint shadows;
 	uint shadowBounding;
 	uint shadowCascades;
-	vec3 frustumCorner1;
-	vec3 frustumCorner2;
-	vec3 frustumCorner3;
-	vec3 frustumCorner4;
 } variables;
 
 #endif

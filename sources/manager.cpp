@@ -308,7 +308,7 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.view = camera.View();
 	shaderVariables.projection = camera.Projection();
 	shaderVariables.viewMatrix = shaderVariables.projection * shaderVariables.view;
-	shaderVariables.frustumMatrix = glm::inverse(camera.GetTempProjection(50.0f, 250.0f) * shaderVariables.view);
+	//shaderVariables.frustumMatrix = glm::inverse(camera.GetTempProjection(50.0f, 250.0f) * shaderVariables.view);
 
 	//if (Shadow::trapezoidal)
 	//{

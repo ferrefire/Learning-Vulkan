@@ -138,7 +138,7 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 	RenderCascadeShadows(commandBuffer, imageIndex);
 }
 
-void Graphics::RenderTrapezoidShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+/*void Graphics::RenderTrapezoidShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
 	VkRenderPassBeginInfo lod0RenderPassInfo{};
 	lod0RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -211,7 +211,7 @@ void Graphics::RenderTrapezoidShadows(VkCommandBuffer commandBuffer, uint32_t im
 
 		vkCmdEndRenderPass(commandBuffer);
 	}
-}
+}*/
 
 void Graphics::RenderCascadeShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {

@@ -36,7 +36,7 @@ class Graphics
 		void RecordComputeCommands(VkCommandBuffer commandBuffer);
 		void RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		void RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-		void RenderTrapezoidShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+		//void RenderTrapezoidShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		void RenderCascadeShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		void RenderCulling(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		bool CheckValidationLayerSupport();
