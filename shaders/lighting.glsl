@@ -249,36 +249,43 @@ float BlendCascadedShadow(vec3 projectionCoordinates, int lod, int samples)
 	//shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
 	//if (samples <= 0) return (shadow);
 
-	//for (int x = 0; x <= 1; x++)
-	//{
-	//	for (int y = 0; y <= 1; y++)
-	//	{
-	//		coords = projectionCoordinates.xy + (vec2(x, y) - 0.5) * texelSize;
-	//		if (abs(coords.x - 0.5) > 0.5 || abs(coords.y - 0.5) > 0.5) continue;
-	//		closestDepth = textureLod(shadowSamplers[lod], coords, 0).r;
-	//		shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
-	//	}
-	//}
+	if (samples <= 0)
+	{
+		shadow = texture(shadowSamplers[lod], projectionCoordinates.xyz);
+		return (shadow);
+	}
 
-	shadow += textureGather(shadowSamplers[lod], projectionCoordinates.xy, projectionCoordinates.z).r;
+	for (int x = 0; x <= 1; x++)
+	{
+		for (int y = 0; y <= 1; y++)
+		{
+			coords = projectionCoordinates.xy + (vec2(x, y) - 0.5) * texelSize;
+			if (abs(coords.x - 0.5) > 0.5 || abs(coords.y - 0.5) > 0.5) continue;
+			//closestDepth = textureLod(shadowSamplers[lod], coords, 0).r;
+			//shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
+			shadow += texture(shadowSamplers[lod], vec3(coords.xy, projectionCoordinates.z));
+		}
+	}
 
-	//if (samples <= 1) return (shadow * rangeMults[0]);
-	return (shadow);
+	if (samples <= 1) return (shadow * rangeMults[0]);
+	
 
-	/*for (int x = 0; x <= 1; x++)
+	for (int x = 0; x <= 1; x++)
 	{
 		coords = projectionCoordinates.xy + ((vec2(x, 0) - 0.5) * 3.0) * texelSize;
 		if (abs(coords.x - 0.5) > 0.5 || abs(coords.y - 0.5) > 0.5) continue;
-		closestDepth = textureLod(shadowSamplers[lod], coords, 0).r;
-		shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
+		//closestDepth = textureLod(shadowSamplers[lod], coords, 0).r;
+		//shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
+		shadow += texture(shadowSamplers[lod], vec3(coords.xy, projectionCoordinates.z));
 	}
 
 	for (int y = 0; y <= 1; y++)
 	{
 		coords = projectionCoordinates.xy + ((vec2(0, y) - 0.5) * 3.0) * texelSize;
 		if (abs(coords.x - 0.5) > 0.5 || abs(coords.y - 0.5) > 0.5) continue;
-		closestDepth = textureLod(shadowSamplers[lod], coords, 0).r;
-		shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
+		//closestDepth = textureLod(shadowSamplers[lod], coords, 0).r;
+		//shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
+		shadow += texture(shadowSamplers[lod], vec3(coords.xy, projectionCoordinates.z));
 	}
 
 	if (samples <= 2) return (shadow * rangeMults[1]);
@@ -289,12 +296,13 @@ float BlendCascadedShadow(vec3 projectionCoordinates, int lod, int samples)
 		{
 			coords = projectionCoordinates.xy + ((vec2(x, y) - 0.5) * 3.0) * texelSize;
 			if (abs(coords.x - 0.5) > 0.5 || abs(coords.y - 0.5) > 0.5) continue;
-			closestDepth = textureLod(shadowSamplers[lod], coords, 0).r;
-			shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
+			//closestDepth = textureLod(shadowSamplers[lod], coords, 0).r;
+			//shadow += (projectionCoordinates.z > closestDepth ? 1.0 : 0.0);
+			shadow += texture(shadowSamplers[lod], vec3(coords.xy, projectionCoordinates.z));
 		}
 	}
 
-	return (shadow * rangeMults[2]);*/
+	return (shadow * rangeMults[2]);
 
 	return (0.0);
 }
@@ -306,7 +314,7 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth)
 	float shadow = 0.0;
 	float blendShadow = 0.0;
 	int lod = 0;
-	int range = 1;
+	int range = 0;
 	//for (int i = CASCADE_COUNT - 1; i >= 0; i--)
 	//{
 	//	//if (lod != -1) break;
@@ -316,10 +324,10 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth)
 	//}
 	//if (lod == -1) return (0.0);
 
-	//float depthDistance = depth * 25000.0;
+	float depthDistance = depth * 25000.0;
 	//if (depthDistance < 100.0) range = 1;
-	//if (depthDistance < 25.0) range = 2;
-	//if (depthDistance < 10.0) range = 3;
+	if (depthDistance < 100.0) range = 1;
+	//if (depthDistance < 10.0) range = 2;
 
 	projectionCoordinates = shadowSpaces[0].xyz / shadowSpaces[0].w;
 	projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;

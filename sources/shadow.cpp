@@ -113,8 +113,10 @@ void Shadow::CreateCascadeResources()
 		samplerConfig.repeatMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 		samplerConfig.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 		samplerConfig.anisotrophic = VK_FALSE;
-		samplerConfig.magFilter = VK_FILTER_NEAREST;
-		samplerConfig.minFilter = VK_FILTER_NEAREST;
+		//samplerConfig.magFilter = VK_FILTER_NEAREST;
+		//samplerConfig.minFilter = VK_FILTER_NEAREST;
+		samplerConfig.compare = VK_TRUE;
+		samplerConfig.compareOp = VK_COMPARE_OP_GREATER;
 
 		shadowCascadeTextures[i].CreateImage(imageConfig, samplerConfig);
 
