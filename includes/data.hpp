@@ -13,19 +13,16 @@
 
 #include <vector>
 
-//struct ComputeData
-//{
-//    float viewHeight = 0;
-//    float frustumIntersect = 0;
-//    float frustumIntersectSecond = 0;
-//    float frustumIntersectAverage = 0;
-//};
-
-struct IntersectData
+struct GeneralData
 {
-    glm::vec3 position = glm::vec3(0);
-    uint32_t active = 0;
+    float viewHeight = 0;
 };
+
+//struct IntersectData
+//{
+//    glm::vec3 position = glm::vec3(0);
+//    uint32_t active = 0;
+//};
 
 class Data
 {
@@ -36,13 +33,14 @@ class Data
         static Pipeline computePipeline;
         static Descriptor computeDescriptor;
         //static std::vector<Buffer> computeBuffers;
-        static Buffer intersectBuffer;
+        //static Buffer intersectBuffer;
+        static Buffer generalBuffer;
 
-        //static std::vector<ComputeData> computeData;
-        static std::vector<IntersectData> intersectData;
+        static std::vector<GeneralData> generalData;
+        //static std::vector<IntersectData> intersectData;
 
-        static int intersectCount;
-        static int activeIntersectCount;
+        //static int intersectCount;
+        //static int activeIntersectCount;
 
         static void Create();
         static void CreatePipelines();
@@ -55,8 +53,10 @@ class Data
         static void DestroyBuffers();
 
         static void Start();
+        static void RecordComputeCommands(VkCommandBuffer commandBuffer);
+        static void ComputeGeneralData(VkCommandBuffer commandBuffer);
         static void SetData();
-        static int AddIntersect(glm::vec3 position);
-        //static ComputeData GetComputeData();
-        static IntersectData GetIntersectData(int index);
+        //static int AddIntersect(glm::vec3 position);
+        static GeneralData GetGeneralData();
+        //static IntersectData GetIntersectData(int index);
 };

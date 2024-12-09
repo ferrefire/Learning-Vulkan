@@ -331,6 +331,7 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 	//Terrain::RecordComputeCommands(commandBuffer);
 	Trees::RecordComputeCommands(commandBuffer);
 	Grass::RecordComputeCommands(commandBuffer);
+	Data::RecordComputeCommands(commandBuffer);
 
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
 	{
@@ -401,6 +402,7 @@ void Graphics::ComputeFrame()
 	vkWaitForFences(device.logicalDevice, 1, &device.computeFences[0], VK_TRUE, uint64_t(1000000000));
 	Trees::SetData();
 	Grass::SetData();
+	Data::SetData();
 }
 
 void Graphics::DrawFrame() 
@@ -577,7 +579,7 @@ void Graphics::Create()
 	Manager::CreateDescriptor();
 	Grass::Create();
 	if (Manager::settings.trees) Trees::Create();
-	//Data::Create();
+	Data::Create();
 
 	if (Manager::settings.screenQuad)
 	{

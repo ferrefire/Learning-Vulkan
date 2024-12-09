@@ -233,7 +233,7 @@ void Manager::Start()
 	Terrain::Start();
 	if (Manager::settings.trees) Trees::Start();
 	Grass::Start();
-	//Data::Start();
+	Data::Start();
 
 	cinematic.Start();
 }
@@ -341,6 +341,7 @@ void Manager::UpdateShaderVariables()
 
 	shaderVariables.cullMatrix = Culling::cullProjection * shaderVariables.view;
 
+	shaderVariables.viewHeight = Data::GetGeneralData().viewHeight;
 	shaderVariables.viewPosition = camera.Position();
 	shaderVariables.viewDirection = camera.Front();
 	shaderVariables.viewRight = camera.Side();

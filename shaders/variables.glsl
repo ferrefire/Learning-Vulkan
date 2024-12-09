@@ -12,6 +12,7 @@ layout(set = 0, binding = 0) uniform Variables
 	mat4 viewMatrix;
 	mat4 shadowCascadeMatrix[CASCADE_COUNT];
 	mat4 cullMatrix;
+    float viewHeight;
     vec3 viewPosition;
     vec3 viewDirection;
     vec3 viewRight;

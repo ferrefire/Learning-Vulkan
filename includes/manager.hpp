@@ -53,6 +53,8 @@ struct ShaderVariables
 	alignas(16) glm::mat4 shadowCascadeMatrix[3];
 
 	alignas(16) glm::mat4 cullMatrix = glm::mat4(1);
+
+	alignas(4) float viewHeight = 0;
 	alignas(16) glm::vec3 viewPosition = glm::vec3(0);
 	alignas(16) glm::vec3 viewDirection = glm::vec3(0);
 	alignas(16) glm::vec3 viewRight = glm::vec3(0);
