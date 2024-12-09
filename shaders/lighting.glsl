@@ -353,7 +353,7 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth, int range
 	{
 		float depthDistance = depth * 25000.0;
 		if (depthDistance < 10.0) range = 2;
-		else if (depthDistance < 100.0) range = 1;
+		else if (depthDistance < 200.0) range = 1;
 		else range = 0;
 		//range = 0;
 	}
