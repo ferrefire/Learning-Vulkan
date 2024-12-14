@@ -63,11 +63,11 @@ struct TreeData
 
 struct TreeRenderData
 {
-	//uint32_t posxz;
-	//uint32_t posyroty;
-	//uint32_t scaxcoly;
-	alignas(16) glm::vec3 position;
-	alignas(16) glm::vec3 rotscacol;
+	uint32_t posxz;
+	uint32_t posyroty;
+	uint32_t scaxcoly;
+	//alignas(16) glm::vec3 position;
+	//alignas(16) glm::vec3 rotscacol;
 };
 
 struct TreeVariables

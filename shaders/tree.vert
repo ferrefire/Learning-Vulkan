@@ -8,11 +8,11 @@
 
 struct TreeRenderData
 {
-	//uint posxz;
-	//uint posyroty;
-	//uint scaxcoly;
-	vec3 position;
-	vec3 rotscacol;
+	uint posxz;
+	uint posyroty;
+	uint scaxcoly;
+	//vec3 position;
+	//vec3 rotscacol;
 };
 
 layout(std430, set = 1, binding = 0) buffer RenderBuffer
@@ -63,23 +63,23 @@ void main()
 	float scale = 1.0;
 	float color = 1.0;
 
-    //position.xz = unpackHalf2x16(renderData[gl_InstanceIndex].posxz);
-	//vec2 yy = unpackHalf2x16(renderData[gl_InstanceIndex].posyroty);
-	//position.y = yy.x;
-	//rotation = yy.y * 360.0;
-	//vec2 xx = unpackHalf2x16(renderData[gl_InstanceIndex].scaxcoly);
-	//scale = xx.x;
-	//color = xx.y;
-
 	uint dataIndex = gl_InstanceIndex;
 	if (pc.treeLod == 1) dataIndex += treeVariables.treeLod0RenderCount;
 	else if (pc.treeLod == 2) dataIndex += treeVariables.treeLod1RenderCount;
 	else if (pc.treeLod == 3) dataIndex += treeVariables.treeLod2RenderCount;
 
-	position = renderData[dataIndex].position;
-	rotation = renderData[dataIndex].rotscacol.x * 360.0;
-	scale = renderData[dataIndex].rotscacol.y;
-	color = renderData[dataIndex].rotscacol.z;
+	position.xz = unpackHalf2x16(renderData[dataIndex].posxz);
+	vec2 posyroty = unpackHalf2x16(renderData[dataIndex].posyroty);
+	position.y = posyroty.x;
+	rotation = posyroty.y * 360.0;
+	vec2 scaxcoly = unpackHalf2x16(renderData[dataIndex].scaxcoly);
+	scale = scaxcoly.x;
+	color = scaxcoly.y;
+
+	//position = renderData[dataIndex].position;
+	//rotation = renderData[dataIndex].rotscacol.x * 360.0;
+	//scale = renderData[dataIndex].rotscacol.y;
+	//color = renderData[dataIndex].rotscacol.z;
 
     position += variables.viewPosition;
 

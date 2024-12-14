@@ -20,11 +20,11 @@ struct TreeData
 
 struct TreeRenderData
 {
-	//uint posxz;
-	//uint posyroty;
-	//uint scaxcoly;
-	vec3 position;
-	vec3 rotscacol;
+	uint posxz;
+	uint posyroty;
+	uint scaxcoly;
+	//vec3 position;
+	//vec3 rotscacol;
 };
 
 layout(std430, set = 1, binding = 0) buffer DataBuffer
@@ -180,6 +180,10 @@ void main()
 	else if (lod == 2) index = atomicAdd(countData.lod2Count, 1) + treeVariables.treeLod1RenderCount;
 	else if (lod == 3) index = atomicAdd(countData.lod3Count, 1) + treeVariables.treeLod2RenderCount;
 
-	renderData[index].position = worldPosition - variables.viewPosition;
-	renderData[index].rotscacol = vec3(rotation, scale, color);
+	renderData[index].posxz = packHalf2x16(worldPosition.xz - variables.viewPosition.xz);
+	renderData[index].posyroty = packHalf2x16(vec2(worldPosition.y - variables.viewPosition.y, rotation));
+	renderData[index].scaxcoly = packHalf2x16(vec2(scale, color));
+
+	//renderData[index].position = worldPosition - variables.viewPosition;
+	//renderData[index].rotscacol = vec3(rotation, scale, color);
 }

@@ -4,8 +4,11 @@
 
 struct TreeRenderData
 {
-	vec3 position;
-	vec3 rotscacol;
+	uint posxz;
+	uint posyroty;
+	uint scaxcoly;
+	//vec3 position;
+	//vec3 rotscacol;
 };
 
 layout(std430, set = 1, binding = 0) buffer RenderBuffer
@@ -60,9 +63,17 @@ void main()
 	else if (pc.treeLod == 2) dataIndex += treeVariables.treeLod1RenderCount;
 	else if (pc.treeLod == 3) dataIndex += treeVariables.treeLod2RenderCount;
 
-	position = renderData[dataIndex].position;
-	rotation = renderData[dataIndex].rotscacol.x * 360.0;
-	scale = renderData[dataIndex].rotscacol.y;
+	position.xz = unpackHalf2x16(renderData[dataIndex].posxz);
+	vec2 posyroty = unpackHalf2x16(renderData[dataIndex].posyroty);
+	position.y = posyroty.x;
+	rotation = posyroty.y * 360.0;
+	vec2 scaxcoly = unpackHalf2x16(renderData[dataIndex].scaxcoly);
+	scale = scaxcoly.x;
+	//color = scaxcoly.y;
+
+	//position = renderData[dataIndex].position;
+	//rotation = renderData[dataIndex].rotscacol.x * 360.0;
+	//scale = renderData[dataIndex].rotscacol.y;
 	//color = renderData[dataIndex].rotscacol.z;
 
     position += variables.viewPosition;

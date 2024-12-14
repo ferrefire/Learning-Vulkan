@@ -60,14 +60,14 @@ class Grass
 	public:
 		static uint32_t grassBase;
 		static uint32_t grassCount;
-		static std::vector<CountData> grassRenderCounts;
 
 		static uint32_t grassLodBase;
 		static uint32_t grassLodCount;
-		//static std::vector<uint32_t> grassLodRenderCounts;
 
 		static uint32_t grassTotalBase;
 		static uint32_t grassTotalCount;
+
+		static std::vector<CountData> grassRenderCounts;
 
 		static Mesh grassMesh;
 		static Mesh grassLodMesh;
@@ -83,9 +83,7 @@ class Grass
 		static Descriptor clumpingComputeDescriptor;
 
 		static std::vector<Buffer> dataBuffers;
-		//static std::vector<Buffer> lodDataBuffers;
 		static std::vector<Buffer> countBuffers;
-		//static std::vector<Buffer> lodCountBuffers;
 		static std::vector<Buffer> variableBuffers;
 
 		static Texture clumpingTexture;
