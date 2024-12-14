@@ -49,7 +49,35 @@ void Shape::SetShape(int type, int resolution)
 			AddCoordinate(glm::vec2(0.0f, 1.0f));
 		}
 	}
-    else if (type == CUBE)
+	else if (type == LEAF)
+	{
+		//normal = true;
+		coordinate = false;
+
+		AddPosition(glm::vec3(-0.25f, -0.25f, 0.0f));
+		AddPosition(glm::vec3(0.25f, 0.25f, 0.0f));
+		AddPosition(glm::vec3(0.5f, -0.5f, 0.0f));
+		AddPosition(glm::vec3(-0.5f, 0.5f, 0.0f));
+
+		Rotate(45.0f, glm::vec3(0, 0, 1));
+
+		AddIndice(0);
+		AddIndice(1);
+		AddIndice(2);
+
+		AddIndice(3);
+		AddIndice(1);
+		AddIndice(0);
+
+		if (coordinate)
+		{
+			AddCoordinate(glm::vec2(0.0f, 0.0f));
+			AddCoordinate(glm::vec2(1.0f, 1.0f));
+			AddCoordinate(glm::vec2(1.0f, 0.0f));
+			AddCoordinate(glm::vec2(0.0f, 1.0f));
+		}
+	}
+	else if (type == CUBE)
     {
         Shape front = Shape(QUAD);
         front.Move(glm::vec3(0.0f, 0.0f, -0.5f));

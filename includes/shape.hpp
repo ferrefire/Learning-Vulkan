@@ -11,6 +11,7 @@
 #define PLANE 3
 #define BLADE 4
 #define CYLINDER 5
+#define LEAF 6
 
 #define INDEX_TYPE VK_INDEX_TYPE_UINT16
 

@@ -10,6 +10,7 @@
 #include "culling.hpp"
 #include "trees.hpp"
 #include "data.hpp"
+#include "leaves.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -117,7 +118,11 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 	Terrain::RecordGraphicsCommands(commandBuffer);
-	if (Manager::settings.trees) Trees::RecordGraphicsCommands(commandBuffer);
+	if (Manager::settings.trees)
+	{
+		Trees::RecordGraphicsCommands(commandBuffer);
+		Leaves::RecordGraphicsCommands(commandBuffer);
+	}
 	Grass::RecordGraphicsCommands(commandBuffer);
 
 	if (Manager::settings.screenQuad)
@@ -250,6 +255,7 @@ void Graphics::RenderCascadeShadows(VkCommandBuffer commandBuffer, uint32_t imag
 
 		Grass::RecordShadowCommands(commandBuffer, i);
 		Trees::RecordShadowCommands(commandBuffer, i);
+		Leaves::RecordShadowCommands(commandBuffer, i);
 
 		vkCmdEndRenderPass(commandBuffer);
 	}
@@ -578,7 +584,13 @@ void Graphics::Create()
 	Terrain::Create();
 	Manager::CreateDescriptor();
 	Grass::Create();
-	if (Manager::settings.trees) Trees::Create();
+	if (Manager::settings.trees)
+	{
+		Trees::Create();
+		std::cout << "trees created" << std::endl;
+		Leaves::Create();
+		std::cout << "leaves created" << std::endl;
+	}
 	Data::Create();
 
 	if (Manager::settings.screenQuad)
@@ -650,6 +662,7 @@ void Graphics::Destroy()
 	Terrain::Destroy();
 	Grass::Destroy();
 	Trees::Destroy();
+	Leaves::Destroy();
 	Data::Destroy();
 	Manager::screenQuadDescriptor.Destroy();
 	Manager::Clean();

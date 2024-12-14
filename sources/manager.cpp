@@ -9,6 +9,7 @@
 #include "trees.hpp"
 #include "utilities.hpp"
 #include "data.hpp"
+#include "leaves.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -231,7 +232,11 @@ void Manager::Start()
 
 	Input::Start();
 	Terrain::Start();
-	if (Manager::settings.trees) Trees::Start();
+	if (Manager::settings.trees)
+	{
+		Trees::Start();
+		Leaves::Start();
+	}
 	Grass::Start();
 	Data::Start();
 
@@ -281,7 +286,11 @@ void Manager::Frame()
 	//}
 
 	Terrain::Frame();
-	if (Manager::settings.trees) Trees::Frame();
+	if (Manager::settings.trees)
+	{
+		Trees::Frame();
+		Leaves::Frame();
+	}
 	Grass::Frame();
 
 	//Data::AddIntersect(camera.Position() + camera.Front() * 1000.0f);
@@ -308,28 +317,6 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.view = camera.View();
 	shaderVariables.projection = camera.Projection();
 	shaderVariables.viewMatrix = shaderVariables.projection * shaderVariables.view;
-	//shaderVariables.frustumMatrix = glm::inverse(camera.GetTempProjection(50.0f, 250.0f) * shaderVariables.view);
-
-	//if (Shadow::trapezoidal)
-	//{
-	//	Shadow::GetTrapezoidTransformation(0);
-	//	shaderVariables.shadowLod0Matrix = Shadow::shadowLod0Transformation * Shadow::shadowLod0Projection * Shadow::shadowLod0View;
-	//	Shadow::GetTrapezoidTransformation(1);
-	//	shaderVariables.shadowLod1Matrix = Shadow::shadowLod1Transformation * Shadow::shadowLod1Projection * Shadow::shadowLod1View;
-	//}
-	//else
-	//{
-	//	Shadow::SetCascadeProjections();
-	//	Shadow::SetCascadeViews();
-	//	Shadow::SetCascadeTransformations();
-	//	for (int i = 0; i < Shadow::cascadeCount; i++)
-	//	{
-	//		shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeTransformations[i] * Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
-	//	}
-	//	//Shadow::GetTrapezoidTransformation(0);
-	//	//shaderVariables.shadowCascadeMatrix[0] = Shadow::shadowLod0Transformation * Shadow::shadowCascadeProjections[0] * Shadow::shadowCascadeViews[0];
-	//	//shaderVariables.shadowCascadeMatrix = Shadow::GetCascadeProjection() * Shadow::GetCascadeView();
-	//}
 
 	Shadow::SetCascadeProjections();
 	Shadow::SetCascadeViews();

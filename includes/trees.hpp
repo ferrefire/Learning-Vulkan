@@ -21,7 +21,9 @@ struct BranchConfiguration
 	bool main = false;
 	int iteration = 0;
 	int maxIteration = 7;
-	float seed = 103.84f;
+	//float seed = 103.84f;
+	float seed = 8.35f;
+	int lod = 0;
 
 	int resolution = 24;
 	int splitCount = 3;
@@ -51,6 +53,7 @@ struct TreeCountData
 	uint32_t lod1Count;
 	uint32_t lod2Count;
 	uint32_t lod3Count;
+	//uint32_t leafCount;
 };
 
 struct TreeData
@@ -72,22 +75,26 @@ struct TreeRenderData
 
 struct TreeVariables
 {
-	uint32_t treeBase;
-	uint32_t treeCount;
+	alignas(4) uint32_t treeBase;
+	alignas(4) uint32_t treeCount;
 
-	uint32_t treeLod0RenderBase;
-	uint32_t treeLod0RenderCount;
-	uint32_t treeLod1RenderBase;
-	uint32_t treeLod1RenderCount;
-	uint32_t treeLod2RenderBase;
-	uint32_t treeLod2RenderCount;
-	uint32_t treeLod3RenderBase;
-	uint32_t treeLod3RenderCount;
-	uint32_t treeTotalRenderBase;
-	uint32_t treeTotalRenderCount;
+	alignas(4) uint32_t treeLod0RenderBase;
+	alignas(4) uint32_t treeLod0RenderCount;
+	alignas(4) uint32_t treeLod1RenderBase;
+	alignas(4) uint32_t treeLod1RenderCount;
+	alignas(4) uint32_t treeLod2RenderBase;
+	alignas(4) uint32_t treeLod2RenderCount;
+	alignas(4) uint32_t treeLod3RenderBase;
+	alignas(4) uint32_t treeLod3RenderCount;
+	alignas(4) uint32_t treeTotalRenderBase;
+	alignas(4) uint32_t treeTotalRenderCount;
 
-	float spacing;
-	float spacingMult;
+	alignas(4) float spacing;
+	alignas(4) float spacingMult;
+
+	alignas(4) uint32_t leafCountTotal;
+	alignas(4) uint32_t leafCount0;
+	alignas(4) uint32_t leafCount1;
 };
 
 class Trees
@@ -112,6 +119,10 @@ class Trees
 
 		static std::vector<TreeCountData> treeRenderCounts;
 
+		static std::vector<glm::vec4> leafPositionsTotal;
+		static std::vector<glm::vec4> leafPositions0;
+		static std::vector<glm::vec4> leafPositions1;
+
 		static Mesh treeLod0Mesh;
 		static Mesh treeLod1Mesh;
 		static Mesh treeLod2Mesh;
@@ -132,6 +143,7 @@ class Trees
 		static Descriptor computeRenderDescriptor;
 
 		static Buffer dataBuffer;
+		static Buffer leafPositionsBuffer;
 		static std::vector<Buffer> renderBuffers;
 		static std::vector<Buffer> countBuffers;
 		static std::vector<Buffer> variableBuffers;
