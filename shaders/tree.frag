@@ -21,11 +21,11 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
-	float shadow = 1.0;
+	//float shadow = 0.0;
 	vec3 normal = normalize(inNormal);
 	float depth = GetDepth(gl_FragCoord.z);
 	//if (variables.shadows == 1) shadow = clamp(1.0 - GetShadow(shadowPosition, 1, 0), 0.3, 1.0);
-	if (variables.shadows == 1) shadow = GetCascadedShadow(shadowPositions, depth, 0);
+	float shadow = GetCascadedShadow(shadowPositions, depth, 0);
 
 	vec3 diffuse = DiffuseLighting(normal, shadow, 0.025);
 	vec3 texColor = texture(treeDiffuseSampler, inCoord * 0.25).xyz;

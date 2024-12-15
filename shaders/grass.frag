@@ -34,8 +34,8 @@ void main()
 	//outColor = vec4(grassColor, 1.0);
 	//return;
 
-	float shadow = 0.0;
-	if (variables.shadows == 1) shadow = GetCascadedShadow(shadowPositions, depth);
+	//float shadow = 0.0;
+	float shadow = GetCascadedShadow(shadowPositions, depth);
 
 	vec3 bladeDiffuse = DiffuseLighting(normal, shadow, 0.0, ambient);
 

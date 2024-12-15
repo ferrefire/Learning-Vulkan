@@ -64,9 +64,9 @@ void main()
 	float color = 1.0;
 
 	uint dataIndex = gl_InstanceIndex;
-	if (pc.treeLod == 1) dataIndex += treeVariables.treeLod0RenderCount;
-	else if (pc.treeLod == 2) dataIndex += treeVariables.treeLod1RenderCount;
-	else if (pc.treeLod == 3) dataIndex += treeVariables.treeLod2RenderCount;
+	if (pc.treeLod >= 1) dataIndex += treeVariables.treeLod0RenderCount;
+	if (pc.treeLod >= 2) dataIndex += treeVariables.treeLod1RenderCount;
+	if (pc.treeLod >= 3) dataIndex += treeVariables.treeLod2RenderCount;
 
 	position.xz = unpackHalf2x16(renderData[dataIndex].posxz);
 	vec2 posyroty = unpackHalf2x16(renderData[dataIndex].posyroty);

@@ -430,7 +430,7 @@ void Trees::CreateComputeRenderDescriptor()
 	for (Buffer &buffer : Leaves::dataBuffers)
 	{
 		descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[i].buffersInfo[index].range = sizeof(LeafData) * (Trees::treeLod0RenderCount + Trees::treeLod1RenderCount) * treeVariables.leafCountTotal;
+		descriptorConfig[i].buffersInfo[index].range = sizeof(LeafData) * (Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal + Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1);
 		descriptorConfig[i].buffersInfo[index].offset = 0;
 		index++;
 	}
@@ -879,11 +879,11 @@ Shape BranchConfiguration::Generate()
 			}
 		}
 
-		if (lod == 0 && iteration > 2)
+		if (lod == 0 && iteration > 1)
 		{
-			int l = int(ceil(float(resolution) / 8.0f));
+			int l = int(ceil(float(resolution) / 4.0f));
 			int leafIndex = y % l;
-			if (leafIndex == 0 || y == resolution) 
+			if (leafIndex == 0 || y == resolution)
 			{
 				for (int i = 0; i < 2; i++)
 				{
@@ -1025,7 +1025,7 @@ uint32_t Trees::treeCount = Trees::treeBase * Trees::treeBase;
 
 uint32_t Trees::treeLod0RenderBase = 8;
 uint32_t Trees::treeLod0RenderCount = Trees::treeLod0RenderBase * Trees::treeLod0RenderBase;
-uint32_t Trees::treeLod1RenderBase = 8;
+uint32_t Trees::treeLod1RenderBase = 16;
 uint32_t Trees::treeLod1RenderCount = Trees::treeLod1RenderBase * Trees::treeLod1RenderBase - Trees::treeLod0RenderCount;
 uint32_t Trees::treeLod2RenderBase = 16;
 uint32_t Trees::treeLod2RenderCount = Trees::treeLod2RenderBase * Trees::treeLod2RenderBase - Trees::treeLod0RenderCount - Trees::treeLod1RenderCount;

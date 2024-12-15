@@ -22,8 +22,8 @@ void main()
 	vec3 leafNormal = normalize(normal);
 	if (!gl_FrontFacing) leafNormal *= -1;
 	float depth = GetDepth(gl_FragCoord.z);
-	float shadow = 0.0;
-	if (variables.shadows == 1) shadow = GetCascadedShadow(shadowPositions, depth);
+	//float shadow = 0.0;
+	float shadow = GetCascadedShadow(shadowPositions, depth);
 	//leafNormal = normalize(leafNormal);
 	vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow, 0.5, 0.1);
 	vec3 endColor = leafDiffuse * leafColor;
