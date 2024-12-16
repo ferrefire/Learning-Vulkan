@@ -259,7 +259,7 @@ void main()
 	float leafRan = 0;
 	int leafCountOffset = lod == 0 ? 0 : int(treeVariables.leafCount0); 
 	int currentLeafIndex = 0;
-	float disMult = 1.0 + clamp(lodInter - 1.0, 0.0, 1.0);
+	float disMult = 1.0 + clamp(lodInter - 1.0, 0.0, 2.0);
 	for (int i = 0; (i + leafCountOffset) < treeVariables.leafCountTotal; i++)
 	{
 		currentLeafIndex = i + leafCountOffset;
