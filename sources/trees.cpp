@@ -51,7 +51,7 @@ void Trees::CreateMeshes()
 	branchConfig.main = true;
 	branchConfig.splitCount = 3;
 	//branchConfig.resolution = 32;
-	branchConfig.resolution = 24;
+	branchConfig.resolution = 32;
 	//branchConfig.blendRange = 8;
 	//branchConfig.minSize = 0.75;
 	branchConfig.lod = 0;
@@ -66,6 +66,7 @@ void Trees::CreateMeshes()
 	treeVariables.leafCountTotal = leafPositionsTotal.size();
 	treeVariables.leafCount0 = leafPositions0.size();
 	treeVariables.leafCount1 = leafPositions1.size();
+	treeVariables.leafCount2 = int(floor(float(treeVariables.leafCount1) / 2.0f));
 	//std::cout << Leaves::leafCount << std::endl;
 
 	branchConfig.resolution = 16;
@@ -430,7 +431,10 @@ void Trees::CreateComputeRenderDescriptor()
 	for (Buffer &buffer : Leaves::dataBuffers)
 	{
 		descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[i].buffersInfo[index].range = sizeof(LeafData) * (Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal + Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1);
+		descriptorConfig[i].buffersInfo[index].range = sizeof(LeafData) * 
+			(Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal + 
+			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1 + 
+			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2);
 		descriptorConfig[i].buffersInfo[index].offset = 0;
 		index++;
 	}
@@ -881,7 +885,7 @@ Shape BranchConfiguration::Generate()
 
 		if (lod == 0 && iteration > 1)
 		{
-			int l = int(ceil(float(resolution) / 4.0f));
+			int l = int(glm::clamp(float(resolution) / 4.0f, 1.0f, float(resolution)));
 			int leafIndex = y % l;
 			if (leafIndex == 0 || y == resolution)
 			{

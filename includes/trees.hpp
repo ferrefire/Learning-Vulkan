@@ -95,6 +95,7 @@ struct TreeVariables
 	alignas(4) uint32_t leafCountTotal;
 	alignas(4) uint32_t leafCount0;
 	alignas(4) uint32_t leafCount1;
+	alignas(4) uint32_t leafCount2;
 };
 
 class Trees

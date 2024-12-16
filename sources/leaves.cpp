@@ -65,7 +65,10 @@ void Leaves::CreateBuffers()
 	dataBuffers.resize(Manager::settings.maxFramesInFlight);
 
 	BufferConfiguration dataConfiguration;
-	dataConfiguration.size = sizeof(LeafData) * (Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal + Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1);
+	dataConfiguration.size = sizeof(LeafData) * 
+			(Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal + 
+			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1 + 
+			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2);
 	dataConfiguration.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 	dataConfiguration.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 	dataConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -88,7 +91,10 @@ void Leaves::CreateGraphicsDescriptor()
 	for (Buffer &buffer : dataBuffers)
 	{
 		descriptorConfig[0].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[0].buffersInfo[index].range = sizeof(LeafData) * (Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal + Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1);
+		descriptorConfig[0].buffersInfo[index].range = sizeof(LeafData) * 
+			(Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal + 
+			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1 + 
+			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2);
 		descriptorConfig[0].buffersInfo[index].offset = 0;
 		index++;
 	}
@@ -107,7 +113,10 @@ void Leaves::CreateShadowDescriptor()
 	for (Buffer &buffer : dataBuffers)
 	{
 		descriptorConfig[0].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[0].buffersInfo[index].range = sizeof(LeafData) * (Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal + Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1);
+		descriptorConfig[0].buffersInfo[index].range = sizeof(LeafData) * 
+			(Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal + 
+			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1 + 
+			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2);
 		descriptorConfig[0].buffersInfo[index].offset = 0;
 		index++;
 	}
@@ -185,6 +194,11 @@ void Leaves::RenderLeaves(VkCommandBuffer commandBuffer)
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
 		Trees::treeRenderCounts[Manager::currentFrame].lod1Count * Trees::treeVariables.leafCount1, 
 		0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal);
+
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
+		Trees::treeRenderCounts[Manager::currentFrame].lod2Count * Trees::treeVariables.leafCount2, 
+		0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal +
+		Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1);
 }
 
 void Leaves::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
@@ -212,6 +226,11 @@ void Leaves::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
 			Trees::treeRenderCounts[Manager::currentFrame].lod1Count * Trees::treeVariables.leafCount1, 
 			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal);
+
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
+			Trees::treeRenderCounts[Manager::currentFrame].lod2Count * Trees::treeVariables.leafCount2, 
+			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal +
+			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1);
 	}
 	else if (cascade == 2)
 	{
@@ -224,6 +243,11 @@ void Leaves::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
 			Trees::treeRenderCounts[Manager::currentFrame].lod1Count * Trees::treeVariables.leafCount1, 
 			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal);
+
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
+			Trees::treeRenderCounts[Manager::currentFrame].lod2Count * Trees::treeVariables.leafCount2, 
+			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal +
+			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1);
 	}
 }
 Mesh Leaves::leafMesh;

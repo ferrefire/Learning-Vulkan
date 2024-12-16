@@ -71,6 +71,7 @@ layout(set = 1, binding = 3) uniform TreeVariables
 	uint leafCountTotal;
 	uint leafCount0;
 	uint leafCount1;
+	uint leafCount2;
 } treeVariables;
 
 layout(std430, set = 1, binding = 4) buffer LeavesBuffer
@@ -250,7 +251,7 @@ void main()
 	//renderData[index].position = worldPosition - variables.viewPosition;
 	//renderData[index].rotscacol = vec3(rotation, scale, color);
 
-	if (lod > 1) return;
+	if (lod > 2) return;
 
 	mat4 rotationMatrix = GetRotationMatrix(radians(rotation * 360.0), vec3(0.0, 1.0, 0.0));
 	vec3 rotatedPosition = vec3(0);
@@ -265,6 +266,14 @@ void main()
 		rotatedPosition = (worldPosition + (rotationMatrix * vec4(leafPositions[currentLeafIndex].xyz, 1.0)).xyz);
 		if (lod == 0) leafIndex = index * treeVariables.leafCountTotal + i;
 		if (lod == 1) leafIndex = index * treeVariables.leafCount1 + i + (indexOffset * treeVariables.leafCountTotal);
+		if (lod == 2)
+		{
+			if (i % 2 != 0) continue ;
+			leafIndex = index * treeVariables.leafCount2;
+			leafIndex += i / 2;
+			leafIndex += (treeVariables.treeLod0RenderCount * treeVariables.leafCountTotal);
+			leafIndex += (treeVariables.treeLod1RenderCount * treeVariables.leafCount1);
+		}
 		//leafIndex += (lod == 0 ? 0 : (treeVariables.leafCountTotal * treeVariables.treeLod0RenderCount));
 		//if (InView(rotatedPosition, 0) == 0) continue;
 
@@ -281,7 +290,7 @@ void main()
 
 		leavesData[leafIndex].posxz = packHalf2x16(rotatedPosition.xz);
 		leavesData[leafIndex].posyroty = packHalf2x16(vec2(rotatedPosition.y, leafRotationY));
-		leavesData[leafIndex].scalxrotx = packHalf2x16(vec2(leafScale, leafRotationX));
+		leavesData[leafIndex].scalxrotx = packHalf2x16(vec2(leafScale * disMult, leafRotationX));
 		leavesData[leafIndex].colx = packHalf2x16(vec2(leafColor, 0.0));
 	}
 }
