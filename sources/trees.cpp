@@ -674,9 +674,9 @@ void Trees::RenderTrees(VkCommandBuffer commandBuffer)
 	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod3), &lod3);
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod3Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod3Count, 0, 0, 0);
 
-	treeLod4Mesh.Bind(commandBuffer);
-	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod4), &lod4);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod4Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod4Count, 0, 0, 0);
+	//treeLod4Mesh.Bind(commandBuffer);
+	//vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod4), &lod4);
+	//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod4Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod4Count, 0, 0, 0);
 }
 
 void Trees::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
