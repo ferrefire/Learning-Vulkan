@@ -19,7 +19,7 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
-	vec3 leafNormal = normalize(normal);
+	vec3 leafNormal = normal;
 	if (!gl_FrontFacing) leafNormal *= -1;
 	float depth = GetDepth(gl_FragCoord.z);
 	//float shadow = 0.0;

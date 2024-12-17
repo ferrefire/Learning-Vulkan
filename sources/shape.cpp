@@ -12,6 +12,13 @@ Shape::Shape(int type)
     SetShape(type);
 }
 
+Shape::Shape(int type, bool coordinate, bool normal)
+{
+	this->coordinate = coordinate;
+	this->normal = normal;
+    SetShape(type);
+}
+
 Shape::Shape(int type, int resolution)
 {
     SetShape(type, resolution);
@@ -30,8 +37,8 @@ void Shape::SetShape(int type, int resolution)
 	{
 		AddPosition(glm::vec3(-0.5f, -0.5f, 0.0f));
 		AddPosition(glm::vec3(0.5f, 0.5f, 0.0f));
-		AddPosition(glm::vec3(0.5f, -0.5f, 0.0f));
 		AddPosition(glm::vec3(-0.5f, 0.5f, 0.0f));
+		AddPosition(glm::vec3(0.5f, -0.5f, 0.0f));
 
 		AddIndice(0);
 		AddIndice(1);
@@ -45,8 +52,16 @@ void Shape::SetShape(int type, int resolution)
 		{
 			AddCoordinate(glm::vec2(0.0f, 0.0f));
 			AddCoordinate(glm::vec2(1.0f, 1.0f));
-			AddCoordinate(glm::vec2(1.0f, 0.0f));
 			AddCoordinate(glm::vec2(0.0f, 1.0f));
+			AddCoordinate(glm::vec2(1.0f, 0.0f));
+		}
+
+		if (normal)
+		{
+			AddNormal(glm::vec3(0.0f, 0.0f, 1.0f));
+			AddNormal(glm::vec3(0.0f, 0.0f, 1.0f));
+			AddNormal(glm::vec3(0.0f, 0.0f, 1.0f));
+			AddNormal(glm::vec3(0.0f, 0.0f, 1.0f));
 		}
 	}
 	else if (type == LEAF)
@@ -55,6 +70,25 @@ void Shape::SetShape(int type, int resolution)
 		coordinate = false;
 
 		if (resolution == 0)
+		{
+			float angleStep = 360.0f / 3.0f;
+
+			for (int i = 0; i < 3; i++)
+			{
+				glm::vec3 newPosition = Utilities::RotateVec(glm::vec3(-0.5f, -0.5f, 0.0f), i * angleStep, glm::vec3(0, 0, 1));
+				AddPosition(newPosition);
+			}
+
+			//Rotate(45.0f, glm::vec3(0, 0, 1));
+
+			AddIndice(0);
+			AddIndice(2);
+			AddIndice(1);
+
+			Rotate(90.0f, glm::vec3(1, 0, 0));
+		}
+
+		if (resolution == 1)
 		{
 			AddPosition(glm::vec3(-0.25f, -0.25f, 0.0f));
 			AddPosition(glm::vec3(0.25f, 0.25f, 0.0f));
@@ -150,7 +184,7 @@ void Shape::SetShape(int type, int resolution)
 			Rotate(90.0f, glm::vec3(1, 0, 0));
 		}
 
-		if (resolution == 1)
+		/*if (resolution == 1)
 		{
 			float angleStep = 360.0f / 3.0f;
 
@@ -189,7 +223,7 @@ void Shape::SetShape(int type, int resolution)
 			AddIndice(3);
 	
 			Rotate(90.0f, glm::vec3(1, 0, 0));
-		}
+		}*/
 
 		/*if (resolution == 1)
 		{
@@ -234,28 +268,31 @@ void Shape::SetShape(int type, int resolution)
 	}
 	else if (type == CUBE)
     {
-        Shape front = Shape(QUAD);
-        front.Move(glm::vec3(0.0f, 0.0f, -0.5f));
+		coordinate = true;
+		normal = true;
 
-        Shape back = Shape(QUAD);
+        Shape front = Shape(QUAD, true, true);
+        front.Move(glm::vec3(0.0f, 0.0f, 0.5f));
+
+        Shape back = Shape(QUAD, true, true);
         back.Rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-        back.Move(glm::vec3(0.0f, 0.0f, 0.5f));
+        back.Move(glm::vec3(0.0f, 0.0f, -0.5f));
 
-        Shape right = Shape(QUAD);
+        Shape right = Shape(QUAD, true, true);
         right.Rotate(-90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-        right.Move(glm::vec3(0.5f, 0.0f, 0.0f));
+        right.Move(glm::vec3(-0.5f, 0.0f, 0.0f));
 
-        Shape left = Shape(QUAD);
+        Shape left = Shape(QUAD, true, true);
         left.Rotate(90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-        left.Move(glm::vec3(-0.5f, 0.0f, 0.0f));
+        left.Move(glm::vec3(0.5f, 0.0f, 0.0f));
 
-        Shape top = Shape(QUAD);
+        Shape top = Shape(QUAD, true, true);
         top.Rotate(90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-        top.Move(glm::vec3(0.0f, 0.5f, 0.0f));
+        top.Move(glm::vec3(0.0f, -0.5f, 0.0f));
 
-        Shape bottom = Shape(QUAD);
+        Shape bottom = Shape(QUAD, true, true);
         bottom.Rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-        bottom.Move(glm::vec3(0.0f, -0.5f, 0.0f));
+        bottom.Move(glm::vec3(0.0f, 0.5f, 0.0f));
 
         Join(front);
         Join(back);
@@ -263,6 +300,8 @@ void Shape::SetShape(int type, int resolution)
         Join(left);
         Join(top);
         Join(bottom);
+
+		//RecalculateNormals();
     }
     else if (type == PLANE)
     {
@@ -415,6 +454,13 @@ void Shape::AddCoordinate(glm::vec2 uv)
 	if (!coordinate) return;
 
 	coordinates.push_back(uv);
+}
+
+void Shape::AddNormal(glm::vec3 norm)
+{
+	if (!normal) return;
+
+	normals.push_back(norm);
 }
 
 void Shape::AddIndice(indexType index)
@@ -604,7 +650,7 @@ void Shape::Rotate(float degrees, glm::vec3 axis)
 	}
 }
 
-void Shape::Scale(glm::vec3 scale)
+void Shape::Scale(glm::vec3 scale, bool scaleUV)
 {
 	glm::mat4 scaleMatrix = glm::mat4(1.0f);
 	scaleMatrix = glm::scale(scaleMatrix, scale);
@@ -613,15 +659,22 @@ void Shape::Scale(glm::vec3 scale)
 	{
 		pos = scaleMatrix * glm::vec4(pos, 1.0f);
 	}
+
+	if (!scaleUV) return;
+
+	for (glm::vec2 &coord : coordinates)
+	{
+		coord = scaleMatrix * glm::vec4(coord, 0.0f, 1.0f);
+	}
 }
 
-void Shape::RecalculateNormals()
+void Shape::RecalculateNormals(bool x, bool y, bool z)
 {
 	normals.clear();
 
 	for (const glm::vec3 &position : positions)
 	{
-		normals.push_back(glm::normalize(glm::vec3(position.x, 0, position.z)));
+		normals.push_back(glm::normalize(glm::vec3(x ? position.x : 0, y ? position.y : 0, z ? position.z : 0)));
 	}
 }
 

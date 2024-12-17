@@ -57,7 +57,6 @@ void Trees::CreateMeshes()
 	//branchConfig.blendRange = 8;
 	//branchConfig.minSize = 0.75;
 	branchConfig.lod = 0;
-
 	GenerateTrunkMesh(treeLod0Mesh, branchConfig);
 	treeLod0Mesh.Create();
 
@@ -76,30 +75,36 @@ void Trees::CreateMeshes()
 	branchConfig.resolution = 12;
 	branchConfig.minSize = 0.15;
 	branchConfig.lod = 1;
-
 	GenerateTrunkMesh(treeLod1Mesh, branchConfig);
 	treeLod1Mesh.Create();
 
 	branchConfig.resolution = 4;
 	branchConfig.minSize = 0.5;
 	branchConfig.lod = 2;
-
 	GenerateTrunkMesh(treeLod2Mesh, branchConfig);
 	treeLod2Mesh.Create();
 
 	branchConfig.resolution = 4;
 	branchConfig.minSize = 0.75;
 	branchConfig.lod = 3;
-
 	GenerateTrunkMesh(treeLod3Mesh, branchConfig);
 	treeLod3Mesh.Create();
 
-	branchConfig.resolution = 4;
-	branchConfig.minSize = 1.0;
-	//branchConfig.minSize = 0.75;
-	branchConfig.lod = 4;
+	//branchConfig.resolution = 4;
+	//branchConfig.minSize = 1.0;
+	////branchConfig.minSize = 0.75;
+	//branchConfig.lod = 4;
+	//GenerateTrunkMesh(treeLod4Mesh, branchConfig);
+	//treeLod4Mesh.Create();
 
-	GenerateTrunkMesh(treeLod4Mesh, branchConfig);
+	treeLod4Mesh.coordinate = true;
+	treeLod4Mesh.normal = true;
+	treeLod4Mesh.shape.coordinate = true;
+	treeLod4Mesh.shape.normal = true;
+	treeLod4Mesh.shape.SetShape(CYLINDER, 4);
+	treeLod4Mesh.shape.Scale(glm::vec3(1.5f, 2.5f, 1.5f), true);
+	//treeLod4Mesh.shape.Move(glm::vec3(0.0f, 20.0f, 0.0f));
+	treeLod4Mesh.RecalculateVertices();
 	treeLod4Mesh.Create();
 }
 
@@ -674,9 +679,9 @@ void Trees::RenderTrees(VkCommandBuffer commandBuffer)
 	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod3), &lod3);
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod3Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod3Count, 0, 0, 0);
 
-	//treeLod4Mesh.Bind(commandBuffer);
-	//vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod4), &lod4);
-	//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod4Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod4Count, 0, 0, 0);
+	treeLod4Mesh.Bind(commandBuffer);
+	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod4), &lod4);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod4Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod4Count, 0, 0, 0);
 }
 
 void Trees::RenderShadows(VkCommandBuffer commandBuffer, int cascade)

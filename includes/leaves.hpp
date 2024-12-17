@@ -31,6 +31,7 @@ class Leaves
 	public:
 		static Mesh leafMeshLod0;
 		static Mesh leafMeshLod1;
+		static Mesh leafMeshLod2;
 
 		static Pipeline graphicsPipeline;
 		static Pipeline shadowPipeline;

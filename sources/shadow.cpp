@@ -1206,7 +1206,7 @@ std::vector<glm::mat4> Shadow::shadowCascadeViews;
 std::vector<glm::mat4> Shadow::shadowCascadeProjections;
 std::vector<glm::mat4> Shadow::shadowCascadeTransformations;
 std::vector<float> Shadow::shadowCascadeDistances = {50, 250, 750, 3000, 7000};
-std::vector<int> Shadow::shadowCascadeResolutions = {3072, 3072, 2048, 2048, 2048};
+std::vector<int> Shadow::shadowCascadeResolutions = {3072, 3072, 2048, 2048, 1024};
 
 bool Shadow::trapezoidal = false;
 

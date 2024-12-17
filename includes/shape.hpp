@@ -25,6 +25,7 @@ class Shape
     public:
         Shape();
         Shape(int type);
+        Shape(int type, bool coordinate, bool normal);
         Shape(int type, int resolution);
         ~Shape();
 
@@ -49,6 +50,7 @@ class Shape
 
         void AddPosition(glm::vec3 pos);
 		void AddCoordinate(glm::vec2 uv);
+		void AddNormal(glm::vec3 norm);
 		void AddIndice(indexType index);
 
         void Join(Shape &joinShape);
@@ -56,9 +58,9 @@ class Shape
 
         void Move(glm::vec3 movement);
         void Rotate(float degrees, glm::vec3 axis);
-        void Scale(glm::vec3 scale);
+        void Scale(glm::vec3 scale, bool scaleUV = false);
 
-        void RecalculateNormals();
+        void RecalculateNormals(bool x = true, bool y = false, bool z = true);
         void RecalculateNormal(unsigned int index);
         void RecalculateCoordinates();
 
