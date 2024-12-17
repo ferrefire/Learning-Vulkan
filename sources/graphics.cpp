@@ -107,7 +107,7 @@ void Graphics::RecordGraphicsCommands()
 
 	VkSubmitInfo submitInfo{};
 	VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame], device.shadowSemaphores[Manager::currentFrame]};
-	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT};
+	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT};
 
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.waitSemaphoreCount = 2;
@@ -390,7 +390,7 @@ void Graphics::ComputeFrame()
 
 	VkSubmitInfo submitInfo{};
 	VkSemaphore waitSemaphores[] = {device.cullSemaphores[Manager::currentFrame]};
-	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_VERTEX_SHADER_BIT};
+	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT};
 
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.waitSemaphoreCount = 1;

@@ -230,7 +230,7 @@ void main()
 	else if (AreaInView(worldPosition + vec3(0, viewFactor, 0), vec2(viewFactor * 0.75, viewFactor), inDis) == 0) return;
 
 	float occludeFactor = 50.0 / float(clamp(lod, 1, 4));
-	if (AreaOccluded(worldPosition + vec3(0, occludeFactor, 0), vec2(occludeFactor * 0.25, occludeFactor), 2.0, 0.001 + (lod == 4 ? 0.004 : 0.0)) == 1) return;
+	if (AreaOccluded(worldPosition + vec3(0, occludeFactor, 0), vec2(occludeFactor * 0.25, occludeFactor), 2.0, 0.005) == 1) return;
 
 	float scale = 1.0;
 	float color = 1.0;
@@ -286,40 +286,53 @@ void main()
 		float scaleMult = 1.0;
 		currentLeafIndex = i + leafCountOffset;
 		rotatedPosition = (worldPosition + (rotationMatrix * vec4(leafPositions[currentLeafIndex].xyz, 1.0)).xyz);
-		if (lod == 0) leafIndex = index * treeVariables.leafCountTotal + i;
-		else if (lod == 1) leafIndex = index * treeVariables.leafCount1 + i + (indexOffset * treeVariables.leafCountTotal);
+		if (lod == 0)
+		{
+			leafIndex = index * treeVariables.leafCountTotal + i;
+			if (i >= treeVariables.leafCount0) scaleMult = 2.0;
+			if (i % 2 == 0) scaleMult += 1.0;
+		}
+		else if (lod == 1)
+		{
+			leafIndex = index * treeVariables.leafCount1 + i + (indexOffset * treeVariables.leafCountTotal);
+			scaleMult = 2.0;
+			if (i % 2 == 0) scaleMult += 1.0;
+		}
 		else if (lod == 2)
 		{
-			if (currentLeafIndex % 2 != 0) continue ;
+			if (i % 2 != 0) continue ;
 			leafIndex = index * treeVariables.leafCount2;
 			leafIndex += int(ceil(float(i) / 2.0));
 			leafIndex += (treeVariables.treeLod0RenderCount * treeVariables.leafCountTotal);
 			leafIndex += (treeVariables.treeLod1RenderCount * treeVariables.leafCount1);
+			scaleMult = 3.0;
 		}
 		else if (lod == 3)
 		{
-			if (currentLeafIndex % 8 != 0) continue ;
+			if (i % 8 != 0) continue ;
 			leafIndex = index * treeVariables.leafCount3;
 			leafIndex += int(ceil(float(i) / 8.0));
 			leafIndex += (treeVariables.treeLod0RenderCount * treeVariables.leafCountTotal);
 			leafIndex += (treeVariables.treeLod1RenderCount * treeVariables.leafCount1);
 			leafIndex += (treeVariables.treeLod2RenderCount * treeVariables.leafCount2);
+			scaleMult = 6.0;
 		}
 		else if (lod == 4)
 		{
-			if (currentLeafIndex % 16 != 0) continue ;
+			if (i % 16 != 0) continue ;
 			leafIndex = index * treeVariables.leafCount4;
 			leafIndex += int(ceil(float(i) / 16.0));
 			leafIndex += (treeVariables.treeLod0RenderCount * treeVariables.leafCountTotal);
 			leafIndex += (treeVariables.treeLod1RenderCount * treeVariables.leafCount1);
 			leafIndex += (treeVariables.treeLod2RenderCount * treeVariables.leafCount2);
 			leafIndex += (treeVariables.treeLod3RenderCount * treeVariables.leafCount3);
+			scaleMult = 9.0;
 		}
-		if (currentLeafIndex >= treeVariables.leafCount0) scaleMult += 1.0;
-		if (currentLeafIndex % 2 == 0) scaleMult += 1.0;
+		//if (currentLeafIndex >= treeVariables.leafCount0) scaleMult += 1.0;
+		//if (currentLeafIndex % 2 == 0) scaleMult += 1.0;
 		//if (currentLeafIndex % 4 == 0) scaleMult += 1.0;
-		if (lod == 3) scaleMult += 3.0;
-		if (lod == 4) scaleMult += 6.0;
+		//if (lod == 3) scaleMult += 3.0;
+		//if (lod == 4) scaleMult += 6.0;
 		//leafIndex += (lod == 0 ? 0 : (treeVariables.leafCountTotal * treeVariables.treeLod0RenderCount));
 		//if (InView(rotatedPosition, 0) == 0) continue;
 
