@@ -54,15 +54,20 @@ class Device
 		QueueFamilies queueFamilies;
 
         VkCommandPool graphicsCommandPool = nullptr;
-		std::vector<VkCommandBuffer> graphicsCommandBuffers;
+        std::vector<VkCommandBuffer> graphicsCommandBuffers;
+        std::vector<VkCommandBuffer> shadowCommandBuffers;
+        std::vector<VkCommandBuffer> cullCommandBuffers;
 
-		VkCommandPool computeCommandPool = nullptr;
+        std::vector<VkSemaphore> shadowSemaphores;
+        std::vector<VkSemaphore> cullSemaphores;
+
+        VkCommandPool computeCommandPool = nullptr;
 		std::vector<VkCommandBuffer> computeCommandBuffers;
 
 		VkSemaphore computeFinishedSemaphore = nullptr;
 		std::vector<VkSemaphore> imageAvailableSemaphores;
-		std::vector<VkSemaphore> renderFinishedSemaphores;
-		std::vector<VkFence> inFlightFences;
+        std::vector<VkSemaphore> renderFinishedSemaphores;
+        std::vector<VkFence> inFlightFences;
 		std::vector<VkFence> computeFences;
 
 		SwapChainSupportDetails swapChainSupportDetails;

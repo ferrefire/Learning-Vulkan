@@ -249,6 +249,8 @@ void Device::CreateSyncObjects()
 
 	imageAvailableSemaphores.resize(Manager::settings.maxFramesInFlight);
 	renderFinishedSemaphores.resize(Manager::settings.maxFramesInFlight);
+	shadowSemaphores.resize(Manager::settings.maxFramesInFlight);
+	cullSemaphores.resize(Manager::settings.maxFramesInFlight);
 	inFlightFences.resize(Manager::settings.maxFramesInFlight);
 	computeFences.resize(Manager::settings.maxFramesInFlight);
 
@@ -266,6 +268,8 @@ void Device::CreateSyncObjects()
 	{
 		if (vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
 			vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
+			vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &shadowSemaphores[i]) != VK_SUCCESS ||
+			vkCreateSemaphore(logicalDevice, &semaphoreInfo, nullptr, &cullSemaphores[i]) != VK_SUCCESS ||
 			vkCreateFence(logicalDevice, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS ||
 			vkCreateFence(logicalDevice, &fenceInfo, nullptr, &computeFences[i]) != VK_SUCCESS)
 		{
@@ -294,6 +298,18 @@ void Device::DestroySyncObjects()
 		vkDestroySemaphore(logicalDevice, semaphore, nullptr);
 	}
 	renderFinishedSemaphores.clear();
+
+	for (VkSemaphore &semaphore : shadowSemaphores)
+	{
+		vkDestroySemaphore(logicalDevice, semaphore, nullptr);
+	}
+	shadowSemaphores.clear();
+
+	for (VkSemaphore &semaphore : cullSemaphores)
+	{
+		vkDestroySemaphore(logicalDevice, semaphore, nullptr);
+	}
+	cullSemaphores.clear();
 
 	for (VkFence &fence : inFlightFences)
 	{
@@ -397,6 +413,36 @@ void Device::CreateCommandBuffers()
 	graphicsAllocInfo.commandBufferCount = (uint32_t)Manager::settings.maxFramesInFlight;
 
 	if (vkAllocateCommandBuffers(logicalDevice, &graphicsAllocInfo, graphicsCommandBuffers.data()) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to allocate command buffers");
+	}
+
+	if (shadowCommandBuffers.size() != 0) throw std::runtime_error("cannot create shadow command buffers because they already exists");
+
+	shadowCommandBuffers.resize(Manager::settings.maxFramesInFlight);
+
+	VkCommandBufferAllocateInfo shadowAllocInfo{};
+	shadowAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	shadowAllocInfo.commandPool = graphicsCommandPool;
+	shadowAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	shadowAllocInfo.commandBufferCount = (uint32_t)Manager::settings.maxFramesInFlight;
+
+	if (vkAllocateCommandBuffers(logicalDevice, &shadowAllocInfo, shadowCommandBuffers.data()) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to allocate command buffers");
+	}
+
+	if (cullCommandBuffers.size() != 0) throw std::runtime_error("cannot create cull command buffers because they already exists");
+
+	cullCommandBuffers.resize(Manager::settings.maxFramesInFlight);
+
+	VkCommandBufferAllocateInfo cullAllocInfo{};
+	cullAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	cullAllocInfo.commandPool = graphicsCommandPool;
+	cullAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	cullAllocInfo.commandBufferCount = (uint32_t)Manager::settings.maxFramesInFlight;
+
+	if (vkAllocateCommandBuffers(logicalDevice, &cullAllocInfo, cullCommandBuffers.data()) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to allocate command buffers");
 	}

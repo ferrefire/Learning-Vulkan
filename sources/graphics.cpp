@@ -85,6 +85,60 @@ void Graphics::CreateInstance()
     }
 }
 
+void Graphics::RecordGraphicsCommands()
+{
+	uint32_t imageIndex;
+	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, uint64_t(1000000000), device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+	vkResetCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], 0);
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = 0;
+	beginInfo.pInheritanceInfo = nullptr;
+
+	if (vkBeginCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], &beginInfo) != VK_SUCCESS)
+		throw std::runtime_error("failed to begin recording command buffer");
+
+	RenderGraphics(device.graphicsCommandBuffers[Manager::currentFrame], imageIndex);
+
+	if (vkEndCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame]) != VK_SUCCESS)
+		throw std::runtime_error("failed to record command buffer");
+
+	VkSubmitInfo submitInfo{};
+	VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame], device.shadowSemaphores[Manager::currentFrame]};
+	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT};
+
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.waitSemaphoreCount = 2;
+	submitInfo.pWaitSemaphores = waitSemaphores;
+	submitInfo.pWaitDstStageMask = waitStages;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &device.graphicsCommandBuffers[Manager::currentFrame];
+
+	VkSemaphore signalSemaphores[] = {device.renderFinishedSemaphores[Manager::currentFrame]};
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = signalSemaphores;
+
+	if (vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, device.inFlightFences[Manager::currentFrame]) != VK_SUCCESS)
+		throw std::runtime_error("failed to submit graphics command buffer");
+
+	VkSemaphore presentWaitSemaphores[] = {device.renderFinishedSemaphores[Manager::currentFrame]};
+
+	VkPresentInfoKHR presentInfo{};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.waitSemaphoreCount = 1;
+	presentInfo.pWaitSemaphores = presentWaitSemaphores;
+
+	VkSwapchainKHR swapChains[] = {window.swapChain};
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = swapChains;
+	presentInfo.pImageIndices = &imageIndex;
+	presentInfo.pResults = nullptr;
+
+	vkQueuePresentKHR(device.presentationQueue, &presentInfo);
+}
+
 void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
 	VkRenderPassBeginInfo renderPassInfo{};
@@ -137,88 +191,109 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	vkCmdEndRenderPass(commandBuffer);
 }
 
-void Graphics::RenderShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+void Graphics::RecordCullCommands()
 {
-	//if (Shadow::trapezoidal) RenderTrapezoidShadows(commandBuffer, imageIndex);
-	RenderCascadeShadows(commandBuffer, imageIndex);
+	vkResetCommandBuffer(device.cullCommandBuffers[Manager::currentFrame], 0);
+
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = 0;
+	beginInfo.pInheritanceInfo = nullptr;
+
+	if (vkBeginCommandBuffer(device.cullCommandBuffers[Manager::currentFrame], &beginInfo) != VK_SUCCESS)
+		throw std::runtime_error("failed to begin recording command buffer");
+
+	RenderCulling(device.cullCommandBuffers[Manager::currentFrame]);
+
+	if (vkEndCommandBuffer(device.cullCommandBuffers[Manager::currentFrame]) != VK_SUCCESS)
+		throw std::runtime_error("failed to record command buffer");
+
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.waitSemaphoreCount = 0;
+	submitInfo.pWaitSemaphores = nullptr;
+	submitInfo.pWaitDstStageMask = nullptr;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &device.cullCommandBuffers[Manager::currentFrame];
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = &device.cullSemaphores[Manager::currentFrame];
+
+	if (vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS)
+		throw std::runtime_error("failed to submit cull command buffer");
 }
 
-/*void Graphics::RenderTrapezoidShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+void Graphics::RenderCulling(VkCommandBuffer commandBuffer)
 {
-	VkRenderPassBeginInfo lod0RenderPassInfo{};
-	lod0RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	lod0RenderPassInfo.renderPass = Shadow::shadowTrapezoidPass;
-	lod0RenderPassInfo.framebuffer = Shadow::shadowLod0FrameBuffer;
-	lod0RenderPassInfo.renderArea.offset = {0, 0};
-	lod0RenderPassInfo.renderArea.extent.width = Shadow::shadowLod0Resolution;
-	lod0RenderPassInfo.renderArea.extent.height = Shadow::shadowLod0Resolution;
+	VkRenderPassBeginInfo renderPassInfo{};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassInfo.renderPass = Culling::cullPass;
+	renderPassInfo.framebuffer = Culling::cullFrameBuffer;
+	renderPassInfo.renderArea.offset = {0, 0};
+	renderPassInfo.renderArea.extent.width = Culling::cullResolutionWidth;
+	renderPassInfo.renderArea.extent.height = Culling::cullResolutionHeight;
 
 	std::vector<VkClearValue> clearValues(1);
 	clearValues[0].depthStencil = {1.0f, 0};
 
-	lod0RenderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-	lod0RenderPassInfo.pClearValues = clearValues.data();
+	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+	renderPassInfo.pClearValues = clearValues.data();
 
-	vkCmdBeginRenderPass(commandBuffer, &lod0RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	VkViewport lod0Viewport{};
-	lod0Viewport.x = 0.0f;
-	lod0Viewport.y = 0.0f;
-	lod0Viewport.width = Shadow::shadowLod0Resolution;
-	lod0Viewport.height = Shadow::shadowLod0Resolution;
-	lod0Viewport.minDepth = 0.0f;
-	lod0Viewport.maxDepth = 1.0f;
-	vkCmdSetViewport(commandBuffer, 0, 1, &lod0Viewport);
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = Culling::cullResolutionWidth;
+	viewport.height = Culling::cullResolutionHeight;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-	VkRect2D lod0Scissor{};
-	lod0Scissor.offset = {0, 0};
-	lod0Scissor.extent.width = Shadow::shadowLod0Resolution;
-	lod0Scissor.extent.height = Shadow::shadowLod0Resolution;
-	vkCmdSetScissor(commandBuffer, 0, 1, &lod0Scissor);
+	VkRect2D scissor{};
+	scissor.offset = {0, 0};
+	scissor.extent.width = Culling::cullResolutionWidth;
+	scissor.extent.height = Culling::cullResolutionHeight;
+	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	Grass::RecordShadowCommands(commandBuffer, 0);
-	//Trees::RecordShadowCommands(commandBuffer, 0);
+	Terrain::RecordCullCommands(commandBuffer);
+	// Grass::RecordCullingCommands(commandBuffer);
 
 	vkCmdEndRenderPass(commandBuffer);
+}
 
-	if (Manager::settings.trees)
-	{
-		VkRenderPassBeginInfo lod1RenderPassInfo{};
-		lod1RenderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		lod1RenderPassInfo.renderPass = Shadow::shadowTrapezoidPass;
-		lod1RenderPassInfo.framebuffer = Shadow::shadowLod1FrameBuffer;
-		lod1RenderPassInfo.renderArea.offset = {0, 0};
-		lod1RenderPassInfo.renderArea.extent.width = Shadow::shadowLod1Resolution;
-		lod1RenderPassInfo.renderArea.extent.height = Shadow::shadowLod1Resolution;
+void Graphics::RecordShadowCommands()
+{
+	vkResetCommandBuffer(device.shadowCommandBuffers[Manager::currentFrame], 0);
 
-		lod1RenderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-		lod1RenderPassInfo.pClearValues = clearValues.data();
+	VkCommandBufferBeginInfo beginInfo{};
+	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	beginInfo.flags = 0;
+	beginInfo.pInheritanceInfo = nullptr;
 
-		vkCmdBeginRenderPass(commandBuffer, &lod1RenderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	if (vkBeginCommandBuffer(device.shadowCommandBuffers[Manager::currentFrame], &beginInfo) != VK_SUCCESS)
+		throw std::runtime_error("failed to begin recording command buffer");
 
-		VkViewport lod1Viewport{};
-		lod1Viewport.x = 0.0f;
-		lod1Viewport.y = 0.0f;
-		lod1Viewport.width = Shadow::shadowLod1Resolution;
-		lod1Viewport.height = Shadow::shadowLod1Resolution;
-		lod1Viewport.minDepth = 0.0f;
-		lod1Viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(commandBuffer, 0, 1, &lod1Viewport);
+	RenderShadows(device.shadowCommandBuffers[Manager::currentFrame]);
 
-		VkRect2D lod1Scissor{};
-		lod1Scissor.offset = {0, 0};
-		lod1Scissor.extent.width = Shadow::shadowLod1Resolution;
-		lod1Scissor.extent.height = Shadow::shadowLod1Resolution;
-		vkCmdSetScissor(commandBuffer, 0, 1, &lod1Scissor);
+	if (vkEndCommandBuffer(device.shadowCommandBuffers[Manager::currentFrame]) != VK_SUCCESS)
+		throw std::runtime_error("failed to record command buffer");
 
-		Trees::RecordShadowCommands(commandBuffer, 1);
-		//Grass::RecordShadowCommands(commandBuffer, 1);
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.waitSemaphoreCount = 0;
+	submitInfo.pWaitSemaphores = nullptr;
+	submitInfo.pWaitDstStageMask = nullptr;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &device.shadowCommandBuffers[Manager::currentFrame];
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = &device.shadowSemaphores[Manager::currentFrame];
 
-		vkCmdEndRenderPass(commandBuffer);
-	}
-}*/
+	//if (vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, device.inFlightFences[Manager::currentFrame]) != VK_SUCCESS)
+	if (vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS)
+		throw std::runtime_error("failed to submit shadow command buffer");
+}
 
-void Graphics::RenderCascadeShadows(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+void Graphics::RenderShadows(VkCommandBuffer commandBuffer)
 {
 	for (int i = 0; i < Shadow::cascadeCount; i++)
 	{
@@ -253,72 +328,11 @@ void Graphics::RenderCascadeShadows(VkCommandBuffer commandBuffer, uint32_t imag
 		scissor.extent.height = Shadow::shadowCascadeResolutions[i];
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		Grass::RecordShadowCommands(commandBuffer, i);
-		Trees::RecordShadowCommands(commandBuffer, i);
 		Leaves::RecordShadowCommands(commandBuffer, i);
+		Trees::RecordShadowCommands(commandBuffer, i);
+		Grass::RecordShadowCommands(commandBuffer, i);
 
 		vkCmdEndRenderPass(commandBuffer);
-	}
-}
-
-void Graphics::RenderCulling(VkCommandBuffer commandBuffer, uint32_t imageIndex)
-{
-	VkRenderPassBeginInfo renderPassInfo{};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassInfo.renderPass = Culling::cullPass;
-	renderPassInfo.framebuffer = Culling::cullFrameBuffer;
-	renderPassInfo.renderArea.offset = {0, 0};
-	renderPassInfo.renderArea.extent.width = Culling::cullResolutionWidth;
-	renderPassInfo.renderArea.extent.height = Culling::cullResolutionHeight;
-
-	std::vector<VkClearValue> clearValues(1);
-	clearValues[0].depthStencil = {1.0f, 0};
-
-	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-	renderPassInfo.pClearValues = clearValues.data();
-
-	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-	VkViewport viewport{};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = Culling::cullResolutionWidth;
-	viewport.height = Culling::cullResolutionHeight;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-	VkRect2D scissor{};
-	scissor.offset = {0, 0};
-	scissor.extent.width = Culling::cullResolutionWidth;
-	scissor.extent.height = Culling::cullResolutionHeight;
-	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-	Terrain::RecordCullCommands(commandBuffer);
-	//Grass::RecordCullingCommands(commandBuffer);
-
-	vkCmdEndRenderPass(commandBuffer);
-}
-
-void Graphics::RecordGraphicsCommands(VkCommandBuffer commandBuffer, uint32_t imageIndex)
-{
-	VkCommandBufferBeginInfo beginInfo{};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = 0;
-	beginInfo.pInheritanceInfo = nullptr;
-
-	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to begin recording command buffer");
-	}
-
-	if (Manager::settings.shadows) RenderShadows(commandBuffer, imageIndex);
-	RenderGraphics(commandBuffer, imageIndex);
-	if (Manager::settings.occlussionCulling) RenderCulling(commandBuffer, imageIndex);
-
-	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to record command buffer");
 	}
 }
 
@@ -351,8 +365,17 @@ void Graphics::Frame()
 	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, uint64_t(1000000000));
 	Manager::UpdateShaderVariables();
 
+	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
+
+	RecordCullCommands();
+
 	ComputeFrame();
-	DrawFrame();
+
+	RecordShadowCommands();
+
+	RecordGraphicsCommands();
+
+	//DrawFrame();
 	
 	Manager::currentFrame = (Manager::currentFrame + 1) % Manager::settings.maxFramesInFlight;
 }
@@ -360,40 +383,21 @@ void Graphics::Frame()
 void Graphics::ComputeFrame()
 {
 	Terrain::PostFrame();
-	//Trees::PostFrame();
-	//Grass::PostFrame();
-	//// Data::SetData();
-	//return;
 
-	//vkWaitForFences(device.logicalDevice, 1, &device.computeFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
-	//Manager::UpdateShaderVariables();
-
-	//vkResetFences(device.logicalDevice, 1, &device.computeFences[Manager::currentFrame]);
 	vkResetFences(device.logicalDevice, 1, &device.computeFences[0]);
 	vkResetCommandBuffer(device.computeCommandBuffers[0], 0);
 	RecordComputeCommands(device.computeCommandBuffers[0]);
 
 	VkSubmitInfo submitInfo{};
+	VkSemaphore waitSemaphores[] = {device.cullSemaphores[Manager::currentFrame]};
+	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_VERTEX_SHADER_BIT};
+
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-	//VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame]};
-	//VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-
-	//submitInfo.waitSemaphoreCount = 1;
-	//submitInfo.pWaitSemaphores = waitSemaphores;
-	//submitInfo.pWaitDstStageMask = waitStages;
-	//submitInfo.commandBufferCount = 1;
-	//submitInfo.pCommandBuffers = &device.graphicsCommandBuffers[Manager::currentFrame];
-
-	submitInfo.waitSemaphoreCount = 0;
-	submitInfo.pWaitSemaphores = nullptr;
-	submitInfo.pWaitDstStageMask = nullptr;
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = waitSemaphores;
+	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &device.computeCommandBuffers[0];
-
-	//VkSemaphore signalSemaphores[] = {device.computeFinishedSemaphore};
-	//submitInfo.signalSemaphoreCount = 1;
-	//submitInfo.pSignalSemaphores = signalSemaphores;
 
 	submitInfo.signalSemaphoreCount = 0;
 	submitInfo.pSignalSemaphores = nullptr;
@@ -413,7 +417,7 @@ void Graphics::ComputeFrame()
 
 void Graphics::DrawFrame() 
 {
-	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, uint64_t(1000000000));
+	//vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, uint64_t(1000000000));
 	//Manager::UpdateShaderVariables();
 
 	uint32_t imageIndex;
@@ -429,22 +433,25 @@ void Graphics::DrawFrame()
 	//	throw std::runtime_error("failed to acquire swap chain image");
 	//}
 
-	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
+	//vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
 	vkResetCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], 0);
-	RecordGraphicsCommands(device.graphicsCommandBuffers[Manager::currentFrame], imageIndex);
+	//RecordGraphicsCommands(device.graphicsCommandBuffers[Manager::currentFrame], imageIndex);
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-	VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame]};
+	VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame], device.shadowSemaphores[Manager::currentFrame]};
 	//VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame], device.computeFinishedSemaphore};
 	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
-	submitInfo.waitSemaphoreCount = 1;
+	//VkCommandBuffer commandBuffers[] = {device.shadowCommandBuffers[Manager::currentFrame], device.graphicsCommandBuffers[Manager::currentFrame]};
+	submitInfo.waitSemaphoreCount = 2;
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &device.graphicsCommandBuffers[Manager::currentFrame];
+	//submitInfo.commandBufferCount = 2;
+	//submitInfo.pCommandBuffers = commandBuffers;
 
 	VkSemaphore signalSemaphores[] = {device.renderFinishedSemaphores[Manager::currentFrame]};
 	submitInfo.signalSemaphoreCount = 1;
