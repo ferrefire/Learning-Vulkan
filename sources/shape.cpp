@@ -54,20 +54,175 @@ void Shape::SetShape(int type, int resolution)
 		//normal = true;
 		coordinate = false;
 
-		AddPosition(glm::vec3(-0.25f, -0.25f, 0.0f));
-		AddPosition(glm::vec3(0.25f, 0.25f, 0.0f));
-		AddPosition(glm::vec3(0.5f, -0.5f, 0.0f));
-		AddPosition(glm::vec3(-0.5f, 0.5f, 0.0f));
+		if (resolution == 0)
+		{
+			AddPosition(glm::vec3(-0.25f, -0.25f, 0.0f));
+			AddPosition(glm::vec3(0.25f, 0.25f, 0.0f));
+			AddPosition(glm::vec3(0.5f, -0.5f, 0.0f));
+			AddPosition(glm::vec3(-0.5f, 0.5f, 0.0f));
 
-		Rotate(45.0f, glm::vec3(0, 0, 1));
+			Rotate(45.0f, glm::vec3(0, 0, 1));
 
-		AddIndice(0);
-		AddIndice(1);
-		AddIndice(2);
+			AddIndice(0);
+			AddIndice(1);
+			AddIndice(2);
 
-		AddIndice(3);
-		AddIndice(1);
-		AddIndice(0);
+			AddIndice(3);
+			AddIndice(1);
+			AddIndice(0);
+
+			Rotate(90.0f, glm::vec3(1, 0, 0));
+		}
+
+		/*if (resolution == 0)
+		{
+			float angleStep = 360.0f / 4.0f;
+
+			for (int i = 0; i < 4; i++)
+			{
+				glm::vec3 newPosition = Utilities::RotateVec(glm::vec3(-0.5f, -0.5f, 0.0f), i * angleStep, glm::vec3(0, 0, 1));
+				AddPosition(newPosition);
+			}
+
+			Rotate(45.0f, glm::vec3(0, 0, 1));
+			Scale(glm::vec3(1.0f, 0.5f, 1.0f));
+			Rotate(-45.0f, glm::vec3(0, 0, 1));
+
+			AddIndice(0);
+			AddIndice(2);
+			AddIndice(1);
+
+			AddIndice(3);
+			AddIndice(2);
+			AddIndice(0);
+
+			Rotate(90.0f, glm::vec3(1, 0, 0));
+		}*/
+
+		if (resolution == 2)
+		{
+			float angleStep = 360.0f / 3.0f;
+
+			AddPosition(glm::vec3(0));
+
+			for (int i = 0; i < 3; i++)
+			{
+				glm::vec3 newPosition = Utilities::RotateVec(glm::vec3(-0.5f, -0.5f, 0.0f), i * angleStep, glm::vec3(0, 0, 1));
+				AddPosition(newPosition);
+			}
+
+			for (int i = 0; i < 3; i++)
+			{
+				int base = i + 1;
+				int start = base + 1;
+				int end = base - 1;
+				if (start > 3) start = 1;
+				if (end < 1) end = 3;
+
+				glm::vec3 point0 = (positions[base] + positions[0]) * 0.5f;
+				glm::vec3 point1 = (positions[base] + positions[start]) * 0.5f;
+				glm::vec3 newPosition = (point0 + point1) * 0.5f;
+				AddPosition(newPosition);
+
+				point1 = (positions[base] + positions[end]) * 0.5f;
+				newPosition = (point0 + point1) * 0.5f;
+				AddPosition(newPosition);
+			}
+
+			for (int i = 0; i < 3; i++)
+			{
+				int index = i * 2 + 4;
+
+				AddIndice(0);
+				AddIndice(index);
+				AddIndice(index + 1);
+			}
+
+			for (int i = 0; i < 3; i++)
+			{
+				int index = i * 2 + 4;
+
+				AddIndice(i + 1);
+				AddIndice(index + 1);
+				AddIndice(index);
+			}
+	
+			Rotate(90.0f, glm::vec3(1, 0, 0));
+		}
+
+		if (resolution == 1)
+		{
+			float angleStep = 360.0f / 3.0f;
+
+			for (int i = 0; i < 3; i++)
+			{
+				glm::vec3 newPosition = Utilities::RotateVec(glm::vec3(-0.5f, -0.5f, 0.0f), i * angleStep, glm::vec3(0, 0, 1));
+				AddPosition(newPosition);
+			}
+
+			glm::vec3 newPosition = (positions[0] + positions[1]) * 0.5f;
+			newPosition *= 0.5f;
+			AddPosition(newPosition);
+
+			newPosition = (positions[1] + positions[2]) * 0.5f;
+			newPosition *= 0.5f;
+			AddPosition(newPosition);
+
+			newPosition = (positions[2] + positions[0]) * 0.5f;
+			newPosition *= 0.5f;
+			AddPosition(newPosition);
+	
+			AddIndice(0);
+			AddIndice(5);
+			AddIndice(3);
+
+			AddIndice(1);
+			AddIndice(3);
+			AddIndice(4);
+
+			AddIndice(2);
+			AddIndice(4);
+			AddIndice(5);
+
+			AddIndice(5);
+			AddIndice(4);
+			AddIndice(3);
+	
+			Rotate(90.0f, glm::vec3(1, 0, 0));
+		}
+
+		/*if (resolution == 1)
+		{
+			float angleStep = 360.0f / 6.0f;
+
+			for (int i = 0; i < 6; i++)
+			{
+				glm::vec3 newPosition = Utilities::RotateVec(glm::vec3(-0.5f, -0.5f, 0.0f), i * angleStep, glm::vec3(0, 0, 1));
+				AddPosition(newPosition);
+			}
+	
+			Rotate(45.0f, glm::vec3(0, 0, 1));
+			Scale(glm::vec3(1.0f, 0.5f, 1.0f));
+			Rotate(-45.0f, glm::vec3(0, 0, 1));
+	
+			AddIndice(0);
+			AddIndice(2);
+			AddIndice(1);
+	
+			AddIndice(2);
+			AddIndice(4);
+			AddIndice(3);
+	
+			AddIndice(4);
+			AddIndice(0);
+			AddIndice(5);
+	
+			AddIndice(0);
+			AddIndice(4);
+			AddIndice(2);
+	
+			Rotate(90.0f, glm::vec3(1, 0, 0));
+		}*/
 
 		if (coordinate)
 		{

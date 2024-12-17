@@ -28,10 +28,18 @@ layout(set = 1, binding = 1) uniform TreeVariables
 	uint treeLod2RenderCount;
 	uint treeLod3RenderBase;
 	uint treeLod3RenderCount;
+	uint treeLod4RenderBase;
+	uint treeLod4RenderCount;
 	uint treeTotalRenderBase;
 	uint treeTotalRenderCount;
 	float spacing;
 	float spacingMult;
+	uint leafCountTotal;
+	uint leafCount0;
+	uint leafCount1;
+	uint leafCount2;
+	uint leafCount3;
+	uint leafCount4;
 } treeVariables;
 
 layout(push_constant, std430) uniform PushConstants
@@ -62,6 +70,7 @@ void main()
 	if (pc.treeLod >= 1) dataIndex += treeVariables.treeLod0RenderCount;
 	if (pc.treeLod >= 2) dataIndex += treeVariables.treeLod1RenderCount;
 	if (pc.treeLod >= 3) dataIndex += treeVariables.treeLod2RenderCount;
+	if (pc.treeLod >= 4) dataIndex += treeVariables.treeLod3RenderCount;
 
 	position.xz = unpackHalf2x16(renderData[dataIndex].posxz);
 	vec2 posyroty = unpackHalf2x16(renderData[dataIndex].posyroty);

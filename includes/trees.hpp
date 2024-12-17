@@ -21,8 +21,8 @@ struct BranchConfiguration
 	bool main = false;
 	int iteration = 0;
 	int maxIteration = 7;
-	//float seed = 103.84f;
-	float seed = 8.35f;
+	float seed = 103.84f;
+	//float seed = 8.35f;
 	int lod = 0;
 
 	int resolution = 24;
@@ -53,6 +53,7 @@ struct TreeCountData
 	uint32_t lod1Count;
 	uint32_t lod2Count;
 	uint32_t lod3Count;
+	uint32_t lod4Count;
 	//uint32_t leafCount;
 };
 
@@ -86,6 +87,8 @@ struct TreeVariables
 	alignas(4) uint32_t treeLod2RenderCount;
 	alignas(4) uint32_t treeLod3RenderBase;
 	alignas(4) uint32_t treeLod3RenderCount;
+	alignas(4) uint32_t treeLod4RenderBase;
+	alignas(4) uint32_t treeLod4RenderCount;
 	alignas(4) uint32_t treeTotalRenderBase;
 	alignas(4) uint32_t treeTotalRenderCount;
 
@@ -96,6 +99,8 @@ struct TreeVariables
 	alignas(4) uint32_t leafCount0;
 	alignas(4) uint32_t leafCount1;
 	alignas(4) uint32_t leafCount2;
+	alignas(4) uint32_t leafCount3;
+	alignas(4) uint32_t leafCount4;
 };
 
 class Trees
@@ -115,6 +120,8 @@ class Trees
 		static uint32_t treeLod2RenderCount;
 		static uint32_t treeLod3RenderBase;
 		static uint32_t treeLod3RenderCount;
+		static uint32_t treeLod4RenderBase;
+		static uint32_t treeLod4RenderCount;
 		static uint32_t treeTotalRenderBase;
 		static uint32_t treeTotalRenderCount;
 
@@ -128,6 +135,7 @@ class Trees
 		static Mesh treeLod1Mesh;
 		static Mesh treeLod2Mesh;
 		static Mesh treeLod3Mesh;
+		static Mesh treeLod4Mesh;
 
 		static Pipeline graphicsPipeline;
 		static Pipeline shadowPipeline;

@@ -19,10 +19,15 @@ void Leaves::Create()
 
 void Leaves::CreateMeshes()
 {
-	leafMesh.shape.SetShape(LEAF, 0);
-	leafMesh.shape.Rotate(90.0f, glm::vec3(1, 0, 0));
-	leafMesh.RecalculateVertices();
-	leafMesh.Create();
+	leafMeshLod0.shape.SetShape(LEAF, 2);
+	//leafMeshLod0.shape.Rotate(90.0f, glm::vec3(1, 0, 0));
+	leafMeshLod0.RecalculateVertices();
+	leafMeshLod0.Create();
+
+	leafMeshLod1.shape.SetShape(LEAF, 0);
+	//leafMeshLod1.shape.Rotate(90.0f, glm::vec3(1, 0, 0));
+	leafMeshLod1.RecalculateVertices();
+	leafMeshLod1.Create();
 }
 
 void Leaves::CreateGraphicsPipeline()
@@ -37,7 +42,7 @@ void Leaves::CreateGraphicsPipeline()
 	//pipelineConfiguration.pushConstantStage = VERTEX_STAGE;
 	//pipelineConfiguration.pushConstantSize = sizeof(uint32_t);
 
-	VertexInfo vertexInfo = leafMesh.MeshVertexInfo();
+	VertexInfo vertexInfo = leafMeshLod1.MeshVertexInfo();
 
 	graphicsPipeline.CreateGraphicsPipeline("leaf", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
 }
@@ -55,7 +60,7 @@ void Leaves::CreateShadowPipeline()
 	pipelineConfiguration.pushConstantStage = VERTEX_STAGE;
 	pipelineConfiguration.pushConstantSize = sizeof(uint32_t);
 
-	VertexInfo vertexInfo = leafMesh.MeshVertexInfo();
+	VertexInfo vertexInfo = leafMeshLod1.MeshVertexInfo();
 
 	shadowPipeline.CreateGraphicsPipeline("leafShadow", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
 }
@@ -68,7 +73,9 @@ void Leaves::CreateBuffers()
 	dataConfiguration.size = sizeof(LeafData) * 
 			(Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal + 
 			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1 + 
-			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2);
+			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2 + 
+			Trees::treeLod3RenderCount * Trees::treeVariables.leafCount3 + 
+			Trees::treeLod4RenderCount * Trees::treeVariables.leafCount4);
 	dataConfiguration.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 	dataConfiguration.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 	dataConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -94,7 +101,9 @@ void Leaves::CreateGraphicsDescriptor()
 		descriptorConfig[0].buffersInfo[index].range = sizeof(LeafData) * 
 			(Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal + 
 			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1 + 
-			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2);
+			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2 + 
+			Trees::treeLod3RenderCount * Trees::treeVariables.leafCount3 + 
+			Trees::treeLod4RenderCount * Trees::treeVariables.leafCount4);
 		descriptorConfig[0].buffersInfo[index].offset = 0;
 		index++;
 	}
@@ -116,7 +125,9 @@ void Leaves::CreateShadowDescriptor()
 		descriptorConfig[0].buffersInfo[index].range = sizeof(LeafData) * 
 			(Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal + 
 			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1 + 
-			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2);
+			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2 + 
+			Trees::treeLod3RenderCount * Trees::treeVariables.leafCount3 + 
+			Trees::treeLod4RenderCount * Trees::treeVariables.leafCount4);
 		descriptorConfig[0].buffersInfo[index].offset = 0;
 		index++;
 	}
@@ -140,7 +151,8 @@ void Leaves::DestroyPipelines()
 
 void Leaves::DestroyMeshes()
 {
-	leafMesh.Destroy();
+	leafMeshLod0.Destroy();
+	leafMeshLod1.Destroy();
 }
 
 void Leaves::DestroyDescriptors()
@@ -175,7 +187,7 @@ void Leaves::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 
 void Leaves::RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade)
 {
-	if (cascade > 2) return;
+	if (cascade > 4) return;
 
 	shadowPipeline.BindGraphics(commandBuffer);
 
@@ -187,18 +199,32 @@ void Leaves::RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade)
 
 void Leaves::RenderLeaves(VkCommandBuffer commandBuffer)
 {
-	leafMesh.Bind(commandBuffer);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
+	leafMeshLod0.Bind(commandBuffer);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod0.indices.size()), 
 		Trees::treeRenderCounts[Manager::currentFrame].lod0Count * Trees::treeVariables.leafCountTotal, 0, 0, 0);
 
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
+	leafMeshLod1.Bind(commandBuffer);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
 		Trees::treeRenderCounts[Manager::currentFrame].lod1Count * Trees::treeVariables.leafCount1, 
 		0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal);
 
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
 		Trees::treeRenderCounts[Manager::currentFrame].lod2Count * Trees::treeVariables.leafCount2, 
 		0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal +
 		Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1);
+
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+		Trees::treeRenderCounts[Manager::currentFrame].lod3Count * Trees::treeVariables.leafCount3, 
+		0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal +
+		Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1 +
+		Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2);
+
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+		Trees::treeRenderCounts[Manager::currentFrame].lod4Count * Trees::treeVariables.leafCount4, 
+		0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal +
+		Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1 +
+		Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2 +
+		Trees::treeLod3RenderCount * Trees::treeVariables.leafCount3);
 }
 
 void Leaves::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
@@ -206,28 +232,31 @@ void Leaves::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 	uint32_t lod0 = 0;
 	uint32_t lod1 = 1;
 	uint32_t lod2 = 2;
+	uint32_t lod3 = 3;
+	uint32_t lod4 = 4;
 
 	if (cascade == 0)
 	{
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
 
-		leafMesh.Bind(commandBuffer);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
+		leafMeshLod0.Bind(commandBuffer);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod0.indices.size()), 
 			Trees::treeRenderCounts[Manager::currentFrame].lod0Count * Trees::treeVariables.leafCountTotal, 0, 0, 0);
 	}
 	else if (cascade == 1)
 	{
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
 
-		leafMesh.Bind(commandBuffer);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
+		leafMeshLod0.Bind(commandBuffer);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod0.indices.size()), 
 			Trees::treeRenderCounts[Manager::currentFrame].lod0Count * Trees::treeVariables.leafCountTotal, 0, 0, 0);
 
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
+		leafMeshLod1.Bind(commandBuffer);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
 			Trees::treeRenderCounts[Manager::currentFrame].lod1Count * Trees::treeVariables.leafCount1, 
 			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal);
 
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
 			Trees::treeRenderCounts[Manager::currentFrame].lod2Count * Trees::treeVariables.leafCount2, 
 			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal +
 			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1);
@@ -236,21 +265,88 @@ void Leaves::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 	{
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod2), &lod2);
 
-		leafMesh.Bind(commandBuffer);
-		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
+		leafMeshLod1.Bind(commandBuffer);
+		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
 		//	Trees::treeRenderCounts[Manager::currentFrame].lod0Count * Trees::treeVariables.leafCountTotal, 0, 0, 0);
 
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
 			Trees::treeRenderCounts[Manager::currentFrame].lod1Count * Trees::treeVariables.leafCount1, 
 			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal);
 
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMesh.indices.size()), 
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
 			Trees::treeRenderCounts[Manager::currentFrame].lod2Count * Trees::treeVariables.leafCount2, 
 			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal +
 			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1);
+
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+			Trees::treeRenderCounts[Manager::currentFrame].lod3Count * Trees::treeVariables.leafCount3, 
+			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal +
+			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1 +
+			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2);
+	}
+	else if (cascade == 3)
+	{
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod3), &lod3);
+
+		leafMeshLod1.Bind(commandBuffer);
+		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+		//	Trees::treeRenderCounts[Manager::currentFrame].lod0Count * Trees::treeVariables.leafCountTotal, 0, 0, 0);
+
+		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+		//	Trees::treeRenderCounts[Manager::currentFrame].lod1Count * Trees::treeVariables.leafCount1, 
+		//	0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal);
+
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+			Trees::treeRenderCounts[Manager::currentFrame].lod2Count * Trees::treeVariables.leafCount2, 
+			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal +
+			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1);
+
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+			Trees::treeRenderCounts[Manager::currentFrame].lod3Count * Trees::treeVariables.leafCount3, 
+			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal +
+			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1 +
+			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2);
+
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+			Trees::treeRenderCounts[Manager::currentFrame].lod4Count * Trees::treeVariables.leafCount4, 
+			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal +
+			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1 +
+			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2 +
+			Trees::treeLod3RenderCount * Trees::treeVariables.leafCount3);
+	}
+	else if (cascade == 4)
+	{
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod4), &lod4);
+
+		leafMeshLod1.Bind(commandBuffer);
+		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+		//	Trees::treeRenderCounts[Manager::currentFrame].lod0Count * Trees::treeVariables.leafCountTotal, 0, 0, 0);
+
+		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+		//	Trees::treeRenderCounts[Manager::currentFrame].lod1Count * Trees::treeVariables.leafCount1, 
+		//	0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal);
+
+		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+		//	Trees::treeRenderCounts[Manager::currentFrame].lod2Count * Trees::treeVariables.leafCount2, 
+		//	0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal +
+		//	Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1);
+
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+			Trees::treeRenderCounts[Manager::currentFrame].lod3Count * Trees::treeVariables.leafCount3, 
+			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal +
+			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1 +
+			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2);
+
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+			Trees::treeRenderCounts[Manager::currentFrame].lod4Count * Trees::treeVariables.leafCount4, 
+			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal +
+			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1 +
+			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2 +
+			Trees::treeLod3RenderCount * Trees::treeVariables.leafCount3);
 	}
 }
-Mesh Leaves::leafMesh;
+Mesh Leaves::leafMeshLod0;
+Mesh Leaves::leafMeshLod1;
 
 Pipeline Leaves::graphicsPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Leaves::shadowPipeline{Manager::currentDevice, Manager::camera};

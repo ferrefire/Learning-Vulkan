@@ -69,7 +69,7 @@ int Occluded(vec3 clipSpace, float tolerance)
 	}
 }
 
-int AreaOccluded(vec3 worldSpace, vec2 areaSize, float inDis)
+int AreaOccluded(vec3 worldSpace, vec2 areaSize, float inDis, float tolerance)
 {
 	vec3 rightOffset = variables.viewRight * areaSize.x;
 	vec3 upOffset = variables.viewUp * areaSize.y;
@@ -78,23 +78,28 @@ int AreaOccluded(vec3 worldSpace, vec2 areaSize, float inDis)
 	//if (SquaredDistance(worldSpace, variables.viewPosition) <= inDistance) return (0);
 
 	vec3 areaPosition = worldSpace - rightOffset - upOffset;
-    if (Occluded(WorldToCull(areaPosition), 0) == 0) return (0);
+    if (Occluded(WorldToCull(areaPosition), tolerance) == 0) return (0);
 
 	areaPosition = worldSpace + rightOffset + upOffset;
-    if (Occluded(WorldToCull(areaPosition), 0) == 0) return (0);
+    if (Occluded(WorldToCull(areaPosition), tolerance) == 0) return (0);
 
 	areaPosition = worldSpace + rightOffset - upOffset;
-    if (Occluded(WorldToCull(areaPosition), 0) == 0) return (0);
+    if (Occluded(WorldToCull(areaPosition), tolerance) == 0) return (0);
 
 	areaPosition = worldSpace - rightOffset + upOffset;
-    if (Occluded(WorldToCull(areaPosition), 0) == 0) return (0);
+    if (Occluded(WorldToCull(areaPosition), tolerance) == 0) return (0);
 
 	return (1);
 }
 
+int AreaOccluded(vec3 worldSpace, vec2 areaSize, float inDis)
+{
+	return (AreaOccluded(worldSpace, areaSize, inDis, 0));
+}
+
 int AreaOccluded(vec3 worldSpace, vec2 areaSize)
 {
-	return (AreaOccluded(worldSpace, areaSize, 1.5));
+	return (AreaOccluded(worldSpace, areaSize, 1.5, 0));
 }
 
 #endif

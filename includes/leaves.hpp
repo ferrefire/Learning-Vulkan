@@ -29,7 +29,8 @@ class Leaves
 		
 
 	public:
-		static Mesh leafMesh;
+		static Mesh leafMeshLod0;
+		static Mesh leafMeshLod1;
 
 		static Pipeline graphicsPipeline;
 		static Pipeline shadowPipeline;

@@ -50,7 +50,7 @@ struct ShaderVariables
 
 	//alignas(16) glm::mat4 shadowLod0Matrix = glm::mat4(1);
 	//alignas(16) glm::mat4 shadowLod1Matrix = glm::mat4(1);
-	alignas(16) glm::mat4 shadowCascadeMatrix[3];
+	alignas(16) glm::mat4 shadowCascadeMatrix[5];
 
 	alignas(16) glm::mat4 cullMatrix = glm::mat4(1);
 
