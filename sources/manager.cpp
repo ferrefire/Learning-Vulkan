@@ -268,22 +268,7 @@ void Manager::Frame()
 		cinematic.AddKey(camera.Position(), camera.Angles());
 	}
 
-	if (Input::GetKey(GLFW_MOUSE_BUTTON_RIGHT, true).pressed)
-	{
-		//glm::vec3 camDir = camera.Front();
-		//glm::vec2 camDir2 = glm::vec2(camDir.x, camDir.z);
-		//camDir2 = glm::normalize(camDir2);
-		//std::cout << "x: " << camDir2.x << " z: " << camDir2.y << std::endl;
-
-		//Utilities::PrintVec(camera.Position() + glm::vec3(Terrain::terrainOffset.x, 0, Terrain::terrainOffset.y));
-		//Utilities::PrintVec("angles", camera.Angles());
-		camera.PrintStatus();
-	}
-
-	//if (settings.fullscreen && Time::newSecond)
-	//{
-	//	std::cout << "FPS: " << Time::currentFPS << std::endl;
-	//}
+	if (Input::GetKey(GLFW_MOUSE_BUTTON_RIGHT, true).pressed) camera.PrintStatus();
 
 	Terrain::Frame();
 	if (Manager::settings.trees)
@@ -293,15 +278,17 @@ void Manager::Frame()
 	}
 	Grass::Frame();
 
-	//Data::AddIntersect(camera.Position() + camera.Front() * 1000.0f);
-	//std::vector<glm::vec4> frustumCorners = camera.GetFrustumCorners(1.0f, 50.0f);
-	//for (int i = 0; i < 4; i++)
+	if (Input::GetKey(GLFW_KEY_RIGHT).down) lightAngles.y -= Time::deltaTime * 45.0f;
+	else if (Input::GetKey(GLFW_KEY_LEFT).down) lightAngles.y += Time::deltaTime * 45.0f;
+	else if (Input::GetKey(GLFW_KEY_DOWN).down) lightAngles.x -= Time::deltaTime * 45.0f;
+	else if (Input::GetKey(GLFW_KEY_UP).down) lightAngles.x += Time::deltaTime * 45.0f;
+
+	//if (Time::newSecond)
 	//{
-	//	cameraIntersects[i] = Data::GetIntersectData(cameraIntersectIndexes[i]).position;
-	//	cameraIntersectIndexes[i] = Data::AddIntersect(frustumCorners[i + 4]);
-	//	//if (Time::newSecond) std::cout << glm::distance(camera.Position(), cameraIntersects[i]) << std::endl;
+	//	Utilities::PrintVec(lightAngles);
+	//	Utilities::PrintVec(shaderVariables.lightDirection);
+	//	std::cout << std::endl;
 	//}
-	//if (Time::newSecond) std::cout << std::endl;
 }
 
 void Manager::PostFrame()
@@ -311,8 +298,12 @@ void Manager::PostFrame()
 
 void Manager::UpdateShaderVariables()
 {
-	shaderVariables.lightDirection = glm::normalize(glm::vec3(0.25, 0.5, 0.25));
-	//shaderVariables.lightDirection = glm::normalize(glm::vec3(1, 1, 1));
+	//shaderVariables.lightDirection = glm::normalize(glm::vec3(0.25, 0.5, 0.25));
+	glm::vec3 lightDirection = glm::vec3(0, 1, 0);
+	lightDirection = Utilities::RotateVec(lightDirection, lightAngles.x, glm::vec3(1, 0, 0));
+	lightDirection = Utilities::RotateVec(lightDirection, lightAngles.y, glm::vec3(0, 1, 0));
+	lightDirection = Utilities::RotateVec(lightDirection, lightAngles.z, glm::vec3(0, 0, 1));
+	shaderVariables.lightDirection = glm::normalize(lightDirection);
 
 	shaderVariables.view = camera.View();
 	shaderVariables.projection = camera.Projection();
@@ -518,3 +509,5 @@ Texture Manager::occlusionTexture;
 
 std::vector<glm::vec3> Manager::cameraIntersects;
 std::vector<int> Manager::cameraIntersectIndexes;
+
+glm::vec3 Manager::lightAngles = glm::vec3(-35.0f, -135.0f, 0.0f);

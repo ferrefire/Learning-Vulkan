@@ -21,7 +21,8 @@ struct BranchConfiguration
 	bool main = false;
 	int iteration = 0;
 	int maxIteration = 7;
-	float seed = 103.84f;
+	//float seed = 103.84f;
+	float seed = 50.0f;
 	//float seed = 8.35f;
 	int lod = 0;
 

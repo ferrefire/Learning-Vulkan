@@ -130,6 +130,8 @@ class Manager
 		static std::vector<glm::vec3> cameraIntersects;
 		static std::vector<int> cameraIntersectIndexes;
 
+		static glm::vec3 lightAngles; 
+
 		static void Setup();
 		static void Create();
 		static void Clean();
