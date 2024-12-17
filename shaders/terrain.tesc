@@ -62,10 +62,24 @@ void main()
         vec3 center = (p0 + p1 + p2) * (1.0 / 3.0);
 
 		float depth = GetWorldDepth(center);
-		float tolerance = pow(1.0 - depth, 3);
-		bool cull = false;
-		if (depth < 0.25) cull = (AreaInView(center, vec2(20 * tolerance)) == 0 && AreaInView(p0, vec2(20 * tolerance)) == 0 && AreaInView(p1, vec2(20 * tolerance)) == 0 && AreaInView(p2, vec2(20 * tolerance)) == 0);
-        else cull = (InView(center, 0) == 0 && InView(p0, 0) == 0 && InView(p1, 0) == 0 && InView(p2, 0) == 0);
+		//float tolerance = pow(1.0 - depth, 3);
+		bool cull = (InView(center, 0) == 0 && InView(p0, 0) == 0 && InView(p1, 0) == 0 && InView(p2, 0) == 0);
+		if (cull && depth < 0.1)
+		{
+			//cull = (AreaInView(center, vec2(20 * tolerance)) == 0 && AreaInView(p0, vec2(20 * tolerance)) == 0 && 
+			//	AreaInView(p1, vec2(20 * tolerance)) == 0 && AreaInView(p2, vec2(20 * tolerance)) == 0);
+			cull = (AreaInView2(center, (1.0 - depth * 10.0) * 250.0) == 0);
+			//if (cull) cull = (AreaInView2(p0, 30.0) == 0);
+			//if (cull) cull = (AreaInView2(p1, 30.0) == 0);
+			//if (cull) cull = (AreaInView2(p2, 30.0) == 0);
+			//if (cull) cull = (InView(p0, 0) == 0);
+			//if (cull) cull = (InView(p1, 0) == 0);
+			//if (cull) cull = (InView(p2, 0) == 0);
+		}
+        //else
+		//{
+		//	cull = (InView(center, 0) == 0 && InView(p0, 0) == 0 && InView(p1, 0) == 0 && InView(p2, 0) == 0);
+		//}
 
 		//if (variables.occlusionCulling == 1 && !cull) cull = PatchOccluded(p0, p1, p2, center) == 1;
 
