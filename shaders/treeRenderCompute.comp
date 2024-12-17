@@ -235,8 +235,8 @@ void main()
 	else
 	{
 		float checkDis = frustumCheckDis;
-		if (lod <= 1) checkDis *=  (1.0 + (1.0 - clamp(dot(variables.viewDirection, variables.lightDirection), 0.0, 1.0)) * 2.0);
-		
+		if (lod <= 1) checkDis *=  (1.0 + (1.0 - clamp(dot(variables.viewDirection, variables.lightDirection), 0.0, 1.0)) * 3.0);
+
 		if (viewDistance >= checkDis)
 		{
 			if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0) return;
