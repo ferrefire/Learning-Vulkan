@@ -819,6 +819,13 @@ void Trees::ComputeTreeRender(VkCommandBuffer commandBuffer)
 void Trees::SetData()
 {
 	treeRenderCounts[Manager::currentFrame] = *(TreeCountData *)countBuffers[Manager::currentFrame].mappedBuffer;
+	//if (Time::newSecond)
+	//{
+	//	std::cout << "lod 0: " << treeRenderCounts[Manager::currentFrame].lod0Count << std::endl;
+	//	std::cout << "lod 1: " << treeRenderCounts[Manager::currentFrame].lod1Count << std::endl;
+	//	std::cout << "lod 2: " << treeRenderCounts[Manager::currentFrame].lod2Count << std::endl;
+	//	std::cout << std::endl;
+	//}
 }
 
 void Trees::GenerateTrunkMesh(Mesh &mesh, BranchConfiguration config)

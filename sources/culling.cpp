@@ -38,12 +38,14 @@ void Culling::CreateCullResources()
 	// imageConfig.sampleCount = device.MaxSampleCount();
 
 	SamplerConfiguration samplerConfig;
-	samplerConfig.repeatMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-	samplerConfig.borderColor = VK_BORDER_COLOR_INT_OPAQUE_WHITE;
+	samplerConfig.repeatMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+	samplerConfig.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 	samplerConfig.anisotrophic = VK_FALSE;
+	//samplerConfig.compare = VK_TRUE;
+	//samplerConfig.compareOp = VK_COMPARE_OP_GREATER;
 
 	cullTexture.CreateImage(imageConfig, samplerConfig);
-	cullTexture.TransitionImageLayout(imageConfig);
+	//cullTexture.TransitionImageLayout(imageConfig);
 
 	VkFramebufferCreateInfo framebufferInfo{};
 	framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

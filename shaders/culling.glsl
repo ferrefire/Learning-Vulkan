@@ -51,6 +51,24 @@ int AreaInView(vec3 worldSpace, vec2 areaSize)
 	return (AreaInView(worldSpace, areaSize, 1.5));
 }
 
+int AreaInView2(vec3 worldSpace, float size)
+{
+	vec3 areaPosition;
+
+	for (int x = -1; x <= 1; x++)
+	{
+		for (int y = -1; y <= 1; y++)
+		{
+			for (int z = -1; z <= 1; z++)
+			{
+				areaPosition = worldSpace + vec3(x, y, z) * size;
+				if (InView(areaPosition, 0) == 1) return (1);
+			}
+		}
+	}
+	return (0);
+}
+
 int Occluded(vec3 clipSpace, float tolerance)
 {
 	if (clipSpace.x > 1.0 || clipSpace.x < 0.0 || clipSpace.y > 1.0 || clipSpace.y < 0.0) return (0);
