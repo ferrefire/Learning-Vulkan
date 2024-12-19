@@ -85,11 +85,26 @@ void Graphics::CreateInstance()
     }
 }
 
-void Graphics::RecordGraphicsCommands()
+void Graphics::PresentFrame(uint32_t imageIndex)
 {
-	uint32_t imageIndex;
-	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, uint64_t(1000000000), device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
+	VkSemaphore presentWaitSemaphores[] = {device.renderFinishedSemaphores[Manager::currentFrame]};
 
+	VkPresentInfoKHR presentInfo{};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.waitSemaphoreCount = 1;
+	presentInfo.pWaitSemaphores = presentWaitSemaphores;
+
+	VkSwapchainKHR swapChains[] = {window.swapChain};
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = swapChains;
+	presentInfo.pImageIndices = &imageIndex;
+	presentInfo.pResults = nullptr;
+
+	vkQueuePresentKHR(device.presentationQueue, &presentInfo);
+}
+
+void Graphics::RecordGraphicsCommands(uint32_t imageIndex)
+{
 	vkResetCommandBuffer(device.graphicsCommandBuffers[Manager::currentFrame], 0);
 
 	VkCommandBufferBeginInfo beginInfo{};
@@ -122,21 +137,6 @@ void Graphics::RecordGraphicsCommands()
 
 	if (vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, device.inFlightFences[Manager::currentFrame]) != VK_SUCCESS)
 		throw std::runtime_error("failed to submit graphics command buffer");
-
-	VkSemaphore presentWaitSemaphores[] = {device.renderFinishedSemaphores[Manager::currentFrame]};
-
-	VkPresentInfoKHR presentInfo{};
-	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = presentWaitSemaphores;
-
-	VkSwapchainKHR swapChains[] = {window.swapChain};
-	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = swapChains;
-	presentInfo.pImageIndices = &imageIndex;
-	presentInfo.pResults = nullptr;
-
-	vkQueuePresentKHR(device.presentationQueue, &presentInfo);
 }
 
 void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex)
@@ -215,8 +215,10 @@ void Graphics::RecordCullCommands()
 	submitInfo.pWaitDstStageMask = nullptr;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &device.cullCommandBuffers[Manager::currentFrame];
-	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &device.cullSemaphores[Manager::currentFrame];
+	//submitInfo.signalSemaphoreCount = 1;
+	//submitInfo.pSignalSemaphores = &device.cullSemaphores[Manager::currentFrame];
+	submitInfo.signalSemaphoreCount = 0;
+	submitInfo.pSignalSemaphores = nullptr;
 
 	if (vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS)
 		throw std::runtime_error("failed to submit cull command buffer");
@@ -227,7 +229,7 @@ void Graphics::RenderCulling(VkCommandBuffer commandBuffer)
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = Culling::cullPass;
-	renderPassInfo.framebuffer = Culling::cullFrameBuffer;
+	renderPassInfo.framebuffer = Culling::cullFrameBuffers[Manager::currentFrame];
 	renderPassInfo.renderArea.offset = {0, 0};
 	renderPassInfo.renderArea.extent.width = Culling::cullResolutionWidth;
 	renderPassInfo.renderArea.extent.height = Culling::cullResolutionHeight;
@@ -373,7 +375,15 @@ void Graphics::Frame()
 
 	RecordShadowCommands();
 
-	RecordGraphicsCommands();
+	uint32_t imageIndex;
+	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, uint64_t(1000000000), 
+		device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+	RecordGraphicsCommands(imageIndex);
+
+	//RecordCullCommands();
+
+	PresentFrame(imageIndex);
 
 	//DrawFrame();
 	
@@ -393,9 +403,12 @@ void Graphics::ComputeFrame()
 	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT};
 
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = waitSemaphores;
-	submitInfo.pWaitDstStageMask = waitStages;
+	//submitInfo.waitSemaphoreCount = 1;
+	//submitInfo.pWaitSemaphores = waitSemaphores;
+	//submitInfo.pWaitDstStageMask = waitStages;
+	submitInfo.waitSemaphoreCount = 0;
+	submitInfo.pWaitSemaphores = nullptr;
+	submitInfo.pWaitDstStageMask = nullptr;
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &device.computeCommandBuffers[0];
 

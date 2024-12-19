@@ -32,8 +32,9 @@ class Graphics
 		void DrawFrame();
 		void ComputeFrame();
 
+		void PresentFrame(uint32_t imageIndex);
 		void RecordComputeCommands(VkCommandBuffer commandBuffer);
-		void RecordGraphicsCommands();
+		void RecordGraphicsCommands(uint32_t imageIndex);
 		void RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 		void RecordCullCommands();
 		void RenderCulling(VkCommandBuffer commandBuffer);

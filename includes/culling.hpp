@@ -19,8 +19,8 @@ class Culling
 
 	public:
 		static VkRenderPass cullPass;
-		static VkFramebuffer cullFrameBuffer;
-		static Texture cullTexture;
+		static std::vector<VkFramebuffer> cullFrameBuffers;
+		static std::vector<Texture> cullTextures;
 
 		//static glm::mat4 cullView;
 		static glm::mat4 cullProjection;

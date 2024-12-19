@@ -19,7 +19,7 @@ void Culling::Create()
 
 void Culling::CreateCullResources()
 {
-	if (cullTexture.image != nullptr || cullTexture.imageMemory != nullptr || cullTexture.imageView != nullptr)
+	if (cullTextures.size() != 0)
 		throw std::runtime_error("cannot create cull resources because they already exist");
 
 	//cullResolutionWidth = Manager::currentWindow.width;
@@ -31,34 +31,42 @@ void Culling::CreateCullResources()
 	imageConfig.width = cullResolutionWidth;
 	imageConfig.height = cullResolutionHeight;
 	imageConfig.format = Manager::currentDevice.FindDepthFormat();
-	// imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 	imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	imageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
 	imageConfig.transitionLayout = LAYOUT_READ_ONLY;
-	// imageConfig.sampleCount = device.MaxSampleCount();
 
 	SamplerConfiguration samplerConfig;
 	samplerConfig.repeatMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 	samplerConfig.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
 	samplerConfig.anisotrophic = VK_FALSE;
-	//samplerConfig.compare = VK_TRUE;
-	//samplerConfig.compareOp = VK_COMPARE_OP_GREATER;
 
-	cullTexture.CreateImage(imageConfig, samplerConfig);
-	//cullTexture.TransitionImageLayout(imageConfig);
+	cullTextures.resize(Manager::settings.maxFramesInFlight);
+	for (Texture &texture : cullTextures)
+	{
+		texture.CreateImage(imageConfig, samplerConfig);
+		// cullTexture.TransitionImageLayout(imageConfig);
+	}
 
 	VkFramebufferCreateInfo framebufferInfo{};
 	framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 	framebufferInfo.renderPass = cullPass;
 	framebufferInfo.attachmentCount = 1;
-	framebufferInfo.pAttachments = &cullTexture.imageView;
+	//framebufferInfo.pAttachments = &cullTexture.imageView;
+	framebufferInfo.pAttachments = &cullTextures[0].imageView;
 	framebufferInfo.width = cullResolutionWidth;
 	framebufferInfo.height = cullResolutionHeight;
 	framebufferInfo.layers = 1;
 
-	if (vkCreateFramebuffer(Manager::currentDevice.logicalDevice, &framebufferInfo, nullptr, &cullFrameBuffer) != VK_SUCCESS)
+	cullFrameBuffers.resize(Manager::settings.maxFramesInFlight);
+	int i = 0;
+	for (VkFramebuffer &frameBuffer : cullFrameBuffers)
 	{
-		throw std::runtime_error("failed to create cull framebuffer");
+		//framebufferInfo.pAttachments = &cullTextures[i].imageView;
+		if (vkCreateFramebuffer(Manager::currentDevice.logicalDevice, &framebufferInfo, nullptr, &frameBuffer) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create cull framebuffer");
+		}
+		i++;
 	}
 }
 
@@ -111,13 +119,25 @@ void Culling::Destroy()
 
 void Culling::DestroyCullResources()
 {
-	if (cullFrameBuffer)
-	{
-		vkDestroyFramebuffer(Manager::currentDevice.logicalDevice, cullFrameBuffer, nullptr);
-		cullFrameBuffer = nullptr;
-	}
+	//if (cullFrameBuffer)
+	//{
+	//	vkDestroyFramebuffer(Manager::currentDevice.logicalDevice, cullFrameBuffer, nullptr);
+	//	cullFrameBuffer = nullptr;
+	//}
 
-	cullTexture.Destroy();
+	// cullTexture.Destroy();
+
+	for (VkFramebuffer &frameBuffer : cullFrameBuffers)
+	{
+		vkDestroyFramebuffer(Manager::currentDevice.logicalDevice, frameBuffer, nullptr);
+	}
+	cullFrameBuffers.clear();
+
+	for (Texture &texture : cullTextures)
+	{
+		texture.Destroy();
+	}
+	cullTextures.clear();
 }
 
 void Culling::DestroyCullPass()
@@ -130,8 +150,10 @@ void Culling::DestroyCullPass()
 }
 
 VkRenderPass Culling::cullPass = nullptr;
-VkFramebuffer Culling::cullFrameBuffer = nullptr;
-Texture Culling::cullTexture;
+//VkFramebuffer Culling::cullFrameBuffer = nullptr;
+//Texture Culling::cullTexture;
+std::vector<VkFramebuffer> Culling::cullFrameBuffers;
+std::vector<Texture> Culling::cullTextures;
 
 int Culling::cullResolutionWidth = 960;
 int Culling::cullResolutionHeight = 540;

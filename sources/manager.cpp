@@ -175,8 +175,10 @@ void Manager::CreateDescriptor()
 	descriptorConfig[j].type = IMAGE_SAMPLER;
 	descriptorConfig[j].stages = ALL_STAGE;
 	descriptorConfig[j].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[j].imageInfo.imageView = Culling::cullTexture.imageView;
-	descriptorConfig[j++].imageInfo.sampler = Culling::cullTexture.sampler;
+	//descriptorConfig[j].imageInfo.imageView = Culling::cullTexture.imageView;
+	//descriptorConfig[j++].imageInfo.sampler = Culling::cullTexture.sampler;
+	descriptorConfig[j].imageInfo.imageView = Culling::cullTextures[0].imageView;
+	descriptorConfig[j++].imageInfo.sampler = Culling::cullTextures[0].sampler;
 
 	/*descriptorConfig[j].type = IMAGE_SAMPLER;
 	descriptorConfig[j].stages = FRAGMENT_STAGE;
