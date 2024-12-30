@@ -39,6 +39,8 @@ struct Settings
 	bool trees = true;
 	bool shadows = true;
 	bool performanceMode = false;
+	bool startTimes = false;
+	bool frameTimes = false;
 };
 
 struct ShaderVariables

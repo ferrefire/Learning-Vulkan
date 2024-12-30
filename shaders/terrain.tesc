@@ -47,9 +47,9 @@ float TessellationFactor (vec3 p0, vec3 p1)
 
 void main()
 {
-    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+    //gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 
-    if (gl_InvocationID == 0)
+    //if (gl_InvocationID == 0)
     {
         vec3 p0 = (gl_in[0].gl_Position).xyz;
         vec3 p1 = (gl_in[1].gl_Position).xyz;
@@ -81,90 +81,6 @@ void main()
 		//	cull = (InView(center, 0) == 0 && InView(p0, 0) == 0 && InView(p1, 0) == 0 && InView(p2, 0) == 0);
 		//}
 
-		//if (variables.occlusionCulling == 1 && !cull) cull = PatchOccluded(p0, p1, p2, center) == 1;
-
-        //if (!cull)
-        //{
-        //    vec3 offset = vec3(0, 100 * depth, 0);
-        //    vec3 centerClip = WorldToCull(center + offset);
-        //    vec3 p0Clip = WorldToCull(p0 + offset);
-        //    vec3 p1Clip = WorldToCull(p1 + offset);
-        //    vec3 p2Clip = WorldToCull(p2 + offset);
-        //    cull = Occluded(centerClip, 0.01) == 1;
-        //    if (cull) cull = Occluded(p0Clip, 0.01) == 1;
-        //    if (cull) cull = Occluded(p1Clip, 0.01) == 1;
-        //    if (cull) cull = Occluded(p2Clip, 0.01) == 1;
-        //}
-
-        /*bool cull = true;
-        //float sqrDis = SquaredDistance(variables.viewPosition, center);
-        //if (sqrDis > 2500) sqrDis = SquaredDistance(variables.viewPosition, p0);
-        //if (sqrDis > 2500) sqrDis = SquaredDistance(variables.viewPosition, p1);
-        //if (sqrDis > 2500) sqrDis = SquaredDistance(variables.viewPosition, p2);
-        //if (sqrDis <= 2500) cull = false;
-
-        vec3 centerClip = WorldToClip(center);
-        vec3 p0Clip = WorldToClip(p0);
-        vec3 p1Clip = WorldToClip(p1);
-        vec3 p2Clip = WorldToClip(p2);
-
-        float closestZ = 10;
-        if (centerClip.z > 0.0 && centerClip.z < closestZ) closestZ = centerClip.z;
-        if (p0Clip.z > 0.0 && p0Clip.z < closestZ) closestZ = p0Clip.z;
-        if (p1Clip.z > 0.0 && p1Clip.z < closestZ) closestZ = p1Clip.z;
-        if (p2Clip.z > 0.0 && p2Clip.z < closestZ) closestZ = p2Clip.z;
-
-        if (cull && closestZ >= 0.0 && closestZ <= 1.0)
-        {
-            vec4 bounds = vec4(0.0, 1.0, 0.0, 1.0);
-            //if (cull) cull = PointInSquare(bounds, WorldToClip(center).xy) == 0;
-            if (cull) cull = PointInSquare(bounds, center.xy) == 0;
-            if (cull) cull = PointInSquare(bounds, p0Clip.xy) == 0;
-            if (cull) cull = PointInSquare(bounds, p1Clip.xy) == 0;
-            if (cull) cull = PointInSquare(bounds, p2Clip.xy) == 0;
-
-            if (cull)
-            {
-                float tf = mix(toleranceFactor, 0.0001, closestZ);
-                //float tf = 0.001;
-
-                if (cull) cull = PointInTriangle(p0Clip.xy, p1Clip.xy, p2Clip.xy, vec2(0.0, 0.0), tf) == 0;
-                if (cull) cull = PointInTriangle(p0Clip.xy, p1Clip.xy, p2Clip.xy, vec2(1.0, 1.0), tf) == 0;
-                if (cull) cull = PointInTriangle(p0Clip.xy, p1Clip.xy, p2Clip.xy, vec2(0.0, 1.0), tf) == 0;
-                if (cull) cull = PointInTriangle(p0Clip.xy, p1Clip.xy, p2Clip.xy, vec2(1.0, 0.0), tf) == 0;
-            }
-
-            if (cull)
-            {
-                Triangle triangle;
-                triangle.p0 = p0Clip.xy;
-                triangle.p1 = p1Clip.xy;
-                triangle.p2 = p2Clip.xy;
-
-                Square square;
-                square.p0 = vec2(0.0);
-                square.p1 = vec2(0.0, 1.0);
-                square.p2 = vec2(1.0);
-                square.p3 = vec2(1.0, 0.0);
-
-                if (cull) cull = LineIntersectsTriangle(triangle, GetLine(square, 0)) == 0;
-                if (cull) cull = LineIntersectsTriangle(triangle, GetLine(square, 1)) == 0;
-                if (cull) cull = LineIntersectsTriangle(triangle, GetLine(square, 2)) == 0;
-                if (cull) cull = LineIntersectsTriangle(triangle, GetLine(square, 3)) == 0;
-            }
-
-            //if (!cull)
-            //{
-            //    float cf = mix(cullFactor, 0.025, closestZ);
-            //    cull = Occluded(WorldToCull(center), cf) == 1;
-            //    if (cull) cull = Occluded(WorldToCull(p0), cf) == 1;
-            //    if (cull) cull = Occluded(WorldToCull(p1), cf) == 1;
-            //    if (cull) cull = Occluded(WorldToCull(p2), cf) == 1;
-            //}
-
-            //if (cull) cull = CullPatch(p0, p1, p2, center) == 1;
-        }*/
-
         if (cull)
         {
             gl_TessLevelOuter[0] = 0;
@@ -185,4 +101,6 @@ void main()
         	gl_TessLevelInner[0] = (tessLevel1 + tessLevel2 + tessLevel3) * (1.0 / 3.0);
 		}
     }
+
+	gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 }

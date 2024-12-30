@@ -293,6 +293,7 @@ void main()
 	//renderData[index].position = worldPosition - viewPosition;
 	//renderData[index].rotscacol = vec3(rotation, scale, color);
 
+	//if (lod > -1) return;
 	if (lod > 4) return;
 
 	mat4 rotationMatrix = GetRotationMatrix(radians(rotation * 360.0), vec3(0.0, 1.0, 0.0));

@@ -10,6 +10,9 @@
 
 #include "manager.hpp"
 
+//#define START_TIME_MODE return (0);
+#define START_TIME_MODE if (!Time::newSubTick) return (0);
+
 void Time::Frame()
 {
     currentFrame = glfwGetTime();
@@ -80,25 +83,31 @@ void Time::CalculateFPS()
 
 double Time::StartTimer(double &timer)
 {
+	START_TIME_MODE
 	timer = GetCurrentTime();
 	return (timer);
 }
 
 double Time::StartTimer()
 {
+	START_TIME_MODE
+	if (!newSubTick) return (0);
 	currentTimer = GetCurrentTime();
 	return (currentTimer);
 }
 
-double Time::StopTimer(double timer, std::string message)
+double Time::StopTimer(double timer, std::string message, bool newline)
 {
+	START_TIME_MODE
 	double diff = GetCurrentTime() - timer;
-	std::cout << message << ": " << diff << std::endl;
+	std::cout << message << ": " << diff * 1000.0 << std::endl;
+	if (newline) std::cout << std::endl;
 	return (diff);
 }
 
 double Time::StopTimer(double timer)
 {
+	START_TIME_MODE
 	double diff = GetCurrentTime() - timer;
 	std::cout << diff << std::endl;
 	return (diff);
@@ -106,6 +115,8 @@ double Time::StopTimer(double timer)
 
 double Time::StopTimer(std::string message)
 {
+	START_TIME_MODE
+	if (!newSubTick) return (0);
 	double diff = GetCurrentTime() - currentTimer;
 	std::cout << message << ": " << diff << std::endl;
 	return (diff);
@@ -113,6 +124,7 @@ double Time::StopTimer(std::string message)
 
 double Time::StopTimer()
 {
+	START_TIME_MODE
 	double diff = GetCurrentTime() - currentTimer;
 	std::cout << diff << std::endl;
 	return (diff);

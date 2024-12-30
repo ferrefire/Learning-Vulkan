@@ -2,6 +2,12 @@
 
 #include <string>
 
+//#define START_TIMER(name) double name; Time::StartTimer(name);
+//#define STOP_TIMER(name, newline) Time::StopTimer(name, #name, newline);
+
+#define START_TIMER(name)
+#define STOP_TIMER(name, newline)
+
 class Time
 {
     private:
@@ -36,7 +42,7 @@ class Time
 		static void CalculateFPS();
 		static double StartTimer(double &timer);
 		static double StartTimer();
-		static double StopTimer(double timer, std::string message);
+		static double StopTimer(double timer, std::string message, bool newline = false);
 		static double StopTimer(double timer);
 		static double StopTimer(std::string message);
 		static double StopTimer();

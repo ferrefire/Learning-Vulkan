@@ -171,13 +171,24 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	scissor.extent = window.swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
+	START_TIMER(terrainTime);
 	Terrain::RecordGraphicsCommands(commandBuffer);
+	STOP_TIMER(terrainTime, false);
+
 	if (Manager::settings.trees)
 	{
+		START_TIMER(treesTime);
 		Trees::RecordGraphicsCommands(commandBuffer);
+		STOP_TIMER(treesTime, false);
+
+		START_TIMER(leavesTime);
 		Leaves::RecordGraphicsCommands(commandBuffer);
+		STOP_TIMER(leavesTime, false);
 	}
+
+	START_TIMER(grassTime);
 	Grass::RecordGraphicsCommands(commandBuffer);
+	STOP_TIMER(grassTime, false);
 
 	if (Manager::settings.screenQuad)
 	{
@@ -203,7 +214,9 @@ void Graphics::RecordCullCommands()
 	if (vkBeginCommandBuffer(device.cullCommandBuffers[Manager::currentFrame], &beginInfo) != VK_SUCCESS)
 		throw std::runtime_error("failed to begin recording command buffer");
 
+	//Time::StartTimer();
 	RenderCulling(device.cullCommandBuffers[Manager::currentFrame]);
+	//Time::StopTimer("cull pass");
 
 	if (vkEndCommandBuffer(device.cullCommandBuffers[Manager::currentFrame]) != VK_SUCCESS)
 		throw std::runtime_error("failed to record command buffer");
@@ -257,7 +270,9 @@ void Graphics::RenderCulling(VkCommandBuffer commandBuffer)
 	scissor.extent.height = Culling::cullResolutionHeight;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
+	START_TIMER(cullTime);
 	Terrain::RecordCullCommands(commandBuffer);
+	STOP_TIMER(cullTime, false);
 	// Grass::RecordCullingCommands(commandBuffer);
 
 	vkCmdEndRenderPass(commandBuffer);
@@ -330,9 +345,17 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer)
 		scissor.extent.height = Shadow::shadowCascadeResolutions[i];
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
+		START_TIMER(leavesTime);
 		Leaves::RecordShadowCommands(commandBuffer, i);
+		STOP_TIMER(leavesTime, false);
+
+		START_TIMER(treesTime);
 		Trees::RecordShadowCommands(commandBuffer, i);
+		STOP_TIMER(treesTime, false);
+
+		START_TIMER(grassTime);
 		Grass::RecordShadowCommands(commandBuffer, i);
+		STOP_TIMER(grassTime, false);
 
 		vkCmdEndRenderPass(commandBuffer);
 	}
@@ -351,9 +374,17 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 	}
 
 	//Terrain::RecordComputeCommands(commandBuffer);
+	START_TIMER(treesTime);
 	Trees::RecordComputeCommands(commandBuffer);
+	STOP_TIMER(treesTime, false);
+
+	START_TIMER(grassTime);
 	Grass::RecordComputeCommands(commandBuffer);
+	STOP_TIMER(grassTime, false);
+
+	START_TIMER(dataTime);
 	Data::RecordComputeCommands(commandBuffer);
+	STOP_TIMER(dataTime, false);
 
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
 	{
@@ -363,39 +394,37 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 
 void Graphics::Frame()
 {
-	//if (window.recreatingSwapchain) return;
-	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, uint64_t(1000000000));
+	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
+	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
 	Manager::UpdateShaderVariables();
 
-	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
-
-	Time::StartTimer();
+	START_TIMER(totalCullTime)
 	RecordCullCommands();
-	Time::StopTimer("cull");
+	STOP_TIMER(totalCullTime, true)
 
-	Time::StartTimer();
+	START_TIMER(totalComputeTime);
 	ComputeFrame();
-	Time::StopTimer("compute");
+	STOP_TIMER(totalComputeTime, true);
 
-	Time::StartTimer();
+	START_TIMER(totalShadowTime);
 	RecordShadowCommands();
-	Time::StopTimer("shadow");
+	STOP_TIMER(totalShadowTime, true);
 
-	Time::StartTimer();
+	START_TIMER(totalAcquireTime);
 	uint32_t imageIndex;
-	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, uint64_t(1000000000), 
+	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, UINT64_MAX, 
 		device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
-	Time::StopTimer("acquire");
+	STOP_TIMER(totalAcquireTime, true);
 
-	Time::StartTimer();
+	START_TIMER(totalGraphicsTime);
 	RecordGraphicsCommands(imageIndex);
-	Time::StopTimer("graphics");
+	STOP_TIMER(totalGraphicsTime, true);
 
 	//RecordCullCommands();
 
-	Time::StartTimer();
+	START_TIMER(totalPresentTime);
 	PresentFrame(imageIndex);
-	Time::StopTimer("present");
+	STOP_TIMER(totalPresentTime, true);
 
 	//DrawFrame();
 	
@@ -434,7 +463,8 @@ void Graphics::ComputeFrame()
 		throw std::runtime_error("failed to submit compute command buffer");
 	}
 
-	vkWaitForFences(device.logicalDevice, 1, &device.computeFences[0], VK_TRUE, uint64_t(1000000000));
+	vkWaitForFences(device.logicalDevice, 1, &device.computeFences[0], VK_TRUE, UINT64_MAX);
+
 	Trees::SetData();
 	Grass::SetData();
 	Data::SetData();
@@ -442,11 +472,11 @@ void Graphics::ComputeFrame()
 
 void Graphics::DrawFrame() 
 {
-	//vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, uint64_t(1000000000));
+	//vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
 	//Manager::UpdateShaderVariables();
 
 	uint32_t imageIndex;
-	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, uint64_t(1000000000), device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, UINT64_MAX, device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
 
 	//if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	//{
@@ -571,11 +601,13 @@ VKAPI_ATTR VkBool32 VKAPI_CALL Graphics::DebugCallback(VkDebugUtilsMessageSeveri
 
 void Graphics::Create()
 {
-	Time::StartTimer();
-	CreateInstance();
-	Time::StopTimer("instance");
+	double timer;
 
-	Time::StartTimer();
+	//Time::StartTimer(timer);
+	CreateInstance();
+	//Time::StopTimer(timer, "instance");
+
+	//Time::StartTimer(timer);
 	window.CreateSurface(instance);
 	device.Create(instance, window.surface);
 	window.CreateResources();
@@ -583,7 +615,7 @@ void Graphics::Create()
 	device.CreateCommandPools();
 	device.CreateCommandBuffers();
 	device.CreateSyncObjects();
-	Time::StopTimer("window and device");
+	//Time::StopTimer(timer, "window and device");
 
 	std::cout << "default stuff created" << std::endl;
 
@@ -605,50 +637,46 @@ void Graphics::Create()
 		Shadow::shadowCascadeDistances[3] *= 0.75;
 	}
 
-	Time::StartTimer();
+	//Time::StartTimer(timer);
 	Culling::Create();
-	Time::StopTimer("culling");
+	//Time::StopTimer(timer, "culling");
 
-	Time::StartTimer();
+	//Time::StartTimer(timer);
 	Shadow::Create();
-	Time::StopTimer("shadow");
+	//Time::StopTimer(timer, "shadow");
 
-	Time::StartTimer();
 	Manager::CreateShaderVariableBuffers();
 	Manager::CreateDescriptorSetLayout();
-	Time::StopTimer("manager pre");
 
-	Time::StartTimer();
+	//Time::StartTimer(timer);
 	Texture::CreateDefaults();
 	Mesh::CreateDefaults();
-	Time::StopTimer("defaults");
+	//Time::StopTimer(timer, "defaults");
 
-	Time::StartTimer();
+	//Time::StartTimer(timer);
 	Terrain::Create();
-	Time::StopTimer("terrain");
+	//Time::StopTimer(timer, "terrain");
 
-	Time::StartTimer();
 	Manager::CreateDescriptor();
-	Time::StopTimer("manager descriptor");
 
-	Time::StartTimer();
+	//Time::StartTimer(timer);
 	Grass::Create();
-	Time::StopTimer("grass");
+	//Time::StopTimer(timer, "grass");
 
 	if (Manager::settings.trees)
 	{
-		Time::StartTimer();
+		//Time::StartTimer(timer);
 		Trees::Create();
-		Time::StopTimer("trees");
+		//Time::StopTimer(timer, "trees");
 
-		Time::StartTimer();
+		//Time::StartTimer(timer);
 		Leaves::Create();
-		Time::StopTimer("leaves");
+		//Time::StopTimer(timer, "leaves");
 	}
 
-	Time::StartTimer();
+	//Time::StartTimer(timer);
 	Data::Create();
-	Time::StopTimer("data");
+	//Time::StopTimer(timer, "data");
 
 	if (Manager::settings.screenQuad)
 	{
