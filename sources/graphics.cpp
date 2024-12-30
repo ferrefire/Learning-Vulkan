@@ -369,21 +369,33 @@ void Graphics::Frame()
 
 	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
 
+	Time::StartTimer();
 	RecordCullCommands();
+	Time::StopTimer("cull");
 
+	Time::StartTimer();
 	ComputeFrame();
+	Time::StopTimer("compute");
 
+	Time::StartTimer();
 	RecordShadowCommands();
+	Time::StopTimer("shadow");
 
+	Time::StartTimer();
 	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, uint64_t(1000000000), 
 		device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
+	Time::StopTimer("acquire");
 
+	Time::StartTimer();
 	RecordGraphicsCommands(imageIndex);
+	Time::StopTimer("graphics");
 
 	//RecordCullCommands();
 
+	Time::StartTimer();
 	PresentFrame(imageIndex);
+	Time::StopTimer("present");
 
 	//DrawFrame();
 	

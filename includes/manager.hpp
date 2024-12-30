@@ -101,6 +101,7 @@ class Manager
 		static std::vector<Mesh *> meshes;
 
 	public:
+		static bool quiting;
 		static Settings settings;
 		static ShaderVariables shaderVariables;
 

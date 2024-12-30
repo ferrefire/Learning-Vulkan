@@ -254,8 +254,9 @@ void Manager::PreFrame()
 
 void Manager::Frame()
 {
-	if (Input::GetKey(GLFW_KEY_ESCAPE).pressed)
+	if (!quiting && Input::GetKey(GLFW_KEY_ESCAPE).down)
 	{
+		quiting = true;
 		if (cinematic.creating) cinematic.Create(cinematic.name.c_str());
 		window.Close();
 	}
@@ -473,6 +474,8 @@ Object *Manager::NewObject()
 	
 	return (object);
 }
+
+bool Manager::quiting = false;
 
 bool Manager::glfwInitialized = false;
 bool Manager::vulkanInitialized = false;
