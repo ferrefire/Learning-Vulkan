@@ -6,6 +6,7 @@
 #include <chrono>
 #include <ctime>
 #include <string>
+#include <iostream>
 
 #include "manager.hpp"
 
@@ -77,6 +78,46 @@ void Time::CalculateFPS()
 	}
 }
 
+double Time::StartTimer(double &timer)
+{
+	timer = GetCurrentTime();
+	return (timer);
+}
+
+double Time::StartTimer()
+{
+	currentTimer = GetCurrentTime();
+	return (currentTimer);
+}
+
+double Time::StopTimer(double timer, std::string message)
+{
+	double diff = GetCurrentTime() - timer;
+	std::cout << message << ": " << diff << std::endl;
+	return (diff);
+}
+
+double Time::StopTimer(double timer)
+{
+	double diff = GetCurrentTime() - timer;
+	std::cout << diff << std::endl;
+	return (diff);
+}
+
+double Time::StopTimer(std::string message)
+{
+	double diff = GetCurrentTime() - currentTimer;
+	std::cout << message << ": " << diff << std::endl;
+	return (diff);
+}
+
+double Time::StopTimer()
+{
+	double diff = GetCurrentTime() - currentTimer;
+	std::cout << diff << std::endl;
+	return (diff);
+}
+
 float Time::deltaTime = 0;
 float Time::currentFrame = 0;
 float Time::lastFrame = 0;
@@ -97,3 +138,5 @@ bool Time::newSubTick = false;
 bool Time::newFrameTick = false;
 
 int Time::currentFPS = 0;
+
+double Time::currentTimer = 0;

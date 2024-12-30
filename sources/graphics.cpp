@@ -559,8 +559,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL Graphics::DebugCallback(VkDebugUtilsMessageSeveri
 
 void Graphics::Create()
 {
+	Time::StartTimer();
 	CreateInstance();
+	Time::StopTimer("instance");
 
+	Time::StartTimer();
 	window.CreateSurface(instance);
 	device.Create(instance, window.surface);
 	window.CreateResources();
@@ -568,8 +571,7 @@ void Graphics::Create()
 	device.CreateCommandPools();
 	device.CreateCommandBuffers();
 	device.CreateSyncObjects();
-
-
+	Time::StopTimer("window and device");
 
 	std::cout << "default stuff created" << std::endl;
 
@@ -591,27 +593,50 @@ void Graphics::Create()
 		Shadow::shadowCascadeDistances[3] *= 0.75;
 	}
 
+	Time::StartTimer();
 	Culling::Create();
-	Shadow::Create();
+	Time::StopTimer("culling");
 
-	//Manager::Create();
+	Time::StartTimer();
+	Shadow::Create();
+	Time::StopTimer("shadow");
+
+	Time::StartTimer();
 	Manager::CreateShaderVariableBuffers();
 	Manager::CreateDescriptorSetLayout();
+	Time::StopTimer("manager pre");
 
+	Time::StartTimer();
 	Texture::CreateDefaults();
 	Mesh::CreateDefaults();
+	Time::StopTimer("defaults");
 
+	Time::StartTimer();
 	Terrain::Create();
+	Time::StopTimer("terrain");
+
+	Time::StartTimer();
 	Manager::CreateDescriptor();
+	Time::StopTimer("manager descriptor");
+
+	Time::StartTimer();
 	Grass::Create();
+	Time::StopTimer("grass");
+
 	if (Manager::settings.trees)
 	{
+		Time::StartTimer();
 		Trees::Create();
-		std::cout << "trees created" << std::endl;
+		Time::StopTimer("trees");
+
+		Time::StartTimer();
 		Leaves::Create();
-		std::cout << "leaves created" << std::endl;
+		Time::StopTimer("leaves");
 	}
+
+	Time::StartTimer();
 	Data::Create();
+	Time::StopTimer("data");
 
 	if (Manager::settings.screenQuad)
 	{

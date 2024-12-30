@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 class Time
 {
     private:
@@ -27,9 +29,17 @@ class Time
 
 		static int currentFPS;
 
+		static double currentTimer;
+
 		static unsigned int GetTime();
 		static double GetCurrentTime();
 		static void CalculateFPS();
+		static double StartTimer(double &timer);
+		static double StartTimer();
+		static double StopTimer(double timer, std::string message);
+		static double StopTimer(double timer);
+		static double StopTimer(std::string message);
+		static double StopTimer();
 
 		static void Frame();
 };
