@@ -48,6 +48,8 @@ layout(location = 0) in vec3 inPosition;
 
 void main()
 {
+	//vec3 normal = normalize(mix(vec3(0, 0, -1), vec3(sign(inPosition.x) * 0.5, 0, 0), clamp(abs(inPosition.x) * 10.0, 0.0, 1.0)));
+
 	vec3 position = vec3(0);
 	vec3 rotation = vec3(0);
 	vec2 clumpScale = vec2(1);
@@ -76,8 +78,18 @@ void main()
 
 	angle = radians(ran);
 	scaledPosition = Rotate(scaledPosition, angle, vec3(0, 1, 0));
+	//normal = Rotate(normal, angle, vec3(0, 1, 0));
 
 	vec3 worldPosition = ObjectToWorld(scaledPosition, mat4(1)) + position;
+
+	//vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
+	//float viewDotNormal = clamp(dot(normal, viewDirection), -1.0, 1.0);
+	//float upDotNormal = dot(normal, vec3(0, -1, 0)) * 0.5 + 0.5;
+	//float dotSign = sign(viewDotNormal);
+	//if (dotSign == 0.0) dotSign = 1.0;
+	//float thickenFactor = (1.0 - pow(1.0 - abs(viewDotNormal), 4.0)) * dotSign;
+	//worldPosition += viewDotNormal * variables.viewRight * 0.025 * (1.0 - upDotNormal);
+	//worldPosition += viewDotNormal * variables.viewUp * 0.025 * (upDotNormal);
 
 	gl_Position = variables.shadowCascadeMatrix[pc.shadowCascade] * vec4(worldPosition, 1.0);
 }

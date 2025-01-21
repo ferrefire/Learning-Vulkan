@@ -27,38 +27,29 @@ void main()
 	vec3 normal = normalize(objectNormal);
 	vec3 terrainNormal = normalize(terrainNormal);
 	float depth = GetDepth(gl_FragCoord.z);
-	//vec3 diffuseNormal = NormalPower(terrainNormal, 0.5);
-	//float shadow = 1.0;
-	//if (variables.shadows == 1) shadow = clamp(1.0 - GetShadow(shadowLod0Position, 0), 0.3, 1.0);
 
-	//outColor = vec4(grassColor, 1.0);
-	//return;
-
-	//float shadow = 0.0;
 	float shadow = GetCascadedShadow(shadowPositions, depth);
 
-	vec3 bladeDiffuse = DiffuseLighting(normal, shadow, 0.0, ambient);
+	//vec3 bladeDiffuse = DiffuseLighting(normal, shadow, 0.0, ambient);
 
 	if (!gl_FrontFacing) normal *= -1;
 
 	float ao = clamp(depth * 100.0, 0.0, 1.0);
 	
-	//if (variables.shadowBounding == 0)
-	//{
-	//	vec3 shadowSpace = shadowLod0Position.xyz / shadowLod0Position.w;
-	//	shadowSpace.xy = shadowSpace.xy * 0.5 + 0.5;
-	//	ao = pow(1.0 - shadowSpace.y, 4.0);
-	//}
+	vec3 bladeDiffuse = DiffuseLighting(normal, shadow, 0.0, ambient);
+
 	vec3 bladeColor = mix(grassColor.xyz * mix(0.3, 0.5, ao), grassColor.xyz, uv.y);
 
 	vec3 terrainDiffuse = DiffuseLighting(terrainNormal, shadow);
 	
-	vec3 diffuse = clamp(terrainDiffuse * 0.9 + bladeDiffuse, vec3(0.0), lightColor);
+	//vec3 diffuse = clamp(terrainDiffuse * 0.9 + bladeDiffuse, vec3(0.0), lightColor);
+	vec3 diffuse = clamp(terrainDiffuse + bladeDiffuse, vec3(0.0), lightColor);
 	vec3 combinedColor = (diffuse * bladeColor);
+	vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
 
 	if (shadow < 0.9)
 	{
-		vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
+		//vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
 		vec3 bladeSpecular = SpecularLighting(normal, viewDirection, 16);
 		vec3 terrainSpecular = SpecularLighting(terrainNormal, viewDirection, 32);
 		//combinedColor += (bladeSpecular * terrainSpecular);
@@ -68,6 +59,14 @@ void main()
 	//{
 	//	combinedColor *= shadow;
 	//}
+
+	//vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
+	float normDot = clamp(dot(normal, -variables.lightDirection), 0.0, 1.0);
+	normDot += (1.0 - normDot) * 0.2;
+    float translucency = pow(clamp(dot(-viewDirection, variables.lightDirection), 0.0, 1.0), exp2(10 * 0.25 + 1)) * 2.0 * normDot;
+	if (1.0 - shadow < translucency)
+		translucency = (translucency * 0.25 + (1.0 - shadow) * 0.75);
+	combinedColor += lightColor * bladeColor * translucency;
 
 	outColor = vec4(combinedColor, 1.0);
 }

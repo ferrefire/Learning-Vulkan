@@ -129,5 +129,7 @@ void main()
 	worldPosition += viewDotNormal * variables.viewRight * 0.025 * (1.0 - upDotNormal);
 	worldPosition += viewDotNormal * variables.viewUp * 0.025 * (upDotNormal);
 
+	//for (int i = 0; i < CASCADE_COUNT; i++) shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
+
 	gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
 }

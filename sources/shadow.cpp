@@ -306,7 +306,7 @@ void Shadow::SetCascadeViews()
 		glm::vec3 side = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
 		glm::vec3 up = glm::normalize(glm::cross(side, front));
 
-		glm::vec3 position = focus + direction * shadowCascadeDistances[i] * 6.0f;
+		glm::vec3 position = focus + direction * shadowCascadeDistances[i] * 10.0f;
 		shadowCascadeViews[i] = glm::lookAt(position, position + front, up);
 	}
 }
@@ -880,7 +880,8 @@ void Shadow::SetCascadeProjections()
 		//float near = 1.0f;
 		//if (i > 0) near = shadowCascadeDistances[i - 1];
 
-		shadowCascadeProjections[i] = glm::ortho(-shadowCascadeDistances[i] * 0.5f, shadowCascadeDistances[i] * 0.5f, -shadowCascadeDistances[i] * 0.5f, shadowCascadeDistances[i] * 0.5f, 1.0f, shadowCascadeDistances[i] * 12.0f);
+		shadowCascadeProjections[i] = glm::ortho(-shadowCascadeDistances[i] * 0.5f, shadowCascadeDistances[i] * 0.5f,
+			 -shadowCascadeDistances[i] * 0.5f, shadowCascadeDistances[i] * 0.5f, 1.0f, shadowCascadeDistances[i] * 50.0f);
 		shadowCascadeProjections[i][1][1] *= -1;
 
 		//shadowCascadeProjections[i] = CreateBoundedProjection(i, near, shadowCascadeDistances[i], 2.0f);

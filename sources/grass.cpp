@@ -523,7 +523,7 @@ void Grass::ComputeClumping()
 uint32_t Grass::grassBase = 256;
 uint32_t Grass::grassCount = Grass::grassBase * Grass::grassBase;
 
-uint32_t Grass::grassLodBase = 2048;
+uint32_t Grass::grassLodBase = 2048 + 1024;
 uint32_t Grass::grassLodCount = Grass::grassLodBase * Grass::grassLodBase - Grass::grassCount;
 
 uint32_t Grass::grassTotalBase = Grass::grassLodBase;

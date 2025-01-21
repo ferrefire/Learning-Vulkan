@@ -5,6 +5,10 @@
 #define CASCADE_COUNT 3
 #endif
 
+#ifndef SKY_COLOR
+#define SKY_COLOR vec3(0.64, 0.886, 1.0)
+#endif
+
 layout(set = 0, binding = 0) uniform Variables 
 {
 	mat4 view;

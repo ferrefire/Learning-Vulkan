@@ -5,6 +5,10 @@
 #define CASCADE_COUNT 3
 #endif
 
+#ifndef FOG_COLOR
+#define FOG_COLOR vec3(0.64, 0.886, 1.0)
+#endif
+
 layout(set = 0, binding = 5) uniform sampler2DShadow shadowSamplers[CASCADE_COUNT];
 //layout(set = 0, binding = 6) uniform sampler2D shadowLod1Sampler;
 
@@ -25,6 +29,17 @@ const float cascadeDistances[] = {50 / 25000.0, 175 / 25000.0, 500 / 25000.0, 90
 #include "depth.glsl"
 //#include "variables.glsl"
 //#include "heightmap.glsl"
+
+/*vec3 DiffuseLighting(vec3 normal, float shadow, float ao, float ao2, vec3 worldPos)
+{
+	if ((variables.lightDirection * 25000.0).y < worldPos.y)
+		return (lightColor * ao2);
+
+	float diffuseStrength = mix(max(dot(normal, variables.lightDirection), ao), ao2, shadow);
+	vec3 diffuse = lightColor * diffuseStrength;
+
+	return diffuse;
+}*/
 
 vec3 DiffuseLighting(vec3 normal, float shadow, float ao, float ao2)
 {
@@ -60,7 +75,7 @@ vec3 SpecularLighting(vec3 normal, vec3 viewDirection, float shininess)
 
 vec3 Fog(vec3 color, float depth)
 {
-	return mix(color, vec3(1), depth);	
+	return mix(color, FOG_COLOR, depth);	
 }
 
 vec3 GroundFog(vec3 color, float depth, float height)

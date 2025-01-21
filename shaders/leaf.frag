@@ -27,6 +27,16 @@ void main()
 	//leafNormal = normalize(leafNormal);
 	vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow, 0.5, 0.1);
 	vec3 endColor = leafDiffuse * leafColor;
+
+	vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
+	float normDot = clamp(dot(leafNormal, -variables.lightDirection), 0.0, 1.0);
+	normDot += (1.0 - normDot) * 0.2;
+    float translucency = pow(clamp(dot(viewDirection, variables.lightDirection), 0.0, 1.0), 
+        exp2(10 * 0.5 + 1)) * 1.0 * normDot;
+	if (1.0 - shadow < translucency)
+		translucency = (translucency * 0.25 + (1.0 - shadow) * 0.75);
+	endColor += lightColor * leafColor * translucency;
+
 	endColor = GroundFog(endColor, depth, worldPosition.y);
 	outColor = vec4(endColor, 1.0);
 }
