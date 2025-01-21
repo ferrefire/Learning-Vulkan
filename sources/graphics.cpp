@@ -11,6 +11,7 @@
 #include "trees.hpp"
 #include "data.hpp"
 #include "leaves.hpp"
+#include "sky.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -200,6 +201,8 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	START_TIMER(grassTime);
 	Grass::RecordGraphicsCommands(commandBuffer);
 	STOP_TIMER(grassTime, false);
+
+	Sky::RecordCommands(commandBuffer);
 
 	if (Manager::settings.screenQuad)
 	{
@@ -705,6 +708,8 @@ void Graphics::Create()
 	Data::Create();
 	//Time::StopTimer(timer, "data");
 
+	Sky::Create();
+
 	if (Manager::settings.screenQuad)
 	{
 		Manager::screenQuad.mesh = Manager::NewMesh();
@@ -776,6 +781,7 @@ void Graphics::Destroy()
 	Trees::Destroy();
 	Leaves::Destroy();
 	Data::Destroy();
+	Sky::Destroy();
 	Manager::screenQuadDescriptor.Destroy();
 	Manager::Clean();
 
