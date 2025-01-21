@@ -136,7 +136,7 @@ void Graphics::RecordGraphicsCommands(uint32_t imageIndex)
 
 	//submitInfo.waitSemaphoreCount = 2;
 	//submitInfo.waitSemaphoreCount = 1;
-	
+
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.commandBufferCount = 1;
