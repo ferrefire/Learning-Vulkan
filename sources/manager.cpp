@@ -247,9 +247,13 @@ void Manager::Start()
 
 void Manager::PreFrame()
 {
-	//Terrain::CheckTerrainOffset();
-
-	
+	Terrain::Frame();
+	if (Manager::settings.trees)
+	{
+		Trees::Frame();
+		Leaves::Frame();
+	}
+	Grass::Frame();
 }
 
 void Manager::Frame()
@@ -273,13 +277,13 @@ void Manager::Frame()
 
 	if (Input::GetKey(GLFW_MOUSE_BUTTON_RIGHT, true).pressed) camera.PrintStatus();
 
-	Terrain::Frame();
-	if (Manager::settings.trees)
-	{
-		Trees::Frame();
-		Leaves::Frame();
-	}
-	Grass::Frame();
+	//Terrain::Frame();
+	//if (Manager::settings.trees)
+	//{
+	//	Trees::Frame();
+	//	Leaves::Frame();
+	//}
+	//Grass::Frame();
 
 	if (Input::GetKey(GLFW_KEY_RIGHT).down) lightAngles.y -= Time::deltaTime * 45.0f;
 	else if (Input::GetKey(GLFW_KEY_LEFT).down) lightAngles.y += Time::deltaTime * 45.0f;

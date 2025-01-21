@@ -24,6 +24,9 @@
 #include <algorithm>
 #include <cstring>
 
+//#define TIMEOUT UINT64_MAX
+#define TIMEOUT 1000000000
+
 Graphics::Graphics(Device &device, Window &window) : device{device}, window{window}
 {
 
@@ -123,9 +126,17 @@ void Graphics::RecordGraphicsCommands(uint32_t imageIndex)
 	VkSubmitInfo submitInfo{};
 	VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame], device.shadowSemaphores[Manager::currentFrame]};
 	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT};
+	// VkSemaphore waitSemaphores[] = {device.imageAvailableSemaphores[Manager::currentFrame]};
+	// VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.waitSemaphoreCount = 2;
+
+	if (Terrain::HeightMapsGenerated()) submitInfo.waitSemaphoreCount = 2;
+	else submitInfo.waitSemaphoreCount = 1;
+
+	//submitInfo.waitSemaphoreCount = 2;
+	//submitInfo.waitSemaphoreCount = 1;
+	
 	submitInfo.pWaitSemaphores = waitSemaphores;
 	submitInfo.pWaitDstStageMask = waitStages;
 	submitInfo.commandBufferCount = 1;
@@ -394,37 +405,53 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 
 void Graphics::Frame()
 {
-	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
+	vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, TIMEOUT);
 	vkResetFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame]);
+
+	Manager::PreFrame();
+
 	Manager::UpdateShaderVariables();
 
-	START_TIMER(totalCullTime)
-	RecordCullCommands();
-	STOP_TIMER(totalCullTime, true)
+	if (Terrain::HeightMapsGenerated())
+	{
+		START_TIMER(totalCullTime)
+		RecordCullCommands();
+		STOP_TIMER(totalCullTime, true)
 
-	START_TIMER(totalComputeTime);
-	ComputeFrame();
-	STOP_TIMER(totalComputeTime, true);
+		START_TIMER(totalComputeTime)
+		ComputeFrame();
+		STOP_TIMER(totalComputeTime, true)
 
-	START_TIMER(totalShadowTime);
-	RecordShadowCommands();
-	STOP_TIMER(totalShadowTime, true);
+		START_TIMER(totalShadowTime)
+		RecordShadowCommands();
+		STOP_TIMER(totalShadowTime, true)
+	}
 
-	START_TIMER(totalAcquireTime);
+	//START_TIMER(totalCullTime)
+	//RecordCullCommands();
+	//STOP_TIMER(totalCullTime, true)
+	//START_TIMER(totalComputeTime)
+	//ComputeFrame();
+	//STOP_TIMER(totalComputeTime, true)
+	//START_TIMER(totalShadowTime)
+	//RecordShadowCommands();
+	//STOP_TIMER(totalShadowTime, true)
+
+	START_TIMER(totalAcquireTime)
 	uint32_t imageIndex;
-	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, UINT64_MAX, 
+	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, TIMEOUT, 
 		device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
-	STOP_TIMER(totalAcquireTime, true);
+	STOP_TIMER(totalAcquireTime, true)
 
-	START_TIMER(totalGraphicsTime);
+	START_TIMER(totalGraphicsTime)
 	RecordGraphicsCommands(imageIndex);
-	STOP_TIMER(totalGraphicsTime, true);
+	STOP_TIMER(totalGraphicsTime, true)
 
 	//RecordCullCommands();
 
-	START_TIMER(totalPresentTime);
+	START_TIMER(totalPresentTime)
 	PresentFrame(imageIndex);
-	STOP_TIMER(totalPresentTime, true);
+	STOP_TIMER(totalPresentTime, true)
 
 	//DrawFrame();
 	
@@ -463,7 +490,7 @@ void Graphics::ComputeFrame()
 		throw std::runtime_error("failed to submit compute command buffer");
 	}
 
-	vkWaitForFences(device.logicalDevice, 1, &device.computeFences[0], VK_TRUE, UINT64_MAX);
+	vkWaitForFences(device.logicalDevice, 1, &device.computeFences[0], VK_TRUE, TIMEOUT);
 
 	Trees::SetData();
 	Grass::SetData();
@@ -472,11 +499,11 @@ void Graphics::ComputeFrame()
 
 void Graphics::DrawFrame() 
 {
-	//vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, UINT64_MAX);
+	//vkWaitForFences(device.logicalDevice, 1, &device.inFlightFences[Manager::currentFrame], VK_TRUE, TIMEOUT);
 	//Manager::UpdateShaderVariables();
 
 	uint32_t imageIndex;
-	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, UINT64_MAX, device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
+	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, TIMEOUT, device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
 
 	//if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	//{
