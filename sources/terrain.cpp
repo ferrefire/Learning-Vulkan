@@ -659,6 +659,8 @@ void Terrain::CheckTerrainOffset(VkCommandBuffer commandBuffer)
 
 		Manager::camera.Move(-glm::vec3(newOffset.x, 0, newOffset.y));
 
+		updateTerrainShadows = true;
+
 		Manager::UpdateShaderVariables();
 	}
 
@@ -676,7 +678,7 @@ void Terrain::CheckTerrainOffset(VkCommandBuffer commandBuffer)
 
 		ComputeHeightMap(commandBuffer, 0);
 	}
-	else if (updateTerrainShadows || abs(xw - terrainShadowOffset.x) > 100.0 || abs(zw - terrainShadowOffset.y) > 100.0)
+	else if (updateTerrainShadows || abs(xw - terrainShadowOffset.x) > 1000.0 || abs(zw - terrainShadowOffset.y) > 1000.0)
 	{
 		updateTerrainShadows = false;
 		terrainShadowOffset = glm::vec2(xw, zw);
