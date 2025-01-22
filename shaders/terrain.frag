@@ -197,6 +197,14 @@ vec3 BlendSteepness(float steepness, float distanceSqrd)
 
 void main()
 {
+	//vec2 terrainShadowUV = (inPosition.xz - variables.terrainShadowOffset) / 5000.0;
+	//if (abs(terrainShadowUV.x) < 0.5 && abs(terrainShadowUV.y) < 0.5)
+	//{
+	//	float terrainShadow = GetTerrainShadow(terrainShadowUV + 0.5);
+	//	outColor = vec4(vec3(terrainShadow), 1.0);
+	//	return;
+	//}
+
 	float distanceSqrd = SquaredDistance(inPosition, variables.viewPosition);
 	float depth = GetDepth(gl_FragCoord.z);
 	//vec3 viewDirection = normalize(variables.viewPosition - inPosition);
@@ -206,7 +214,11 @@ void main()
 	vec3 textureColor = BlendSteepness(steepness, distanceSqrd);
 
 	//float shadow = 0.0;
-	float shadow = GetCascadedShadow(shadowPositions, depth);
+	float shadow = GetTerrainShadow(inPosition.xz);
+	if (shadow <= 0.1)
+		shadow = GetCascadedShadow(shadowPositions, depth);
+
+	//float shadow = GetCascadedShadow(shadowPositions, depth);
 
 	vec3 diffuse = DiffuseLighting(terrainNormal, shadow);
 	

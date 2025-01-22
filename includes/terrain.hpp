@@ -61,11 +61,13 @@ class Terrain
 		static Pipeline cullPipeline;
 		static Pipeline heightMapComputePipeline;
 		static Pipeline heightMapArrayComputePipeline;
+		static Pipeline shadowComputePipeline;
 
 		static Descriptor graphicsDescriptor;
 		static Descriptor cullDescriptor;
 		static Descriptor heightMapComputeDescriptor;
 		static Descriptor heightMapArrayComputeDescriptor;
+		static Descriptor shadowComputeDescriptor;
 
 		static std::vector<Object> terrainChunks;
 
@@ -76,6 +78,8 @@ class Terrain
 		static Texture heightMapArrayTexture;
 		static Texture heightMapLod0Texture;
 		static Texture heightMapLod1Texture;
+
+		static Texture terrainShadowTexture;
 
 		static HeightMapComputeVariables heightMapComputeVariables;
 		static Buffer heightMapComputeVariablesBuffer;
@@ -105,6 +109,9 @@ class Terrain
 		static float terrainLod0Step;
 		static float terrainLod1Step;
 
+		static bool updateTerrainShadows;
+		static glm::vec2 terrainShadowOffset;
+
 		static uint32_t currentBoundHeightMap;
 
 		static int heightMapArrayLayersGenerated;
@@ -119,6 +126,8 @@ class Terrain
 		static void CreateCullDescriptor();
 		static void CreateComputePipelines();
 		static void CreateComputeDescriptors();
+		static void CreateShadowPipeline();
+		static void CreateShadowDescriptor();
 		static void CreateBuffers();
 
 		static void Destroy();
@@ -137,6 +146,7 @@ class Terrain
 		static void RecordCullCommands(VkCommandBuffer commandBuffer);
 		static void ComputeHeightMap(VkCommandBuffer commandBuffer, uint32_t lod);
 		static void ComputeHeightMapArray(VkCommandBuffer commandBuffer, uint32_t index);
+		static void ComputeShadows();
 		static void CheckTerrainOffset(VkCommandBuffer commandBuffer);
 		static void RenderTerrain(VkCommandBuffer commandBuffer);
 		static void RenderCulling(VkCommandBuffer commandBuffer);

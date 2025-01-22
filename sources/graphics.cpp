@@ -719,6 +719,7 @@ void Graphics::Create()
 
 		Manager::screenQuad.pipeline = Manager::NewPipeline();
 		PipelineConfiguration pipelineConfig = Pipeline::DefaultConfiguration();
+		pipelineConfig.rasterization.cullMode = VK_CULL_MODE_NONE;
 
 		std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(1);
 		descriptorLayoutConfig[0].type = IMAGE_SAMPLER;
@@ -731,9 +732,9 @@ void Graphics::Create()
 		std::vector<DescriptorConfiguration> descriptorConfig(1);
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
-		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[0].imageInfo.imageView = Shadow::shadowCascadeTextures[3].imageView;
-		descriptorConfig[0].imageInfo.sampler = Shadow::shadowCascadeTextures[3].sampler;
+		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
+		descriptorConfig[0].imageInfo.imageView = Terrain::terrainShadowTexture.imageView;
+		descriptorConfig[0].imageInfo.sampler = Terrain::terrainShadowTexture.sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}

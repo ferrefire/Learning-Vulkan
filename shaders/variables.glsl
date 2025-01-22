@@ -26,6 +26,7 @@ layout(set = 0, binding = 0) uniform Variables
 	vec2 terrainOffset;
 	vec2 terrainLod0Offset;
 	vec2 terrainLod1Offset;
+	vec2 terrainShadowOffset;
 	float terrainTotalSize;
 	float terrainTotalSizeMult;
 	int terrainChunksLength;

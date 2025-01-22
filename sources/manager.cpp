@@ -106,7 +106,7 @@ void Manager::CreateShaderVariableBuffers()
 void Manager::CreateDescriptorSetLayout()
 {
 	int i = 0;
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(6);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(7);
 	descriptorLayoutConfig[i].type = UNIFORM_BUFFER;
 	descriptorLayoutConfig[i++].stages = ALL_STAGE;
 	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
@@ -120,6 +120,8 @@ void Manager::CreateDescriptorSetLayout()
 	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
 	descriptorLayoutConfig[i++].count = Shadow::cascadeCount;
+	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[i++].stages = ALL_STAGE;
 	//descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
 	//descriptorLayoutConfig[i++].stages = FRAGMENT_STAGE;
 
@@ -140,7 +142,7 @@ void Manager::CreateDescriptor()
 	//Pipeline::CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
 
 	int j = 0;
-	std::vector<DescriptorConfiguration> descriptorConfig(6);
+	std::vector<DescriptorConfiguration> descriptorConfig(7);
 	descriptorConfig[j].type = UNIFORM_BUFFER;
 	descriptorConfig[j].stages = ALL_STAGE;
 	descriptorConfig[j].buffersInfo.resize(shaderVariableBuffers.size());
@@ -206,6 +208,12 @@ void Manager::CreateDescriptor()
 	//descriptorConfig[j].imageInfo.imageLayout = LAYOUT_READ_ONLY;
 	//descriptorConfig[j].imageInfo.imageView = Shadow::shadowCascadeTextures[0].imageView;
 	//descriptorConfig[j++].imageInfo.sampler = Shadow::shadowCascadeTextures[0].sampler;
+
+	descriptorConfig[j].type = IMAGE_SAMPLER;
+	descriptorConfig[j].stages = ALL_STAGE;
+	descriptorConfig[j].imageInfo.imageLayout = LAYOUT_GENERAL;
+	descriptorConfig[j].imageInfo.imageView = Terrain::terrainShadowTexture.imageView;
+	descriptorConfig[j++].imageInfo.sampler = Terrain::terrainShadowTexture.sampler;
 
 	globalDescriptor.Create(descriptorConfig, globalDescriptorSetLayout);
 }
@@ -285,10 +293,18 @@ void Manager::Frame()
 	//}
 	//Grass::Frame();
 
+	bool lightUpdated = true;
 	if (Input::GetKey(GLFW_KEY_RIGHT).down) lightAngles.y -= Time::deltaTime * 45.0f;
 	else if (Input::GetKey(GLFW_KEY_LEFT).down) lightAngles.y += Time::deltaTime * 45.0f;
 	else if (Input::GetKey(GLFW_KEY_DOWN).down) lightAngles.x -= Time::deltaTime * 45.0f;
 	else if (Input::GetKey(GLFW_KEY_UP).down) lightAngles.x += Time::deltaTime * 45.0f;
+	else lightUpdated = false;
+
+	if (lightUpdated)
+		Terrain::updateTerrainShadows = true;
+
+	if (Input::GetKey(GLFW_KEY_C).pressed)
+		Terrain::ComputeShadows();
 
 	//if (Time::newSecond)
 	//{
@@ -337,6 +353,7 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.terrainOffset = Terrain::terrainOffset;
 	shaderVariables.terrainLod0Offset = Terrain::terrainLod0Offset;
 	shaderVariables.terrainLod1Offset = Terrain::terrainLod1Offset;
+	shaderVariables.terrainShadowOffset = Terrain::terrainShadowOffset;
 
 	shaderVariables.time = Time::GetCurrentTime();
 

@@ -25,7 +25,10 @@ void main()
 	vec3 normal = normalize(inNormal);
 	float depth = GetDepth(gl_FragCoord.z);
 	//if (variables.shadows == 1) shadow = clamp(1.0 - GetShadow(shadowPosition, 1, 0), 0.3, 1.0);
-	float shadow = GetCascadedShadow(shadowPositions, depth);
+	float shadow = GetTerrainShadow(worldPosition.xz);
+	if (shadow <= 0.1)
+		shadow = GetCascadedShadow(shadowPositions, depth);
+	//float shadow = GetCascadedShadow(shadowPositions, depth);
 
 	vec3 diffuse = DiffuseLighting(normal, shadow, 0.025);
 	vec3 texColor = texture(treeDiffuseSampler, inCoord * 0.25).xyz;

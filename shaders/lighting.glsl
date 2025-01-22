@@ -10,7 +10,7 @@
 #endif
 
 layout(set = 0, binding = 5) uniform sampler2DShadow shadowSamplers[CASCADE_COUNT];
-//layout(set = 0, binding = 6) uniform sampler2D shadowLod1Sampler;
+layout(set = 0, binding = 6) uniform sampler2D terrainShadowSampler;
 
 //const vec3 lightColor = vec3(2);
 const vec3 lightColor = vec3(1.0, 0.933, 0.89) * 2.0;
@@ -436,5 +436,18 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth)
 //{
 //	return (GetCascadedShadow(shadowSpace, lod, 0, 2.0));
 //}
+
+float GetTerrainShadow(vec2 worldPosition)
+{
+	vec2 uv = (worldPosition - variables.terrainShadowOffset) / 25000.0;
+
+	if (abs(uv.x) < 0.5 && abs(uv.y) < 0.5)
+	{
+		float terrainShadow = textureLod(terrainShadowSampler, uv + 0.5, 0).r;
+		return (1.0 - terrainShadow);
+	}
+
+	return (0);
+}
 
 #endif

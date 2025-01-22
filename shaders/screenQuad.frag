@@ -8,9 +8,6 @@ layout(location = 0) in vec2 inCoordinates;
 
 layout(location = 0) out vec4 outColor;
 
-#include "variables.glsl"
-#include "depth.glsl"
-
 void main()
 {
     float val = texture(textureSampler, inCoordinates).r;
@@ -31,7 +28,7 @@ void main()
 	//vec3 depthVal = vec3(GetDepth(val, 50.0, 250.0));
 	//vec3 endVal = mix(vec3(0), depthVal, );
 
-	vec3 finalColor = vec3(GetDepth(val, 1.0, 50.0));
+	//vec3 finalColor = vec3(GetDepth(val, 1.0, 50.0));
 
 	//for (int i = 0; i < 4; i++)
 	//{
@@ -47,7 +44,7 @@ void main()
 	//else if (distance(inCoordinates, variables.frustumCorner3.xy * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
 	//else if (distance(inCoordinates, variables.frustumCorner4.xy * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
 
-    outColor = vec4(finalColor, 1.0);
+    outColor = vec4(vec3(val), 1.0);
 
     //outColor = vec4(1);
 }
