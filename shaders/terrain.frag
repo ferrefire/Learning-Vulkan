@@ -215,8 +215,8 @@ void main()
 
 	//float shadow = 0.0;
 	float shadow = GetTerrainShadow(inPosition.xz);
-	if (shadow <= 0.1)
-		shadow = GetCascadedShadow(shadowPositions, depth);
+	if (shadow < 1.0)
+		shadow = clamp(shadow + GetCascadedShadow(shadowPositions, depth), 0.0, 1.0);
 
 	//float shadow = GetCascadedShadow(shadowPositions, depth);
 

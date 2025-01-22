@@ -51,7 +51,7 @@ void Terrain::CreateTextures()
 	heightMapLod0Texture.TransitionImageLayout(heightMapLod0Config);
 
 	SamplerConfiguration terrainShadowSamplerConfig;
-	ImageConfiguration terrainShadowConfig = Texture::ImageStorage(4096, 4096);
+	ImageConfiguration terrainShadowConfig = Texture::ImageStorage(2048, 2048);
 	terrainShadowTexture.CreateImage(terrainShadowConfig, terrainShadowSamplerConfig);
 	terrainShadowTexture.TransitionImageLayout(terrainShadowConfig);
 }
@@ -633,7 +633,7 @@ void Terrain::ComputeShadows()
 	Manager::globalDescriptor.Bind(commandBuffer, shadowComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
 	shadowComputeDescriptor.Bind(commandBuffer, shadowComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
 
-	vkCmdDispatch(commandBuffer, 512, 512, 1);
+	vkCmdDispatch(commandBuffer, 256, 256, 1);
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
 
