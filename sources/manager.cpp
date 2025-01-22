@@ -121,7 +121,8 @@ void Manager::CreateDescriptorSetLayout()
 	descriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
 	descriptorLayoutConfig[i++].count = Shadow::cascadeCount;
 	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[i++].stages = ALL_STAGE;
+	descriptorLayoutConfig[i].stages = ALL_STAGE;
+	descriptorLayoutConfig[i++].count = TERRAIN_SHADOW_CASCADES;
 	//descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
 	//descriptorLayoutConfig[i++].stages = FRAGMENT_STAGE;
 
@@ -211,9 +212,18 @@ void Manager::CreateDescriptor()
 
 	descriptorConfig[j].type = IMAGE_SAMPLER;
 	descriptorConfig[j].stages = ALL_STAGE;
-	descriptorConfig[j].imageInfo.imageLayout = LAYOUT_GENERAL;
-	descriptorConfig[j].imageInfo.imageView = Terrain::terrainShadowTexture.imageView;
-	descriptorConfig[j++].imageInfo.sampler = Terrain::terrainShadowTexture.sampler;
+	descriptorConfig[j].count = TERRAIN_SHADOW_CASCADES;
+	descriptorConfig[j].imageInfos.resize(TERRAIN_SHADOW_CASCADES);
+	for (int k = 0; k < TERRAIN_SHADOW_CASCADES; k++)
+	{
+		descriptorConfig[j].imageInfos[k].imageLayout = LAYOUT_GENERAL;
+		descriptorConfig[j].imageInfos[k].imageView = Terrain::terrainShadowTextures[k].imageView;
+		descriptorConfig[j].imageInfos[k].sampler = Terrain::terrainShadowTextures[k].sampler;
+	}
+	j++;
+	//escriptorConfig[j].imageInfo.imageLayout = LAYOUT_GENERAL;
+	//escriptorConfig[j].imageInfo.imageView = Terrain::terrainShadowTextures[0].imageView;
+	//escriptorConfig[j++].imageInfo.sampler = Terrain::terrainShadowTextures[0].sampler;
 
 	globalDescriptor.Create(descriptorConfig, globalDescriptorSetLayout);
 }
@@ -303,8 +313,8 @@ void Manager::Frame()
 	if (lightUpdated)
 		Terrain::updateTerrainShadows = true;
 
-	if (Input::GetKey(GLFW_KEY_C).pressed)
-		Terrain::ComputeShadows();
+	//if (Input::GetKey(GLFW_KEY_C).pressed)
+	//	Terrain::ComputeShadows(0);
 
 	//if (Time::newSecond)
 	//{
@@ -353,7 +363,7 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.terrainOffset = Terrain::terrainOffset;
 	shaderVariables.terrainLod0Offset = Terrain::terrainLod0Offset;
 	shaderVariables.terrainLod1Offset = Terrain::terrainLod1Offset;
-	shaderVariables.terrainShadowOffset = Terrain::terrainShadowOffset;
+	//shaderVariables.terrainShadowOffset = Terrain::terrainShadowOffset;
 
 	shaderVariables.time = Time::GetCurrentTime();
 
@@ -361,6 +371,13 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.shadows = settings.shadows ? 1 : 0;
 	//shaderVariables.shadowCascades = Shadow::trapezoidal ? 0 : 1;
 	shaderVariables.shadowCascades = Shadow::cascadeCount;
+	for (int i = 0; i < TERRAIN_SHADOW_CASCADES; i++)
+	{
+		shaderVariables.terrainShadowOffsets[i] = glm::vec4(Terrain::terrainShadowOffsets[i].x, Terrain::terrainShadowOffsets[i].y, 0, 0);
+		shaderVariables.terrainShadowDistances[i] = glm::vec4(Terrain::shadowComputeVariables[i].distance);
+	}
+	//shaderVariables.terrainShadowDistance0 = Terrain::shadowComputeVariables[0].distance;
+	//shaderVariables.terrainShadowDistance1 = Terrain::shadowComputeVariables[1].distance;
 
 	//std::vector<glm::vec4> frustumCorners = camera.GetFrustumCorners(1.0f, 1000.0f);
 	//shaderVariables.frustumCorner1 = frustumCorners[4];

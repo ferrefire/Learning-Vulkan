@@ -60,7 +60,6 @@ struct ShaderVariables
 	alignas(8) glm::vec2 terrainOffset;
 	alignas(8) glm::vec2 terrainLod0Offset;
 	alignas(8) glm::vec2 terrainLod1Offset;
-	alignas(8) glm::vec2 terrainShadowOffset;
 	alignas(4) float terrainTotalSize;
 	alignas(4) float terrainTotalSizeMult;
 	alignas(4) int terrainChunksLength;
@@ -70,6 +69,9 @@ struct ShaderVariables
 	alignas(4) uint32_t shadows;
 	alignas(4) uint32_t shadowBounding;
 	alignas(4) uint32_t shadowCascades;
+	alignas(16) glm::vec4 terrainShadowOffsets[3];
+	alignas(16) glm::vec4 terrainShadowDistances[3];
+	//alignas(4) float terrainShadowDistance1;
 };
 
 class Manager

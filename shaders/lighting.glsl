@@ -5,12 +5,16 @@
 #define CASCADE_COUNT 3
 #endif
 
+#ifndef TERRAIN_CASCADE_COUNT
+#define TERRAIN_CASCADE_COUNT 1
+#endif
+
 #ifndef FOG_COLOR
 #define FOG_COLOR vec3(0.64, 0.886, 1.0)
 #endif
 
 layout(set = 0, binding = 5) uniform sampler2DShadow shadowSamplers[CASCADE_COUNT];
-layout(set = 0, binding = 6) uniform sampler2D terrainShadowSampler;
+layout(set = 0, binding = 6) uniform sampler2D terrainShadowSamplers[TERRAIN_CASCADE_COUNT];
 
 //const vec3 lightColor = vec3(2);
 const vec3 lightColor = vec3(1.0, 0.933, 0.89) * 2.0;
@@ -439,12 +443,17 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth)
 
 float GetTerrainShadow(vec2 worldPosition)
 {
-	vec2 uv = (worldPosition - variables.terrainShadowOffset) / 25000.0;
+	vec2 uv;
 
-	if (abs(uv.x) < 0.5 && abs(uv.y) < 0.5)
+	for (int i = 0; i < TERRAIN_CASCADE_COUNT; i++)
 	{
-		float terrainShadow = textureLod(terrainShadowSampler, uv + 0.5, 0).r;
-		return (1.0 - terrainShadow);
+		uv = (worldPosition - variables.terrainShadowOffsets[i].xy) / variables.terrainShadowDistances[i].x;
+
+		if (abs(uv.x) < 0.5 && abs(uv.y) < 0.5)
+		{
+			float terrainShadow = textureLod(terrainShadowSamplers[i], uv + 0.5, 0).r;
+			return (1.0 - terrainShadow);
+		}
 	}
 
 	return (0);

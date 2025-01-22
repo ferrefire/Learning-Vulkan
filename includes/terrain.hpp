@@ -14,6 +14,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#define TERRAIN_SHADOW_CASCADES 3
+
 struct HeightMapVariables
 {
 	alignas(8) glm::vec2 terrainOffset;
@@ -45,6 +47,14 @@ struct HeightMapArrayComputeVariables
 	alignas(4) float mapScale = 1.0f;
 	alignas(4) uint32_t currentChunkIndex = 0;
 	alignas(8) glm::vec2 mapOffset = glm::vec2(0);
+};
+
+struct ShadowComputeVariables
+{
+	float distance = 0;
+	int resolution =  0;
+	float resolutionMultiplier = 0;
+	int lod = 0;
 };
 
 class Terrain
@@ -79,13 +89,16 @@ class Terrain
 		static Texture heightMapLod0Texture;
 		static Texture heightMapLod1Texture;
 
-		static Texture terrainShadowTexture;
+		static std::vector<Texture> terrainShadowTextures;
 
 		static HeightMapComputeVariables heightMapComputeVariables;
 		static Buffer heightMapComputeVariablesBuffer;
 
 		static HeightMapArrayComputeVariables heightMapArrayComputeVariables;
 		static Buffer heightMapArrayComputeVariablesBuffer;
+
+		static std::vector<ShadowComputeVariables> shadowComputeVariables;
+		static Buffer shadowComputeVariablesBuffer;
 
 		static float terrainTotalSize;
 		static float terrainHeight;
@@ -110,7 +123,7 @@ class Terrain
 		static float terrainLod1Step;
 
 		static bool updateTerrainShadows;
-		static glm::vec2 terrainShadowOffset;
+		static std::vector<glm::vec2> terrainShadowOffsets;
 
 		static uint32_t currentBoundHeightMap;
 
@@ -146,8 +159,9 @@ class Terrain
 		static void RecordCullCommands(VkCommandBuffer commandBuffer);
 		static void ComputeHeightMap(VkCommandBuffer commandBuffer, uint32_t lod);
 		static void ComputeHeightMapArray(VkCommandBuffer commandBuffer, uint32_t index);
-		static void ComputeShadows();
+		static void ComputeShadows(uint32_t index, glm::vec2 newOffset);
 		static void CheckTerrainOffset(VkCommandBuffer commandBuffer);
+		static void CheckTerrainShadowOffset();
 		static void RenderTerrain(VkCommandBuffer commandBuffer);
 		static void RenderCulling(VkCommandBuffer commandBuffer);
 		static bool InView(const glm::vec3 &position, float tolerance, const glm::mat4 &projection, const glm::mat4 &view);

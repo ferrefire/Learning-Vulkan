@@ -710,7 +710,7 @@ void Graphics::Create()
 
 	Sky::Create();
 
-	if (Manager::settings.screenQuad)
+	/*if (Manager::settings.screenQuad)
 	{
 		Manager::screenQuad.mesh = Manager::NewMesh();
 		Manager::screenQuad.mesh->shape.SetShape(QUAD);
@@ -733,11 +733,11 @@ void Graphics::Create()
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
 		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
-		descriptorConfig[0].imageInfo.imageView = Terrain::terrainShadowTexture.imageView;
-		descriptorConfig[0].imageInfo.sampler = Terrain::terrainShadowTexture.sampler;
+		descriptorConfig[0].imageInfo.imageView = Terrain::terrainShadowTextures[0].imageView;
+		descriptorConfig[0].imageInfo.sampler = Terrain::terrainShadowTextures[0].sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
-	}
+	}*/
 
 	/*
 	Object *obj1 = Manager::NewObject();

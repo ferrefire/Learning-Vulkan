@@ -9,7 +9,28 @@
 
 void Terrain::Create()
 {
-    CreateMeshes();
+	terrainShadowOffsets.resize(TERRAIN_SHADOW_CASCADES);
+	shadowComputeVariables.resize(TERRAIN_SHADOW_CASCADES);
+
+	shadowComputeVariables[0].lod = 0;
+	shadowComputeVariables[1].lod = 1;
+	shadowComputeVariables[2].lod = 2;
+
+	shadowComputeVariables[0].distance = 2048;
+	shadowComputeVariables[1].distance = 8192;
+	shadowComputeVariables[2].distance = 32768;
+
+	shadowComputeVariables[0].resolution = 1024;
+	shadowComputeVariables[1].resolution = 1024;
+	shadowComputeVariables[2].resolution = 1024;
+
+	shadowComputeVariables[0].resolutionMultiplier = 1.0 / 1024.0;
+	shadowComputeVariables[1].resolutionMultiplier = 1.0 / 1024.0;
+	shadowComputeVariables[2].resolutionMultiplier = 1.0 / 1024.0;
+
+	//Manager::shaderVariables.terrainShadowDistances[0] = shadowComputeVariables.terrainShadowDistances[0];
+
+	CreateMeshes();
 	CreateGraphicsPipeline();
 	if (Manager::settings.occlussionCulling) CreateCullPipeline();
 	CreateComputePipelines();
@@ -51,9 +72,15 @@ void Terrain::CreateTextures()
 	heightMapLod0Texture.TransitionImageLayout(heightMapLod0Config);
 
 	SamplerConfiguration terrainShadowSamplerConfig;
-	ImageConfiguration terrainShadowConfig = Texture::ImageStorage(2048, 2048);
-	terrainShadowTexture.CreateImage(terrainShadowConfig, terrainShadowSamplerConfig);
-	terrainShadowTexture.TransitionImageLayout(terrainShadowConfig);
+	terrainShadowTextures.resize(TERRAIN_SHADOW_CASCADES);
+
+	for (int i = 0; i < TERRAIN_SHADOW_CASCADES; i++)
+	{
+		ImageConfiguration terrainShadowConfig = Texture::ImageStorage(shadowComputeVariables[i].resolution, 
+			shadowComputeVariables[i].resolution);
+		terrainShadowTextures[i].CreateImage(terrainShadowConfig, terrainShadowSamplerConfig);
+		terrainShadowTextures[i].TransitionImageLayout(terrainShadowConfig);
+	}
 }
 
 void Terrain::CreateMeshes()
@@ -150,9 +177,12 @@ void Terrain::CreateComputePipelines()
 
 void Terrain::CreateShadowPipeline()
 {
-	std::vector<DescriptorLayoutConfiguration> shadowDescriptorLayoutConfig(1);
+	std::vector<DescriptorLayoutConfiguration> shadowDescriptorLayoutConfig(2);
 	shadowDescriptorLayoutConfig[0].type = IMAGE_STORAGE;
 	shadowDescriptorLayoutConfig[0].stages = COMPUTE_STAGE;
+	shadowDescriptorLayoutConfig[0].count = TERRAIN_SHADOW_CASCADES;
+	shadowDescriptorLayoutConfig[1].type = UNIFORM_BUFFER;
+	shadowDescriptorLayoutConfig[1].stages = COMPUTE_STAGE;
 
 	shadowComputePipeline.CreateComputePipeline("terrainShadowCompute", shadowDescriptorLayoutConfig);
 }
@@ -268,13 +298,29 @@ void Terrain::CreateComputeDescriptors()
 
 void Terrain::CreateShadowDescriptor()
 {
-	std::vector<DescriptorConfiguration> shadowDescriptorConfig(1);
+	std::vector<DescriptorConfiguration> shadowDescriptorConfig(2);
 
 	shadowDescriptorConfig[0].type = IMAGE_STORAGE;
 	shadowDescriptorConfig[0].stages = COMPUTE_STAGE;
-	shadowDescriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
-	shadowDescriptorConfig[0].imageInfo.imageView = terrainShadowTexture.imageView;
+	shadowDescriptorConfig[0].count = TERRAIN_SHADOW_CASCADES;
+	shadowDescriptorConfig[0].imageInfos.resize(TERRAIN_SHADOW_CASCADES);
+	for (int i = 0; i < TERRAIN_SHADOW_CASCADES; i++)
+	{
+		shadowDescriptorConfig[0].imageInfos[i].imageLayout = LAYOUT_GENERAL;
+		shadowDescriptorConfig[0].imageInfos[i].imageView = terrainShadowTextures[i].imageView;
+		//shadowDescriptorConfig[0].imageInfos[i].sampler = terrainShadowTextures[i].sampler;
+	}
+
+	//shadowDescriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
+	//shadowDescriptorConfig[0].imageInfo.imageView = terrainShadowTextures[0].imageView;
 	// shadowDescriptorConfig[0].imageInfo.sampler = heightMapTexture.sampler;
+
+	shadowDescriptorConfig[1].type = UNIFORM_BUFFER;
+	shadowDescriptorConfig[1].stages = COMPUTE_STAGE;
+	shadowDescriptorConfig[1].buffersInfo.resize(1);
+	shadowDescriptorConfig[1].buffersInfo[0].buffer = shadowComputeVariablesBuffer.buffer;
+	shadowDescriptorConfig[1].buffersInfo[0].range = sizeof(ShadowComputeVariables);
+	shadowDescriptorConfig[1].buffersInfo[0].offset = 0;
 
 	shadowComputeDescriptor.perFrame = false;
 	shadowComputeDescriptor.Create(shadowDescriptorConfig, shadowComputePipeline.objectDescriptorSetLayout);
@@ -299,6 +345,14 @@ void Terrain::CreateBuffers()
 	arrayComputeConfiguration.mapped = true;
 
 	heightMapArrayComputeVariablesBuffer.Create(arrayComputeConfiguration);
+
+	BufferConfiguration shadowComputeConfiguration;
+	shadowComputeConfiguration.size = sizeof(ShadowComputeVariables);
+	shadowComputeConfiguration.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	shadowComputeConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	shadowComputeConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	shadowComputeConfiguration.mapped = true;
+	shadowComputeVariablesBuffer.Create(shadowComputeConfiguration);
 }
 
 void Terrain::Destroy()
@@ -321,7 +375,12 @@ void Terrain::DestroyTextures()
 	heightMapLod1Texture.Destroy();
 	heightMapLod0Texture.Destroy();
 
-	terrainShadowTexture.Destroy();
+	//terrainShadowTexture.Destroy();
+	for (Texture &texture : terrainShadowTextures)
+	{
+		texture.Destroy();
+	}
+	terrainShadowTextures.clear();
 }
 
 void Terrain::DestroyMeshes()
@@ -372,6 +431,8 @@ void Terrain::DestroyBuffers()
 	heightMapComputeVariablesBuffer.Destroy();
 
 	heightMapArrayComputeVariablesBuffer.Destroy();
+
+	shadowComputeVariablesBuffer.Destroy();
 }
 
 void Terrain::Start()
@@ -411,9 +472,17 @@ void Terrain::Frame()
 
 void Terrain::PostFrame()
 {
-	if (HeightMapsGenerated() && Time::newSubTick)
+	if (!HeightMapsGenerated())
+		return;
+
+	if (Time::newSubTick)
 	{
 		CheckTerrainOffset(nullptr);
+	}
+
+	if (Time::newTick)
+	{
+		CheckTerrainShadowOffset();
 	}
 }
 
@@ -625,16 +694,41 @@ void Terrain::ComputeHeightMapArray(VkCommandBuffer commandBuffer, uint32_t inde
 	if (oneTimeBuffer) Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
 
-void Terrain::ComputeShadows()
+void Terrain::ComputeShadows(uint32_t index, glm::vec2 newOffset)
 {
+	//int dispatchCount = int(floor(shadowComputeVariables.resolutions[index] / 8.0));
+	//shadowComputeVariables.index = index;
+	
+	terrainShadowOffsets[index] = newOffset;
+	int dispatchCount = 128;
+
+	//Manager::UpdateShaderVariables();
+
 	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
 
 	shadowComputePipeline.BindCompute(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, shadowComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
 	shadowComputeDescriptor.Bind(commandBuffer, shadowComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
+	memcpy(shadowComputeVariablesBuffer.mappedBuffer, &shadowComputeVariables[index], sizeof(ShadowComputeVariables));
 
-	vkCmdDispatch(commandBuffer, 256, 256, 1);
+	vkCmdDispatch(commandBuffer, dispatchCount, dispatchCount, 1);
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
+
+	Manager::UpdateShaderVariables();
+}
+
+int ShouldUpdateShadows(glm::vec2 viewPosition)
+{
+	for (int i = TERRAIN_SHADOW_CASCADES - 1; i >= 0; i--)
+	{
+		if (abs(viewPosition.x - Terrain::terrainShadowOffsets[i].x) > Terrain::shadowComputeVariables[i].distance * 0.1 ||
+			abs(viewPosition.y - Terrain::terrainShadowOffsets[i].y) > Terrain::shadowComputeVariables[i].distance * 0.1)
+		{
+			return (i);
+		}
+	}
+
+	return (-1);
 }
 
 void Terrain::CheckTerrainOffset(VkCommandBuffer commandBuffer)
@@ -678,12 +772,6 @@ void Terrain::CheckTerrainOffset(VkCommandBuffer commandBuffer)
 
 		ComputeHeightMap(commandBuffer, 0);
 	}
-	else if (updateTerrainShadows || abs(xw - terrainShadowOffset.x) > 1000.0 || abs(zw - terrainShadowOffset.y) > 1000.0)
-	{
-		updateTerrainShadows = false;
-		terrainShadowOffset = glm::vec2(xw, zw);
-		ComputeShadows();
-	}
 	else
 	{
 		updated = false;
@@ -692,6 +780,28 @@ void Terrain::CheckTerrainOffset(VkCommandBuffer commandBuffer)
 	if (updated)
 	{
 		Manager::UpdateShaderVariables();
+	}
+}
+
+void Terrain::CheckTerrainShadowOffset()
+{
+	float xw = Manager::camera.Position().x;
+	float zw = Manager::camera.Position().z;
+
+	if (updateTerrainShadows || ShouldUpdateShadows(glm::vec2(xw, zw)) >= 0)
+	{
+		if (updateTerrainShadows)
+		{
+			updateTerrainShadows = false;
+			for (int i = TERRAIN_SHADOW_CASCADES - 1; i >= 0; i--)
+			{
+				ComputeShadows(i, glm::vec2(xw, zw));
+			}
+		}
+		else
+		{
+			ComputeShadows(ShouldUpdateShadows(glm::vec2(xw, zw)), glm::vec2(xw, zw));
+		}
 	}
 }
 
@@ -756,13 +866,16 @@ Texture Terrain::heightMapArrayTexture{Manager::currentDevice};
 Texture Terrain::heightMapLod0Texture{Manager::currentDevice};
 Texture Terrain::heightMapLod1Texture{Manager::currentDevice};
 
-Texture Terrain::terrainShadowTexture{Manager::currentDevice};
+std::vector<Texture> Terrain::terrainShadowTextures;
 
 HeightMapComputeVariables Terrain::heightMapComputeVariables;
 Buffer Terrain::heightMapComputeVariablesBuffer;
 
 HeightMapArrayComputeVariables Terrain::heightMapArrayComputeVariables;
 Buffer Terrain::heightMapArrayComputeVariablesBuffer;
+
+std::vector<ShadowComputeVariables> Terrain::shadowComputeVariables;
+Buffer Terrain::shadowComputeVariablesBuffer;
 
 Descriptor Terrain::graphicsDescriptor{Manager::currentDevice};
 Descriptor Terrain::cullDescriptor{Manager::currentDevice};
@@ -793,7 +906,7 @@ float Terrain::terrainHeight = 5000;
 glm::vec2 Terrain::terrainOffset = glm::vec2(0);
 glm::vec2 Terrain::terrainLod0Offset = glm::vec2(0);
 glm::vec2 Terrain::terrainLod1Offset = glm::vec2(0);
-glm::vec2 Terrain::terrainShadowOffset = glm::vec2(0);
+std::vector<glm::vec2> Terrain::terrainShadowOffsets;
 float Terrain::terrainStep = 1.0f;
 float Terrain::terrainLod0Step = 0.125f;
 float Terrain::terrainLod1Step = 0.25f;
