@@ -20,13 +20,13 @@ void Terrain::Create()
 	shadowComputeVariables[1].distance = 8192;
 	shadowComputeVariables[2].distance = 32768;
 
-	shadowComputeVariables[0].resolution = 1024;
-	shadowComputeVariables[1].resolution = 1024;
-	shadowComputeVariables[2].resolution = 1024;
+	shadowComputeVariables[0].resolution = 512;
+	shadowComputeVariables[1].resolution = 512;
+	shadowComputeVariables[2].resolution = 512;
 
-	shadowComputeVariables[0].resolutionMultiplier = 1.0 / 1024.0;
-	shadowComputeVariables[1].resolutionMultiplier = 1.0 / 1024.0;
-	shadowComputeVariables[2].resolutionMultiplier = 1.0 / 1024.0;
+	shadowComputeVariables[0].resolutionMultiplier = 1.0 / 512.0;
+	shadowComputeVariables[1].resolutionMultiplier = 1.0 / 512.0;
+	shadowComputeVariables[2].resolutionMultiplier = 1.0 / 512.0;
 
 	//Manager::shaderVariables.terrainShadowDistances[0] = shadowComputeVariables.terrainShadowDistances[0];
 
@@ -696,11 +696,11 @@ void Terrain::ComputeHeightMapArray(VkCommandBuffer commandBuffer, uint32_t inde
 
 void Terrain::ComputeShadows(uint32_t index, glm::vec2 newOffset)
 {
-	//int dispatchCount = int(floor(shadowComputeVariables.resolutions[index] / 8.0));
+	int dispatchCount = int(floor(float(shadowComputeVariables[index].resolution) / 8.0));
 	//shadowComputeVariables.index = index;
 	
 	terrainShadowOffsets[index] = newOffset;
-	int dispatchCount = 128;
+	//int dispatchCount = 128;
 
 	//Manager::UpdateShaderVariables();
 
