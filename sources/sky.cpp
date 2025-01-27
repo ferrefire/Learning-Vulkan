@@ -10,7 +10,13 @@ void Sky::Create()
 
 void Sky::CreateMesh()
 {
+	skyMesh.coordinate = true;
+	skyMesh.shape.coordinate = true;
 	skyMesh.shape.SetShape(QUAD);
+	skyMesh.shape.positions[0] = glm::vec3(-0.73638, -0.414214, 1.0);
+	skyMesh.shape.positions[1] = glm::vec3(0.73638, 0.414214, 1.0);
+	skyMesh.shape.positions[2] = glm::vec3(-0.73638, 0.414214, 1.0);
+	skyMesh.shape.positions[3] = glm::vec3(0.73638, -0.414214, 1.0);
 	skyMesh.RecalculateVertices();
 	skyMesh.Create();
 }

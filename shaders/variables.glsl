@@ -26,6 +26,7 @@ layout(set = 0, binding = 0) uniform Variables
     vec3 viewRight;
     vec3 viewUp;
 	vec4 resolution;
+	vec4 ranges;
 	vec3 lightDirection;
 	vec2 terrainOffset;
 	vec2 terrainLod0Offset;

@@ -117,6 +117,13 @@ void Camera::PrintStatus()
 {
 	std::cout << "position: (" << Position().x << ", " << Position().y << ", " << Position().z << ") rotation: (" << Angles().x << ", " << 
 		Angles().y << ", " << Angles().z << ")" << std::endl;
+
+	//glm::mat4 tempView = glm::lookAt(glm::vec3(0), glm::vec3(0, 0, 1), glm::vec3(0, 1, 0));
+	//std::vector<glm::vec4> corners = GetFrustumCorners(1, far, tempView);
+	//for (glm::vec4 corner : corners)
+	//{
+	//	Utilities::PrintVec(corner);
+	//}
 }
 
 void Camera::UpdateMovement()
@@ -172,10 +179,10 @@ void Camera::UpdateRotation(double xpos, double ypos)
 	Rotate(Angles() + glm::vec3(yoffset, xoffset, 0.0f));
 }
 
-std::vector<glm::vec4> Camera::GetFrustumCorners(float nearDis, float farDis)
+std::vector<glm::vec4> Camera::GetFrustumCorners(float nearDis, float farDis, glm::mat4 tempView)
 {
 	glm::mat4 tempProjection = glm::perspective(glm::radians(FOV), (float)cameraWidth / (float)cameraHeight, nearDis, farDis);
-	glm::mat4 inverse = glm::inverse(tempProjection * view);
+	glm::mat4 inverse = glm::inverse(tempProjection * tempView);
     std::vector<glm::vec4> corners;
 
     std::vector<glm::vec4> clipSpaceCorners = 
@@ -192,6 +199,11 @@ std::vector<glm::vec4> Camera::GetFrustumCorners(float nearDis, float farDis)
     }
 
     return corners;
+}
+
+std::vector<glm::vec4> Camera::GetFrustumCorners(float nearDis, float farDis)
+{
+	return (GetFrustumCorners(nearDis, farDis, view));
 }
 
 glm::mat4 Camera::GetTempProjection(float nearDis, float farDis)

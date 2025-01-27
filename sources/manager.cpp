@@ -359,6 +359,7 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.viewUp = camera.Up();
 
 	shaderVariables.resolution = glm::vec4(window.width, window.height, 1.0 / window.width, 1.0 / window.height);
+	shaderVariables.ranges = glm::vec4(camera.near, camera.far, 1.0 / camera.near, 1.0 / camera.far);
 
 	shaderVariables.terrainOffset = Terrain::terrainOffset;
 	shaderVariables.terrainLod0Offset = Terrain::terrainLod0Offset;

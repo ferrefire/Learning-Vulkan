@@ -56,6 +56,7 @@ struct ShaderVariables
 	alignas(16) glm::vec3 viewRight = glm::vec3(0);
 	alignas(16) glm::vec3 viewUp = glm::vec3(0);
 	alignas(16) glm::vec4 resolution = glm::vec4(0);
+	alignas(16) glm::vec4 ranges = glm::vec4(0);
 	alignas(16) glm::vec3 lightDirection;
 	alignas(8) glm::vec2 terrainOffset;
 	alignas(8) glm::vec2 terrainLod0Offset;
