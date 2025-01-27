@@ -22,13 +22,17 @@ void Cinematic::Load(const char *path)
 {
 	std::string positionsString = "#key_positions";
 	std::string rotationsString = "#key_rotations";
+	std::string lightsString = "#key_lights";
 	std::string endString = "#end";
 	std::string fileString = Utilities::FileToString(path);
 
 	size_t rotationsPosition = fileString.find(rotationsString);
+	size_t lightsPosition = fileString.find(lightsString);
 	size_t endPosition = fileString.find(endString);
 	size_t filePosition = fileString.find(positionsString);
 	size_t dividerPosition;
+
+	if (lightsPosition == std::string::npos) lightsPosition = endPosition;
 
 	filePosition = fileString.find("<");
 
@@ -55,7 +59,7 @@ void Cinematic::Load(const char *path)
 		AddKeyPosition(newKeyPosition, newKeyDuration);
 	}
 
-	while (filePosition != std::string::npos && filePosition < endPosition)
+	while (filePosition != std::string::npos && filePosition < lightsPosition)
 	{
 		glm::vec3 newKeyRotation;
 		float newKeyDuration;
@@ -77,6 +81,29 @@ void Cinematic::Load(const char *path)
 		// Utilities::PrintVec3(newKeyRotation);
 		AddKeyRotation(newKeyRotation, newKeyDuration);
 	}
+
+	while (filePosition != std::string::npos && filePosition < endPosition)
+	{
+		glm::vec3 newKeyLight;
+		float newKeyDuration;
+
+		filePosition++;
+		dividerPosition = fileString.find(",", filePosition);
+		newKeyLight.x = std::stof(fileString.substr(filePosition, dividerPosition));
+		filePosition = dividerPosition + 1;
+		dividerPosition = fileString.find(",", filePosition);
+		newKeyLight.y = std::stof(fileString.substr(filePosition, dividerPosition));
+		filePosition = dividerPosition + 1;
+		dividerPosition = fileString.find(",", filePosition);
+		newKeyLight.z = std::stof(fileString.substr(filePosition, dividerPosition));
+		filePosition = dividerPosition + 1;
+		dividerPosition = fileString.find(">", filePosition);
+		newKeyDuration = std::stof(fileString.substr(filePosition, dividerPosition));
+		filePosition = fileString.find("<", filePosition);
+
+		// Utilities::PrintVec3(newKeyLight);
+		AddKeyLight(newKeyLight, newKeyDuration);
+	}
 }
 
 void Cinematic::Create(const char *path)
@@ -92,6 +119,14 @@ void Cinematic::Create(const char *path)
 	for (CinematicKey &key : keyRotations)
 	{
 		ps.append("<" + std::to_string(key.value.x) + "," + std::to_string(key.value.y) + "," + std::to_string(key.value.z) + "," + std::to_string(key.duration) + ">" + "\n");
+	}
+	if (keyLights.size() > 0)
+	{
+		ps.append("#key_lights\n");
+		for (CinematicKey &key : keyLights)
+		{
+			ps.append("<" + std::to_string(key.value.x) + "," + std::to_string(key.value.y) + "," + std::to_string(key.value.z) + "," + std::to_string(key.duration) + ">" + "\n");
+		}
 	}
 	ps.append("#end\n");
 
@@ -118,16 +153,33 @@ void Cinematic::AddKeyRotation(glm::vec3 value, float duration)
 	keyRotations.push_back(key);
 }
 
+void Cinematic::AddKeyLight(glm::vec3 value, float duration)
+{
+	CinematicKey key;
+	key.value = value;
+	key.duration = duration;
+
+	keyLights.push_back(key);
+}
+
 void Cinematic::AddKey(glm::vec3 position, glm::vec3 rotation, float duration)
 {
 	float currentTime = Time::GetCurrentTime();
 	if (duration == -1) duration = currentTime - lastKeyTime;
 	lastKeyTime = currentTime;
 
-	if (keyPositions.size() == 0 || keyRotations.size() == 0) duration = 0;
+	if (keyPositions.size() == 0 || keyRotations.size() == 0 || keyLights.size() == 0) duration = 0;
 
 	AddKeyPosition(position + glm::vec3(Terrain::terrainOffset.x, 0, Terrain::terrainOffset.y), duration);
 	AddKeyRotation(rotation, duration);
+	AddKeyLight(Manager::lightAngles, duration);
+
+	//if (Manager::lightAngles != lastLight || keyLights.size() == 0)
+	//{
+	//	lastLight = Manager::lightAngles;
+	//	if (keyLights.size() == 0) duration = 0;
+	//	AddKeyLight(Manager::lightAngles, duration);
+	//}
 }
 
 void Cinematic::Start()
@@ -174,6 +226,26 @@ void Cinematic::Play()
 		{
 			rotationIndex++;
 			rotationDuration = 0;
+		}
+
+		ended = false;
+	}
+
+	if (lightIndex + 1 < keyLights.size())
+	{
+		if (keyLights[lightIndex].value != keyLights[lightIndex + 1].value)
+		{
+			Manager::lightAngles = glm::mix(keyLights[lightIndex].value, keyLights[lightIndex + 1].value,
+				lightDuration / keyLights[lightIndex + 1].duration);
+			Terrain::updateTerrainShadows = true;
+		}
+
+		lightDuration += Time::deltaTime * speed;
+
+		if (lightDuration >= keyLights[lightIndex + 1].duration)
+		{
+			lightIndex++;
+			lightDuration = 0;
 		}
 
 		ended = false;

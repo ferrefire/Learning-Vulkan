@@ -12,14 +12,18 @@ class Cinematic
 private:
 	int positionIndex = 0;
 	int rotationIndex = 0;
+	int lightIndex = 0;
 
 	float positionDuration = 0;
 	float rotationDuration = 0;
+	float lightDuration = 0;
 
 	float totalFrameTime = 0;
 	int totalFrames = 0;
 
 	float lastKeyTime = 0;
+
+	glm::vec3 lastLight = glm::vec3(0);
 
 public:
 	struct CinematicKey
@@ -39,12 +43,14 @@ public:
 
 	std::vector<CinematicKey> keyPositions = std::vector<CinematicKey>();
 	std::vector<CinematicKey> keyRotations = std::vector<CinematicKey>();
+	std::vector<CinematicKey> keyLights = std::vector<CinematicKey>();
 
 	void Load(const char *path);
 	void Create(const char *path);
 
 	void AddKeyPosition(glm::vec3 value, float duration);
 	void AddKeyRotation(glm::vec3 value, float duration);
+	void AddKeyLight(glm::vec3 value, float duration);
 	void AddKey(glm::vec3 position, glm::vec3 rotation, float duration = -1);
 
 	void Start();

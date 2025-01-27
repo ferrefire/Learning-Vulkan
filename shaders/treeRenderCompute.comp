@@ -232,16 +232,37 @@ void main()
 	{
 		if (InView(worldPosition, 0) == 0) return;
 	}
-	else
+	else if (lod > 1)
 	{
-		float checkDis = frustumCheckDis;
-		if (lod <= 1) checkDis *=  (1.0 + (1.0 - clamp(dot(variables.viewDirection, variables.lightDirection), 0.0, 1.0)) * 3.0);
-
-		if (viewDistance >= checkDis)
+		if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0) return;
+	}
+	else if (lod > 0)
+	{
+		if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0)
 		{
-			if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0) return;
+			lod = 3;
 		}
 	}
+	else
+	{
+		if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0)
+		{
+			lod = 1;
+		}
+	}
+	//else if (lod > 0)
+	//{
+	//	if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0) return;
+	//}
+	//else
+	//{
+	//	float checkDis = frustumCheckDis;
+	//	if (lod <= 1) checkDis *=  (1.0 + (1.0 - clamp(dot(variables.viewDirection, variables.lightDirection), 0.0, 1.0)) * 3.0);
+	//	if (viewDistance >= checkDis)
+	//	{
+	//		if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0) return;
+	//	}
+	//}
 	//else if (AreaInView(worldPosition + vec3(0, viewFactor, 0), vec2(viewFactor * 0.75, viewFactor), inDis) == 0) return;
 
 	//float occludeFactor = 50.0 / float(clamp(lod, 1, 4));

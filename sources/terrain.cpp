@@ -447,8 +447,8 @@ void Terrain::Start()
 	Manager::shaderVariables.terrainChunksLength = heightMapLength;
 	Manager::shaderVariables.terrainChunksLengthMult = 1.0 / float(heightMapLength);
 
-	ComputeHeightMap(nullptr, 1);
-	ComputeHeightMap(nullptr, 0);
+	//ComputeHeightMap(nullptr, 1);
+	//ComputeHeightMap(nullptr, 0);
 }
 
 void Terrain::Frame()

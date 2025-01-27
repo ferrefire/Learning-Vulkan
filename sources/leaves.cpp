@@ -247,10 +247,15 @@ void Leaves::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod0.indices.size()), 
 			Trees::treeRenderCounts[Manager::currentFrame].lod0Count * Trees::treeVariables.leafCountTotal, 0, 0, 0);
 
-		leafMeshLod1.Bind(commandBuffer);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+		//leafMeshLod1.Bind(commandBuffer);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod0.indices.size()), 
 			Trees::treeRenderCounts[Manager::currentFrame].lod1Count * Trees::treeVariables.leafCount1, 
 			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal);
+
+		//leafMeshLod1.Bind(commandBuffer);
+		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+		//	Trees::treeRenderCounts[Manager::currentFrame].lod1Count * Trees::treeVariables.leafCount1, 
+		//	0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal);
 
 		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
 		//	Trees::treeRenderCounts[Manager::currentFrame].lod2Count * Trees::treeVariables.leafCount2, 
@@ -265,10 +270,12 @@ void Leaves::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod0.indices.size()), 
 			Trees::treeRenderCounts[Manager::currentFrame].lod0Count * Trees::treeVariables.leafCountTotal, 0, 0, 0);
 
-		leafMeshLod1.Bind(commandBuffer);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+		//leafMeshLod1.Bind(commandBuffer);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod0.indices.size()), 
 			Trees::treeRenderCounts[Manager::currentFrame].lod1Count * Trees::treeVariables.leafCount1, 
 			0, 0, Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal);
+
+		leafMeshLod1.Bind(commandBuffer);
 
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
 			Trees::treeRenderCounts[Manager::currentFrame].lod2Count * Trees::treeVariables.leafCount2, 
