@@ -261,8 +261,6 @@ void Manager::Start()
 	Data::Start();
 
 	cinematic.Start();
-
-	Terrain::updateTerrainShadows = true;
 }
 
 void Manager::PreFrame()

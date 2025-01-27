@@ -911,7 +911,7 @@ float Terrain::terrainStep = 1.0f;
 float Terrain::terrainLod0Step = 0.125f;
 float Terrain::terrainLod1Step = 0.25f;
 
-bool Terrain::updateTerrainShadows = false;
+bool Terrain::updateTerrainShadows = true;
 
 uint32_t Terrain::currentBoundHeightMap = -1;
 
