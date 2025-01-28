@@ -2,7 +2,10 @@
 
 #extension GL_ARB_shading_language_include : require
 
+#ifndef OBJECT_DATA_COUNT
 #define OBJECT_DATA_COUNT 49
+#endif
+
 layout(set = 1, binding = 0) uniform ObjectData
 {
     mat4 model;
@@ -34,7 +37,7 @@ void main()
 
 	vec3 worldPosition = ObjectToWorld(inPosition, objectDatas[pc.chunkIndex].model);
 	//worldPosition.y += texture(heightMapSampler, vec2(inPosition.xz + 0.5)).r * 5000;
-	worldPosition.y += SampleDynamic(worldPosition.xz) * 5000;
+	worldPosition.y += SampleDynamic(worldPosition.xz) * variables.terrainHeight;
 
 	gl_Position = vec4(worldPosition, 1);
 }

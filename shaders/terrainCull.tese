@@ -2,7 +2,10 @@
 
 #extension GL_ARB_shading_language_include : require
 
+#ifndef OBJECT_DATA_COUNT
 #define OBJECT_DATA_COUNT 49
+#endif
+
 layout(set = 1, binding = 0) uniform ObjectData
 {
     mat4 model;
@@ -29,7 +32,7 @@ void main()
     vec4 position = gl_in[0].gl_Position * gl_TessCoord[0] + gl_in[1].gl_Position * gl_TessCoord[1] + gl_in[2].gl_Position * gl_TessCoord[2];
 
 	vec3 worldPosition = position.xyz;
-	worldPosition.y = ObjectToWorld(vec3(0), objectDatas[pc.chunkIndex].model).y + SampleDynamic(worldPosition.xz) * 5000;
+	worldPosition.y = ObjectToWorld(vec3(0), objectDatas[pc.chunkIndex].model).y + SampleDynamic(worldPosition.xz) * variables.terrainHeight;
 
 	//shadowPosition = variables.shadowProjection * variables.shadowView * vec4(worldPosition, 1.0);
 

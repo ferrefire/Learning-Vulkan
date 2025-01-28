@@ -36,7 +36,7 @@ void main()
 	
 	
 	//combinedColor *= shadow;
-	combinedColor = GroundFog(combinedColor, depth, worldPosition.y);
+	//combinedColor = GroundFog(combinedColor, depth, worldPosition.y);
 
 	outColor = vec4(combinedColor, 1.0);
 

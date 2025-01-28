@@ -19,7 +19,7 @@ float GetDepth(float z, float near, float far)
 
 float GetDepth(float z)
 {
-    return (GetDepth(z, 0.1, 25000));
+    return (GetDepth(z, variables.ranges.x, variables.ranges.y));
 }
 
 float GetWorldDepth(vec3 worldSpace)

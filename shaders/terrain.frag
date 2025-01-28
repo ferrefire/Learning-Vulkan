@@ -226,7 +226,8 @@ void main()
 
 	vec3 combinedColor = textureColor * diffuse;
 	//vec3 endColor = Fog(combinedColor, depth);
-	vec3 endColor = GroundFog(combinedColor, depth, inPosition.y);
+	//vec3 endColor = GroundFog(combinedColor, depth, inPosition.y);
+	vec3 endColor = combinedColor;
 
 	outColor = vec4(endColor, 1.0);
 	//outColor = vec4(vec3(steepness), 1.0);

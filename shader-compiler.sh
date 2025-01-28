@@ -23,7 +23,7 @@ fi
 
 compile_shader () {
 	#"$path""$glslang_path" -V $1 -o $1.spv
-	"$glslang_path" -V $1 -o $1.spv -DCASCADE_COUNT=5 -DTERRAIN_CASCADE_COUNT=3
+	"$glslang_path" -V $1 -o $1.spv -DCASCADE_COUNT=5 -DTERRAIN_CASCADE_COUNT=3 -DOBJECT_DATA_COUNT=49
 }
 
 if [[ $@ == "ALL" ]] || [[ $@ == "all" ]]; then

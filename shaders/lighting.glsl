@@ -77,9 +77,14 @@ vec3 SpecularLighting(vec3 normal, vec3 viewDirection, float shininess)
 	return specularColor;
 }
 
+vec3 Fog(vec3 color, vec3 fogColor, float depth)
+{
+	return mix(color, fogColor, depth);	
+}
+
 vec3 Fog(vec3 color, float depth)
 {
-	return mix(color, FOG_COLOR, depth);	
+	return Fog(color, FOG_COLOR, depth);	
 }
 
 vec3 GroundFog(vec3 color, float depth, float height)
@@ -370,7 +375,7 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth, int range
 
 	if (range < 0)
 	{
-		float depthDistance = depth * 25000.0;
+		float depthDistance = depth * variables.ranges.y;
 		if (depthDistance < 10.0) range = 2;
 		else if (depthDistance < 200.0) range = 1;
 		else range = 0;

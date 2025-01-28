@@ -2,6 +2,9 @@
 
 #extension GL_ARB_shading_language_include : require
 
+layout (input_attachment_index = 0, set = 1, binding = 0) uniform subpassInput inputColor;
+layout (input_attachment_index = 1, set = 1, binding = 1) uniform subpassInput inputDepth;
+
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inCoordinates;
 
@@ -9,6 +12,8 @@ layout(location = 0) out vec4 outColor;
 
 #include "variables.glsl"
 #include "transformation.glsl"
+#include "depth.glsl"
+#include "lighting.glsl"
 
 #define SCATTER_ITERATIONS 5
 #define OPTICAL_ITERATIONS 5
@@ -36,7 +41,7 @@ const float mieHeightScale = 1000;
 const vec3 rayleighBeta = vec3(0.0058, 0.0135, 0.0331);
 const vec3 mieBeta = vec3(0.01);
 
-vec3 sunWithBloom(vec3 rayDir, vec3 sunDir) 
+vec3 sunWithBloom(vec3 rayDir, vec3 sunDir)
 {
     const float sunSolidAngle = 1*PI/180.0;
     const float minSunCosTheta = cos(sunSolidAngle);
@@ -119,7 +124,7 @@ float GetOpticalDepth(vec3 point, vec3 center, vec3 direction, float len)
 	return (opticalDepth);
 }
 
-vec3 GetScattering()
+vec3 GetScattering(float depth)
 {
 	vec4 screenPosition;
 	screenPosition.xy = (((gl_FragCoord.xy + 0.5) / (variables.resolution.xy)) - 0.5) * 2.0;
@@ -146,12 +151,15 @@ vec3 GetScattering()
 
 	if (tRange.x == 0 && tRange.y == 0) return (vec3(1));
 
+	float rayLength = tRange.y;
+	if (depth >= 0.0 && depth < 1.0) rayLength = min(tRange.y, depth * variables.ranges.y * 25.0);
+
 	vec3 totalRayScattering = vec3(0.0);
 	vec3 totalMieScattering = vec3(0.0);
 	float totalOpticalDepth = 0.0;
 	float viewOptical = 0.0;
 
-	float stepSize = tRange.y / (SCATTER_ITERATIONS - 1);
+	float stepSize = rayLength / (SCATTER_ITERATIONS - 1);
 
 	for (int i = 0; i < SCATTER_ITERATIONS; i++)
 	{
@@ -181,7 +189,7 @@ vec3 GetScattering()
 	//vec3 rayInScattering = totalRayScattering * exp(-totalOpticalDepth);
 	//vec3 mieInScattering = totalMieScattering * exp(-totalOpticalDepth);
 
-	if (dot(pixelDirection, variables.lightDirection) > 0.5)
+	if (depth >= 1.0 && dot(pixelDirection, variables.lightDirection) > 0.5)
 	{
 		totalRayScattering += sunWithBloom(pixelDirection, variables.lightDirection);
 	}
@@ -195,7 +203,39 @@ void main()
 {
 	//vec3 finalColor = GetSky();
 
-	vec3 finalColor = GetScattering();
+	//vec3 finalColor = GetScattering();
+
+	//discard;
+
+	vec3 finalColor = vec3(1.0);
+	float depth = GetDepth(subpassLoad(inputDepth).r);
+
+	//if (depth < 1.0 && depth * variables.ranges.y > 20000.0)
+	//{
+	//	outColor = vec4(0);
+	//	return;
+	//}
+
+	vec3 scatteredLight = GetScattering(depth);
+
+	if (depth < 1.0)
+	{
+		vec3 originalColor = subpassLoad(inputColor).rgb;
+		finalColor = Fog(originalColor, scatteredLight, depth);
+
+		if (depth > 0.8)
+		{
+			finalColor = mix(finalColor, GetScattering(1.0), pow((depth - 0.8) * 5.0, 1.5));
+		}
+	}
+	else
+	{
+		finalColor = scatteredLight;
+	}
+
+	//vec3 finalColor = vec3(inCoordinates, 1.0);
+
+	//vec3 finalColor = subpassLoad(inputColor).rgb;
 
     outColor = vec4(finalColor, 1.0);
 }

@@ -274,9 +274,10 @@ void Window::CreateFramebuffers()
 
 		if (!Manager::settings.mssa)
 		{
-			attachments.resize(2);
+			attachments.resize(3);
 			attachments[0] = swapChainTextures[i].imageView;
-			attachments[1] = depthTexture.imageView;
+			attachments[1] = colorTexture.imageView;
+			attachments[2] = depthTexture.imageView; 
 		}
 		else
 		{
@@ -313,7 +314,8 @@ void Window::CreateDepthResources()
 	imageConfig.width = swapChainExtent.width;
 	imageConfig.height = swapChainExtent.height;
 	imageConfig.format = device.FindDepthFormat();
-	imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	//imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
 	//imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	imageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
 	imageConfig.sampleCount = device.MaxSampleCount();
@@ -325,8 +327,6 @@ void Window::CreateDepthResources()
 
 void Window::CreateColorResources()
 {
-	if (!Manager::settings.mssa) return;
-
 	if (colorTexture.image != nullptr || colorTexture.imageMemory != nullptr || colorTexture.imageView != nullptr)
 		throw std::runtime_error("cannot create color resources because they already exist");
 
@@ -334,7 +334,8 @@ void Window::CreateColorResources()
 	imageConfig.width = swapChainExtent.width;
 	imageConfig.height = swapChainExtent.height;
 	imageConfig.format = swapChainImageFormat;
-	imageConfig.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	imageConfig.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+	imageConfig.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
 	imageConfig.sampleCount = device.MaxSampleCount();
 
 	SamplerConfiguration samplerConfig;
@@ -394,7 +395,7 @@ void Window::CreateRenderPass()
 	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
 	VkAttachmentReference colorAttachmentRef{};
-	colorAttachmentRef.attachment = 0;
+	colorAttachmentRef.attachment = 1;
 	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 	VkAttachmentDescription depthAttachment{};
@@ -408,7 +409,7 @@ void Window::CreateRenderPass()
 	depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 	VkAttachmentReference depthAttachmentRef{};
-	depthAttachmentRef.attachment = 1;
+	depthAttachmentRef.attachment = 2;
 	depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 	VkSubpassDescription subpass{};
@@ -417,13 +418,55 @@ void Window::CreateRenderPass()
 	subpass.pColorAttachments = &colorAttachmentRef;
 	subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
-	VkAttachmentDescription attachments[] = {colorAttachment, depthAttachment};
+	VkAttachmentDescription swapchainAttachment{};
+	swapchainAttachment.format = swapChainImageFormat;
+	swapchainAttachment.samples = device.MaxSampleCount();
+	swapchainAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	swapchainAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	swapchainAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	swapchainAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	swapchainAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	swapchainAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+	VkAttachmentReference swapchainAttachmentRef{};
+	swapchainAttachmentRef.attachment = 0;
+	swapchainAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	VkAttachmentReference inputReferences[2]{};
+	inputReferences[0].attachment = 1;
+	inputReferences[0].layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	inputReferences[1].attachment = 2;
+	inputReferences[1].layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	VkSubpassDescription postProcessingPass{};
+	postProcessingPass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	postProcessingPass.colorAttachmentCount = 1;
+	postProcessingPass.pColorAttachments = &swapchainAttachmentRef;
+	postProcessingPass.inputAttachmentCount = 2;
+	postProcessingPass.pInputAttachments = inputReferences;
+
+	VkSubpassDependency dependency{};
+	dependency.srcSubpass = 0;
+	dependency.dstSubpass = 1;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.srcAccessMask = 0;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+	VkAttachmentDescription attachments[] = {swapchainAttachment, colorAttachment, depthAttachment};
+	VkSubpassDescription subpasses[] = {subpass, postProcessingPass};
+
 	VkRenderPassCreateInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	renderPassInfo.attachmentCount = 2;
+	renderPassInfo.attachmentCount = 3;
 	renderPassInfo.pAttachments = attachments;
-	renderPassInfo.subpassCount = 1;
-	renderPassInfo.pSubpasses = &subpass;
+	//renderPassInfo.subpassCount = 1;
+	//renderPassInfo.pSubpasses = &subpass;
+	renderPassInfo.subpassCount = 2;
+	renderPassInfo.pSubpasses = subpasses;
+	renderPassInfo.dependencyCount = 1;
+	renderPassInfo.pDependencies = &dependency;
 
 	if (vkCreateRenderPass(device.logicalDevice, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
 	{

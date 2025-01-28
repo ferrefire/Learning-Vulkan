@@ -187,7 +187,7 @@ void Descriptor::Update()
 				descriptorWrites[index].descriptorCount = config.count;
 				descriptorWrites[index].pImageInfo = config.imageInfos.data();
 			}
-			else if (config.type == IMAGE_SAMPLER || config.type == IMAGE_STORAGE)
+			else if (config.type == IMAGE_SAMPLER || config.type == IMAGE_STORAGE || config.type == INPUT_ATTACHMENT)
 			{
 				descriptorWrites[index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 				descriptorWrites[index].dstSet = descriptorSets[i];

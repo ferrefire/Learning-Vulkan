@@ -446,6 +446,7 @@ void Terrain::Start()
 	Manager::shaderVariables.terrainTotalSizeMult = 1.0 / terrainTotalSize;
 	Manager::shaderVariables.terrainChunksLength = heightMapLength;
 	Manager::shaderVariables.terrainChunksLengthMult = 1.0 / float(heightMapLength);
+	Manager::shaderVariables.terrainHeight = terrainHeight;
 
 	//ComputeHeightMap(nullptr, 1);
 	//ComputeHeightMap(nullptr, 0);

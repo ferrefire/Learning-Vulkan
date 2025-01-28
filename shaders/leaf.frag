@@ -23,8 +23,9 @@ void main()
 	if (!gl_FrontFacing) leafNormal *= -1;
 	float depth = GetDepth(gl_FragCoord.z);
 	//float shadow = 0.0;
-	float shadow = GetTerrainShadow(worldPosition.xz);
-	if (shadow < 1.0)
+	float terrainShadow = GetTerrainShadow(worldPosition.xz);
+	float shadow = terrainShadow;
+	if (terrainShadow < 1.0)
 		shadow = clamp(shadow + GetCascadedShadow(shadowPositions, depth), 0.0, 1.0);
 	//float shadow = GetCascadedShadow(shadowPositions, depth);
 	//leafNormal = normalize(leafNormal);
@@ -34,12 +35,19 @@ void main()
 	vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
 	float normDot = clamp(dot(leafNormal, -variables.lightDirection), 0.0, 1.0);
 	normDot += (1.0 - normDot) * 0.2;
-    float translucency = pow(clamp(dot(viewDirection, variables.lightDirection), 0.0, 1.0), 
-        exp2(10 * 0.5 + 1)) * 1.0 * normDot;
-	if (1.0 - shadow < translucency)
-		translucency = (translucency * 0.25 + (1.0 - shadow) * 0.75);
-	endColor += lightColor * leafColor * translucency;
+	//float translucency = 1.0;
 
-	endColor = GroundFog(endColor, depth, worldPosition.y);
+    if (terrainShadow < 1.0)
+	{
+		float translucency = pow(clamp(dot(viewDirection, variables.lightDirection), 0.0, 1.0), exp2(10 * 0.5 + 1)) * 1.0 * normDot;
+		if (1.0 - shadow < translucency)
+		{
+			translucency = (translucency * 0.25 + (1.0 - shadow) * 0.75);
+			if (shadow == 0.0) translucency *= 2.0;
+		}
+		endColor += lightColor * leafColor * translucency;
+	}
+
+	//endColor = GroundFog(endColor, depth, worldPosition.y);
 	outColor = vec4(endColor, 1.0);
 }

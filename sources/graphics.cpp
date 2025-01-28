@@ -160,9 +160,10 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	renderPassInfo.renderArea.offset = {0, 0};
 	renderPassInfo.renderArea.extent = window.swapChainExtent;
 
-	std::vector<VkClearValue> clearValues(2);
+	std::vector<VkClearValue> clearValues(3);
 	clearValues[0].color = {{1.0f, 1.0f, 1.0f, 1.0f}};
-	clearValues[1].depthStencil = {1.0f, 0};
+	clearValues[1].color = {{1.0f, 1.0f, 1.0f, 1.0f}};
+	clearValues[2].depthStencil = {1.0f, 0};
 
 	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 	renderPassInfo.pClearValues = clearValues.data();
@@ -202,16 +203,18 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	Grass::RecordGraphicsCommands(commandBuffer);
 	STOP_TIMER(grassTime, false);
 
+	vkCmdNextSubpass(commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
+
 	Sky::RecordCommands(commandBuffer);
 
-	if (Manager::settings.screenQuad)
-	{
-		Manager::screenQuad.pipeline->BindGraphics(commandBuffer);
-		Manager::globalDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
-		Manager::screenQuadDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
-		Manager::screenQuad.mesh->Bind(commandBuffer);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Manager::screenQuad.mesh->indices.size()), 1, 0, 0, 0);
-	}
+	//if (Manager::settings.screenQuad)
+	//{
+	//	Manager::screenQuad.pipeline->BindGraphics(commandBuffer);
+	//	Manager::globalDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+	//	Manager::screenQuadDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+	//	Manager::screenQuad.mesh->Bind(commandBuffer);
+	//	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Manager::screenQuad.mesh->indices.size()), 1, 0, 0, 0);
+	//}
 
 	vkCmdEndRenderPass(commandBuffer);
 }
