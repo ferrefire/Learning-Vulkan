@@ -13,6 +13,10 @@
 #define FOG_COLOR vec3(0.64, 0.886, 1.0)
 #endif
 
+#ifndef LIGHT_COLOR
+#define LIGHT_COLOR vec3(1.0, 0.933, 0.89) * 2.0
+#endif
+
 layout(set = 0, binding = 5) uniform sampler2DShadow shadowSamplers[CASCADE_COUNT];
 layout(set = 0, binding = 6) uniform sampler2D terrainShadowSamplers[TERRAIN_CASCADE_COUNT];
 

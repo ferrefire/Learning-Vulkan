@@ -25,13 +25,14 @@ float outer = 1.0 - sunCenter;
 float mid = 0.75;
 //float inside = 1.0 - outside;
 
-const float radius = 2250000;
+const float radius = 10250000;
 //const float radius = 20000;
 const float radiusSqr = radius * radius;
 //const float surface = 5000;
-const float surface = 2000000;
+const float surface = 10000000;
 const float surfaceSqr = surface * surface;
 const float densityFalloff = 10.0;
+const float mistFalloff = 0.25;
 
 const float airMult = 1.0 / (radius - surface);
 
@@ -51,8 +52,9 @@ vec3 sunWithBloom(vec3 rayDir, vec3 sunDir)
     
     float offset = minSunCosTheta - cosTheta;
     float gaussianBloom = exp(-offset * 50000.0 * 16.0)*0.5;
-    float invBloom = 32.0 / (0.02 + offset * 300.0) * 0.01;
-    return vec3(gaussianBloom+invBloom);
+    float invBloom = 16.0 / (0.02 + offset * 300.0) * 0.01;
+   // return vec3(gaussianBloom+invBloom);
+    return LIGHT_COLOR * (gaussianBloom + invBloom);
 }
 
 vec3 GetSky()
@@ -131,12 +133,6 @@ vec3 GetScattering(float depth, vec3 originalColor)
 	screenPosition.z = 0.0;
 	screenPosition.w = 1.0;
 
-	vec3 surfaceCenter = variables.viewPosition;
-	surfaceCenter.y = -surface - 155000.0;
-
-	vec3 atmosCenter = variables.viewPosition;
-	atmosCenter.y = -radius + variables.viewPosition.y;
-
 	//center.y = 0;
 	
 	vec4 pixelPosition = inverse(variables.viewMatrix) * screenPosition;
@@ -146,6 +142,9 @@ vec3 GetScattering(float depth, vec3 originalColor)
 
 	vec3 pixelDirection = normalize(pixelPosition.xyz - variables.viewPosition);
 	vec3 pixelStart = variables.viewPosition;
+
+	vec3 surfaceCenter = variables.viewPosition;
+	surfaceCenter.y = -surface - 162000.0;
 
 	vec2 tRange = AtmosphereIntersect(pixelStart, pixelDirection, surfaceCenter);
 
@@ -184,12 +183,12 @@ vec3 GetScattering(float depth, vec3 originalColor)
 		//float opticalDepth = rayHeight * dot(rayleighBeta, vec3(1.0)) + mieHeight * dot(mieBeta, vec3(1.0));
 		//totalOpticalDepth += opticalDepth * stepSize;
 	}
-	float originalTransmittance = exp(-viewOptical);
+	float originalTransmittance = exp(-viewOptical * mistFalloff);
 	totalRayScattering = originalColor * originalTransmittance + totalRayScattering;
 	//vec3 rayInScattering = totalRayScattering * exp(-totalOpticalDepth);
 	//vec3 mieInScattering = totalMieScattering * exp(-totalOpticalDepth);
 
-	if (depth >= 0.95 && dot(pixelDirection, variables.lightDirection) > 0.5)
+	if (depth >= 0.95 && dot(pixelDirection, variables.lightDirection) > 0.75)
 	{
 		totalRayScattering += sunWithBloom(pixelDirection, variables.lightDirection);
 	}
@@ -222,7 +221,8 @@ void main()
 	{
 		vec3 originalColor = subpassLoad(inputColor).rgb;
 		scatteredLight = GetScattering(depth, originalColor);
-		finalColor = Fog(originalColor, scatteredLight * 4.0, 1.0 - pow(1.0 - depth, 4.0));
+		finalColor = scatteredLight;
+		//finalColor = Fog(originalColor, scatteredLight * 4.0, 1.0 - pow(1.0 - depth, 4.0));
 		//finalColor = Fog(originalColor, scatteredLight, depth);
 
 		//if (depth > 0.8)
