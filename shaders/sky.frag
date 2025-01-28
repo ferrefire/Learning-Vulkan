@@ -124,7 +124,7 @@ float GetOpticalDepth(vec3 point, vec3 center, vec3 direction, float len)
 	return (opticalDepth);
 }
 
-vec3 GetScattering(float depth)
+vec3 GetScattering(float depth, vec3 originalColor)
 {
 	vec4 screenPosition;
 	screenPosition.xy = (((gl_FragCoord.xy + 0.5) / (variables.resolution.xy)) - 0.5) * 2.0;
@@ -152,7 +152,7 @@ vec3 GetScattering(float depth)
 	if (tRange.x == 0 && tRange.y == 0) return (vec3(1));
 
 	float rayLength = tRange.y;
-	if (depth >= 0.0 && depth < 1.0) rayLength = min(tRange.y, depth * variables.ranges.y * 25.0);
+	if (depth >= 0.0 && depth < 1.0) rayLength = min(tRange.y, depth * variables.ranges.y * 1.0);
 
 	vec3 totalRayScattering = vec3(0.0);
 	vec3 totalMieScattering = vec3(0.0);
@@ -184,12 +184,12 @@ vec3 GetScattering(float depth)
 		//float opticalDepth = rayHeight * dot(rayleighBeta, vec3(1.0)) + mieHeight * dot(mieBeta, vec3(1.0));
 		//totalOpticalDepth += opticalDepth * stepSize;
 	}
-	//float originalTransmittance = exp(-viewOptical);
-
+	float originalTransmittance = exp(-viewOptical);
+	totalRayScattering = originalColor * originalTransmittance + totalRayScattering;
 	//vec3 rayInScattering = totalRayScattering * exp(-totalOpticalDepth);
 	//vec3 mieInScattering = totalMieScattering * exp(-totalOpticalDepth);
 
-	if (depth >= 1.0 && dot(pixelDirection, variables.lightDirection) > 0.5)
+	if (depth >= 0.95 && dot(pixelDirection, variables.lightDirection) > 0.5)
 	{
 		totalRayScattering += sunWithBloom(pixelDirection, variables.lightDirection);
 	}
@@ -216,20 +216,23 @@ void main()
 	//	return;
 	//}
 
-	vec3 scatteredLight = GetScattering(depth);
+	vec3 scatteredLight;
 
-	if (depth < 1.0)
+	if (depth < 0.95)
 	{
 		vec3 originalColor = subpassLoad(inputColor).rgb;
-		finalColor = Fog(originalColor, scatteredLight, depth);
+		scatteredLight = GetScattering(depth, originalColor);
+		finalColor = Fog(originalColor, scatteredLight * 4.0, 1.0 - pow(1.0 - depth, 4.0));
+		//finalColor = Fog(originalColor, scatteredLight, depth);
 
-		if (depth > 0.8)
-		{
-			finalColor = mix(finalColor, GetScattering(1.0), pow((depth - 0.8) * 5.0, 1.5));
-		}
+		//if (depth > 0.8)
+		//{
+		//	finalColor = mix(finalColor, GetScattering(1.0), pow((depth - 0.8) * 5.0, 1.5));
+		//}
 	}
 	else
 	{
+		scatteredLight = GetScattering(1.0, vec3(0));
 		finalColor = scatteredLight;
 	}
 
