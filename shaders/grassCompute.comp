@@ -121,12 +121,20 @@ void main()
 
 	if (lod == 1 && InView(position + vec3(0, 0.5, 0), 0) == 0) return ;
 
-	float squaredDistance = SquaredDistance(position, variables.viewPosition);
-	float maxDistance = pow(grassVariables.grassTotalBase * grassVariables.spacing, 2);
-	float maxDistanceMult = pow(grassVariables.grassTotalBaseMult * grassVariables.spacingMult, 2);
+	//float squaredDistance = SquaredDistance(position, variables.viewPosition);
+	//float maxDistance = pow(grassVariables.grassTotalBase * grassVariables.spacing, 2);
+	//float maxDistanceMult = pow(grassVariables.grassTotalBaseMult * grassVariables.spacingMult, 2);
+	float squaredDistance = distance(position, variables.viewPosition);
+	float maxDistance = grassVariables.grassTotalBase * grassVariables.spacing;
+	float maxDistanceMult = grassVariables.grassTotalBaseMult * grassVariables.spacingMult;
 
-	float falloff = clamp(clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult, 0.0, 1.0);
-	falloff = 1.0 - pow(1.0 - falloff, 16);
+	//float maxDistanceMult = 1.0 / maxDistance;
+
+	float falloff = clamp((clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult) * 1.0, 0.0, 1.0);
+	
+	falloff = 1.0 - pow(1.0 - falloff, 8);
+	falloff = clamp(falloff - 0.4, 0.0, 1.0);
+	falloff /= 0.6;
 
 	float ranMult = 1.0 - (abs(position.x) + abs(position.z)) * variables.terrainTotalSizeMult * 0.5;
     float ran = random(position.xz * ranMult);
@@ -168,12 +176,21 @@ void main()
     rotations.x *= 60.0;
     rotations.y *= 360.0;
 
-	float disNorm = clamp(clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult, 0.0, 1.0);
+	float disNorm = clamp((clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult) * 1.0, 0.0, 1.0);
+	//disNorm = clamp(disNorm - 0.1, 0.0, 1.0);
+	//disNorm /= 0.9;
+	//disNorm = 1.0 - pow(1.0 - disNorm, 2.0);
 	float scale = mix(1.0, 4.0, disNorm);
 	float scaleX = 0.5 * pow(scale, 2.0);
 	float scaleY = pow(1.0 - clumping.z, 0.5) * scale;
 
 	float colorVal = random(position.xz * ranMult);
+
+	//if (disNorm > 0.25)
+	//{
+	//	scaleX *= 10.0;
+	//	scaleY *= 10.0;
+	//}
 
 	uint index;
 	if (lod == 0) index = atomicAdd(countData.renderCount, 1);

@@ -1,12 +1,14 @@
 #include "sky.hpp"
 
 #include "manager.hpp"
+#include "terrain.hpp"
 
 void Sky::Create()
 {
 	CreateMesh();
-	CreatePipeline();
-	CreateDescriptor();
+	CreatePipelines();
+	CreateTextures();
+	CreateDescriptors();
 }
 
 void Sky::CreateMesh()
@@ -22,57 +24,90 @@ void Sky::CreateMesh()
 	skyMesh.Create();
 }
 
-void Sky::CreatePipeline()
+void Sky::CreatePipelines()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(2);
+	std::vector<DescriptorLayoutConfiguration> skyDescriptorLayoutConfig(3);
 
-	descriptorLayoutConfig[0].type = INPUT_ATTACHMENT;
-	descriptorLayoutConfig[0].stages = FRAGMENT_STAGE;
-	descriptorLayoutConfig[1].type = INPUT_ATTACHMENT;
-	descriptorLayoutConfig[1].stages = FRAGMENT_STAGE;
+	skyDescriptorLayoutConfig[0].type = INPUT_ATTACHMENT;
+	skyDescriptorLayoutConfig[0].stages = FRAGMENT_STAGE;
+	skyDescriptorLayoutConfig[1].type = INPUT_ATTACHMENT;
+	skyDescriptorLayoutConfig[1].stages = FRAGMENT_STAGE;
+	skyDescriptorLayoutConfig[2].type = IMAGE_SAMPLER;
+	skyDescriptorLayoutConfig[2].stages = FRAGMENT_STAGE;
 
-	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
+	PipelineConfiguration skyPipelineConfiguration = Pipeline::DefaultConfiguration();
 
-	pipelineConfiguration.depthStencil.depthWriteEnable = VK_FALSE;
-	//pipelineConfiguration.depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-	pipelineConfiguration.depthStencil.depthCompareOp = VK_COMPARE_OP_ALWAYS;
-	pipelineConfiguration.rasterization.cullMode = VK_CULL_MODE_NONE;
-	pipelineConfiguration.subpass = 1;
+	skyPipelineConfiguration.depthStencil.depthWriteEnable = VK_FALSE;
+	//skyPipelineConfiguration.depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+	skyPipelineConfiguration.depthStencil.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+	skyPipelineConfiguration.rasterization.cullMode = VK_CULL_MODE_NONE;
+	skyPipelineConfiguration.subpass = 1;
 
 	VertexInfo vertexInfo = skyMesh.MeshVertexInfo();
 
-	skyPipeline.CreateGraphicsPipeline("sky", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
+	skyPipeline.CreateGraphicsPipeline("sky", skyDescriptorLayoutConfig, skyPipelineConfiguration, vertexInfo);
+
+	std::vector<DescriptorLayoutConfiguration> scatterDescriptorLayoutConfig(1);
+
+	scatterDescriptorLayoutConfig[0].type = IMAGE_STORAGE;
+	scatterDescriptorLayoutConfig[0].stages = COMPUTE_STAGE;
+
+	scatterComputePipeline.CreateComputePipeline("scatterCompute", scatterDescriptorLayoutConfig);
 }
 
-void Sky::CreateDescriptor()
+void Sky::CreateTextures()
 {
-	std::vector<DescriptorConfiguration> descriptorConfig(2);
+	SamplerConfiguration scatterSampler;
+	ImageConfiguration scatterConfig = Texture::ImageStorage(512, 512);
+	scatterTexture.CreateImage(scatterConfig, scatterSampler);
+	scatterTexture.TransitionImageLayout(scatterConfig);
+}
 
-	descriptorConfig[0].type = INPUT_ATTACHMENT;
-	descriptorConfig[0].stages = FRAGMENT_STAGE;
-	descriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[0].imageInfo.imageView = Manager::currentWindow.colorTexture.imageView;
-	//descriptorConfig[0].imageInfo.sampler = grassDiffuseTexture.sampler;
+void Sky::CreateDescriptors()
+{
+	std::vector<DescriptorConfiguration> skyDescriptorConfig(3);
 
-	descriptorConfig[1].type = INPUT_ATTACHMENT;
-	descriptorConfig[1].stages = FRAGMENT_STAGE;
-	descriptorConfig[1].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[1].imageInfo.imageView = Manager::currentWindow.depthTexture.imageView;
-	// descriptorConfig[0].imageInfo.sampler = grassDiffuseTexture.sampler;
+	skyDescriptorConfig[0].type = INPUT_ATTACHMENT;
+	skyDescriptorConfig[0].stages = FRAGMENT_STAGE;
+	skyDescriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	skyDescriptorConfig[0].imageInfo.imageView = Manager::currentWindow.colorTexture.imageView;
 
-	skyDescriptor.Create(descriptorConfig, skyPipeline.objectDescriptorSetLayout);
+	skyDescriptorConfig[1].type = INPUT_ATTACHMENT;
+	skyDescriptorConfig[1].stages = FRAGMENT_STAGE;
+	skyDescriptorConfig[1].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	skyDescriptorConfig[1].imageInfo.imageView = Manager::currentWindow.depthTexture.imageView;
+
+	skyDescriptorConfig[2].type = IMAGE_SAMPLER;
+	skyDescriptorConfig[2].stages = FRAGMENT_STAGE;
+	skyDescriptorConfig[2].imageInfo.imageLayout = LAYOUT_GENERAL;
+	skyDescriptorConfig[2].imageInfo.imageView = scatterTexture.imageView;
+	skyDescriptorConfig[2].imageInfo.sampler = scatterTexture.sampler;
+
+	skyDescriptor.Create(skyDescriptorConfig, skyPipeline.objectDescriptorSetLayout);
+
+	std::vector<DescriptorConfiguration> scatterDescriptorConfig(1);
+
+	scatterDescriptorConfig[0].type = IMAGE_STORAGE;
+	scatterDescriptorConfig[0].stages = COMPUTE_STAGE;
+	scatterDescriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
+	scatterDescriptorConfig[0].imageInfo.imageView = scatterTexture.imageView;
+
+	scatterComputeDescriptor.perFrame = false;
+	scatterComputeDescriptor.Create(scatterDescriptorConfig, scatterComputePipeline.objectDescriptorSetLayout);
 }
 
 void Sky::Destroy()
 {
-	DestroyPipeline();
+	DestroyPipelines();
 	DestroyMesh();
-	DestroyDescriptor();
+	DestroyTextures();
+	DestroyDescriptors();
 }
 
-void Sky::DestroyPipeline()
+void Sky::DestroyPipelines()
 {
 	skyPipeline.Destroy();
+	scatterComputePipeline.Destroy();
 }
 
 void Sky::DestroyMesh()
@@ -80,9 +115,15 @@ void Sky::DestroyMesh()
 	skyMesh.Destroy();
 }
 
-void Sky::DestroyDescriptor()
+void Sky::DestroyTextures()
+{
+	scatterTexture.Destroy();
+}
+
+void Sky::DestroyDescriptors()
 {
 	skyDescriptor.Destroy();
+	scatterComputeDescriptor.Destroy();
 }
 
 void Sky::Start()
@@ -92,7 +133,11 @@ void Sky::Start()
 
 void Sky::Frame()
 {
-	
+	if (!scatterComputed && Terrain::HeightMapsGenerated())
+	{
+		scatterComputed = true;
+		ComputeInScattering();
+	}
 }
 
 void Sky::RecordCommands(VkCommandBuffer commandBuffer)
@@ -109,6 +154,26 @@ void Sky::RenderSky(VkCommandBuffer commandBuffer)
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(skyMesh.indices.size()), 1, 0, 0, 0);
 }
 
+void Sky::ComputeInScattering()
+{
+	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
+
+	scatterComputePipeline.BindCompute(commandBuffer);
+	Manager::globalDescriptor.Bind(commandBuffer, scatterComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
+	scatterComputeDescriptor.Bind(commandBuffer, scatterComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
+
+	vkCmdDispatch(commandBuffer, 64, 64, 1);
+	Manager::currentDevice.EndComputeCommand(commandBuffer);
+}
+
 Mesh Sky::skyMesh;
+
 Pipeline Sky::skyPipeline{Manager::currentDevice, Manager::camera};
+Pipeline Sky::scatterComputePipeline{Manager::currentDevice, Manager::camera};
+
+Texture Sky::scatterTexture{Manager::currentDevice};
+
 Descriptor Sky::skyDescriptor{Manager::currentDevice};
+Descriptor Sky::scatterComputeDescriptor{Manager::currentDevice};
+
+bool Sky::scatterComputed = false;

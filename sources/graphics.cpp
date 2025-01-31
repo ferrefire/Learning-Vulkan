@@ -203,18 +203,18 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	Grass::RecordGraphicsCommands(commandBuffer);
 	STOP_TIMER(grassTime, false);
 
+	if (Manager::settings.screenQuad && Terrain::HeightMapsGenerated())
+	{
+		Manager::screenQuad.pipeline->BindGraphics(commandBuffer);
+		Manager::globalDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+		Manager::screenQuadDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+		Manager::screenQuad.mesh->Bind(commandBuffer);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Manager::screenQuad.mesh->indices.size()), 1, 0, 0, 0);
+	}
+
 	vkCmdNextSubpass(commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
 	Sky::RecordCommands(commandBuffer);
-
-	//if (Manager::settings.screenQuad)
-	//{
-	//	Manager::screenQuad.pipeline->BindGraphics(commandBuffer);
-	//	Manager::globalDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
-	//	Manager::screenQuadDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
-	//	Manager::screenQuad.mesh->Bind(commandBuffer);
-	//	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Manager::screenQuad.mesh->indices.size()), 1, 0, 0, 0);
-	//}
 
 	vkCmdEndRenderPass(commandBuffer);
 }
@@ -652,23 +652,23 @@ void Graphics::Create()
 
 	std::cout << "default stuff created" << std::endl;
 
-	if (Manager::settings.performanceMode)
-	{
-		Grass::grassBase = 256;
-		Grass::grassLodBase = 1536;
-		Trees::treeLod0RenderBase = 8;
-		Trees::treeLod1RenderBase = 8;
-		Trees::treeLod2RenderBase = 8;
-		Trees::treeLod3RenderBase = 32;
-		Shadow::shadowCascadeResolutions[0] = ceil(Shadow::shadowCascadeResolutions[0] * 0.5f);
-		Shadow::shadowCascadeResolutions[1] = ceil(Shadow::shadowCascadeResolutions[1] * 0.5f);
-		Shadow::shadowCascadeResolutions[2] = ceil(Shadow::shadowCascadeResolutions[2] * 0.5f);
-		Shadow::shadowCascadeResolutions[3] = ceil(Shadow::shadowCascadeResolutions[3] * 0.5f);
-		Shadow::shadowCascadeDistances[0] *= 0.75;
-		Shadow::shadowCascadeDistances[1] *= 0.75;
-		Shadow::shadowCascadeDistances[2] *= 0.75;
-		Shadow::shadowCascadeDistances[3] *= 0.75;
-	}
+	//if (Manager::settings.performanceMode)
+	//{
+	//	Grass::grassBase = 256;
+	//	Grass::grassLodBase = 1536;
+	//	Trees::treeLod0RenderBase = 8;
+	//	Trees::treeLod1RenderBase = 8;
+	//	Trees::treeLod2RenderBase = 8;
+	//	Trees::treeLod3RenderBase = 32;
+	//	Shadow::shadowCascadeResolutions[0] = ceil(Shadow::shadowCascadeResolutions[0] * 0.5f);
+	//	Shadow::shadowCascadeResolutions[1] = ceil(Shadow::shadowCascadeResolutions[1] * 0.5f);
+	//	Shadow::shadowCascadeResolutions[2] = ceil(Shadow::shadowCascadeResolutions[2] * 0.5f);
+	//	Shadow::shadowCascadeResolutions[3] = ceil(Shadow::shadowCascadeResolutions[3] * 0.5f);
+	//	Shadow::shadowCascadeDistances[0] *= 0.75;
+	//	Shadow::shadowCascadeDistances[1] *= 0.75;
+	//	Shadow::shadowCascadeDistances[2] *= 0.75;
+	//	Shadow::shadowCascadeDistances[3] *= 0.75;
+	//}
 
 	//Time::StartTimer(timer);
 	Culling::Create();
@@ -713,7 +713,7 @@ void Graphics::Create()
 
 	Sky::Create();
 
-	/*if (Manager::settings.screenQuad)
+	if (Manager::settings.screenQuad)
 	{
 		Manager::screenQuad.mesh = Manager::NewMesh();
 		Manager::screenQuad.mesh->shape.SetShape(QUAD);
@@ -736,11 +736,11 @@ void Graphics::Create()
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
 		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
-		descriptorConfig[0].imageInfo.imageView = Terrain::terrainShadowTextures[0].imageView;
-		descriptorConfig[0].imageInfo.sampler = Terrain::terrainShadowTextures[0].sampler;
+		descriptorConfig[0].imageInfo.imageView = Sky::scatterTexture.imageView;
+		descriptorConfig[0].imageInfo.sampler = Sky::scatterTexture.sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
-	}*/
+	}
 
 	/*
 	Object *obj1 = Manager::NewObject();

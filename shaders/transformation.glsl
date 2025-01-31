@@ -59,7 +59,7 @@ mat4 GetRotationMatrix(float angle, vec3 axis)
 
 vec3 Rotate(vec3 vec, float angle, vec3 axis)
 {
-	return (GetRotationMatrix(angle, axis) * vec4(vec, 1.0)).xyz;
+	return (GetRotationMatrix(angle, axis) * vec4(vec, 0.0)).xyz;
 }
 
 #endif

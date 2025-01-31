@@ -10,6 +10,7 @@
 #include "utilities.hpp"
 #include "data.hpp"
 #include "leaves.hpp"
+#include "sky.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -266,12 +267,10 @@ void Manager::Start()
 void Manager::PreFrame()
 {
 	Terrain::Frame();
-	if (Manager::settings.trees)
-	{
-		Trees::Frame();
-		Leaves::Frame();
-	}
+	Trees::Frame();
+	Leaves::Frame();
 	Grass::Frame();
+	Sky::Frame();
 }
 
 void Manager::Frame()
