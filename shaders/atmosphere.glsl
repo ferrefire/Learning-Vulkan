@@ -6,7 +6,10 @@
 #define SCATTER_ITERATIONS 5
 #define OPTICAL_ITERATIONS 5
 #define BAKED_OPTICAL_ITERATIONS 50
-#define PI 3.14159265359
+
+#ifndef PI
+#define PI 3.141592654
+#endif
 
 const float sunCenter = 0.1;
 const float outer = 1.0 - sunCenter;
@@ -244,8 +247,8 @@ vec3 Transmittance(vec3 start, vec3 direction)
 
 vec3 sunWithBloom(vec3 rayDir, vec3 sunDir)
 {
-    const float sunSolidAngle = 1*PI/180.0;
-    const float minSunCosTheta = cos(sunSolidAngle);
+    float sunSolidAngle = 1.0 * PI / 180.0;
+    float minSunCosTheta = cos(sunSolidAngle);
 
     float cosTheta = dot(rayDir, sunDir);
     if (cosTheta >= minSunCosTheta) return vec3(1.0);
@@ -253,7 +256,7 @@ vec3 sunWithBloom(vec3 rayDir, vec3 sunDir)
     float offset = minSunCosTheta - cosTheta;
     float gaussianBloom = exp(-offset * 50000.0 * 16.0)*0.5;
     float invBloom = 4.0 / (0.02 + offset * 100.0) * 0.01;
-   // return vec3(gaussianBloom+invBloom);
+    //return vec3(gaussianBloom+invBloom);
     return LIGHT_COLOR * (gaussianBloom + invBloom);
 }
 
