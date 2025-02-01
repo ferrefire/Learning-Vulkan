@@ -1,8 +1,8 @@
 #ifndef ATMOSPHERE_INCLUDED
 #define ATMOSPHERE_INCLUDED
 
-#define TRANSMITTANCE_ITERATIONS 50
-#define MULTISCATTER_ITERATIONS 50
+#define TRANSMITTANCE_ITERATIONS 400
+#define MULTISCATTER_ITERATIONS 20
 #define SCATTER_ITERATIONS 5
 #define OPTICAL_ITERATIONS 5
 #define BAKED_OPTICAL_ITERATIONS 50
@@ -42,12 +42,18 @@ const float PR = 6360000.0;
 const float AR = 6460000.0;
 const float AH = AR - PR;
 
-float SphereIntersectNearest(vec3 point, vec3 direction)
+struct RaymarchResult 
+{
+    vec3 luminance;
+    vec3 multiscattering;
+};
+
+float SphereIntersectNearest(vec3 point, vec3 direction, float radius)
 {
 	vec3 offset = point - vec3(0);
 	float a = dot(direction, direction);
 	float b = 2.0 * dot(direction, offset);
-	float c = dot(offset, offset) - (AR * AR);
+	float c = dot(offset, offset) - (radius * radius);
 	float discriminant = b * b - 4.0 * a * c;
 
 	if (discriminant < 0.0 || a == 0.0)
@@ -84,6 +90,26 @@ vec2 SphereIntersect(vec3 point, vec3 direction)
 	return (vec2(t0, t1));
 }
 
+float ScatterValues(float u, float resolution)
+{
+	return ((u - 0.5 / resolution) * (resolution / (resolution - 1.0)));
+}
+
+vec2 TransmittanceUV(vec2 values)
+{
+	float atmosphereHeight = sqrt(AR * AR - PR * PR);
+	float uvHeight = sqrt(values.x * values.x - PR * PR);
+
+	float discriminant = values.x * values.x * (values.y * values.y - 1.0) + AR * AR;
+	float atmosphereDistance = max(0.0, (-values.x * values.y + sqrt(discriminant)));
+	float minDistance = AR - values.x;
+	float maxDistance = uvHeight + atmosphereHeight;
+	float mu = (atmosphereDistance - minDistance) / (maxDistance - minDistance);
+	float r = uvHeight / atmosphereHeight;
+
+	return (vec2(mu, r));
+}
+
 vec2 TransmittanceValues(vec2 uv)
 {
 	float atmosphereHeight = sqrt(AR * AR - PR * PR);
@@ -108,7 +134,7 @@ float Density(float height, float scale)
 
 #ifdef SCATTER_COMPUTE
 
-vec3 MultiScatter(vec3 start, vec3 end)
+/*vec3 MultiScatter(vec3 start, vec3 end)
 {
 	vec3 ray = start;
 	vec3 rayStep = (end - start) / float(MULTISCATTER_ITERATIONS - 1.0);
@@ -125,6 +151,46 @@ vec3 MultiScatter(vec3 start, vec3 end)
 	}
 
 	return (accumulatedScattering);
+}*/
+
+RaymarchResult MultiScatter(vec3 rayStart, vec3 rayDirection, vec3 sunDirection)
+{
+	RaymarchResult result = RaymarchResult(vec3(0.0), vec3(0.0));
+
+	float atmosphereDistance = SphereIntersectNearest(rayStart, rayDirection, AR);
+	float surfaceDistance = SphereIntersectNearest(rayStart, rayDirection, PR);
+
+	float rayLength;
+
+	if (surfaceDistance == -1.0 && atmosphereDistance == -1.0)
+		return (result);
+	else if (surfaceDistance == -1.0 && atmosphereDistance > 0.0)
+		rayLength = atmosphereDistance;
+	else if (surfaceDistance > 0.0 && atmosphereDistance == -1.0)
+		rayLength = surfaceDistance;
+	else
+		rayLength = min(surfaceDistance, atmosphereDistance);
+
+	float rayStep = rayLength / float(MULTISCATTER_ITERATIONS);
+
+	vec3 accumulatedTransmittance = vec3(0.0);
+	vec3 accumulatedLuminance = vec3(0.0);
+	float oldRayShift = 0.0;
+
+	for (int i = 0; i < MULTISCATTER_ITERATIONS; i++)
+	{
+		float newRayShift = rayLength * (float(i) + 0.3) / float(MULTISCATTER_ITERATIONS);
+		rayStep = newRayShift - oldRayShift;
+		vec3 ray = rayStart + newRayShift * rayDirection;
+		oldRayShift = newRayShift;
+
+		vec3 upVector = normalize(ray);
+		vec2 transmittanceValues = vec2(length(ray), dot(sunDirection, upVector));
+		vec2 transmittanceUV = TransmittanceUV(transmittanceValues);
+
+		vec3 sunTransmittance = textureLod(transmittanceSampler, transmittanceUV, 0.0).rgb;
+		vec3 scattering; //continue from here!!!!
+	}
 }
 
 #endif
@@ -144,7 +210,7 @@ vec3 Extinction(vec3 point)
 
 vec3 Transmittance(vec3 start, vec3 direction)
 {
-	float rayLength = SphereIntersectNearest(start, direction);
+	float rayLength = SphereIntersectNearest(start, direction, AR);
 	float rayStep = rayLength / float(TRANSMITTANCE_ITERATIONS);
 	vec3 totalTransmittance = vec3(0.0);
 
