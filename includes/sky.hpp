@@ -17,13 +17,17 @@ class Sky
 		static Mesh skyMesh;
 
 		static Pipeline skyPipeline;
-		static Pipeline scatterComputePipeline;
+		static Pipeline transmittancePipeline;
+		static Pipeline scatterPipeline;
 
 		static Descriptor skyDescriptor;
-		static Descriptor scatterComputeDescriptor;
+		static Descriptor transmittanceDescriptor;
+		static Descriptor scatterDescriptor;
 
+		static Texture transmittanceTexture;
 		static Texture scatterTexture;
 
+		static bool transmittanceComputed;
 		static bool scatterComputed;
 
 		static void Create();
@@ -42,5 +46,6 @@ class Sky
 		static void Frame();
 		static void RecordCommands(VkCommandBuffer commandBuffer);
 		static void RenderSky(VkCommandBuffer commandBuffer);
-		static void ComputeInScattering();
+		static void ComputeTransmittance();
+		static void ComputeScattering();
 };

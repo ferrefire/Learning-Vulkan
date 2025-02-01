@@ -2,6 +2,7 @@
 #define ATMOSPHERE_INCLUDED
 
 #define TRANSMITTANCE_ITERATIONS 50
+#define MULTISCATTER_ITERATIONS 50
 #define SCATTER_ITERATIONS 5
 #define OPTICAL_ITERATIONS 5
 #define BAKED_OPTICAL_ITERATIONS 50
@@ -35,32 +36,35 @@ const vec3 mieBeta = vec3(0.01);
 const float RSH = 8000.0;
 const float MSH = 1200.0;
 const vec3 betaR = vec3(5.8e-6, 13.5e-6, 33.1e-6);
-const vec3 betaM = vec3(2.0e-5);
+const vec3 betaM = vec3(3.996e-6);
+const vec3 ME = vec3(4.440e-6);
 const float PR = 6360000.0;
 const float AR = 6460000.0;
 const float AH = AR - PR;
 
-float Density(float height, float scale)
+float SphereIntersectNearest(vec3 point, vec3 direction)
 {
-	return (exp(-height / scale));
-}
+	vec3 offset = point - vec3(0);
+	float a = dot(direction, direction);
+	float b = 2.0 * dot(direction, offset);
+	float c = dot(offset, offset) - (AR * AR);
+	float discriminant = b * b - 4.0 * a * c;
 
-vec3 Transmittance(vec3 start, vec3 end)
-{
-	vec3 ray = start;
-	vec3 rayStep = (end - start) / float(TRANSMITTANCE_ITERATIONS - 1.0);
-	float rayStepSize = length(rayStep);
-	vec3 tau = vec3(0.0);
+	if (discriminant < 0.0 || a == 0.0)
+		return (-1.0);
 
-	for (int i = 0; i < TRANSMITTANCE_ITERATIONS; i++)
-	{
-		float height = length(ray) - PR;
-		vec3 betaE = betaR * Density(height, RSH) + betaM * Density(height, MSH);
-		tau += betaE * rayStepSize;
-		ray += rayStep;
-	}
+	float t0 = (-b - sqrt(discriminant)) / (2.0 * a);
+	float t1 = (-b + sqrt(discriminant)) / (2.0 * a);
 
-	return (exp(-tau));
+	if (t0 < 0.0 && t1 < 0.0)
+		return (-1.0);
+
+	if (t0 < 0.0)
+		return (max(0.0, t1));
+	else if (t1 < 0.0)
+		return (max(0.0, t0));
+
+	return (max(0.0, min(t0, t1)));
 }
 
 vec2 SphereIntersect(vec3 point, vec3 direction)
@@ -79,6 +83,98 @@ vec2 SphereIntersect(vec3 point, vec3 direction)
 
 	return (vec2(t0, t1));
 }
+
+vec2 TransmittanceValues(vec2 uv)
+{
+	float atmosphereHeight = sqrt(AR * AR - PR * PR);
+	float uvHeight = uv.y * atmosphereHeight;
+	float x = sqrt(uvHeight * uvHeight + PR * PR);
+
+	float minDistance = AR - x;
+	float maxDistance = uvHeight + atmosphereHeight;
+	float uvDistance = minDistance + uv.x * (maxDistance - minDistance);
+	float y = 1.0;
+	if (uvDistance != 0.0)
+		y = (atmosphereHeight * atmosphereHeight - uvHeight * uvHeight - uvDistance * uvDistance) / (2.0 * x * uvDistance);
+	y = clamp(y, -1.0, 1.0);
+
+	return (vec2(x, y));
+}
+
+float Density(float height, float scale)
+{
+	return (exp(-height / scale));
+}
+
+#ifdef SCATTER_COMPUTE
+
+vec3 MultiScatter(vec3 start, vec3 end)
+{
+	vec3 ray = start;
+	vec3 rayStep = (end - start) / float(MULTISCATTER_ITERATIONS - 1.0);
+	float rayStepSize = length(rayStep);
+	vec3 accumulatedScattering = vec3(0.0);
+
+	for (int i = 0; i < MULTISCATTER_ITERATIONS; i++)
+	{
+		float height = length(ray) - PR;
+		float betaE = Density(height, RSH) + Density(height, MSH);
+		vec3 transmittance = textureLod(transmittanceSampler, vec2(height / AH, 0.5), 0.0).rgb;
+		accumulatedScattering += betaE * transmittance * rayStepSize;
+		ray += rayStep;
+	}
+
+	return (accumulatedScattering);
+}
+
+#endif
+
+vec3 Extinction(vec3 point)
+{
+	float height = length(point) - PR;
+
+	float mieDensity = exp(-height / MSH);
+	float rayDensity = exp(-height / RSH);
+
+	vec3 mieExtinction = mieDensity * ME;
+	vec3 rayExtinction = rayDensity * betaR;
+
+	return (mieExtinction + rayExtinction);
+}
+
+vec3 Transmittance(vec3 start, vec3 direction)
+{
+	float rayLength = SphereIntersectNearest(start, direction);
+	float rayStep = rayLength / float(TRANSMITTANCE_ITERATIONS);
+	vec3 totalTransmittance = vec3(0.0);
+
+	for (int i = 0; i < TRANSMITTANCE_ITERATIONS; i++)
+	{
+		vec3 ray = start + i * rayStep * direction;
+		vec3 extinction = Extinction(ray);
+		totalTransmittance += extinction * rayStep;
+	}
+
+	return (totalTransmittance);
+}
+
+/*vec3 Transmittance(vec3 start, vec3 end)
+{
+	vec3 ray = start;
+	vec3 rayStep = (end - start) / float(TRANSMITTANCE_ITERATIONS);
+	float rayStepSize = length(rayStep);
+	vec3 tau = vec3(0.0);
+
+	for (int i = 0; i < TRANSMITTANCE_ITERATIONS; i++)
+	{
+		ray += rayStep;
+		float height = length(ray) - PR;
+		vec3 betaE = betaR * Density(height, RSH) + betaM * Density(height, MSH);
+		tau += betaE * rayStepSize;
+	}
+
+	return (exp(-tau));
+}*/
 
 vec3 sunWithBloom(vec3 rayDir, vec3 sunDir)
 {
