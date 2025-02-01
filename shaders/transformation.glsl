@@ -62,4 +62,10 @@ vec3 Rotate(vec3 vec, float angle, vec3 axis)
 	return (GetRotationMatrix(angle, axis) * vec4(vec, 0.0)).xyz;
 }
 
+//vec3 ObjectToTerrain(vec3 objectSpace, mat4 model)
+//{
+//	vec3 worldSpace = ObjectToWorld(objectSpace, model);
+//	vec3 terrainSpace = 
+//}
+
 #endif

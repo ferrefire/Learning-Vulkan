@@ -28,7 +28,7 @@ vec3 GetScattering(float depth, vec3 originalColor)
 	pixelPosition /= pixelPosition.w;
 
 	vec3 pixelDirection = normalize(pixelPosition.xyz - variables.viewPosition);
-	vec3 pixelStart = vec3(0, variables.viewPosition.y, 0);
+	vec3 pixelStart = vec3(0, variables.viewPosition.y - variables.terrainOffset.y, 0);
 
 	vec3 scatterPosition = pixelStart;
 
@@ -68,7 +68,7 @@ vec3 GetScattering(float depth, vec3 originalColor)
 	float originalTransmittance = exp(-viewOptical * mistFalloff);
 	totalRayScattering = originalColor * originalTransmittance + totalRayScattering;
 
-	if (depth >= 0.95 && dot(pixelDirection, variables.lightDirection) > 0.75)
+	if (depth >= 1.0 && dot(pixelDirection, variables.lightDirection) > 0.0)
 	{
 		totalRayScattering += sunWithBloom(pixelDirection, variables.lightDirection);
 	}
@@ -83,7 +83,7 @@ void main()
 
 	vec3 scatteredLight;
 
-	if (depth < 0.95)
+	if (depth < 1.0)
 	{
 		vec3 originalColor = subpassLoad(inputColor).rgb;
 		scatteredLight = GetScattering(depth, originalColor);

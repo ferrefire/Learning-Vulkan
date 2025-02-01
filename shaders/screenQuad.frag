@@ -10,7 +10,8 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
-    float val = texture(textureSampler, inCoordinates).r;
+    //float val = texture(textureSampler, inCoordinates).r;
+    vec3 val = texture(textureSampler, inCoordinates).rgb;
     //outColor = vec4(GetDepth(val));
 
 	//{-1, -1, -1, 1}, { 1, -1, -1, 1}, { 1,  1, -1, 1}, {-1,  1, -1, 1},
@@ -44,7 +45,7 @@ void main()
 	//else if (distance(inCoordinates, variables.frustumCorner3.xy * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
 	//else if (distance(inCoordinates, variables.frustumCorner4.xy * 0.5 + 0.5) < 0.01) finalColor = vec3(0);
 
-    outColor = vec4(vec3(val), 1.0);
+    outColor = vec4(val, 1.0);
 
     //outColor = vec4(1);
 }

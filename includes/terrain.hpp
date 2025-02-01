@@ -115,7 +115,7 @@ class Terrain
 		static int heightMapLength;
 		static int heightMapCount;
 
-		static glm::vec2 terrainOffset;
+		static glm::vec3 terrainOffset;
 		static glm::vec2 terrainLod0Offset;
 		static glm::vec2 terrainLod1Offset;
 		static float terrainStep;

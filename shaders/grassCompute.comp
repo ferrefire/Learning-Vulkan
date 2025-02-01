@@ -112,7 +112,7 @@ void main()
 
     float x = (xp + flooredViewPosition.x) * grassVariables.spacing;
     float z = (zp + flooredViewPosition.y) * grassVariables.spacing;
-    float y = SampleDynamic(vec2(x, z)) * variables.terrainHeight;
+    float y = GetTerrainHeight(vec2(x, z));
 
 	vec3 position = vec3(x, y, z);
 
@@ -148,7 +148,7 @@ void main()
 
 	vec3 clumping = textureLod(clumpingSampler, position.xz * 0.1, 0).xyz;
 	position.xz += clumping.xy;
-	position.y = SampleDynamic(position.xz) * variables.terrainHeight;
+	position.y = GetTerrainHeight(position.xz);
 
 	if (lod == 0 && InView(position + vec3(0, 1, 0), 0) == 0 && InView(position, 0) == 0) return ;
 

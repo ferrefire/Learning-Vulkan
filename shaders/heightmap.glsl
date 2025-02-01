@@ -56,33 +56,20 @@ float SampleArray(vec2 uvPosition)
 
 float SampleDynamic(vec2 worldPosition)
 {
-	//vec2 worldUV = (worldPosition + terrainWorldOffset) * terrainSizeMult;
-	//vec2 worldUV = (worldPosition + variables.terrainOffset) * terrainChunkSizeMult;
-	vec2 worldUV = (worldPosition + variables.terrainOffset) * variables.terrainTotalSizeMult;
+	vec2 worldUV = (worldPosition + variables.terrainOffset.xz) * variables.terrainTotalSizeMult;
 	if (abs(worldUV.x) > 0.5 || abs(worldUV.y) > 0.5) return 0;
 	if (abs(worldPosition.x - variables.terrainLod0Offset.x) < terrainLod0Size * 0.5 && abs(worldPosition.y - variables.terrainLod0Offset.y) < terrainLod0Size * 0.5)
 	{
-		//return (Sample((worldPosition - terrainOffsetLod0) * terrainLod0SizeMult + 0.5, 0));
 		return textureLod(heightMapLod0Sampler, (worldPosition - variables.terrainLod0Offset) * terrainLod0SizeMult + 0.5, 0).r;
 	}
 	else if (abs(worldPosition.x - variables.terrainLod1Offset.x) < terrainLod1Size * 0.5 && abs(worldPosition.y - variables.terrainLod1Offset.y) < terrainLod1Size * 0.5)
 	{
-		//return (Sample((worldPosition - terrainOffsetLod1) * terrainLod1SizeMult + 0.5, 1));
 		return textureLod(heightMapLod1Sampler, (worldPosition - variables.terrainLod1Offset) * terrainLod1SizeMult + 0.5, 0).r;
 	}
 	else
 	{
 		return (SampleArray(worldUV + 0.5));
 	}
-
-	//if (abs(worldPosition.x - terrainOffsetLod0.x) < terrainLod0Size * 0.5 && abs(worldPosition.y - terrainOffsetLod0.y) < terrainLod0Size * 0.5)
-	//{
-	//	return (Sample((worldPosition - terrainOffsetLod0) * terrainLod0SizeMult + 0.5, 0));
-	//}
-	//else if (abs(worldPosition.x - terrainOffsetLod1.x) < terrainLod1Size * 0.5 && abs(worldPosition.y - terrainOffsetLod1.y) < terrainLod1Size * 0.5)
-	//{
-	//	return (Sample((worldPosition - terrainOffsetLod1) * terrainLod1SizeMult + 0.5, 1));
-	//}
 }
 
 float SampleArrayWorld(vec2 worldPosition)
@@ -128,6 +115,15 @@ float GetSteepness(vec3 normal)
     steepness = 1.0 - steepness;
 
     return steepness;
+}
+
+float GetTerrainHeight(vec2 worldPosition)
+{
+	float result = SampleDynamic(worldPosition);
+	result *= variables.terrainHeight;
+	result += variables.terrainOffset.y;
+
+	return (result);
 }
 
 #endif

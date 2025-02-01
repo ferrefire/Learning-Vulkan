@@ -1,8 +1,9 @@
 #ifndef ATMOSPHERE_INCLUDED
 #define ATMOSPHERE_INCLUDED
 
-#define SCATTER_ITERATIONS 10
-#define OPTICAL_ITERATIONS 10
+#define TRANSMITTANCE_ITERATIONS 50
+#define SCATTER_ITERATIONS 5
+#define OPTICAL_ITERATIONS 5
 #define BAKED_OPTICAL_ITERATIONS 50
 #define PI 3.14159265359
 
@@ -31,6 +32,54 @@ const float mieHeightScale = 1000;
 const vec3 rayleighBeta = vec3(0.0058, 0.0135, 0.0331);
 const vec3 mieBeta = vec3(0.01);
 
+const float RSH = 8000.0;
+const float MSH = 1200.0;
+const vec3 betaR = vec3(5.8e-6, 13.5e-6, 33.1e-6);
+const vec3 betaM = vec3(2.0e-5);
+const float PR = 6360000.0;
+const float AR = 6460000.0;
+const float AH = AR - PR;
+
+float Density(float height, float scale)
+{
+	return (exp(-height / scale));
+}
+
+vec3 Transmittance(vec3 start, vec3 end)
+{
+	vec3 ray = start;
+	vec3 rayStep = (end - start) / float(TRANSMITTANCE_ITERATIONS - 1.0);
+	float rayStepSize = length(rayStep);
+	vec3 tau = vec3(0.0);
+
+	for (int i = 0; i < TRANSMITTANCE_ITERATIONS; i++)
+	{
+		float height = length(ray) - PR;
+		vec3 betaE = betaR * Density(height, RSH) + betaM * Density(height, MSH);
+		tau += betaE * rayStepSize;
+		ray += rayStep;
+	}
+
+	return (exp(-tau));
+}
+
+vec2 SphereIntersect(vec3 point, vec3 direction)
+{
+	vec3 offset = point - vec3(0);
+	float a = dot(direction, direction);
+	float b = 2.0 * dot(direction, offset);
+	float c = dot(offset, offset) - (AR * AR);
+	float discriminant = b * b - 4.0 * a * c;
+
+	if (discriminant < 0.0)
+		return (vec2(0, 0));
+
+	float t0 = (-b - sqrt(discriminant)) / (2.0 * a);
+	float t1 = (-b + sqrt(discriminant)) / (2.0 * a);
+
+	return (vec2(t0, t1));
+}
+
 vec3 sunWithBloom(vec3 rayDir, vec3 sunDir)
 {
     const float sunSolidAngle = 1*PI/180.0;
@@ -41,7 +90,7 @@ vec3 sunWithBloom(vec3 rayDir, vec3 sunDir)
     
     float offset = minSunCosTheta - cosTheta;
     float gaussianBloom = exp(-offset * 50000.0 * 16.0)*0.5;
-    float invBloom = 16.0 / (0.02 + offset * 300.0) * 0.01;
+    float invBloom = 4.0 / (0.02 + offset * 100.0) * 0.01;
    // return vec3(gaussianBloom+invBloom);
     return LIGHT_COLOR * (gaussianBloom + invBloom);
 }

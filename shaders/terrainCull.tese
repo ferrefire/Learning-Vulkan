@@ -32,9 +32,8 @@ void main()
     vec4 position = gl_in[0].gl_Position * gl_TessCoord[0] + gl_in[1].gl_Position * gl_TessCoord[1] + gl_in[2].gl_Position * gl_TessCoord[2];
 
 	vec3 worldPosition = position.xyz;
-	worldPosition.y = ObjectToWorld(vec3(0), objectDatas[pc.chunkIndex].model).y + SampleDynamic(worldPosition.xz) * variables.terrainHeight;
-
-	//shadowPosition = variables.shadowProjection * variables.shadowView * vec4(worldPosition, 1.0);
+	worldPosition.y = ObjectToWorld(vec3(0), objectDatas[pc.chunkIndex].model).y;
+	worldPosition.y += GetTerrainHeight(worldPosition.xz);
 
 	gl_Position = variables.cullMatrix * vec4(worldPosition, 1.0);
 }

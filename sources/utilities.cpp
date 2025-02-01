@@ -229,6 +229,11 @@ int Utilities::RandomInt(int min, int max)
 	return (glm::mix(min, max, inter));
 }
 
+//glm::vec2 Utilities::XZ(glm::vec3 &vec)
+//{
+//	return (glm::vec2(vec.x, vec.z));
+//}
+
 double Utilities::seed = 1;
 std::hash<float> Utilities::floatHash;
 std::hash<size_t> Utilities::sizetHash;

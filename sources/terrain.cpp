@@ -545,8 +545,8 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 			float zf = float(zi);
 
 			float distance = glm::clamp(glm::distance(glm::vec2(xf, zf), glm::vec2(xs, zs)), 0.0f, float(terrainChunkLength));
-			//bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.View());
-			bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.View());
+			//bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.ViewOffset());
+			bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.ViewOffset());
 
 			if ((inView && distance < 1.0) || distance <= 0.75)
 			{
@@ -607,8 +607,8 @@ void Terrain::RenderCulling(VkCommandBuffer commandBuffer)
 			float zf = float(zi);
 
 			float distance = glm::clamp(glm::distance(glm::vec2(xf, zf), glm::vec2(xs, zs)), 0.0f, float(terrainChunkLength));
-			// bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.View());
-			bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.View());
+			// bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.ViewOffset());
+			bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.ViewOffset());
 
 			if ((inView && distance < 1.0) || distance <= 0.75)
 			{
@@ -664,7 +664,7 @@ void Terrain::ComputeHeightMap(VkCommandBuffer commandBuffer, uint32_t lod)
 
 	heightMapComputeDescriptor.Bind(commandBuffer, heightMapComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
 	heightMapComputeVariables.mapScale = (lod == 0 ? terrainLod0Size : (lod == 1 ? terrainLod1Size : terrainChunkSize)) / terrainChunkSize;
-	heightMapComputeVariables.mapOffset = (lod == 0 ? ((terrainLod0Offset + terrainOffset) / terrainLod0Size) : ((terrainLod1Offset + terrainOffset) / terrainLod1Size));
+	heightMapComputeVariables.mapOffset = (lod == 0 ? ((terrainLod0Offset + XZ2XY(terrainOffset)) / terrainLod0Size) : ((terrainLod1Offset + XZ2XY(terrainOffset)) / terrainLod1Size));
 	memcpy(heightMapComputeVariablesBuffer.mappedBuffer, &heightMapComputeVariables, sizeof(heightMapComputeVariables));
 	vkCmdDispatch(commandBuffer, 128, 128, 1); //Change dispatch count
 	if (oneTimeBuffer) Manager::currentDevice.EndComputeCommand(commandBuffer);
@@ -737,6 +737,7 @@ void Terrain::CheckTerrainOffset(VkCommandBuffer commandBuffer)
 	bool updated = true;
 
 	float xw = Manager::camera.Position().x;
+	float yw = Manager::camera.Position().y;
 	float zw = Manager::camera.Position().z;
 
 	float x0 = xw - terrainLod0Offset.x;
@@ -744,10 +745,19 @@ void Terrain::CheckTerrainOffset(VkCommandBuffer commandBuffer)
 	float x1 = xw - terrainLod1Offset.x;
 	float z1 = zw - terrainLod1Offset.y;
 
+	if (abs(yw) >= terrainHeight * 0.25)
+	{
+		glm::vec3 newOffset = glm::vec3(0, -yw, 0);
+		terrainOffset += newOffset;
+		Manager::camera.Move(newOffset);
+
+		Manager::UpdateShaderVariables();
+	}
+
 	if (abs(xw) >= terrainChunkSize * terrainStep || abs(zw) >= terrainChunkSize * terrainStep)
 	{
 		glm::vec2 newOffset = glm::vec2(Utilities::Fits(terrainChunkSize * terrainStep, xw), Utilities::Fits(terrainChunkSize * terrainStep, zw)) * terrainChunkSize * terrainStep;
-		terrainOffset += newOffset;
+		terrainOffset += XY3XZ(newOffset);
 
 		terrainLod0Offset = glm::vec2(0);
 		terrainLod1Offset = glm::vec2(0);
@@ -904,11 +914,11 @@ int Terrain::heightMapCount = Terrain::heightMapLength * Terrain::heightMapLengt
 float Terrain::terrainTotalSize = Terrain::heightMapLength * Terrain::terrainChunkSize;
 float Terrain::terrainHeight = 5000;
 
-glm::vec2 Terrain::terrainOffset = glm::vec2(0);
+glm::vec3 Terrain::terrainOffset = glm::vec3(0.0, -2500.0, 0.0);
 glm::vec2 Terrain::terrainLod0Offset = glm::vec2(0);
 glm::vec2 Terrain::terrainLod1Offset = glm::vec2(0);
 std::vector<glm::vec2> Terrain::terrainShadowOffsets;
-float Terrain::terrainStep = 1.0f;
+float Terrain::terrainStep = 0.5f;
 float Terrain::terrainLod0Step = 0.125f;
 float Terrain::terrainLod1Step = 0.25f;
 

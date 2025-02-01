@@ -7,6 +7,10 @@
 #include <string>
 #include <vector>
 
+#define XZ2XY(vec) glm::vec2(vec.x, vec.z)
+#define XY3XZ(vec) glm::vec3(vec.x, 0, vec.y)
+#define Y3Y(vec) glm::vec3(0, vec.y, 0)
+
 class Utilities
 {
 	private:
@@ -44,4 +48,5 @@ class Utilities
 		static float RandomFloat(float min, float max);
 		static int RandomInt(int min, int max, float seed);
 		static int RandomInt(int min, int max);
+		//static glm::vec2 XZ(glm::vec3 &vec);
 };

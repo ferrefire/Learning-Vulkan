@@ -3,6 +3,7 @@
 #include "time.hpp"
 #include "utilities.hpp"
 #include "input.hpp"
+#include "terrain.hpp"
 
 #include <iostream>
 
@@ -27,18 +28,24 @@ void Camera::UpdateProjection()
 	projection[1][1] *= -1;
 }
 
+void Camera::UpdateView()
+{
+	view = glm::lookAt(position, position + front, up);
+	viewOffset = glm::lookAt(position - Y3Y(Terrain::terrainOffset), position - Y3Y(Terrain::terrainOffset) + front, up);
+}
+
 void Camera::Move(const glm::vec3 &amount)
 {
 	position += amount;
 
-	view = glm::lookAt(position, position + front, up);
+	UpdateView();
 }
 
 void Camera::SetPosition(const glm::vec3 &newPosition)
 {
 	position = newPosition;
 
-	view = glm::lookAt(position, position + front, up);
+	UpdateView();
 }
 
 void Camera::Rotate(const glm::vec3 &degrees)
@@ -56,7 +63,7 @@ void Camera::Rotate(const glm::vec3 &degrees)
 	side = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
 	up = glm::normalize(glm::cross(side, front));
 
-	view = glm::lookAt(position, position + front, up);
+	UpdateView();
 }
 
 void Camera::SetRotation(const glm::vec3 &newRotation)
@@ -74,7 +81,7 @@ void Camera::SetRotation(const glm::vec3 &newRotation)
 	side = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
 	up = glm::normalize(glm::cross(side, front));
 
-	view = glm::lookAt(position, position + front, up);
+	UpdateView();
 }
 
 const glm::vec3 &Camera::Position()
@@ -105,6 +112,11 @@ const glm::vec3 &Camera::Angles()
 const glm::mat4 &Camera::View()
 {
 	return (view);
+}
+
+const glm::mat4 &Camera::ViewOffset()
+{
+	return (viewOffset);
 }
 
 const glm::mat4 &Camera::Projection()

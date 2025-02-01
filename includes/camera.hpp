@@ -22,6 +22,7 @@ class Camera
 		glm::vec3 side = glm::vec3(1.0f, 0.0f, 0.0f);
 
 		glm::mat4 view = glm::mat4(1.0f);
+		glm::mat4 viewOffset = glm::mat4(1.0f);
 		glm::mat4 projection = glm::mat4(1.0f);
 
 	public:
@@ -30,7 +31,7 @@ class Camera
 
 		float near = 0.1f;
 		//float far = 1000.0f;
-		float far = 35000.0f;
+		float far = 25000.0f;
 		float FOV = 45.0f;
 		//float speed = 1.0f;
 		float speed = 25.0f;
@@ -50,6 +51,7 @@ class Camera
 		void Rotate(const glm::vec3 &degrees);
 		void SetRotation(const glm::vec3 &newRotation);
 		void UpdateProjection();
+		void UpdateView();
 
 		void UpdateMovement();
 		void UpdateRotation(double xpos, double ypos);
@@ -62,6 +64,7 @@ class Camera
 		const glm::vec3 &Angles();
 
 		const glm::mat4 &View();
+		const glm::mat4 &ViewOffset();
 		const glm::mat4 &Projection();
 
 		std::vector<glm::vec4> GetFrustumCorners(float nearDis, float farDis);

@@ -36,8 +36,7 @@ void main()
     //gl_Position = objectData.projection * objectData.view * objectData.model * vec4(position, 1.0);
 
 	vec3 worldPosition = ObjectToWorld(inPosition, objectDatas[pc.chunkIndex].model);
-	//worldPosition.y += texture(heightMapSampler, vec2(inPosition.xz + 0.5)).r * 5000;
-	worldPosition.y += SampleDynamic(worldPosition.xz) * variables.terrainHeight;
+	worldPosition.y += GetTerrainHeight(worldPosition.xz);
 
 	gl_Position = vec4(worldPosition, 1);
 }

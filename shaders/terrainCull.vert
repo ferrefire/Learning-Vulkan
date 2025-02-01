@@ -25,8 +25,7 @@ layout(location = 0) in vec3 inPosition;
 void main()
 {
 	vec3 worldPosition = ObjectToWorld(inPosition, objectDatas[pc.chunkIndex].model);
-	worldPosition.y += SampleDynamic(worldPosition.xz) * variables.terrainHeight;
+	worldPosition.y += GetTerrainHeight(worldPosition.xz);
 
-	//gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
 	gl_Position = vec4(worldPosition, 1.0);
 }

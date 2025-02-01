@@ -59,6 +59,8 @@ void Sky::CreateTextures()
 {
 	SamplerConfiguration scatterSampler;
 	ImageConfiguration scatterConfig = Texture::ImageStorage(512, 512);
+	scatterConfig.format = RGB8;
+
 	scatterTexture.CreateImage(scatterConfig, scatterSampler);
 	scatterTexture.TransitionImageLayout(scatterConfig);
 }

@@ -28,7 +28,7 @@ layout(set = 0, binding = 0) uniform Variables
 	vec4 resolution;
 	vec4 ranges;
 	vec3 lightDirection;
-	vec2 terrainOffset;
+	vec3 terrainOffset;
 	vec2 terrainLod0Offset;
 	vec2 terrainLod1Offset;
 	float terrainTotalSize;
