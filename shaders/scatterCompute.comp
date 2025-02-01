@@ -11,6 +11,13 @@ layout(local_size_x = 1, local_size_y = 1, local_size_z = 64) in;
 #define SCATTER_COMPUTE
 #endif
 
+//maybe change to 10.0
+#ifndef RADIUS_OFFSET
+#define RADIUS_OFFSET 0.01
+#endif
+
+#define PI = 3.1415926535897932384626433832795;
+
 #include "variables.glsl"
 #include "transformation.glsl"
 #include "depth.glsl"
@@ -20,12 +27,15 @@ layout(local_size_x = 1, local_size_y = 1, local_size_z = 64) in;
 shared vec3 scatterResults[64];
 shared vec3 luminenceResults[64];
 
-const vec2 resolution = vec2(256, 64);
+const vec2 resolution = vec2(32, 32);
 const vec2 resolutionMult = 1.0 / resolution;
+
+const float goldenRatio = 1.6180339;
+const float uniformPhase = 1.0 / (4.0 * PI);
 
 void main()
 {
-	vec2 index = gl_GlobalInvocationID.xy;
+	/*vec2 index = gl_GlobalInvocationID.xy;
 	vec2 uv = index * resolutionMult;
 
 	float y = -2 * uv.x + 1;
@@ -38,5 +48,21 @@ void main()
 
 	vec3 multiScattering = MultiScatter(rayStart, rayEnd);
 
-	imageStore(scatterTexture, ivec2(index), vec4(multiScattering, 1.0));
+	imageStore(scatterTexture, ivec2(index), vec4(multiScattering, 1.0));*/
+
+	vec2 index = gl_GlobalInvocationID.xy;
+	vec2 uv = (index + 0.5) * resolutionMult;
+	vec2 scatterValues = vec2(ScatterValues(uv.x, resolution.x), ScatterValues(uv.y, resolution.y));
+
+	float sunAngle = scatterValues.x * 2.0 - 1.0;
+	vec3 sunDirection = vec3(0.0, sqrt(clamp(1.0 - sunAngle * sunAngle, 0.0, 1.0)), sunAngle);
+	float height = PR + clamp(uv.y + RADIUS_OFFSET, 0.0, 1.0) * (AR - PR - RADIUS_OFFSET);
+
+	vec3 rayStart = vec3(0.0, 0.0, height);
+
+	float idx = gl_LocalInvocationID.z;
+	float theta = acos(1.0 - 2.0 * (idx + 0.5) / 64.0);
+	float phi = (2.0 * PI * idx) / goldenRatio;
+
+	vec3 rayDirection = vec3(cos(theta) * sin(phi), sin(theta) * sin(phi), cos(phi));
 }

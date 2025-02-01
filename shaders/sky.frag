@@ -89,10 +89,11 @@ void main()
 		scatteredLight = GetScattering(depth, originalColor);
 		finalColor = scatteredLight;
 	}
-	else
+
+	if (depth >= 0.95)
 	{
 		scatteredLight = GetScattering(1.0, vec3(0));
-		finalColor = scatteredLight;
+		finalColor = mix(finalColor, scatteredLight, (depth - 0.95) / 0.05);
 	}
 
     outColor = vec4(finalColor, 1.0);
