@@ -118,7 +118,8 @@ void main()
 
 	//grassColor = vec3(0.25, 0.6, 0.1);
 	//grassColor = vec3(0.0916, 0.0866, 0.0125) * 1.5;
-	grassColor = vec3(0.0916, 0.1, 0.0125) * (1.0 + (colorVal * 0.35 - 0.175));
+	grassColor = vec3(0.0916, 0.1, 0.0125) * (1.0 + (colorVal * 0.5 - 0.25));
+	grassColor *= 0.75;
 
 	vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
 	float viewDotNormal = clamp(dot(normal, viewDirection), -1.0, 1.0);

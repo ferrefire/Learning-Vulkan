@@ -78,6 +78,9 @@ vec3 GetScattering(float depth, vec3 originalColor)
 
 void main()
 {
+	outColor = vec4(subpassLoad(inputColor).rgb, 1.0);
+	return;
+
 	vec3 finalColor = vec3(1.0);
 	float depth = GetDepth(subpassLoad(inputDepth).r);
 
