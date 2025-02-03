@@ -312,7 +312,8 @@ void Manager::Frame()
 	if (lightUpdated)
 	{
 		Terrain::updateTerrainShadows = true;
-		Sky::shouldUpdate = true;
+		Sky::shouldUpdateView = true;
+		Sky::shouldUpdateAerial = true;
 	}
 
 	//if (Input::GetKey(GLFW_KEY_C).pressed)
@@ -339,6 +340,9 @@ void Manager::UpdateShaderVariables()
 	lightDirection = Utilities::RotateVec(lightDirection, lightAngles.y, glm::vec3(0, 1, 0));
 	lightDirection = Utilities::RotateVec(lightDirection, lightAngles.z, glm::vec3(0, 0, 1));
 	shaderVariables.lightDirection = glm::normalize(lightDirection);
+
+	glm::vec3 rotatedLightDirection = Utilities::RotateVec(shaderVariables.lightDirection, 90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+	shaderVariables.rotatedLightDirection = glm::normalize(rotatedLightDirection);
 
 	shaderVariables.view = camera.View();
 	shaderVariables.projection = camera.Projection();

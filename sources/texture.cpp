@@ -30,6 +30,22 @@ ImageConfiguration Texture::ImageStorage(uint32_t width, uint32_t height)
 	return (imageConfig);
 }
 
+ImageConfiguration Texture::ImageStorage(uint32_t width, uint32_t height, uint32_t depth)
+{
+	ImageConfiguration imageConfig;
+	imageConfig.type = IMAGE_3D;
+	imageConfig.viewType = IMAGE_VIEW_3D;
+	imageConfig.width = width;
+	imageConfig.height = height;
+	imageConfig.depth = depth;
+	imageConfig.format = R16;
+	imageConfig.transitionLayout = LAYOUT_GENERAL;
+	imageConfig.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+	imageConfig.createMipmaps = false;
+
+	return (imageConfig);
+}
+
 ImageConfiguration Texture::ImageArrayStorage(uint32_t width, uint32_t height, uint32_t layers)
 {
 	ImageConfiguration imageConfig;

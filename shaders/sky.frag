@@ -5,6 +5,7 @@
 layout (input_attachment_index = 0, set = 1, binding = 0) uniform subpassInput inputColor;
 layout (input_attachment_index = 1, set = 1, binding = 1) uniform subpassInput inputDepth;
 layout (set = 1, binding = 2) uniform sampler2D viewSampler;
+layout (set = 1, binding = 3) uniform sampler3D aerialSampler;
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inCoordinates;
@@ -112,6 +113,8 @@ void main()
 	//vec3 rayDirection = normalize(pixelPosition.xyz - variables.viewPosition);
 	//rayDirection = normalize(Rotate(rayDirection, -90.0, vec3(1.0, 0.0, 0.0)));
 
+	vec3 finalColor = vec3(0.0);
+
 	vec2 pixelPosition = inCoordinates;
 	vec3 clipSpace = vec3(pixelPosition * vec2(2.0) - vec2(1.0), 1.0);
 	vec4 hPos = inverse(variables.viewMatrix) * vec4(clipSpace, 1.0);
@@ -129,8 +132,7 @@ void main()
 		vec3 upVector = normalize(rayStart);
 		float viewAngle = acos(dot(rayDirection, upVector));
 
-		vec3 sunDirection = variables.lightDirection;
-		//sunDirection = normalize(Rotate(sunDirection, -90.0, vec3(1.0, 0.0, 0.0)));
+		vec3 sunDirection = variables.rotatedLightDirection;
 
 		float lightAngle = acos(dot(normalize(vec3(sunDirection.xy, 0.0)), normalize(vec3(rayDirection.xy, 0.0))));
 		bool surfaceIntersect = SphereIntersectNearest(rayStart, rayDirection, PR) >= 0.0;
@@ -146,13 +148,42 @@ void main()
 			incomingLight += sunWithBloom(rayDirection, sunDirection);
 		}
 
-		outColor = vec4(incomingLight, 1.0);
+		finalColor = incomingLight;
 	}
 	else
 	{
-		//vec3 originalColor = subpassLoad(inputColor).rgb;
-		vec3 originalColor = vec3(0.0);
+		vec3 originalColor = subpassLoad(inputColor).rgb;
+		//vec3 originalColor = vec3(0.0);
 
-		outColor = vec4(originalColor, 1.0);
+		finalColor = originalColor;
+
+		clipSpace = vec3(pixelPosition * vec2(2.0) - vec2(1.0), depth);
+		hPos = inverse(variables.viewMatrix) * vec4(clipSpace, 1.0);
+		float realDepth = length(hPos.xyz / hPos.w - variables.viewPosition);
+		//float realDepth = GetDepth(depth);
+
+		//vec4 screenPosition;
+		//screenPosition.xy = (((gl_FragCoord.xy + 0.5) / (variables.resolution.xy)) - 0.5) * 2.0;
+		//screenPosition.z = 0.0;
+		//screenPosition.w = 1.0;
+		//vec4 pixelWorldPosition = inverse(variables.viewMatrix) * screenPosition;
+		//pixelWorldPosition /= pixelWorldPosition.w;
+	
+		float slice = realDepth * (1.0 / 4.0);
+		float weight = 1.0;
+		if (slice < 0.5)
+		{
+			weight = clamp(slice * 2.0, 0.0, 1.0);
+			slice = 0.5;
+		}
+		float w = sqrt(slice / 32.0);
+		//float slice = sqrt(1.0 - GetDepth(depth));
+		//float w = sqrt(slice / 32.0);
+		//float w = slice;
+		vec4 aerialPerspective = weight * texture(aerialSampler, vec3(inCoordinates, w));
+
+		finalColor = mix(finalColor, aerialPerspective.rgb, aerialPerspective.a);
 	}
+
+	outColor = vec4(finalColor, 1.0);
 }

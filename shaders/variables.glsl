@@ -28,6 +28,7 @@ layout(set = 0, binding = 0) uniform Variables
 	vec4 resolution;
 	vec4 ranges;
 	vec3 lightDirection;
+	vec3 rotatedLightDirection;
 	vec3 terrainOffset;
 	vec2 terrainLod0Offset;
 	vec2 terrainLod1Offset;

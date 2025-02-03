@@ -20,22 +20,28 @@ class Sky
 		static Pipeline transmittancePipeline;
 		static Pipeline scatterPipeline;
 		static Pipeline viewPipeline;
+		static Pipeline aerialPipeline;
 
 		static Descriptor skyDescriptor;
 		static Descriptor transmittanceDescriptor;
 		static Descriptor scatterDescriptor;
 		static Descriptor viewDescriptor;
+		static Descriptor aerialDescriptor;
 
 		static Texture transmittanceTexture;
 		static Texture scatterTexture;
 		static Texture viewTexture;
+		static Texture aerialTexture;
 
 		static bool transmittanceComputed;
 		static bool transmittanceReady;
 		static bool scatterComputed;
 		static bool scatterReady;
 		static bool viewComputed;
-		static bool shouldUpdate;
+		static bool viewReady;
+		static bool shouldUpdateView;
+		static bool aerialComputed;
+		static bool shouldUpdateAerial;
 
 		static void Create();
 		static void CreateMesh();
@@ -56,5 +62,6 @@ class Sky
 		static void ComputeTransmittance();
 		static void ComputeScattering();
 		static void ComputeView();
+		static void ComputeAerial();
 		static void Recompute();
 };

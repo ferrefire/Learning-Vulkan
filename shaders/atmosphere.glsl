@@ -367,7 +367,7 @@ RaymarchResult MultiScatter(vec3 rayStart, vec3 rayDirection, vec3 sunDirection)
 
 #endif
 
-#ifdef VIEW_COMPUTE
+#if defined(VIEW_COMPUTE) || defined(AERIAL_COMPUTE)
 
 float MiePhase(float g, float cosTheta)
 {
@@ -388,6 +388,10 @@ vec3 MultiScatter(vec3 point, float viewAngle)
 
 	return (textureLod(scatterSampler, uv, 0).rgb);
 }
+
+#endif
+
+#ifdef VIEW_COMPUTE
 
 vec3 Luminance(vec3 rayStart, vec3 rayDirection, vec3 sunDirection)
 {
@@ -451,6 +455,74 @@ vec3 Luminance(vec3 rayStart, vec3 rayDirection, vec3 sunDirection)
 	}
 
 	return (accumulatedLuminance);
+}
+
+#endif
+
+#ifdef AERIAL_COMPUTE
+
+RaymarchResult AerialScatter(vec3 rayStart, vec3 rayDirection, vec3 sunDirection, int sampleCount, float maxDis)
+{
+	RaymarchResult result = RaymarchResult(vec3(0.0), vec3(0.0));
+
+	float atmosphereDistance = SphereIntersectNearest(rayStart, rayDirection, AR);
+	float surfaceDistance = SphereIntersectNearest(rayStart, rayDirection, PR);
+
+	float rayLength;
+
+	if (surfaceDistance == -1.0 && atmosphereDistance == -1.0)
+		return (result);
+	else if (surfaceDistance == -1.0 && atmosphereDistance > 0.0)
+		rayLength = atmosphereDistance;
+	else if (surfaceDistance > 0.0 && atmosphereDistance == -1.0)
+		rayLength = surfaceDistance;
+	else
+		rayLength = min(surfaceDistance, atmosphereDistance);
+	rayLength = min(rayLength, maxDis);
+	
+	float cosTheta = dot(sunDirection, rayDirection);
+	float miePhaseValue = MiePhase(MP, -cosTheta);
+	float rayPhaseValue = RayPhase(cosTheta);
+
+	vec3 accumulatedTransmittance = vec3(1.0);
+	vec3 accumulatedLuminance = vec3(0.0);
+	float oldRayShift = 0.0;
+	float rayStep = 0.0;
+
+	for (int i = 0; i < sampleCount; i++)
+	{
+		float newRayShift = rayLength * (float(i) + 0.3) / float(sampleCount);
+		rayStep = newRayShift - oldRayShift;
+		vec3 ray = rayStart + newRayShift * rayDirection;
+		oldRayShift = newRayShift;
+
+		ScatterResult scattering = ScatterResults(ray);
+		vec3 extinction = Extinction(ray);
+
+		vec3 upVector = normalize(ray);
+		vec2 transmittanceValues = vec2(length(ray), dot(sunDirection, upVector));
+		vec2 transmittanceUV = TransmittanceUV(transmittanceValues);
+
+		vec3 sunTransmittance = textureLod(transmittanceSampler, transmittanceUV, 0.0).rgb;
+		vec3 phaseScattering = scattering.mie * miePhaseValue + scattering.rayleigh * rayPhaseValue;
+
+		float surfaceDistance = SphereIntersectNearest(ray, sunDirection, PR, RADIUS_OFFSET * upVector);
+		float inShadow = surfaceDistance == -1.0 ? 1.0 : 0.0;
+
+		vec3 multiScatteredLuminance = MultiScatter(ray, dot(sunDirection, upVector));
+
+		vec3 light = inShadow * sunTransmittance * phaseScattering + multiScatteredLuminance * (scattering.rayleigh + scattering.mie);
+
+		vec3 transmittanceIncrease = exp(-(extinction * rayStep));
+		vec3 incomingLight = (light - light * transmittanceIncrease) / extinction;
+		accumulatedLuminance += accumulatedTransmittance * incomingLight;
+		accumulatedTransmittance *= transmittanceIncrease;
+	}
+
+	result.luminance = accumulatedLuminance;
+	result.multiScattering = accumulatedTransmittance;
+
+	return (result);
 }
 
 #endif

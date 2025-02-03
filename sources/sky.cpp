@@ -28,7 +28,7 @@ void Sky::CreateMesh()
 
 void Sky::CreatePipelines()
 {
-	std::vector<DescriptorLayoutConfiguration> skyDescriptorLayoutConfig(3);
+	std::vector<DescriptorLayoutConfiguration> skyDescriptorLayoutConfig(4);
 
 	skyDescriptorLayoutConfig[0].type = INPUT_ATTACHMENT;
 	skyDescriptorLayoutConfig[0].stages = FRAGMENT_STAGE;
@@ -36,6 +36,8 @@ void Sky::CreatePipelines()
 	skyDescriptorLayoutConfig[1].stages = FRAGMENT_STAGE;
 	skyDescriptorLayoutConfig[2].type = IMAGE_SAMPLER;
 	skyDescriptorLayoutConfig[2].stages = FRAGMENT_STAGE;
+	skyDescriptorLayoutConfig[3].type = IMAGE_SAMPLER;
+	skyDescriptorLayoutConfig[3].stages = FRAGMENT_STAGE;
 
 	PipelineConfiguration skyPipelineConfiguration = Pipeline::DefaultConfiguration();
 
@@ -75,6 +77,17 @@ void Sky::CreatePipelines()
 	viewDescriptorLayoutConfig[2].stages = COMPUTE_STAGE;
 
 	viewPipeline.CreateComputePipeline("viewCompute", viewDescriptorLayoutConfig);
+
+	std::vector<DescriptorLayoutConfiguration> aerialDescriptorLayoutConfig(3);
+
+	aerialDescriptorLayoutConfig[0].type = IMAGE_STORAGE;
+	aerialDescriptorLayoutConfig[0].stages = COMPUTE_STAGE;
+	aerialDescriptorLayoutConfig[1].type = IMAGE_SAMPLER;
+	aerialDescriptorLayoutConfig[1].stages = COMPUTE_STAGE;
+	aerialDescriptorLayoutConfig[2].type = IMAGE_SAMPLER;
+	aerialDescriptorLayoutConfig[2].stages = COMPUTE_STAGE;
+
+	aerialPipeline.CreateComputePipeline("aerialCompute", aerialDescriptorLayoutConfig);
 }
 
 void Sky::CreateTextures()
@@ -99,11 +112,18 @@ void Sky::CreateTextures()
 
 	viewTexture.CreateImage(viewConfig, viewSampler);
 	viewTexture.TransitionImageLayout(viewConfig);
+
+	SamplerConfiguration aerialSampler;
+	ImageConfiguration aerialConfig = Texture::ImageStorage(32, 32, 32);
+	aerialConfig.format = RGB16;
+
+	aerialTexture.CreateImage(aerialConfig, aerialSampler);
+	aerialTexture.TransitionImageLayout(aerialConfig);
 }
 
 void Sky::CreateDescriptors()
 {
-	std::vector<DescriptorConfiguration> skyDescriptorConfig(3);
+	std::vector<DescriptorConfiguration> skyDescriptorConfig(4);
 
 	skyDescriptorConfig[0].type = INPUT_ATTACHMENT;
 	skyDescriptorConfig[0].stages = FRAGMENT_STAGE;
@@ -120,6 +140,12 @@ void Sky::CreateDescriptors()
 	skyDescriptorConfig[2].imageInfo.imageLayout = LAYOUT_GENERAL;
 	skyDescriptorConfig[2].imageInfo.imageView = viewTexture.imageView;
 	skyDescriptorConfig[2].imageInfo.sampler = viewTexture.sampler;
+
+	skyDescriptorConfig[3].type = IMAGE_SAMPLER;
+	skyDescriptorConfig[3].stages = FRAGMENT_STAGE;
+	skyDescriptorConfig[3].imageInfo.imageLayout = LAYOUT_GENERAL;
+	skyDescriptorConfig[3].imageInfo.imageView = aerialTexture.imageView;
+	skyDescriptorConfig[3].imageInfo.sampler = aerialTexture.sampler;
 
 	skyDescriptor.Create(skyDescriptorConfig, skyPipeline.objectDescriptorSetLayout);
 
@@ -167,6 +193,26 @@ void Sky::CreateDescriptors()
 
 	viewDescriptor.perFrame = false;
 	viewDescriptor.Create(viewDescriptorConfig, viewPipeline.objectDescriptorSetLayout);
+
+	std::vector<DescriptorConfiguration> aerialDescriptorConfig(3);
+
+	aerialDescriptorConfig[0].type = IMAGE_STORAGE;
+	aerialDescriptorConfig[0].stages = COMPUTE_STAGE;
+	aerialDescriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
+	aerialDescriptorConfig[0].imageInfo.imageView = aerialTexture.imageView;
+	aerialDescriptorConfig[1].type = IMAGE_SAMPLER;
+	aerialDescriptorConfig[1].stages = COMPUTE_STAGE;
+	aerialDescriptorConfig[1].imageInfo.imageLayout = LAYOUT_GENERAL;
+	aerialDescriptorConfig[1].imageInfo.imageView = transmittanceTexture.imageView;
+	aerialDescriptorConfig[1].imageInfo.sampler = transmittanceTexture.sampler;
+	aerialDescriptorConfig[2].type = IMAGE_SAMPLER;
+	aerialDescriptorConfig[2].stages = COMPUTE_STAGE;
+	aerialDescriptorConfig[2].imageInfo.imageLayout = LAYOUT_GENERAL;
+	aerialDescriptorConfig[2].imageInfo.imageView = scatterTexture.imageView;
+	aerialDescriptorConfig[2].imageInfo.sampler = scatterTexture.sampler;
+
+	aerialDescriptor.perFrame = false;
+	aerialDescriptor.Create(aerialDescriptorConfig, aerialPipeline.objectDescriptorSetLayout);
 }
 
 void Sky::Destroy()
@@ -183,6 +229,7 @@ void Sky::DestroyPipelines()
 	transmittancePipeline.Destroy();
 	scatterPipeline.Destroy();
 	viewPipeline.Destroy();
+	aerialPipeline.Destroy();
 }
 
 void Sky::DestroyMesh()
@@ -195,6 +242,7 @@ void Sky::DestroyTextures()
 	transmittanceTexture.Destroy();
 	scatterTexture.Destroy();
 	viewTexture.Destroy();
+	aerialTexture.Destroy();
 }
 
 void Sky::DestroyDescriptors()
@@ -203,6 +251,7 @@ void Sky::DestroyDescriptors()
 	transmittanceDescriptor.Destroy();
 	scatterDescriptor.Destroy();
 	viewDescriptor.Destroy();
+	aerialDescriptor.Destroy();
 }
 
 void Sky::Start()
@@ -236,13 +285,31 @@ void Sky::Frame()
 		ComputeView();
 	}
 
+	if (!aerialComputed && viewComputed && transmittanceComputed && transmittanceReady && scatterComputed && scatterReady && Terrain::HeightMapsGenerated())
+	{
+		aerialComputed = true;
+		ComputeAerial();
+	}
+
 	if (Time::newTick)
 	{
-		if (shouldUpdate && viewComputed && transmittanceComputed && transmittanceReady && scatterComputed && scatterReady && Terrain::HeightMapsGenerated())
+		if (shouldUpdateView && viewComputed && transmittanceComputed && transmittanceReady && scatterComputed && scatterReady && Terrain::HeightMapsGenerated())
 		{
-			shouldUpdate = false;
+			viewReady = false;
+			shouldUpdateView = false;
 			ComputeView();
 		}
+
+		//if (shouldUpdateAerial && viewReady && aerialComputed && transmittanceComputed && transmittanceReady && scatterComputed && scatterReady && Terrain::HeightMapsGenerated())
+		//{
+		//	shouldUpdateAerial = false;
+		//	ComputeAerial();
+		//}
+	}
+
+	if (aerialComputed && viewComputed && transmittanceComputed && transmittanceReady && scatterComputed && scatterReady && Terrain::HeightMapsGenerated())
+	{
+		ComputeAerial();
 	}
 }
 
@@ -298,6 +365,20 @@ void Sky::ComputeView()
 
 	vkCmdDispatch(commandBuffer, 24, 16, 1);
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
+
+	viewReady = true;
+}
+
+void Sky::ComputeAerial()
+{
+	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
+
+	aerialPipeline.BindCompute(commandBuffer);
+	Manager::globalDescriptor.Bind(commandBuffer, aerialPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
+	aerialDescriptor.Bind(commandBuffer, aerialPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
+
+	vkCmdDispatch(commandBuffer, 1, 32, 32);
+	Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
 
 void Sky::Recompute()
@@ -307,6 +388,7 @@ void Sky::Recompute()
 	scatterComputed = false;
 	scatterReady = false;
 	viewComputed = false;
+	aerialComputed = false;
 }
 
 Mesh Sky::skyMesh;
@@ -315,19 +397,25 @@ Pipeline Sky::skyPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Sky::transmittancePipeline{Manager::currentDevice, Manager::camera};
 Pipeline Sky::scatterPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Sky::viewPipeline{Manager::currentDevice, Manager::camera};
+Pipeline Sky::aerialPipeline{Manager::currentDevice, Manager::camera};
 
 Texture Sky::transmittanceTexture{Manager::currentDevice};
 Texture Sky::scatterTexture{Manager::currentDevice};
 Texture Sky::viewTexture{Manager::currentDevice};
+Texture Sky::aerialTexture{Manager::currentDevice};
 
 Descriptor Sky::skyDescriptor{Manager::currentDevice};
 Descriptor Sky::transmittanceDescriptor{Manager::currentDevice};
 Descriptor Sky::scatterDescriptor{Manager::currentDevice};
 Descriptor Sky::viewDescriptor{Manager::currentDevice};
+Descriptor Sky::aerialDescriptor{Manager::currentDevice};
 
 bool Sky::transmittanceComputed = false;
 bool Sky::transmittanceReady = false;
 bool Sky::scatterComputed = false;
 bool Sky::scatterReady = false;
 bool Sky::viewComputed = false;
-bool Sky::shouldUpdate = false;
+bool Sky::viewReady = false;
+bool Sky::shouldUpdateView = false;
+bool Sky::aerialComputed = false;
+bool Sky::shouldUpdateAerial = false;
