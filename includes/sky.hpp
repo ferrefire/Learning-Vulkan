@@ -33,7 +33,9 @@ class Sky
 		static bool transmittanceComputed;
 		static bool transmittanceReady;
 		static bool scatterComputed;
+		static bool scatterReady;
 		static bool viewComputed;
+		static bool shouldUpdate;
 
 		static void Create();
 		static void CreateMesh();
@@ -54,4 +56,5 @@ class Sky
 		static void ComputeTransmittance();
 		static void ComputeScattering();
 		static void ComputeView();
+		static void Recompute();
 };

@@ -303,14 +303,17 @@ void Manager::Frame()
 	//Grass::Frame();
 
 	bool lightUpdated = true;
-	if (Input::GetKey(GLFW_KEY_RIGHT).down) lightAngles.y -= Time::deltaTime * 45.0f;
-	else if (Input::GetKey(GLFW_KEY_LEFT).down) lightAngles.y += Time::deltaTime * 45.0f;
-	else if (Input::GetKey(GLFW_KEY_DOWN).down) lightAngles.x -= Time::deltaTime * 45.0f;
-	else if (Input::GetKey(GLFW_KEY_UP).down) lightAngles.x += Time::deltaTime * 45.0f;
+	if (Input::GetKey(GLFW_KEY_RIGHT).down) lightAngles.y -= Time::deltaTime * 15.0f;
+	else if (Input::GetKey(GLFW_KEY_LEFT).down) lightAngles.y += Time::deltaTime * 15.0f;
+	else if (Input::GetKey(GLFW_KEY_DOWN).down) lightAngles.x -= Time::deltaTime * 15.0f;
+	else if (Input::GetKey(GLFW_KEY_UP).down) lightAngles.x += Time::deltaTime * 15.0f;
 	else lightUpdated = false;
 
 	if (lightUpdated)
+	{
 		Terrain::updateTerrainShadows = true;
+		Sky::shouldUpdate = true;
+	}
 
 	//if (Input::GetKey(GLFW_KEY_C).pressed)
 	//	Terrain::ComputeShadows(0);

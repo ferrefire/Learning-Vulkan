@@ -2,6 +2,8 @@
 
 #include "manager.hpp"
 #include "terrain.hpp"
+#include "input.hpp"
+#include "time.hpp"
 
 void Sky::Create()
 {
@@ -79,21 +81,21 @@ void Sky::CreateTextures()
 {
 	SamplerConfiguration transmittanceSampler;
 	ImageConfiguration transmittanceConfig = Texture::ImageStorage(256, 64);
-	transmittanceConfig.format = RGB8;
+	transmittanceConfig.format = RGB16;
 
 	transmittanceTexture.CreateImage(transmittanceConfig, transmittanceSampler);
 	transmittanceTexture.TransitionImageLayout(transmittanceConfig);
 
 	SamplerConfiguration scatterSampler;
 	ImageConfiguration scatterConfig = Texture::ImageStorage(32, 32);
-	scatterConfig.format = RGB8;
+	scatterConfig.format = RGB16;
 
 	scatterTexture.CreateImage(scatterConfig, scatterSampler);
 	scatterTexture.TransitionImageLayout(scatterConfig);
 
 	SamplerConfiguration viewSampler;
 	ImageConfiguration viewConfig = Texture::ImageStorage(192, 128);
-	viewConfig.format = RGB8;
+	viewConfig.format = RGB16;
 
 	viewTexture.CreateImage(viewConfig, viewSampler);
 	viewTexture.TransitionImageLayout(viewConfig);
@@ -116,8 +118,8 @@ void Sky::CreateDescriptors()
 	skyDescriptorConfig[2].type = IMAGE_SAMPLER;
 	skyDescriptorConfig[2].stages = FRAGMENT_STAGE;
 	skyDescriptorConfig[2].imageInfo.imageLayout = LAYOUT_GENERAL;
-	skyDescriptorConfig[2].imageInfo.imageView = scatterTexture.imageView;
-	skyDescriptorConfig[2].imageInfo.sampler = scatterTexture.sampler;
+	skyDescriptorConfig[2].imageInfo.imageView = viewTexture.imageView;
+	skyDescriptorConfig[2].imageInfo.sampler = viewTexture.sampler;
 
 	skyDescriptor.Create(skyDescriptorConfig, skyPipeline.objectDescriptorSetLayout);
 
@@ -210,6 +212,12 @@ void Sky::Start()
 
 void Sky::Frame()
 {
+	if (Input::GetKey(GLFW_KEY_L).pressed)
+	{
+		Recompute();
+		return;
+	}
+
 	if (!transmittanceComputed && Terrain::HeightMapsGenerated())
 	{
 		transmittanceComputed = true;
@@ -220,6 +228,21 @@ void Sky::Frame()
 	{
 		scatterComputed = true;
 		ComputeScattering();
+	}
+
+	if (!viewComputed && transmittanceComputed && transmittanceReady && scatterComputed && scatterReady && Terrain::HeightMapsGenerated())
+	{
+		viewComputed = true;
+		ComputeView();
+	}
+
+	if (Time::newTick)
+	{
+		if (shouldUpdate && viewComputed && transmittanceComputed && transmittanceReady && scatterComputed && scatterReady && Terrain::HeightMapsGenerated())
+		{
+			shouldUpdate = false;
+			ComputeView();
+		}
 	}
 }
 
@@ -261,6 +284,8 @@ void Sky::ComputeScattering()
 
 	vkCmdDispatch(commandBuffer, 32, 32, 1);
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
+
+	scatterReady = true;
 }
 
 void Sky::ComputeView()
@@ -273,6 +298,15 @@ void Sky::ComputeView()
 
 	vkCmdDispatch(commandBuffer, 24, 16, 1);
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
+}
+
+void Sky::Recompute()
+{
+	transmittanceComputed = false;
+	transmittanceReady = false;
+	scatterComputed = false;
+	scatterReady = false;
+	viewComputed = false;
 }
 
 Mesh Sky::skyMesh;
@@ -294,4 +328,6 @@ Descriptor Sky::viewDescriptor{Manager::currentDevice};
 bool Sky::transmittanceComputed = false;
 bool Sky::transmittanceReady = false;
 bool Sky::scatterComputed = false;
+bool Sky::scatterReady = false;
 bool Sky::viewComputed = false;
+bool Sky::shouldUpdate = false;

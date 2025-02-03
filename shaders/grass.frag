@@ -71,7 +71,7 @@ void main()
 	//	translucency = (translucency * 0.25 + (1.0 - shadow) * 0.75);
 	//combinedColor += lightColor * bladeColor * translucency;
 
-	combinedColor = GroundFog(combinedColor, depth, 0);
+	//combinedColor = GroundFog(combinedColor, depth, 0);
 
 	outColor = vec4(combinedColor, 1.0);
 }

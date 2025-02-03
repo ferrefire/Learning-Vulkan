@@ -48,6 +48,6 @@ void main()
 		endColor += lightColor * leafColor * translucency;
 	}
 
-	endColor = GroundFog(endColor, depth, worldPosition.y);
+	//endColor = GroundFog(endColor, depth, worldPosition.y);
 	outColor = vec4(endColor, 1.0);
 }

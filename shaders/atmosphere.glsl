@@ -3,12 +3,16 @@
 
 #define TRANSMITTANCE_ITERATIONS 400
 #define MULTISCATTER_ITERATIONS 20
-#define SCATTER_ITERATIONS 5
-#define OPTICAL_ITERATIONS 5
-#define BAKED_OPTICAL_ITERATIONS 50
+#define SKY_VIEW_ITERATIONS 30
+
+//maybe change to 10.0
+#ifndef RADIUS_OFFSET
+#define RADIUS_OFFSET 0.01
+//#define RADIUS_OFFSET 10.0
+#endif
 
 #ifndef PI
-#define PI 3.141592654
+#define PI 3.1415926535897932384626433832795
 #endif
 
 const float sunCenter = 0.1;
@@ -36,16 +40,23 @@ const float mieHeightScale = 1000;
 const vec3 rayleighBeta = vec3(0.0058, 0.0135, 0.0331);
 const vec3 mieBeta = vec3(0.01);
 
-const float RHS = 8000.0;
-const float MHS = 1200.0;
-const vec3 RS = vec3(5.8e-6, 13.5e-6, 33.1e-6);
-//const vec3 RS = vec3(0.005802, 0.013558, 0.033100);
-const vec3 MS = vec3(3.996e-6);
-//const vec3 MS = vec3(0.003996, 0.003996, 0.003996);
-const vec3 ME = vec3(4.440e-6);
-//const vec3 ME = vec3(0.004440, 0.004440, 0.004440);
-const float PR = 6360000.0;
-const float AR = 6460000.0;
+//const float RHS = 8000.0;
+//const float MHS = 1200.0;
+//const vec3 RS = vec3(5.8e-6, 13.5e-6, 33.1e-6);
+//const vec3 MS = vec3(3.996e-6);
+//const vec3 ME = vec3(4.440e-6);
+//const float PR = 6360000.0;
+//const float AR = 6460000.0;
+//const float AH = AR - PR;
+
+const float RHS = 8.0;
+const float MHS = 1.2;
+const vec3 RS = vec3(0.005802, 0.013558, 0.033100);
+const vec3 MS = vec3(0.003996, 0.003996, 0.003996);
+const vec3 ME = vec3(0.004440, 0.004440, 0.004440);
+const float MP = 0.8;
+const float PR = 6360.0;
+const float AR = 6460.0;
 const float AH = AR - PR;
 
 struct RaymarchResult 
@@ -53,6 +64,25 @@ struct RaymarchResult
     vec3 luminance;
     vec3 multiScattering;
 };
+
+struct ScatterResult 
+{
+    vec3 mie;
+    vec3 rayleigh;
+};
+
+vec3 sunWithBloom(vec3 worldDir, vec3 sunDir)
+{
+    const float sunSolidAngle = 1.0 * PI / 180.0;
+    const float minSunCosTheta = cos(sunSolidAngle);
+
+    float cosTheta = dot(worldDir, sunDir);
+    if(cosTheta >= minSunCosTheta) {return vec3(0.5) ;}
+    float offset = minSunCosTheta - cosTheta;
+    float gaussianBloom = exp(-offset * 50000.0) * 0.5;
+    float invBloom = 1.0/(0.02 + offset * 300.0) * 0.01;
+    return vec3(gaussianBloom + invBloom);
+}
 
 float SphereIntersectNearest(vec3 point, vec3 direction, float radius, vec3 centerOffset)
 {
@@ -101,6 +131,31 @@ vec2 SphereIntersect(vec3 point, vec3 direction)
 	return (vec2(t0, t1));
 }
 
+bool MoveToAtmosphereEdge(inout vec3 point, vec3 direction)
+{
+	if (length(point) > AR)
+	{
+		float atmosphereDistance = SphereIntersectNearest(point, direction, AR);
+
+		if (atmosphereDistance == -1.0)
+		{
+			return (false);
+		}
+		else
+		{
+			vec3 upOffset = normalize(point) * -RADIUS_OFFSET;
+			point += direction * atmosphereDistance + upOffset;
+		}
+	}
+
+	return (true);
+}
+
+float ScatterUV(float u, float resolution)
+{
+	return ((u + 0.5 / resolution) * (resolution / (resolution + 1.0)));
+}
+
 float ScatterValues(float u, float resolution)
 {
 	return ((u - 0.5 / resolution) * (resolution / (resolution - 1.0)));
@@ -138,12 +193,65 @@ vec2 TransmittanceValues(vec2 uv)
 	return (vec2(x, y));
 }
 
+vec2 ViewUV(vec2 values, vec2 dimensions, float height, bool surfaceIntersect)
+{
+	vec2 uv;
+
+	float beta = asin(PR / height);
+	float horizonAngle = PI - beta;
+
+	if (!surfaceIntersect)
+	{
+		float coord = values.x / horizonAngle;
+		coord = (1.0 - sqrt(1.0 - coord)) / 2.0;
+		uv.y = coord;
+	}
+	else
+	{
+		float coord = (values.x - horizonAngle) / beta;
+		coord = (sqrt(coord) + 1.0) / 2.0;
+		uv.y = coord;
+	}
+
+	uv.x = sqrt(values.y / PI);
+
+	uv = vec2(ScatterUV(uv.x, dimensions.x), ScatterUV(uv.y, dimensions.y));
+
+	return (uv);
+}
+
+vec2 ViewValues(vec2 uv, vec2 dimensions, float height)
+{
+	vec2 values = vec2(ScatterValues(uv.x, dimensions.x), ScatterValues(uv.y, dimensions.y));
+
+	float beta = asin(PR / height);
+	float horizonAngle = PI - beta;
+
+	float viewAngle;
+	float lightAngle;
+
+	if (uv.y < 0.5)
+	{
+		float coord = 1.0 - (1.0 - 2.0 * uv.y) * (1.0 - 2.0 * uv.y);
+		viewAngle = horizonAngle * coord;
+	}
+	else
+	{
+		float coord = (uv.y * 2.0 - 1.0) * (uv.y * 2.0 - 1.0);
+		viewAngle = horizonAngle + beta * coord;
+	}
+
+	lightAngle = (uv.x * uv.x) * PI;
+
+	return (vec2(viewAngle, lightAngle));
+}
+
 float Density(float height, float scale)
 {
 	return (exp(-height / scale));
 }
 
-vec3 Scatter(vec3 point)
+ScatterResult ScatterResults(vec3 point)
 {
 	float height = length(point) - PR;
 
@@ -153,7 +261,14 @@ vec3 Scatter(vec3 point)
 	vec3 mieScattering = mieDensity * MS;
 	vec3 rayScattering = rayDensity * RS;
 
-	return (mieScattering + rayScattering);
+	return ScatterResult(mieScattering, rayScattering);
+}
+
+vec3 Scatter(vec3 point)
+{
+	ScatterResult result = ScatterResults(point);
+
+	return (result.mie + result.rayleigh);
 }
 
 vec3 Extinction(vec3 point)
@@ -186,25 +301,6 @@ vec3 Transmittance(vec3 start, vec3 direction)
 }
 
 #ifdef SCATTER_COMPUTE
-
-/*vec3 MultiScatter(vec3 start, vec3 end)
-{
-	vec3 ray = start;
-	vec3 rayStep = (end - start) / float(MULTISCATTER_ITERATIONS - 1.0);
-	float rayStepSize = length(rayStep);
-	vec3 accumulatedScattering = vec3(0.0);
-
-	for (int i = 0; i < MULTISCATTER_ITERATIONS; i++)
-	{
-		float height = length(ray) - PR;
-		float betaE = Density(height, RHS) + Density(height, MHS);
-		vec3 transmittance = textureLod(transmittanceSampler, vec2(height / AH, 0.5), 0.0).rgb;
-		accumulatedScattering += betaE * transmittance * rayStepSize;
-		ray += rayStep;
-	}
-
-	return (accumulatedScattering);
-}*/
 
 RaymarchResult MultiScatter(vec3 rayStart, vec3 rayDirection, vec3 sunDirection)
 {
@@ -271,6 +367,94 @@ RaymarchResult MultiScatter(vec3 rayStart, vec3 rayDirection, vec3 sunDirection)
 
 #endif
 
+#ifdef VIEW_COMPUTE
+
+float MiePhase(float g, float cosTheta)
+{
+	float k = 3.0 / (8.0 * PI) * (1.0 - g * g) / (2.0 + g * g);
+	return (k * (1.0 + cosTheta * cosTheta) / pow(1.0 + g * g - 2.0 * g * -cosTheta, 1.5));
+}
+
+float RayPhase(float cosTheta)
+{
+	float factor = 3.0 / (16.0 * PI);
+	return (factor * (1.0 + cosTheta * cosTheta));
+}
+
+vec3 MultiScatter(vec3 point, float viewAngle)
+{
+	vec2 values = clamp(vec2(viewAngle * 0.5 + 0.5, (length(point) - PR) / (AR - PR)), 0.0, 1.0);
+	vec2 uv = vec2(ScatterUV(values.x, scatterResolution.x), ScatterUV(values.y, scatterResolution.y));
+
+	return (textureLod(scatterSampler, uv, 0).rgb);
+}
+
+vec3 Luminance(vec3 rayStart, vec3 rayDirection, vec3 sunDirection)
+{
+	float atmosphereDistance = SphereIntersectNearest(rayStart, rayDirection, AR);
+	float surfaceDistance = SphereIntersectNearest(rayStart, rayDirection, PR);
+
+	float rayLength;
+
+	if (surfaceDistance == -1.0 && atmosphereDistance == -1.0)
+		return (vec3(0.0));
+	else if (surfaceDistance == -1.0 && atmosphereDistance > 0.0)
+		rayLength = atmosphereDistance;
+	else if (surfaceDistance > 0.0 && atmosphereDistance == -1.0)
+		rayLength = surfaceDistance;
+	else
+		rayLength = min(surfaceDistance, atmosphereDistance);
+
+	float cosTheta = dot(sunDirection, rayDirection);
+	float miePhaseValue = MiePhase(MP, -cosTheta);
+	float rayPhaseValue = RayPhase(cosTheta);
+
+	vec3 accumulatedTransmittance = vec3(1.0);
+	vec3 accumulatedLuminance = vec3(0.0);
+
+	for (int i = 0; i < SKY_VIEW_ITERATIONS; i++)
+	{
+		float step0 = float(i) / SKY_VIEW_ITERATIONS;
+		float step1 = float(i + 1) / SKY_VIEW_ITERATIONS;
+
+		step0 *= step0;
+		step1 *= step1;
+
+		step0 = step0 * rayLength;
+		step1 = step1 > 1.0 ? rayLength : step1 * rayLength;
+
+		float rayStep = step0 + (step1 - step0) * 0.3;
+		float stepDiff = step1 - step0;
+
+		vec3 ray = rayStart + rayDirection * rayStep;
+		ScatterResult scattering = ScatterResults(ray);
+		vec3 extinction = Extinction(ray);
+
+		vec3 upVector = normalize(ray);
+		vec2 transmittanceValues = vec2(length(ray), dot(sunDirection, upVector));
+		vec2 transmittanceUV = TransmittanceUV(transmittanceValues);
+
+		vec3 sunTransmittance = textureLod(transmittanceSampler, transmittanceUV, 0.0).rgb;
+		vec3 phaseScattering = scattering.mie * miePhaseValue + scattering.rayleigh * rayPhaseValue;
+
+		float surfaceDistance = SphereIntersectNearest(ray, sunDirection, PR, RADIUS_OFFSET * upVector);
+		float inShadow = surfaceDistance == -1.0 ? 1.0 : 0.0;
+
+		vec3 multiScatteredLuminance = MultiScatter(ray, dot(sunDirection, upVector));
+
+		vec3 light = inShadow * sunTransmittance * phaseScattering + multiScatteredLuminance * (scattering.rayleigh + scattering.mie);
+
+		vec3 transmittanceIncrease = exp(-(extinction * stepDiff));
+		vec3 incomingLight = (light - light * transmittanceIncrease) / extinction;
+		accumulatedLuminance += accumulatedTransmittance * incomingLight;
+		accumulatedTransmittance *= transmittanceIncrease;
+	}
+
+	return (accumulatedLuminance);
+}
+
+#endif
+
 /*vec3 Transmittance(vec3 start, vec3 end)
 {
 	vec3 ray = start;
@@ -287,7 +471,7 @@ RaymarchResult MultiScatter(vec3 rayStart, vec3 rayDirection, vec3 sunDirection)
 	}
 
 	return (exp(-tau));
-}*/
+}
 
 vec3 sunWithBloom(vec3 rayDir, vec3 sunDir)
 {
@@ -304,7 +488,7 @@ vec3 sunWithBloom(vec3 rayDir, vec3 sunDir)
     return LIGHT_COLOR * (gaussianBloom + invBloom);
 }
 
-/*vec3 GetSky()
+vec3 GetSky()
 {
 	vec3 finalColor = SKY_COLOR;
 
@@ -325,7 +509,7 @@ vec3 sunWithBloom(vec3 rayDir, vec3 sunDir)
 	}
 
 	return (finalColor);
-}*/
+}
 
 vec2 AtmosphereIntersect(vec3 point, vec3 direction)
 {
@@ -421,6 +605,6 @@ float GetOpticalDepth(vec3 point, vec3 center, vec3 direction, float len)
 	}
 
 	return (opticalDepth);
-}
+}*/
 
 #endif
