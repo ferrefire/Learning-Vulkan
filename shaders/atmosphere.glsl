@@ -36,11 +36,14 @@ const float mieHeightScale = 1000;
 const vec3 rayleighBeta = vec3(0.0058, 0.0135, 0.0331);
 const vec3 mieBeta = vec3(0.01);
 
-const float RSH = 8000.0;
-const float MSH = 1200.0;
-const vec3 betaR = vec3(5.8e-6, 13.5e-6, 33.1e-6);
-const vec3 betaM = vec3(3.996e-6);
+const float RHS = 8000.0;
+const float MHS = 1200.0;
+const vec3 RS = vec3(5.8e-6, 13.5e-6, 33.1e-6);
+//const vec3 RS = vec3(0.005802, 0.013558, 0.033100);
+const vec3 MS = vec3(3.996e-6);
+//const vec3 MS = vec3(0.003996, 0.003996, 0.003996);
 const vec3 ME = vec3(4.440e-6);
+//const vec3 ME = vec3(0.004440, 0.004440, 0.004440);
 const float PR = 6360000.0;
 const float AR = 6460000.0;
 const float AH = AR - PR;
@@ -48,12 +51,12 @@ const float AH = AR - PR;
 struct RaymarchResult 
 {
     vec3 luminance;
-    vec3 multiscattering;
+    vec3 multiScattering;
 };
 
-float SphereIntersectNearest(vec3 point, vec3 direction, float radius)
+float SphereIntersectNearest(vec3 point, vec3 direction, float radius, vec3 centerOffset)
 {
-	vec3 offset = point - vec3(0);
+	vec3 offset = point - centerOffset;
 	float a = dot(direction, direction);
 	float b = 2.0 * dot(direction, offset);
 	float c = dot(offset, offset) - (radius * radius);
@@ -74,6 +77,11 @@ float SphereIntersectNearest(vec3 point, vec3 direction, float radius)
 		return (max(0.0, t0));
 
 	return (max(0.0, min(t0, t1)));
+}
+
+float SphereIntersectNearest(vec3 point, vec3 direction, float radius)
+{
+	return (SphereIntersectNearest(point, direction, radius, vec3(0.0)));
 }
 
 vec2 SphereIntersect(vec3 point, vec3 direction)
@@ -135,6 +143,48 @@ float Density(float height, float scale)
 	return (exp(-height / scale));
 }
 
+vec3 Scatter(vec3 point)
+{
+	float height = length(point) - PR;
+
+	float mieDensity = exp(-height / MHS);
+	float rayDensity = exp(-height / RHS);
+
+	vec3 mieScattering = mieDensity * MS;
+	vec3 rayScattering = rayDensity * RS;
+
+	return (mieScattering + rayScattering);
+}
+
+vec3 Extinction(vec3 point)
+{
+	float height = length(point) - PR;
+
+	float mieDensity = exp(-height / MHS);
+	float rayDensity = exp(-height / RHS);
+
+	vec3 mieExtinction = mieDensity * ME;
+	vec3 rayExtinction = rayDensity * RS;
+
+	return (mieExtinction + rayExtinction);
+}
+
+vec3 Transmittance(vec3 start, vec3 direction)
+{
+	float rayLength = SphereIntersectNearest(start, direction, AR);
+	float rayStep = rayLength / float(TRANSMITTANCE_ITERATIONS);
+	vec3 totalTransmittance = vec3(0.0);
+
+	for (int i = 0; i < TRANSMITTANCE_ITERATIONS; i++)
+	{
+		vec3 ray = start + i * rayStep * direction;
+		vec3 extinction = Extinction(ray);
+		totalTransmittance += extinction * rayStep;
+	}
+
+	return (totalTransmittance);
+}
+
 #ifdef SCATTER_COMPUTE
 
 /*vec3 MultiScatter(vec3 start, vec3 end)
@@ -147,7 +197,7 @@ float Density(float height, float scale)
 	for (int i = 0; i < MULTISCATTER_ITERATIONS; i++)
 	{
 		float height = length(ray) - PR;
-		float betaE = Density(height, RSH) + Density(height, MSH);
+		float betaE = Density(height, RHS) + Density(height, MHS);
 		vec3 transmittance = textureLod(transmittanceSampler, vec2(height / AH, 0.5), 0.0).rgb;
 		accumulatedScattering += betaE * transmittance * rayStepSize;
 		ray += rayStep;
@@ -176,7 +226,7 @@ RaymarchResult MultiScatter(vec3 rayStart, vec3 rayDirection, vec3 sunDirection)
 
 	float rayStep = rayLength / float(MULTISCATTER_ITERATIONS);
 
-	vec3 accumulatedTransmittance = vec3(0.0);
+	vec3 accumulatedTransmittance = vec3(1.0);
 	vec3 accumulatedLuminance = vec3(0.0);
 	float oldRayShift = 0.0;
 
@@ -192,40 +242,34 @@ RaymarchResult MultiScatter(vec3 rayStart, vec3 rayDirection, vec3 sunDirection)
 		vec2 transmittanceUV = TransmittanceUV(transmittanceValues);
 
 		vec3 sunTransmittance = textureLod(transmittanceSampler, transmittanceUV, 0.0).rgb;
-		vec3 scattering; //continue from here!!!!
+		vec3 scattering = Scatter(ray);
+		vec3 extinction = Extinction(ray);
+
+		vec3 transmittanceIncrease = exp(-(extinction * rayStep));
+		float surfaceDistance = SphereIntersectNearest(ray, sunDirection, PR, RADIUS_OFFSET * upVector);
+		float inShadow = surfaceDistance == -1.0 ? 1.0 : 0.0;
+
+		vec3 light = inShadow * sunTransmittance * scattering * uniformPhase;
+		vec3 multiScatterIn = (scattering - scattering * transmittanceIncrease) / extinction;
+		vec3 scatterIn = (light - light * transmittanceIncrease) / extinction;
+
+		if (all(equal(transmittanceIncrease, vec3(1.0))))
+		{
+			multiScatterIn = vec3(0.0);
+			scatterIn = vec3(0.0);
+		}
+
+		result.multiScattering += accumulatedTransmittance * multiScatterIn;
+		accumulatedLuminance += accumulatedTransmittance * scatterIn;
+		accumulatedTransmittance *= transmittanceIncrease;
 	}
+
+	result.luminance = accumulatedLuminance;
+
+	return (result);
 }
 
 #endif
-
-vec3 Extinction(vec3 point)
-{
-	float height = length(point) - PR;
-
-	float mieDensity = exp(-height / MSH);
-	float rayDensity = exp(-height / RSH);
-
-	vec3 mieExtinction = mieDensity * ME;
-	vec3 rayExtinction = rayDensity * betaR;
-
-	return (mieExtinction + rayExtinction);
-}
-
-vec3 Transmittance(vec3 start, vec3 direction)
-{
-	float rayLength = SphereIntersectNearest(start, direction, AR);
-	float rayStep = rayLength / float(TRANSMITTANCE_ITERATIONS);
-	vec3 totalTransmittance = vec3(0.0);
-
-	for (int i = 0; i < TRANSMITTANCE_ITERATIONS; i++)
-	{
-		vec3 ray = start + i * rayStep * direction;
-		vec3 extinction = Extinction(ray);
-		totalTransmittance += extinction * rayStep;
-	}
-
-	return (totalTransmittance);
-}
 
 /*vec3 Transmittance(vec3 start, vec3 end)
 {
@@ -238,7 +282,7 @@ vec3 Transmittance(vec3 start, vec3 direction)
 	{
 		ray += rayStep;
 		float height = length(ray) - PR;
-		vec3 betaE = betaR * Density(height, RSH) + betaM * Density(height, MSH);
+		vec3 betaE = RS * Density(height, RHS) + MS * Density(height, MHS);
 		tau += betaE * rayStepSize;
 	}
 

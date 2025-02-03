@@ -1,0 +1,32 @@
+#version 450
+
+#extension GL_ARB_shading_language_include : require
+
+layout(set = 1, binding = 0, rgba8) uniform image2D viewTexture;
+layout (set = 1, binding = 1) uniform sampler2D transmittanceSampler;
+layout (set = 1, binding = 2) uniform sampler2D scatterSampler;
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+#include "variables.glsl"
+#include "transformation.glsl"
+#include "depth.glsl"
+#include "lighting.glsl"
+#include "atmosphere.glsl"
+
+const vec2 resolution = vec2(192.0, 128.0);
+const vec2 resolutionMult = 1.0 / resolution;
+
+void main()
+{
+	vec2 index = gl_GlobalInvocationID.xy;
+	vec2 uv = index * resolutionMult;
+	vec2 transmittanceValues = TransmittanceValues(uv);
+
+	vec3 rayStart = vec3(0, 0, transmittanceValues.x);
+	vec3 rayDirection = vec3(0.0, sqrt(1.0 - transmittanceValues.y * transmittanceValues.y), transmittanceValues.y);
+
+	vec3 transmittance = exp(-Transmittance(rayStart, rayDirection));
+
+	imageStore(transmittanceTexture, ivec2(index), vec4(transmittance, 1.0));
+}

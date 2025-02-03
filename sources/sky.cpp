@@ -62,6 +62,17 @@ void Sky::CreatePipelines()
 	scatterDescriptorLayoutConfig[1].stages = COMPUTE_STAGE;
 
 	scatterPipeline.CreateComputePipeline("scatterCompute", scatterDescriptorLayoutConfig);
+
+	std::vector<DescriptorLayoutConfiguration> viewDescriptorLayoutConfig(3);
+
+	viewDescriptorLayoutConfig[0].type = IMAGE_STORAGE;
+	viewDescriptorLayoutConfig[0].stages = COMPUTE_STAGE;
+	viewDescriptorLayoutConfig[1].type = IMAGE_SAMPLER;
+	viewDescriptorLayoutConfig[1].stages = COMPUTE_STAGE;
+	viewDescriptorLayoutConfig[2].type = IMAGE_SAMPLER;
+	viewDescriptorLayoutConfig[2].stages = COMPUTE_STAGE;
+
+	viewPipeline.CreateComputePipeline("viewCompute", viewDescriptorLayoutConfig);
 }
 
 void Sky::CreateTextures()
@@ -79,6 +90,13 @@ void Sky::CreateTextures()
 
 	scatterTexture.CreateImage(scatterConfig, scatterSampler);
 	scatterTexture.TransitionImageLayout(scatterConfig);
+
+	SamplerConfiguration viewSampler;
+	ImageConfiguration viewConfig = Texture::ImageStorage(192, 128);
+	viewConfig.format = RGB8;
+
+	viewTexture.CreateImage(viewConfig, viewSampler);
+	viewTexture.TransitionImageLayout(viewConfig);
 }
 
 void Sky::CreateDescriptors()
@@ -127,6 +145,26 @@ void Sky::CreateDescriptors()
 
 	scatterDescriptor.perFrame = false;
 	scatterDescriptor.Create(scatterDescriptorConfig, scatterPipeline.objectDescriptorSetLayout);
+
+	std::vector<DescriptorConfiguration> viewDescriptorConfig(3);
+
+	viewDescriptorConfig[0].type = IMAGE_STORAGE;
+	viewDescriptorConfig[0].stages = COMPUTE_STAGE;
+	viewDescriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
+	viewDescriptorConfig[0].imageInfo.imageView = viewTexture.imageView;
+	viewDescriptorConfig[1].type = IMAGE_SAMPLER;
+	viewDescriptorConfig[1].stages = COMPUTE_STAGE;
+	viewDescriptorConfig[1].imageInfo.imageLayout = LAYOUT_GENERAL;
+	viewDescriptorConfig[1].imageInfo.imageView = transmittanceTexture.imageView;
+	viewDescriptorConfig[1].imageInfo.sampler = transmittanceTexture.sampler;
+	viewDescriptorConfig[2].type = IMAGE_SAMPLER;
+	viewDescriptorConfig[2].stages = COMPUTE_STAGE;
+	viewDescriptorConfig[2].imageInfo.imageLayout = LAYOUT_GENERAL;
+	viewDescriptorConfig[2].imageInfo.imageView = scatterTexture.imageView;
+	viewDescriptorConfig[2].imageInfo.sampler = scatterTexture.sampler;
+
+	viewDescriptor.perFrame = false;
+	viewDescriptor.Create(viewDescriptorConfig, viewPipeline.objectDescriptorSetLayout);
 }
 
 void Sky::Destroy()
@@ -142,6 +180,7 @@ void Sky::DestroyPipelines()
 	skyPipeline.Destroy();
 	transmittancePipeline.Destroy();
 	scatterPipeline.Destroy();
+	viewPipeline.Destroy();
 }
 
 void Sky::DestroyMesh()
@@ -153,6 +192,7 @@ void Sky::DestroyTextures()
 {
 	transmittanceTexture.Destroy();
 	scatterTexture.Destroy();
+	viewTexture.Destroy();
 }
 
 void Sky::DestroyDescriptors()
@@ -160,6 +200,7 @@ void Sky::DestroyDescriptors()
 	skyDescriptor.Destroy();
 	transmittanceDescriptor.Destroy();
 	scatterDescriptor.Destroy();
+	viewDescriptor.Destroy();
 }
 
 void Sky::Start()
@@ -175,11 +216,11 @@ void Sky::Frame()
 		ComputeTransmittance();
 	}
 
-	//if (!scatterComputed && transmittanceComputed && Terrain::HeightMapsGenerated())
-	//{
-	//	scatterComputed = true;
-	//	ComputeScattering();
-	//}
+	if (!scatterComputed && transmittanceComputed && transmittanceReady && Terrain::HeightMapsGenerated())
+	{
+		scatterComputed = true;
+		ComputeScattering();
+	}
 }
 
 void Sky::RecordCommands(VkCommandBuffer commandBuffer)
@@ -206,6 +247,8 @@ void Sky::ComputeTransmittance()
 
 	vkCmdDispatch(commandBuffer, 32, 8, 1);
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
+
+	transmittanceReady = true;
 }
 
 void Sky::ComputeScattering()
@@ -220,18 +263,35 @@ void Sky::ComputeScattering()
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
 
+void Sky::ComputeView()
+{
+	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
+
+	viewPipeline.BindCompute(commandBuffer);
+	Manager::globalDescriptor.Bind(commandBuffer, viewPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
+	viewDescriptor.Bind(commandBuffer, viewPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
+
+	vkCmdDispatch(commandBuffer, 24, 16, 1);
+	Manager::currentDevice.EndComputeCommand(commandBuffer);
+}
+
 Mesh Sky::skyMesh;
 
 Pipeline Sky::skyPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Sky::transmittancePipeline{Manager::currentDevice, Manager::camera};
 Pipeline Sky::scatterPipeline{Manager::currentDevice, Manager::camera};
+Pipeline Sky::viewPipeline{Manager::currentDevice, Manager::camera};
 
 Texture Sky::transmittanceTexture{Manager::currentDevice};
 Texture Sky::scatterTexture{Manager::currentDevice};
+Texture Sky::viewTexture{Manager::currentDevice};
 
 Descriptor Sky::skyDescriptor{Manager::currentDevice};
 Descriptor Sky::transmittanceDescriptor{Manager::currentDevice};
 Descriptor Sky::scatterDescriptor{Manager::currentDevice};
+Descriptor Sky::viewDescriptor{Manager::currentDevice};
 
 bool Sky::transmittanceComputed = false;
+bool Sky::transmittanceReady = false;
 bool Sky::scatterComputed = false;
+bool Sky::viewComputed = false;
