@@ -115,16 +115,20 @@ void main()
 
 	vec3 finalColor = vec3(0.0);
 
+	float depth = subpassLoad(inputDepth).r;
+	float linearDepth = GetDepth(depth);
+
 	vec2 pixelPosition = inCoordinates;
 	vec3 clipSpace = vec3(pixelPosition * vec2(2.0) - vec2(1.0), 1.0);
 	vec4 hPos = inverse(variables.viewMatrix) * vec4(clipSpace, 1.0);
+	//vec3 worldPosition = hPos.xyz / hPos.w;
 	vec3 rayDirection = normalize(hPos.xyz / hPos.w - variables.viewPosition);
 	rayDirection = normalize(Rotate(rayDirection, radians(-90.0), vec3(1.0, 0.0, 0.0)));
-	vec3 rayStart = vec3(0.0, 0.0, PR + RADIUS_OFFSET + (variables.viewPosition.y - variables.terrainOffset.y) * 0.0001);
+	vec3 rayStart = vec3(0.0, 0.0, PR + RADIUS_OFFSET + (variables.viewPosition.y - variables.terrainOffset.y) * 0.001);
 
 	float viewHeight = length(rayStart);
 
-	float depth = subpassLoad(inputDepth).r;
+	
 
 	if (depth == 1.0)
 	{
@@ -153,11 +157,25 @@ void main()
 	else
 	{
 		vec3 originalColor = subpassLoad(inputColor).rgb;
-		//vec3 originalColor = vec3(0.0);
 
-		finalColor = originalColor;
+		if (linearDepth < 0.01)
+		{
+			finalColor = originalColor;
+		}
+		else
+		{
+			vec4 aerialPerspective = texture(aerialSampler, vec3(inCoordinates, linearDepth));
+			vec3 aerialColor = aerialPerspective.rgb;
+			float aerialDensity = clamp((length(aerialColor)) * 4.0, 0.0, 1.0);
+			finalColor = mix(originalColor, aerialColor, linearDepth);
+			//finalColor = originalColor * aerialPerspective.a + aerialColor;
+			//finalColor = aerialColor;
+			//finalColor = aerialColor + (originalColor * (1.0 - aerialDensity));
+		}
 
-		clipSpace = vec3(pixelPosition * vec2(2.0) - vec2(1.0), depth);
+		
+
+		/*clipSpace = vec3(pixelPosition * vec2(2.0) - vec2(1.0), depth);
 		hPos = inverse(variables.viewMatrix) * vec4(clipSpace, 1.0);
 		float realDepth = length(hPos.xyz / hPos.w - variables.viewPosition);
 		//float realDepth = GetDepth(depth);
@@ -182,7 +200,7 @@ void main()
 		//float w = slice;
 		vec4 aerialPerspective = weight * texture(aerialSampler, vec3(inCoordinates, w));
 
-		finalColor = mix(finalColor, aerialPerspective.rgb, aerialPerspective.a);
+		finalColor = mix(finalColor, aerialPerspective.rgb, aerialPerspective.a);*/
 	}
 
 	outColor = vec4(finalColor, 1.0);

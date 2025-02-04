@@ -293,18 +293,25 @@ void Sky::Frame()
 
 	if (Time::newTick)
 	{
-		if (shouldUpdateView && viewComputed && transmittanceComputed && transmittanceReady && scatterComputed && scatterReady && Terrain::HeightMapsGenerated())
-		{
-			viewReady = false;
-			shouldUpdateView = false;
-			ComputeView();
-		}
+		//if (shouldUpdateView && viewComputed && transmittanceComputed && transmittanceReady && scatterComputed && scatterReady && Terrain::HeightMapsGenerated())
+		//{
+		//	viewReady = false;
+		//	shouldUpdateView = false;
+		//	ComputeView();
+		//}
 
 		//if (shouldUpdateAerial && viewReady && aerialComputed && transmittanceComputed && transmittanceReady && scatterComputed && scatterReady && Terrain::HeightMapsGenerated())
 		//{
 		//	shouldUpdateAerial = false;
 		//	ComputeAerial();
 		//}
+	}
+
+	if (viewComputed && transmittanceComputed && transmittanceReady && scatterComputed && scatterReady && Terrain::HeightMapsGenerated())
+	{
+		viewReady = false;
+		shouldUpdateView = false;
+		ComputeView();
 	}
 
 	if (aerialComputed && viewComputed && transmittanceComputed && transmittanceReady && scatterComputed && scatterReady && Terrain::HeightMapsGenerated())
@@ -377,7 +384,7 @@ void Sky::ComputeAerial()
 	Manager::globalDescriptor.Bind(commandBuffer, aerialPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
 	aerialDescriptor.Bind(commandBuffer, aerialPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
 
-	vkCmdDispatch(commandBuffer, 1, 32, 32);
+	vkCmdDispatch(commandBuffer, 4, 4, 4);
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
 

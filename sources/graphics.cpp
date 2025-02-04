@@ -736,8 +736,8 @@ void Graphics::Create()
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
 		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
-		descriptorConfig[0].imageInfo.imageView = Sky::viewTexture.imageView;
-		descriptorConfig[0].imageInfo.sampler = Sky::viewTexture.sampler;
+		descriptorConfig[0].imageInfo.imageView = Sky::aerialTexture.imageView;
+		descriptorConfig[0].imageInfo.sampler = Sky::aerialTexture.sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}

@@ -476,6 +476,16 @@ void Terrain::PostFrame()
 	if (!HeightMapsGenerated())
 		return;
 
+	float yw = Manager::camera.Position().y;
+	if (abs(yw) >= terrainHeight * 0.25)
+	{
+		glm::vec3 newOffset = glm::vec3(0, -yw, 0);
+		terrainOffset += newOffset;
+		Manager::camera.Move(newOffset);
+
+		Manager::UpdateShaderVariables();
+	}
+
 	if (Time::newSubTick)
 	{
 		CheckTerrainOffset(nullptr);
@@ -745,14 +755,13 @@ void Terrain::CheckTerrainOffset(VkCommandBuffer commandBuffer)
 	float x1 = xw - terrainLod1Offset.x;
 	float z1 = zw - terrainLod1Offset.y;
 
-	if (abs(yw) >= terrainHeight * 0.25)
-	{
-		glm::vec3 newOffset = glm::vec3(0, -yw, 0);
-		terrainOffset += newOffset;
-		Manager::camera.Move(newOffset);
-
-		Manager::UpdateShaderVariables();
-	}
+	//if (abs(yw) >= terrainHeight * 0.25)
+	//{
+	//	glm::vec3 newOffset = glm::vec3(0, -yw, 0);
+	//	terrainOffset += newOffset;
+	//	Manager::camera.Move(newOffset);
+	//	Manager::UpdateShaderVariables();
+	//}
 
 	if (abs(xw) >= terrainChunkSize * terrainStep || abs(zw) >= terrainChunkSize * terrainStep)
 	{

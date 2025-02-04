@@ -37,7 +37,9 @@ void main()
 
 	if (!gl_FrontFacing) normal *= -1;
 
-	float ao = clamp(depth * 100.0, 0.0, 1.0);
+	//float aoDepth = depth;
+	float ao = clamp(depth * variables.ranges.y * 100.0, 0.0, 25000.0);
+	ao /= 25000.0;
 	
 	vec3 bladeDiffuse = DiffuseLighting(normal, shadow, 0.0, ambient);
 
