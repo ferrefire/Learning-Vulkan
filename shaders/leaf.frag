@@ -37,7 +37,7 @@ void main()
 	normDot += (1.0 - normDot) * 0.2;
 	//float translucency = 1.0;
 
-    if (terrainShadow < 1.0)
+    if (terrainShadow == 0.0)
 	{
 		float translucency = pow(clamp(dot(viewDirection, variables.lightDirection), 0.0, 1.0), exp2(10 * 0.5 + 1)) * 1.0 * normDot;
 		if (1.0 - shadow < translucency)

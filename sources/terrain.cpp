@@ -927,7 +927,7 @@ glm::vec3 Terrain::terrainOffset = glm::vec3(0.0, -2500.0, 0.0);
 glm::vec2 Terrain::terrainLod0Offset = glm::vec2(0);
 glm::vec2 Terrain::terrainLod1Offset = glm::vec2(0);
 std::vector<glm::vec2> Terrain::terrainShadowOffsets;
-float Terrain::terrainStep = 0.5f;
+float Terrain::terrainStep = 0.25f;
 float Terrain::terrainLod0Step = 0.125f;
 float Terrain::terrainLod1Step = 0.25f;
 

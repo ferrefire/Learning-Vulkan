@@ -44,7 +44,8 @@ void main()
 	float result = 1;
 	int i = 0;
 	float inter = 0;
-	vec3 lightPosition = variables.lightDirection * 25000.0;
+	//vec3 lightPosition = variables.lightDirection * 25000.0;
+	vec3 lightPosition = variables.lightDirection * 12500.0;
 	//lightPosition.xz += worldPosition;
 	vec3 samplePosition = vec3(worldPosition.x, height * variables.terrainHeight, worldPosition.y);
 	lightPosition += samplePosition;

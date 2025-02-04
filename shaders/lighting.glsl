@@ -14,14 +14,14 @@
 #endif
 
 #ifndef LIGHT_COLOR
-#define LIGHT_COLOR vec3(1.0, 0.933, 0.89)
+#define LIGHT_COLOR vec3(1.0, 0.933, 0.89) * 2.0
 #endif
 
 layout(set = 0, binding = 5) uniform sampler2DShadow shadowSamplers[CASCADE_COUNT];
 layout(set = 0, binding = 6) uniform sampler2D terrainShadowSamplers[TERRAIN_CASCADE_COUNT];
 
 //const vec3 lightColor = vec3(2);
-const vec3 lightColor = vec3(1.0, 0.933, 0.89);
+const vec3 lightColor = vec3(1.0, 0.933, 0.89) * 2.0;
 //const vec3 lightDirection = vec3(0.25, 0.5, 0.25);
 
 const float ambient = 0.1;

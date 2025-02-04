@@ -47,18 +47,25 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 //const float spacing = 50;
 //const float spacingMult = 0.02;
 
+const float treeChance = 0.375;
+const float treeChanceRandomness = 0.25;
+const float treeChanceScale = 50.0;
+const int treeChanceLayers = 2;
+
 #include "variables.glsl"
 #include "functions.glsl"
 #include "heightmap.glsl"
+#include "noise.glsl"
 
 float random(vec2 st)
 {
-    return fract(sin(dot(st.xy * 0.001, vec2(12.9898,78.233))) * 43758.5453123);
+    return fract(sin(dot(st.xy * 0.0001, vec2(12.9898,78.233))) * 43758.5453123);
 }
 
 void main()
 {
 	uint index = gl_GlobalInvocationID.x * treeVariables.treeBase + gl_GlobalInvocationID.y;
+	vec2 uv = vec2(gl_GlobalInvocationID.xy) / float(treeVariables.treeBase);
 
 	//float x = (float(gl_GlobalInvocationID.x) - float(treeBase) * 0.5) * spacing;
 	//float z = (float(gl_GlobalInvocationID.y) - float(treeBase) * 0.5) * spacing;
@@ -82,17 +89,23 @@ void main()
 	float px = ix * treeVariables.spacing + position.x;
 	float pz = iz * treeVariables.spacing + position.z;
 
+	float noiseVal = GenerateNoise(uv * treeChanceScale, treeChanceLayers);
 	uint life = 1;
 
-	vec3 terrainNormal = SampleNormalArray(vec2(px, pz), 1.0);
-	float steepness = 1.0 - pow(1.0 - GetSteepness(terrainNormal), 1.5);
+	ran = random(vec2(ran, index));
 
-	//vec3 terrainNormal = SampleNormalDynamic(vec2(px, pz), 1.0);
-	//float steepness = 1.0 - pow(1.0 - GetSteepness(terrainNormal), 1.5);
+	if (noiseVal > treeChance + (ran * 2.0 - 1.0) * treeChanceRandomness)
+		life = 0;
 
-    if (steepness > 0.2) life = 0;
+	if (life == 1)
+	{
+		vec3 terrainNormal = SampleNormalArray(vec2(px, pz), 1.0);
+		float steepness = 1.0 - pow(1.0 - GetSteepness(terrainNormal), 1.5);
+    	if (steepness > 0.2) life = 0;
+	}
 
-	float scale = 1.0;
+	ran = random(vec2(ran, index));
+	float scale = 1.0 + (ran - 0.5) * 0.5;
 	float color = 1.0;
 	ran = random(vec2(ran, index));
 	float rotation = ran;

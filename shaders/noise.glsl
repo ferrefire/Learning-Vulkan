@@ -6,6 +6,8 @@
 //uniform float noiseSampleDistance;
 //uniform float noiseSampleDistanceMult;
 
+#include "curve.glsl"
+
 const int noiseLayers = 8;
 const float noiseScale = 0.75;
 const float noiseSampleDistance = 0.0001;
@@ -72,7 +74,7 @@ float InvLerp(float a, float b, float v)
     return (v - a) / (b - a);
 }
 
-float GenerateNoise(vec2 uv, int layers)
+float GenerateNoise(vec2 uv, int layers, int curve)
 {
     float noise = 0;
     float maxNoise = 0;
@@ -124,17 +126,25 @@ float GenerateNoise(vec2 uv, int layers)
     noise = InvLerp(0.0, maxNoise, noise);
     //noise = noise * noise;
 	
-	//float biome = max(abs(uv.x), abs(uv.y)) - 2.0;
-	//if (biome >= -blendDistance && biome <= blendDistance)
-	//{
-	//	noise = mix(CubicCurve(LOWLANDS, noise), noise, (biome / blendDistance) * 0.5 + 0.5);
-	//}
-    //else if (biome <= -blendDistance)
-    //{
-    //    noise = CubicCurve(LOWLANDS, noise);
-    //}
+	if (curve == 0)
+	{
+		float biome = max(abs(uv.x), abs(uv.y)) - 2.0;
+		if (biome >= -blendDistance && biome <= blendDistance)
+		{
+			noise = mix(CubicCurve(MIDLANDS, noise), noise, (biome / blendDistance) * 0.5 + 0.5);
+		}
+    	else if (biome <= -blendDistance)
+    	{
+    	    noise = CubicCurve(MIDLANDS, noise);
+    	}
+	}
 
     return (noise);
+}
+
+float GenerateNoise(vec2 uv, int layers)
+{
+	return (GenerateNoise(uv, layers, -1));
 }
 
 vec3 GetDerivative(vec2 uv, int layers, float sampleDis)

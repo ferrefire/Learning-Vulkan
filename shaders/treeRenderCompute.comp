@@ -200,9 +200,9 @@ void main()
 	vec2 posyroty = unpackHalf2x16(data[dataIndex].posyroty);
 	offset.y = posyroty.x;
 	float rotation = posyroty.y;
-	//vec2 xx = unpackHalf2x16(data[gl_InstanceIndex].scaxcoly);
-	//scale = xx.x;
-	//color = xx.y;
+	vec2 xx = unpackHalf2x16(data[dataIndex].scaxcoly);
+	float scale = xx.x;
+	float color = xx.y;
 
 	float x = worldOffset.x * treeVariables.spacing + offset.x;
 	float z = worldOffset.y * treeVariables.spacing + offset.z;
@@ -269,8 +269,8 @@ void main()
 	//}
 	if (Occluded(WorldToCull(worldPosition + vec3(0, 60, 0)), 0.005) == 1) return;
 
-	float scale = 1.0;
-	float color = 1.0;
+	//float scale = 1.0;
+	//float color = 1.0;
 
 	uint index = 0;
 
@@ -323,7 +323,7 @@ void main()
 	{
 		float scaleMult = 1.0;
 		currentLeafIndex = i + leafCountOffset;
-		rotatedPosition = (worldPosition + (rotationMatrix * vec4(leafPositions[currentLeafIndex].xyz, 1.0)).xyz);
+		rotatedPosition = (worldPosition + (rotationMatrix * vec4(leafPositions[currentLeafIndex].xyz * scale, 1.0)).xyz);
 		if (lod == 0)
 		{
 			leafIndex = index * treeVariables.leafCountTotal + i;

@@ -152,7 +152,7 @@ void main()
 			incomingLight += sunWithBloom(rayDirection, sunDirection);
 		}
 
-		finalColor = incomingLight;
+		finalColor = incomingLight * LIGHT_COLOR;
 	}
 	else
 	{
@@ -165,9 +165,12 @@ void main()
 		else
 		{
 			vec4 aerialPerspective = texture(aerialSampler, vec3(inCoordinates, linearDepth));
-			vec3 aerialColor = aerialPerspective.rgb;
-			float aerialDensity = clamp((length(aerialColor)) * 4.0, 0.0, 1.0);
-			finalColor = mix(originalColor, aerialColor, linearDepth);
+			vec3 aerialColor = aerialPerspective.rgb * LIGHT_COLOR;
+			//float aerialDensity = clamp((length(aerialColor)) * 4.0, 0.0, 1.0);
+			//finalColor = mix(originalColor, aerialColor, clamp(linearDepth + (1.0 - aerialPerspective.a), 0.0, 1.0));
+			//float modDepth = pow(linearDepth, 0.5);
+			float modDepth = linearDepth;
+			finalColor = mix(originalColor, aerialColor, modDepth);
 			//finalColor = originalColor * aerialPerspective.a + aerialColor;
 			//finalColor = aerialColor;
 			//finalColor = aerialColor + (originalColor * (1.0 - aerialDensity));

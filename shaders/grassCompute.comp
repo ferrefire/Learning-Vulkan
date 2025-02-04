@@ -157,7 +157,7 @@ void main()
 	{
 		//vec3 clipPosition = WorldToClip(position);
 		vec3 clipPosition = WorldToCull(position);
-		if (Occluded(clipPosition, 0.0005) == 1) return ;
+		if (Occluded(clipPosition, 0.001) == 1) return ;
 	}
 
 	vec3 terrainNormal = SampleNormalDynamic(position.xz, 0.5);
