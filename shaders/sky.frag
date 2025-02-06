@@ -158,18 +158,22 @@ void main()
 	{
 		vec3 originalColor = subpassLoad(inputColor).rgb;
 
-		if (linearDepth < 0.01)
-		{
-			finalColor = originalColor;
-		}
-		else
+		//if (linearDepth < 0.01)
+		//{
+		//	finalColor = originalColor;
+		//}
+		//else
 		{
 			vec4 aerialPerspective = texture(aerialSampler, vec3(inCoordinates, linearDepth));
 			vec3 aerialColor = aerialPerspective.rgb * LIGHT_COLOR;
 			//float aerialDensity = clamp((length(aerialColor)) * 4.0, 0.0, 1.0);
 			//finalColor = mix(originalColor, aerialColor, clamp(linearDepth + (1.0 - aerialPerspective.a), 0.0, 1.0));
 			//float modDepth = pow(linearDepth, 0.5);
-			float modDepth = linearDepth;
+			//if (linearDepth < 0.5) linearDepth = 0.5;
+			//else linearDepth = pow((linearDepth - 0.5) / 0.5, 2.0) * 0.5 + 0.5;
+			//float modDepth = linearDepth;
+			float modDepth = clamp(linearDepth + 0.5, 0.0, 1.0);
+			
 			finalColor = mix(originalColor, aerialColor, modDepth);
 			//finalColor = originalColor * aerialPerspective.a + aerialColor;
 			//finalColor = aerialColor;

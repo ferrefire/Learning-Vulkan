@@ -331,25 +331,34 @@ void Shape::SetShape(int type, int resolution)
     }
 	else if (type == BLADE)
 	{
+		coordinate = true;
+
 		int layer = 1;
 		int subLayers = resolution;
 		const float BLADE_WIDTH = 0.05f;
 		const float BLADE_HEIGHT = 1.0 / (subLayers + 2);
 
 		positions.push_back(glm::vec3(-BLADE_WIDTH, layer * BLADE_HEIGHT, 0.0f));
+		coordinates.push_back(glm::vec2(0.0, 0.0));
 		positions.push_back(glm::vec3(BLADE_WIDTH, 0, 0.0f));
+		coordinates.push_back(glm::vec2(1.0, 0.0));
 		positions.push_back(glm::vec3(-BLADE_WIDTH, 0, 0.0f));
+		coordinates.push_back(glm::vec2(0.0, 0.0));
 		positions.push_back(glm::vec3(BLADE_WIDTH, layer * BLADE_HEIGHT, 0.0f));
+		coordinates.push_back(glm::vec2(1.0, 0.0));
 
 		for (int i = 0; i < subLayers; i++)
 		{
 			layer++;
 			positions.push_back(glm::vec3(-BLADE_WIDTH, layer * BLADE_HEIGHT, 0.0f));
+			coordinates.push_back(glm::vec2(0.0, 0.0));
 			positions.push_back(glm::vec3(BLADE_WIDTH, layer * BLADE_HEIGHT, 0.0f));
+			coordinates.push_back(glm::vec2(1.0, 0.0));
 		}
 
 		layer++;
 		positions.push_back(glm::vec3(0.0f, layer * BLADE_HEIGHT, 0.0f));
+		coordinates.push_back(glm::vec2(0.5, 1.0));
 
 		indices.push_back(0);
 		indices.push_back(1);

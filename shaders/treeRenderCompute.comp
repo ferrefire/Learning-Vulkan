@@ -388,7 +388,7 @@ void main()
 
 		leavesData[leafIndex].posxz = packHalf2x16(rotatedPosition.xz);
 		leavesData[leafIndex].posyroty = packHalf2x16(vec2(rotatedPosition.y, leafRotationY));
-		leavesData[leafIndex].scalxrotx = packHalf2x16(vec2(leafScale, leafRotationX));
+		leavesData[leafIndex].scalxrotx = packHalf2x16(vec2(leafScale * scale, leafRotationX));
 		leavesData[leafIndex].colx = packHalf2x16(vec2(leafColor, 0.0));
 	}
 }

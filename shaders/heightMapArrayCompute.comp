@@ -26,5 +26,5 @@ void main()
   vec2 uv = index * resolutionMult - 0.5 + heightMapArrayComputeVariables.mapOffset;
   uv *= heightMapArrayComputeVariables.mapScale;
 
-  imageStore(heightMapArrayTexture, ivec3(index, heightMapArrayComputeVariables.currentChunkIndex), vec4(GenerateNoise(uv, 8), 0, 0, 0));
+  imageStore(heightMapArrayTexture, ivec3(index, heightMapArrayComputeVariables.currentChunkIndex), vec4(GenerateNoise(uv, 8, 0), 0, 0, 0));
 }

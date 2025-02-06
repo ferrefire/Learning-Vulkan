@@ -49,6 +49,7 @@ layout(push_constant, std430) uniform PushConstants
 } pc;
 
 layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec2 inCoordinate;
 
 layout(location = 0) out vec3 worldPosition;
 layout(location = 1) out vec3 objectNormal;
@@ -71,7 +72,8 @@ float random(vec2 st)
 
 void main()
 {
-	vec3 normal = normalize(mix(vec3(0, 0, -1), vec3(sign(inPosition.x) * 0.5, 0, 0), clamp(abs(inPosition.x) * 10.0, 0.0, 1.0)));
+	//vec3 normal = normalize(mix(vec3(0, 0, -1), vec3(sign(inPosition.x) * 0.5, 0, 0), clamp(abs(inPosition.x) * 10.0, 0.0, 1.0)));
+	vec3 normal = Rotate(vec3(0.0, 0.0, -1.0), radians(15.0) * ((inCoordinate.x - 0.5) * 2.0), vec3(0.0, 1.0, 0.0));
 
 	vec3 position = vec3(0);
 	vec3 rotation = vec3(0);
@@ -99,12 +101,12 @@ void main()
 	scaledPosition.y *= clumpScale.y;
 
 	float angle = radians(ran * (inPosition.y + 0.25));
-	scaledPosition = Rotate(scaledPosition, angle, vec3(1, 0, 0));
-	normal = Rotate(normal, angle, vec3(1, 0, 0));
+	scaledPosition = Rotate(scaledPosition, -angle, vec3(1, 0, 0));
+	normal = Rotate(normal, -angle, vec3(1, 0, 0));
 
-	ran = rotation.y;
+	//ran = rotation.y;
 
-	angle = radians(ran);
+	angle = radians(rotation.y);
 	scaledPosition = Rotate(scaledPosition, angle, vec3(0, 1, 0));
 	normal = Rotate(normal, angle, vec3(0, 1, 0));
 
@@ -119,7 +121,8 @@ void main()
 	//grassColor = vec3(0.25, 0.6, 0.1);
 	//grassColor = vec3(0.0916, 0.0866, 0.0125) * 1.5;
 	grassColor = vec3(0.0916, 0.1, 0.0125) * (1.0 + (colorVal * 0.5 - 0.25));
-	grassColor *= 0.75;
+	//grassColor = vec3(0.0916, 0.1, 0.0125) * (1.0 + (colorVal * 0.375 - 0.1875));
+	//grassColor *= 0.75;
 
 	vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
 	float viewDotNormal = clamp(dot(normal, viewDirection), -1.0, 1.0);

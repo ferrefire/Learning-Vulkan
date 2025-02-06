@@ -42,10 +42,14 @@ void Grass::CreateTextures()
 
 void Grass::CreateMeshes()
 {
+	grassMesh.coordinate = true;
+	grassMesh.shape.coordinate = true;
 	grassMesh.shape.SetShape(BLADE, 3);
 	grassMesh.RecalculateVertices();
 	grassMesh.Create();
 
+	grassLodMesh.coordinate = true;
+	grassLodMesh.shape.coordinate = true;
 	grassLodMesh.shape.SetShape(BLADE, 1);
 	grassLodMesh.RecalculateVertices();
 	grassLodMesh.Create();
@@ -523,7 +527,7 @@ void Grass::ComputeClumping()
 uint32_t Grass::grassBase = 256;
 uint32_t Grass::grassCount = Grass::grassBase * Grass::grassBase;
 
-uint32_t Grass::grassLodBase = 2048 + 2048;
+uint32_t Grass::grassLodBase = 2048;
 uint32_t Grass::grassLodCount = Grass::grassLodBase * Grass::grassLodBase - Grass::grassCount;
 
 uint32_t Grass::grassTotalBase = Grass::grassLodBase;

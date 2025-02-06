@@ -74,6 +74,7 @@ vec3 BlendTexture(sampler2D textureSampler, int index, float viewDistance, int m
 	float lod3Blend = textureLod3Distances[index] * textureBlendDistances[index];
 	float maxDistance = textureLod3Distances[index] - lod3Blend;
 	float maxBlend = lod3Blend * 2;
+	vec2 texUV = inPosition.xz + variables.terrainOffset.xz;
 
 	if (maxLod >= 0)
 	{
@@ -108,7 +109,7 @@ vec3 BlendTexture(sampler2D textureSampler, int index, float viewDistance, int m
 
 	if (viewDistance < textureLod0Distances[index] + lod0Blend)
 	{
-		result = texture(textureSampler, inPosition.xz * textureLod0Scales[index]).rgb;
+		result = texture(textureSampler, texUV * textureLod0Scales[index]).rgb;
 
 		if (viewDistance > textureLod0Distances[index] - lod0Blend)
 		{
@@ -116,12 +117,12 @@ vec3 BlendTexture(sampler2D textureSampler, int index, float viewDistance, int m
 			blendFactor /= lod0Blend * 2;
 
 			result *= (1.0 - blendFactor);
-			result += texture(textureSampler, inPosition.xz * textureLod1Scales[index]).rgb * (blendFactor);
+			result += texture(textureSampler, texUV * textureLod1Scales[index]).rgb * (blendFactor);
 		}
 	}
 	else if (viewDistance < textureLod1Distances[index] + lod1Blend)
 	{
-		result = texture(textureSampler, inPosition.xz * textureLod1Scales[index]).rgb;
+		result = texture(textureSampler, texUV * textureLod1Scales[index]).rgb;
 
 		if (viewDistance > textureLod1Distances[index] - lod1Blend)
 		{
@@ -129,12 +130,12 @@ vec3 BlendTexture(sampler2D textureSampler, int index, float viewDistance, int m
 			blendFactor /= lod1Blend * 2;
 
 			result *= (1.0 - blendFactor);
-			result += texture(textureSampler, inPosition.xz * textureLod2Scales[index]).rgb * (blendFactor);
+			result += texture(textureSampler, texUV * textureLod2Scales[index]).rgb * (blendFactor);
 		}
 	}
 	else if (viewDistance < textureLod2Distances[index] + lod2Blend)
 	{
-		result = texture(textureSampler, inPosition.xz * textureLod2Scales[index]).rgb;
+		result = texture(textureSampler, texUV * textureLod2Scales[index]).rgb;
 
 		if (viewDistance > textureLod2Distances[index] - lod2Blend)
 		{
@@ -142,12 +143,12 @@ vec3 BlendTexture(sampler2D textureSampler, int index, float viewDistance, int m
 			blendFactor /= lod2Blend * 2;
 
 			result *= (1.0 - blendFactor);
-			result += texture(textureSampler, inPosition.xz * textureLod3Scales[index]).rgb * (blendFactor);
+			result += texture(textureSampler, texUV * textureLod3Scales[index]).rgb * (blendFactor);
 		}
 	}
 	else if (viewDistance < textureLod3Distances[index] + lod3Blend)
 	{
-		result = texture(textureSampler, inPosition.xz * textureLod3Scales[index]).rgb;
+		result = texture(textureSampler, texUV * textureLod3Scales[index]).rgb;
 
 		if (viewDistance > textureLod3Distances[index] - lod3Blend)
 		{

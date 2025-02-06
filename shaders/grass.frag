@@ -37,6 +37,9 @@ void main()
 
 	if (!gl_FrontFacing) normal *= -1;
 
+	//outColor = vec4(normal * 0.5 + 0.5, 1.0);
+	//return;
+
 	//float aoDepth = depth;
 	float ao = clamp(depth * variables.ranges.y * 100.0, 0.0, 25000.0);
 	ao /= 25000.0;
@@ -48,7 +51,8 @@ void main()
 	vec3 terrainDiffuse = DiffuseLighting(terrainNormal, shadow);
 	
 	//vec3 diffuse = clamp(terrainDiffuse * 0.9 + bladeDiffuse, vec3(0.0), lightColor);
-	vec3 diffuse = clamp(terrainDiffuse + bladeDiffuse, vec3(0.0), lightColor);
+	//vec3 diffuse = clamp(terrainDiffuse + bladeDiffuse, vec3(0.0), lightColor);
+	vec3 diffuse = terrainDiffuse;
 	vec3 combinedColor = (diffuse * bladeColor);
 	//vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
 
