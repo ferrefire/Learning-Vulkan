@@ -152,7 +152,7 @@ void main()
 			incomingLight += sunWithBloom(rayDirection, sunDirection);
 		}
 
-		finalColor = incomingLight * LIGHT_COLOR;
+		finalColor = incomingLight * LIGHT_COLOR * 2.0;
 	}
 	else
 	{
@@ -164,17 +164,19 @@ void main()
 		//}
 		//else
 		{
-			vec4 aerialPerspective = texture(aerialSampler, vec3(inCoordinates, linearDepth));
-			vec3 aerialColor = aerialPerspective.rgb * LIGHT_COLOR;
 			//float aerialDensity = clamp((length(aerialColor)) * 4.0, 0.0, 1.0);
 			//finalColor = mix(originalColor, aerialColor, clamp(linearDepth + (1.0 - aerialPerspective.a), 0.0, 1.0));
 			//float modDepth = pow(linearDepth, 0.5);
 			//if (linearDepth < 0.5) linearDepth = 0.5;
 			//else linearDepth = pow((linearDepth - 0.5) / 0.5, 2.0) * 0.5 + 0.5;
 			//float modDepth = linearDepth;
-			float modDepth = clamp(linearDepth + 0.5, 0.0, 1.0);
+			float modDepth = clamp(linearDepth + 0.1, 0.0, 1.0);
+			float mixDepth = clamp(linearDepth + 0.5, 0.0, 1.0);
+
+			vec4 aerialPerspective = texture(aerialSampler, vec3(inCoordinates, modDepth));
+			vec3 aerialColor = aerialPerspective.rgb * LIGHT_COLOR * 2.0;
 			
-			finalColor = mix(originalColor, aerialColor, modDepth);
+			finalColor = mix(originalColor, aerialColor, mixDepth);
 			//finalColor = originalColor * aerialPerspective.a + aerialColor;
 			//finalColor = aerialColor;
 			//finalColor = aerialColor + (originalColor * (1.0 - aerialDensity));

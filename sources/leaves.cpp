@@ -293,8 +293,8 @@ void Leaves::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod2), &lod2);
 
 		leafMeshLod1.Bind(commandBuffer);
-		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
-		//	Trees::treeRenderCounts[Manager::currentFrame].lod0Count * Trees::treeVariables.leafCountTotal, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+			Trees::treeRenderCounts[Manager::currentFrame].lod0Count * Trees::treeVariables.leafCountTotal, 0, 0, 0);
 
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
 			Trees::treeRenderCounts[Manager::currentFrame].lod1Count * Trees::treeVariables.leafCount1, 

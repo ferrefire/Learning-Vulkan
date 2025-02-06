@@ -1067,9 +1067,9 @@ uint32_t Trees::treeCount = Trees::treeBase * Trees::treeBase;
 //uint32_t Trees::treeTotalRenderBase = Trees::treeLod3RenderBase;
 //uint32_t Trees::treeTotalRenderCount = Trees::treeTotalRenderBase * Trees::treeTotalRenderBase;
 
-uint32_t Trees::treeLod0RenderBase = 8;
+uint32_t Trees::treeLod0RenderBase = 16;
 uint32_t Trees::treeLod0RenderCount = Trees::treeLod0RenderBase * Trees::treeLod0RenderBase;
-uint32_t Trees::treeLod1RenderBase = 8;
+uint32_t Trees::treeLod1RenderBase = 16;
 uint32_t Trees::treeLod1RenderCount = Trees::treeLod1RenderBase * Trees::treeLod1RenderBase - Trees::treeLod0RenderCount;
 uint32_t Trees::treeLod2RenderBase = 32;
 uint32_t Trees::treeLod2RenderCount = Trees::treeLod2RenderBase * Trees::treeLod2RenderBase - Trees::treeLod0RenderCount - Trees::treeLod1RenderCount;
