@@ -82,12 +82,16 @@ void Trees::CreateMeshes()
 	branchConfig.minSize = 0.5;
 	branchConfig.lod = 2;
 	GenerateTrunkMesh(treeLod2Mesh, branchConfig);
+	treeLod2Mesh.shape.Scale(glm::vec3(1.5, 1.0, 1.0));
+	treeLod2Mesh.RecalculateVertices();
 	treeLod2Mesh.Create();
 
 	branchConfig.resolution = 4;
 	branchConfig.minSize = 0.75;
 	branchConfig.lod = 3;
 	GenerateTrunkMesh(treeLod3Mesh, branchConfig);
+	treeLod3Mesh.shape.Scale(glm::vec3(2.25, 1.0, 2.25));
+	treeLod3Mesh.RecalculateVertices();
 	treeLod3Mesh.Create();
 
 	//branchConfig.resolution = 4;
@@ -102,7 +106,7 @@ void Trees::CreateMeshes()
 	treeLod4Mesh.shape.coordinate = true;
 	treeLod4Mesh.shape.normal = true;
 	treeLod4Mesh.shape.SetShape(CYLINDER, 4);
-	treeLod4Mesh.shape.Scale(glm::vec3(1.5f, 2.5f, 1.5f), true);
+	treeLod4Mesh.shape.Scale(glm::vec3(3.0f, 2.5f, 3.0f), true);
 	//treeLod4Mesh.shape.Move(glm::vec3(0.0f, 20.0f, 0.0f));
 	treeLod4Mesh.RecalculateVertices();
 	treeLod4Mesh.Create();
@@ -904,6 +908,7 @@ Shape BranchConfiguration::Generate()
 		glm::mat4 yRotationMatrix = Utilities::GetRotationMatrix(yAngle, glm::vec3(0, 1, 0));
 
 		// glm::mat4 rotationMatrix = Utilities::GetRotationMatrix(glm::vec3(xAngle, yAngle, 0));
+		int l = int(glm::clamp(float(resolution) / 4.0f, 1.0f, float(resolution)));
 
 		for (int x = 0; x <= resolution; x++)
 		{
@@ -921,11 +926,20 @@ Shape BranchConfiguration::Generate()
 				branch.normals[branch.centerMergePoint] = xRotationMatrix * glm::vec4(branch.normals[branch.centerMergePoint], 0);
 				branch.normals[branch.centerMergePoint] = yRotationMatrix * glm::vec4(branch.normals[branch.centerMergePoint], 0);
 			}
+
+			if (main)
+			{
+				int p = x % l;
+				float lhalf = l * 0.5;
+				float lol = abs(float(p) - lhalf);
+				float amount = lol / lhalf;
+				branch.positions[branch.GetPositionIndex(y, x)] = branch.positions[branch.GetPositionIndex(y, x)] * 
+					glm::vec3(1.0 + pow(1.0 - gradient, 8.0) * 1.25 * amount);
+			}
 		}
 
 		if (lod == 0 && iteration > 1)
 		{
-			int l = int(glm::clamp(float(resolution) / 4.0f, 1.0f, float(resolution)));
 			int leafIndex = y % l;
 			if (leafIndex == 0 || y == resolution)
 			{

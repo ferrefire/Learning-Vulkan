@@ -170,7 +170,7 @@ void main()
 			//if (linearDepth < 0.5) linearDepth = 0.5;
 			//else linearDepth = pow((linearDepth - 0.5) / 0.5, 2.0) * 0.5 + 0.5;
 			//float modDepth = linearDepth;
-			float modDepth = clamp(linearDepth + 0.1, 0.0, 1.0);
+			float modDepth = clamp(linearDepth + 0.125, 0.0, 1.0);
 			float mixDepth = clamp(linearDepth + 0.5, 0.0, 1.0);
 
 			vec4 aerialPerspective = texture(aerialSampler, vec3(inCoordinates, modDepth));
