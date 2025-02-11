@@ -32,7 +32,8 @@ void main()
 		shadow = clamp(shadow + GetCascadedShadow(shadowPositions, depth), 0.0, 1.0);
 	//float shadow = GetCascadedShadow(shadowPositions, depth);
 
-	vec3 diffuse = DiffuseLighting(normal, shadow, 0.025);
+	vec3 diffuse = DiffuseLighting(normal, shadow, 0.025 * 0.5);
+	//vec3 diffuse = DiffuseLightingRealistic(normal, worldPosition, shadow, 0.025, 0.025);
 	vec3 texColor = texture(treeDiffuseSampler, inCoord * 0.25).xyz * trunkColor;
 	vec3 combinedColor = diffuse * texColor;
 	

@@ -34,8 +34,8 @@ struct LeafData
 	uint posxz;
 	uint posyroty;
 	uint scalxrotx;
-	uint colx;
-	//vec3 position;
+	uint colxnormx;
+	uint normyz;
 };
 
 layout(std430, set = 1, binding = 0) buffer DataBuffer
@@ -98,6 +98,8 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 #include "transformation.glsl"
 
 const int frustumCheckDis = 35 * 35;
+//const vec3 treeCenter = vec3(-3.05, 47.22, -5.725);
+const vec3 treeCenter = vec3(0.0, 40.0, 0.0);
 
 int Inside(vec2 pos)
 {
@@ -323,6 +325,7 @@ void main()
 	{
 		float scaleMult = 1.0;
 		currentLeafIndex = i + leafCountOffset;
+		vec3 rotatedNormal = (rotationMatrix * vec4(normalize(leafPositions[currentLeafIndex].xyz - treeCenter), 0.0)).xyz;
 		rotatedPosition = (worldPosition + (rotationMatrix * vec4(leafPositions[currentLeafIndex].xyz * scale, 1.0)).xyz);
 		if (lod == 0)
 		{
@@ -353,7 +356,7 @@ void main()
 			leafIndex += (treeVariables.treeLod0RenderCount * treeVariables.leafCountTotal);
 			leafIndex += (treeVariables.treeLod1RenderCount * treeVariables.leafCount1);
 			leafIndex += (treeVariables.treeLod2RenderCount * treeVariables.leafCount2);
-			scaleMult = 6.0;
+			scaleMult = 6.0 * 1.0;
 		}
 		else if (lod == 4)
 		{
@@ -364,7 +367,7 @@ void main()
 			leafIndex += (treeVariables.treeLod1RenderCount * treeVariables.leafCount1);
 			leafIndex += (treeVariables.treeLod2RenderCount * treeVariables.leafCount2);
 			leafIndex += (treeVariables.treeLod3RenderCount * treeVariables.leafCount3);
-			scaleMult = 9.0;
+			scaleMult = 9.0 * 1.5;
 		}
 		//if (currentLeafIndex >= treeVariables.leafCount0) scaleMult += 1.0;
 		//if (currentLeafIndex % 2 == 0) scaleMult += 1.0;
@@ -380,7 +383,7 @@ void main()
 		float leafScale = leafLodScale + (Random11(leafRan) * leafLodScale) * 0.25;
 		float leafRotationX = Random01(leafScale + leafRan);
 		float leafRotationY = Random01(leafScale * 2.0 + leafRan * 0.5);
-		float leafColor = 0.5 + Random01(leafScale * 0.5 + leafRan * 2.0 + leafRotationX + leafRotationY) * 0.5;
+		float leafColor = 0.75 + Random01(leafScale * 0.5 + leafRan * 2.0 + leafRotationX + leafRotationY) * 0.25;
 
 		rotatedPosition -= viewPosition;
 			
@@ -389,6 +392,7 @@ void main()
 		leavesData[leafIndex].posxz = packHalf2x16(rotatedPosition.xz);
 		leavesData[leafIndex].posyroty = packHalf2x16(vec2(rotatedPosition.y, leafRotationY));
 		leavesData[leafIndex].scalxrotx = packHalf2x16(vec2(leafScale * scale, leafRotationX));
-		leavesData[leafIndex].colx = packHalf2x16(vec2(leafColor, 0.0));
+		leavesData[leafIndex].colxnormx = packHalf2x16(vec2(leafColor, rotatedNormal.x));
+		leavesData[leafIndex].normyz = packHalf2x16(vec2(rotatedNormal.y, rotatedNormal.z));
 	}
 }

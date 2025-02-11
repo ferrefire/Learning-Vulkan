@@ -7,8 +7,8 @@ struct LeafData
 	uint posxz;
 	uint posyroty;
 	uint scalxrotx;
-	uint colx;
-	//vec3 position;
+	uint colxnormx;
+	uint normyz;
 };
 
 layout(std430, set = 1, binding = 0) buffer DataBuffer

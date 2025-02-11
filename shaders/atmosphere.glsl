@@ -50,7 +50,7 @@ const vec3 mieBeta = vec3(0.01);
 //const float AH = AR - PR;
 
 const float RHS = 8.0;
-const float MHS = 1.2 * 4.0;
+const float MHS = 1.2 * 2.0;
 const vec3 RS = vec3(0.005802, 0.013558, 0.033100);
 const vec3 MS = vec3(0.003996, 0.003996, 0.003996) * 1.0;
 const vec3 ME = vec3(0.004440, 0.004440, 0.004440) * 1.0;

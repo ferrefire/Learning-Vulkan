@@ -491,7 +491,7 @@ void Terrain::PostFrame()
 		CheckTerrainOffset(nullptr);
 	}
 
-	if (Time::newTick)
+	//if (Time::newTick)
 	{
 		CheckTerrainShadowOffset();
 	}
@@ -775,10 +775,12 @@ void Terrain::CheckTerrainOffset(VkCommandBuffer commandBuffer)
 
 		updateTerrainShadows = true;
 
-		Manager::UpdateShaderVariables();
-	}
+		//Manager::UpdateShaderVariables();
 
-	if (abs(x1) >= terrainLod1Size * terrainLod1Step || abs(z1) >= terrainLod1Size * terrainLod1Step)
+		ComputeHeightMap(commandBuffer, 1);
+		ComputeHeightMap(commandBuffer, 0);
+	}
+	else if (abs(x1) >= terrainLod1Size * terrainLod1Step || abs(z1) >= terrainLod1Size * terrainLod1Step)
 	{
 		glm::vec2 newOffset = glm::vec2(Utilities::Fits(terrainLod1Size * terrainLod1Step, x1), Utilities::Fits(terrainLod1Size * terrainLod1Step, z1)) * terrainLod1Size * terrainLod1Step;
 		terrainLod1Offset += newOffset;

@@ -282,13 +282,13 @@ void Sky::Frame()
 	if (!viewComputed && transmittanceComputed && transmittanceReady && scatterComputed && scatterReady && Terrain::HeightMapsGenerated())
 	{
 		viewComputed = true;
-		ComputeView();
+		ComputeView(nullptr);
 	}
 
 	if (!aerialComputed && viewComputed && transmittanceComputed && transmittanceReady && scatterComputed && scatterReady && Terrain::HeightMapsGenerated())
 	{
 		aerialComputed = true;
-		ComputeAerial();
+		ComputeAerial(nullptr);
 	}
 
 	if (Time::newTick)
@@ -311,12 +311,12 @@ void Sky::Frame()
 	{
 		viewReady = false;
 		shouldUpdateView = false;
-		ComputeView();
+		ComputeView(nullptr);
 	}
 
 	if (aerialComputed && viewComputed && transmittanceComputed && transmittanceReady && scatterComputed && scatterReady && Terrain::HeightMapsGenerated())
 	{
-		ComputeAerial();
+		ComputeAerial(nullptr);
 	}
 }
 
@@ -362,30 +362,34 @@ void Sky::ComputeScattering()
 	scatterReady = true;
 }
 
-void Sky::ComputeView()
+void Sky::ComputeView(VkCommandBuffer commandBuffer)
 {
-	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
+	bool newBuffer = commandBuffer == nullptr;
+
+	if (newBuffer) commandBuffer = Manager::currentDevice.BeginComputeCommand();
 
 	viewPipeline.BindCompute(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, viewPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
 	viewDescriptor.Bind(commandBuffer, viewPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
 
 	vkCmdDispatch(commandBuffer, 24, 16, 1);
-	Manager::currentDevice.EndComputeCommand(commandBuffer);
+	if (newBuffer) Manager::currentDevice.EndComputeCommand(commandBuffer);
 
 	viewReady = true;
 }
 
-void Sky::ComputeAerial()
+void Sky::ComputeAerial(VkCommandBuffer commandBuffer)
 {
-	VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
+	bool newBuffer = commandBuffer == nullptr;
+
+	if (newBuffer) commandBuffer = Manager::currentDevice.BeginComputeCommand();
 
 	aerialPipeline.BindCompute(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, aerialPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
 	aerialDescriptor.Bind(commandBuffer, aerialPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
 
 	vkCmdDispatch(commandBuffer, 4, 4, 4);
-	Manager::currentDevice.EndComputeCommand(commandBuffer);
+	if (newBuffer) Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
 
 void Sky::Recompute()

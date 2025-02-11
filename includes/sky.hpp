@@ -61,7 +61,7 @@ class Sky
 		static void RenderSky(VkCommandBuffer commandBuffer);
 		static void ComputeTransmittance();
 		static void ComputeScattering();
-		static void ComputeView();
-		static void ComputeAerial();
+		static void ComputeView(VkCommandBuffer commandBuffer);
+		static void ComputeAerial(VkCommandBuffer commandBuffer);
 		static void Recompute();
 };

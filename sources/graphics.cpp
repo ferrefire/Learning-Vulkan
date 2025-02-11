@@ -321,6 +321,8 @@ void Graphics::RecordShadowCommands()
 	submitInfo.pCommandBuffers = &device.shadowCommandBuffers[Manager::currentFrame];
 	submitInfo.signalSemaphoreCount = 1;
 	submitInfo.pSignalSemaphores = &device.shadowSemaphores[Manager::currentFrame];
+	//submitInfo.signalSemaphoreCount = 0;
+	//submitInfo.pSignalSemaphores = nullptr;
 
 	//if (vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, device.inFlightFences[Manager::currentFrame]) != VK_SUCCESS)
 	if (vkQueueSubmit(device.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS)
@@ -399,9 +401,12 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 	Grass::RecordComputeCommands(commandBuffer);
 	STOP_TIMER(grassTime, false);
 
-	START_TIMER(dataTime);
-	Data::RecordComputeCommands(commandBuffer);
-	STOP_TIMER(dataTime, false);
+	//START_TIMER(dataTime); 
+	//Data::RecordComputeCommands(commandBuffer); //removeee
+	//STOP_TIMER(dataTime, false);
+
+	//Sky::ComputeView(commandBuffer);
+	//Sky::ComputeAerial(commandBuffer);
 
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
 	{
@@ -468,9 +473,9 @@ void Graphics::ComputeFrame()
 {
 	Terrain::PostFrame();
 
-	vkResetFences(device.logicalDevice, 1, &device.computeFences[0]);
-	vkResetCommandBuffer(device.computeCommandBuffers[0], 0);
-	RecordComputeCommands(device.computeCommandBuffers[0]);
+	vkResetFences(device.logicalDevice, 1, &device.computeFences[Manager::currentFrame]);
+	vkResetCommandBuffer(device.computeCommandBuffers[Manager::currentFrame], 0);
+	RecordComputeCommands(device.computeCommandBuffers[Manager::currentFrame]);
 
 	VkSubmitInfo submitInfo{};
 	VkSemaphore waitSemaphores[] = {device.cullSemaphores[Manager::currentFrame]};
@@ -484,23 +489,23 @@ void Graphics::ComputeFrame()
 	submitInfo.pWaitSemaphores = nullptr;
 	submitInfo.pWaitDstStageMask = nullptr;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &device.computeCommandBuffers[0];
+	submitInfo.pCommandBuffers = &device.computeCommandBuffers[Manager::currentFrame];
 
 	submitInfo.signalSemaphoreCount = 0;
 	submitInfo.pSignalSemaphores = nullptr;
 
-	if (vkQueueSubmit(device.computeQueue, 1, &submitInfo, device.computeFences[0]) != VK_SUCCESS)
+	if (vkQueueSubmit(device.computeQueue, 1, &submitInfo, device.computeFences[Manager::currentFrame]) != VK_SUCCESS)
 	//if (vkQueueSubmit(device.computeQueue, 1, &submitInfo, nullptr) != VK_SUCCESS)
 	{
 		std::cout << "error!!!!!!!!!!!!" << std::endl;
 		throw std::runtime_error("failed to submit compute command buffer");
 	}
 
-	vkWaitForFences(device.logicalDevice, 1, &device.computeFences[0], VK_TRUE, TIMEOUT);
+	vkWaitForFences(device.logicalDevice, 1, &device.computeFences[Manager::currentFrame], VK_TRUE, TIMEOUT);
 
 	Trees::SetData();
 	Grass::SetData();
-	Data::SetData();
+	//Data::SetData();
 }
 
 void Graphics::DrawFrame() 
@@ -690,6 +695,8 @@ void Graphics::Create()
 	Terrain::Create();
 	//Time::StopTimer(timer, "terrain");
 
+	Sky::Create();
+
 	Manager::CreateDescriptor();
 
 	//Time::StartTimer(timer);
@@ -711,7 +718,7 @@ void Graphics::Create()
 	Data::Create();
 	//Time::StopTimer(timer, "data");
 
-	Sky::Create();
+	
 
 	if (Manager::settings.screenQuad)
 	{

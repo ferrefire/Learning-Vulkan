@@ -116,22 +116,18 @@ void main()
 	vec3 finalColor = vec3(0.0);
 
 	float depth = subpassLoad(inputDepth).r;
-	float linearDepth = GetDepth(depth);
-
-	vec2 pixelPosition = inCoordinates;
-	vec3 clipSpace = vec3(pixelPosition * vec2(2.0) - vec2(1.0), 1.0);
-	vec4 hPos = inverse(variables.viewMatrix) * vec4(clipSpace, 1.0);
-	//vec3 worldPosition = hPos.xyz / hPos.w;
-	vec3 rayDirection = normalize(hPos.xyz / hPos.w - variables.viewPosition);
-	rayDirection = normalize(Rotate(rayDirection, radians(-90.0), vec3(1.0, 0.0, 0.0)));
-	vec3 rayStart = vec3(0.0, 0.0, PR + RADIUS_OFFSET + (variables.viewPosition.y - variables.terrainOffset.y) * 0.001);
-
-	float viewHeight = length(rayStart);
-
-	
 
 	if (depth == 1.0)
 	{
+		vec2 pixelPosition = inCoordinates;
+		vec3 clipSpace = vec3(pixelPosition * vec2(2.0) - vec2(1.0), 1.0);
+		vec4 hPos = inverse(variables.viewMatrix) * vec4(clipSpace, 1.0);
+		vec3 rayDirection = normalize(hPos.xyz / hPos.w - variables.viewPosition);
+		rayDirection = normalize(Rotate(rayDirection, radians(-90.0), vec3(1.0, 0.0, 0.0)));
+		vec3 rayStart = vec3(0.0, 0.0, PR + RADIUS_OFFSET + (variables.viewPosition.y - variables.terrainOffset.y) * 0.001);
+
+		float viewHeight = length(rayStart);
+
 		vec2 uv;
 		vec3 upVector = normalize(rayStart);
 		float viewAngle = acos(dot(rayDirection, upVector));
@@ -152,11 +148,13 @@ void main()
 			incomingLight += sunWithBloom(rayDirection, sunDirection);
 		}
 
-		finalColor = incomingLight * LIGHT_COLOR * 2.0;
+		finalColor = incomingLight * LIGHT_COLOR * 4.0;
 	}
 	else
 	{
 		vec3 originalColor = subpassLoad(inputColor).rgb;
+
+		float linearDepth = GetDepth(depth);
 
 		//if (linearDepth < 0.01)
 		//{
@@ -171,12 +169,16 @@ void main()
 			//else linearDepth = pow((linearDepth - 0.5) / 0.5, 2.0) * 0.5 + 0.5;
 			//float modDepth = linearDepth;
 			float modDepth = clamp(linearDepth + 0.1, 0.0, 1.0);
-			float mixDepth = clamp(linearDepth + 0.5, 0.0, 1.0);
+			float mixDepth = clamp(linearDepth + 0.25, 0.0, 1.0);
+
+			//modDepth = 1.0 - pow(1.0 - modDepth, 2.0);
 
 			vec4 aerialPerspective = texture(aerialSampler, vec3(inCoordinates, modDepth));
-			vec3 aerialColor = aerialPerspective.rgb * LIGHT_COLOR * 2.0;
+			vec3 aerialColor = aerialPerspective.rgb * LIGHT_COLOR * 4.0;
 			
-			finalColor = mix(originalColor, aerialColor, mixDepth);
+			//finalColor = mix(originalColor, aerialColor, mixDepth);
+			finalColor = mix(originalColor, aerialColor, 1.0 - aerialPerspective.a);
+			
 			//finalColor = originalColor * aerialPerspective.a + aerialColor;
 			//finalColor = aerialColor;
 			//finalColor = aerialColor + (originalColor * (1.0 - aerialDensity));

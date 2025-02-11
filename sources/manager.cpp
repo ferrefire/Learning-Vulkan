@@ -107,7 +107,7 @@ void Manager::CreateShaderVariableBuffers()
 void Manager::CreateDescriptorSetLayout()
 {
 	int i = 0;
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(7);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(8);
 	descriptorLayoutConfig[i].type = UNIFORM_BUFFER;
 	descriptorLayoutConfig[i++].stages = ALL_STAGE;
 	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
@@ -124,6 +124,8 @@ void Manager::CreateDescriptorSetLayout()
 	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[i].stages = ALL_STAGE;
 	descriptorLayoutConfig[i++].count = TERRAIN_SHADOW_CASCADES;
+	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[i++].stages = ALL_STAGE;
 	//descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
 	//descriptorLayoutConfig[i++].stages = FRAGMENT_STAGE;
 
@@ -144,7 +146,7 @@ void Manager::CreateDescriptor()
 	//Pipeline::CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
 
 	int j = 0;
-	std::vector<DescriptorConfiguration> descriptorConfig(7);
+	std::vector<DescriptorConfiguration> descriptorConfig(8);
 	descriptorConfig[j].type = UNIFORM_BUFFER;
 	descriptorConfig[j].stages = ALL_STAGE;
 	descriptorConfig[j].buffersInfo.resize(shaderVariableBuffers.size());
@@ -225,6 +227,12 @@ void Manager::CreateDescriptor()
 	//escriptorConfig[j].imageInfo.imageLayout = LAYOUT_GENERAL;
 	//escriptorConfig[j].imageInfo.imageView = Terrain::terrainShadowTextures[0].imageView;
 	//escriptorConfig[j++].imageInfo.sampler = Terrain::terrainShadowTextures[0].sampler;
+
+	descriptorConfig[j].type = IMAGE_SAMPLER;
+	descriptorConfig[j].stages = ALL_STAGE;
+	descriptorConfig[j].imageInfo.imageLayout = LAYOUT_GENERAL;
+	descriptorConfig[j].imageInfo.imageView = Sky::viewTexture.imageView;
+	descriptorConfig[j++].imageInfo.sampler = Sky::viewTexture.sampler;
 
 	globalDescriptor.Create(descriptorConfig, globalDescriptorSetLayout);
 }

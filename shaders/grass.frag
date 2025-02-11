@@ -49,6 +49,7 @@ void main()
 	vec3 bladeColor = mix(grassColor.xyz * mix(0.3, 0.5, ao), grassColor.xyz, uv.y);
 
 	vec3 terrainDiffuse = DiffuseLighting(terrainNormal, shadow);
+	//vec3 terrainDiffuse = DiffuseLightingRealistic(terrainNormal, worldPosition, shadow);
 	
 	//vec3 diffuse = clamp(terrainDiffuse * 0.9 + bladeDiffuse, vec3(0.0), lightColor);
 	//vec3 diffuse = clamp(terrainDiffuse + bladeDiffuse, vec3(0.0), lightColor);
@@ -61,6 +62,8 @@ void main()
 		vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
 		vec3 bladeSpecular = SpecularLighting(normal, viewDirection, 16);
 		vec3 terrainSpecular = SpecularLighting(terrainNormal, viewDirection, 32);
+		//vec3 bladeSpecular = SpecularLightingRealistic(normal, viewDirection, 16, worldPosition);
+		//vec3 terrainSpecular = SpecularLightingRealistic(terrainNormal, viewDirection, 32, worldPosition);
 		//combinedColor += (bladeSpecular * terrainSpecular);
 		combinedColor += (bladeSpecular * terrainSpecular) * (1.0 - shadow);
 	}

@@ -72,6 +72,14 @@ void Trees::CreateMeshes()
 	treeVariables.leafCount4 = int(floor(float(treeVariables.leafCount1) / 16.0f));
 	//std::cout << Leaves::leafCount << std::endl;
 
+	glm::vec4 sumPosition = glm::vec4(0.0);
+	for (int i = 0; i < leafPositionsTotal.size(); i++)
+	{
+		sumPosition += leafPositionsTotal[i];
+	}
+	sumPosition /= leafPositionsTotal.size();
+	Utilities::PrintVec(sumPosition);
+
 	branchConfig.resolution = 12;
 	branchConfig.minSize = 0.15;
 	branchConfig.lod = 1;

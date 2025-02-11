@@ -19,12 +19,13 @@
 
 layout(set = 0, binding = 5) uniform sampler2DShadow shadowSamplers[CASCADE_COUNT];
 layout(set = 0, binding = 6) uniform sampler2D terrainShadowSamplers[TERRAIN_CASCADE_COUNT];
+layout(set = 0, binding = 7) uniform sampler2D skyViewSampler;
 
 //const vec3 lightColor = vec3(2);
 const vec3 lightColor = vec3(1.0, 0.933, 0.89) * 2.0;
 //const vec3 lightDirection = vec3(0.25, 0.5, 0.25);
 
-const float ambient = 0.1;
+const float ambient = 0.1 * 0.5;
 const float shadowDis = 250.0;
 const float shadowDepth = shadowDis / 25000.0;
 const float shadowDepthMult = 1.0 / (shadowDis / 25000.0);
@@ -37,6 +38,7 @@ const float cascadeDistances[] = {50 / 25000.0, 175 / 25000.0, 500 / 25000.0, 90
 #include "depth.glsl"
 //#include "variables.glsl"
 //#include "heightmap.glsl"
+//#include "atmosphere.glsl"
 
 /*vec3 DiffuseLighting(vec3 normal, float shadow, float ao, float ao2, vec3 worldPos)
 {
@@ -47,6 +49,33 @@ const float cascadeDistances[] = {50 / 25000.0, 175 / 25000.0, 500 / 25000.0, 90
 	vec3 diffuse = lightColor * diffuseStrength;
 
 	return diffuse;
+}*/
+
+/*vec3 DiffuseLightingRealistic(vec3 normal, vec3 position, float shadow, float ao, float ao2)
+{
+	vec2 uv;
+	vec3 rayDirection = normal;
+	rayDirection = normalize(Rotate(rayDirection, radians(-90.0), vec3(1.0, 0.0, 0.0)));
+	vec3 sunDirection = variables.rotatedLightDirection;
+	vec3 rayStart = vec3(0.0, 0.0, PR + RADIUS_OFFSET + (position.y - variables.terrainOffset.y) * 0.001);
+	float viewHeight = length(rayStart);
+	//vec3 upVector = normalize(rayStart);
+	//float viewAngle = acos(dot(sunDirection, upVector));
+	float viewAngle = acos(0);
+	float lightAngle = acos(dot(normalize(vec3(sunDirection.xy, 0.0)), normalize(vec3(sunDirection.xy, 0.0))));
+	bool surfaceIntersect = SphereIntersectNearest(rayStart, sunDirection, PR) >= 0.0;
+	uv = ViewUV(vec2(viewAngle, lightAngle), vec2(32, 32), viewHeight, surfaceIntersect);
+	vec3 skyColor = texture(skyViewSampler, uv).rgb * LIGHT_COLOR * 4.0;
+	float diffuseStrength = mix(max(dot(normal, variables.lightDirection), ao), ao2, shadow);
+	//vec3 diffuseColor = clamp(skyColor * diffuseStrength, vec3(ao2), lightColor * 8.0);
+	vec3 diffuse = skyColor * diffuseStrength;
+
+	return (diffuse);
+}
+
+vec3 DiffuseLightingRealistic(vec3 normal, vec3 position, float shadow)
+{
+	return (DiffuseLightingRealistic(normal, position, shadow, ambient, ambient));
 }*/
 
 vec3 DiffuseLighting(vec3 normal, float shadow, float ao, float ao2)
@@ -71,6 +100,29 @@ vec3 DiffuseLighting(vec3 normal)
 {
 	return DiffuseLighting(normal, 0.0, ambient);
 }
+
+/*vec3 SpecularLightingRealistic(vec3 normal, vec3 viewDirection, float shininess, vec3 position)
+{
+	vec2 uv;
+	vec3 rayDirection = normal;
+	rayDirection = normalize(Rotate(rayDirection, radians(-90.0), vec3(1.0, 0.0, 0.0)));
+	vec3 sunDirection = variables.rotatedLightDirection;
+	vec3 rayStart = vec3(0.0, 0.0, PR + RADIUS_OFFSET + (position.y - variables.terrainOffset.y) * 0.001);
+	float viewHeight = length(rayStart);
+	//vec3 upVector = normalize(rayStart);
+	//float viewAngle = acos(dot(sunDirection, upVector));
+	float viewAngle = acos(0);
+	float lightAngle = acos(dot(normalize(vec3(sunDirection.xy, 0.0)), normalize(vec3(sunDirection.xy, 0.0))));
+	bool surfaceIntersect = SphereIntersectNearest(rayStart, sunDirection, PR) >= 0.0;
+	uv = ViewUV(vec2(viewAngle, lightAngle), vec2(32, 32), viewHeight, surfaceIntersect);
+	vec3 skyColor = texture(skyViewSampler, uv).rgb * LIGHT_COLOR * 4.0;
+
+	vec3 halfwayDirection = normalize(variables.lightDirection + viewDirection);
+	float specular = pow(max(dot(normal, halfwayDirection), 0.0), shininess);
+	vec3 specularColor = skyColor * specular;
+
+	return specularColor;
+}*/
 
 vec3 SpecularLighting(vec3 normal, vec3 viewDirection, float shininess)
 {

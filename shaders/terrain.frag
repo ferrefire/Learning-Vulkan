@@ -222,6 +222,7 @@ void main()
 	//float shadow = GetCascadedShadow(shadowPositions, depth);
 
 	vec3 diffuse = DiffuseLighting(terrainNormal, shadow);
+	//vec3 diffuse = DiffuseLightingRealistic(terrainNormal, inPosition, shadow);
 	
 	//vec4 shadowSpace = variables.shadowProjection * variables.shadowView * vec4(inPosition, 1.0);
 

@@ -19,8 +19,9 @@ struct LeafData
 	uint32_t posxz;
 	uint32_t posyroty;
 	uint32_t scalxrotx;
-	uint32_t colx;
-	//glm::vec3 position;
+	uint32_t colxnormx;
+	uint32_t normyz;
+	//alignas(16) glm::vec4 normal;
 };
 
 class Leaves

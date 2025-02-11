@@ -11,8 +11,10 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
+	discard;
     //float val = texture(textureSampler, inCoordinates).r;
     //vec3 val = texture(textureSampler, inCoordinates).rgb;
+
 	int xi = int(floor(inCoordinates.x / 0.125));
 	float x = (inCoordinates.x - (xi * 0.125)) * 8.0;
 	int yi = int(floor(inCoordinates.y / 0.25));
@@ -22,6 +24,7 @@ void main()
 	//uv = vec3(inCoordinates, 0.0);
     vec3 val = texture(textureSampler, uv).rgb;
     //vec3 val = vec3(texture(textureSampler, uv).a);
+
     //outColor = vec4(GetDepth(val));
 
 	//{-1, -1, -1, 1}, { 1, -1, -1, 1}, { 1,  1, -1, 1}, {-1,  1, -1, 1},
