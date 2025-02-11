@@ -47,9 +47,9 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 //const float spacing = 50;
 //const float spacingMult = 0.02;
 
-const float treeChance = 0.325;
-const float treeChanceRandomness = 0.25;
-const float treeChanceScale = 25.0;
+const float treeChance = 0.25;
+const float treeChanceRandomness = 0.2;
+const float treeChanceScale = 35.0;
 const int treeChanceLayers = 2;
 
 #include "variables.glsl"
@@ -92,7 +92,7 @@ void main()
 	float noiseVal = GenerateNoise(uv * treeChanceScale, treeChanceLayers);
 	uint life = 1;
 
-	ran = random(vec2(ran, index));
+	float lifeRan = random(vec2(ix + iz, index));
 
 	if (noiseVal > treeChance + (ran * 2.0 - 1.0) * treeChanceRandomness)
 		life = 0;
