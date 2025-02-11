@@ -51,7 +51,7 @@ void Trees::CreateMeshes()
 
 	BranchConfiguration branchConfig;
 	branchConfig.main = true;
-	branchConfig.splitCount = 3;
+	branchConfig.splitCount = 4;
 	//branchConfig.resolution = 32;
 	branchConfig.resolution = 24;
 	//branchConfig.blendRange = 8;
@@ -70,7 +70,7 @@ void Trees::CreateMeshes()
 	treeVariables.leafCount2 = int(floor(float(treeVariables.leafCount1) / 2.0f));
 	treeVariables.leafCount3 = int(floor(float(treeVariables.leafCount1) / 8.0f));
 	treeVariables.leafCount4 = int(floor(float(treeVariables.leafCount1) / 16.0f));
-	//std::cout << Leaves::leafCount << std::endl;
+	std::cout << "leaf count: " << treeVariables.leafCountTotal << std::endl;
 
 	glm::vec4 sumPosition = glm::vec4(0.0);
 	for (int i = 0; i < leafPositionsTotal.size(); i++)
@@ -270,7 +270,7 @@ void Trees::CreateBuffers()
 	}
 
 	BufferConfiguration leafPositionsConfiguration;
-	leafPositionsConfiguration.size = sizeof(glm::vec4) * 5000;
+	leafPositionsConfiguration.size = sizeof(glm::vec4) * treeVariables.leafCountTotal;
 	leafPositionsConfiguration.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 	leafPositionsConfiguration.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 	//leafPositionsConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -475,7 +475,7 @@ void Trees::CreateComputeRenderDescriptor()
 	descriptorConfig[i].stages = COMPUTE_STAGE;
 	descriptorConfig[i].buffersInfo.resize(1);
 	descriptorConfig[i].buffersInfo[0].buffer = leafPositionsBuffer.buffer;
-	descriptorConfig[i].buffersInfo[0].range = sizeof(glm::vec4) * 5000;
+	descriptorConfig[i].buffersInfo[0].range = sizeof(glm::vec4) * treeVariables.leafCountTotal;
 	descriptorConfig[i].buffersInfo[0].offset = 0;
 	i++;
 
@@ -647,7 +647,7 @@ void Trees::RecordComputeCommands(VkCommandBuffer commandBuffer)
 
 void Trees::RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade)
 {
-	if (cascade > 2) return;
+	if (cascade > 3) return;
 
 	shadowPipeline.BindGraphics(commandBuffer);
 
@@ -743,9 +743,9 @@ void Trees::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 	{
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, sizeof(uint32_t), sizeof(lod2), &lod2);
 
-		//treeLod0Mesh.Bind(commandBuffer);
-		//vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
-		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod0Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod0Count, 0, 0, 0);
+		treeLod0Mesh.Bind(commandBuffer);
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod0Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod0Count, 0, 0, 0);
 
 		treeLod1Mesh.Bind(commandBuffer);
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
@@ -755,9 +755,9 @@ void Trees::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod2), &lod2);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod2Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod2Count, 0, 0, 0);
 
-		//treeLod3Mesh.Bind(commandBuffer);
-		//vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod3), &lod3);
-		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod3Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod3Count, 0, 0, 0);
+		treeLod3Mesh.Bind(commandBuffer);
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod3), &lod3);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod3Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod3Count, 0, 0, 0);
 	}
 	else if (cascade == 3)
 	{

@@ -23,9 +23,11 @@ layout(std430, set = 1, binding = 0) buffer DataBuffer
 layout(location = 0) in vec3 inPosition;
 
 layout(location = 0) out vec3 worldPosition;
-layout(location = 1) out vec3 normal;
-layout(location = 2) out vec3 leafColor;
-layout(location = 3) out vec4 shadowPositions[CASCADE_COUNT];
+layout(location = 1) out vec3 localPosition;
+layout(location = 2) out vec3 globalNormal;
+layout(location = 3) out vec3 localNormal;
+layout(location = 4) out vec3 leafColor;
+layout(location = 5) out vec4 shadowPositions[CASCADE_COUNT];
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -56,7 +58,6 @@ void main()
 	color = colxnormx.x;
 	vec2 normyz = unpackHalf2x16(data[dataIndex].normyz);
 	vec3 normalPos = vec3(colxnormx.y, normyz.x, normyz.y);
-	
 
 	position += variables.viewPosition;
 
@@ -64,14 +65,18 @@ void main()
 	mat4 rotationMatrix = GetRotationMatrix(radians(rotation.y), vec3(0.0, 1.0, 0.0));
 	rotationMatrix = rotationMatrix * GetRotationMatrix(radians(rotation.x * 0.5), vec3(1.0, 0.0, 0.0));
     objectPosition = (rotationMatrix * vec4(objectPosition, 1.0)).xyz;
-	//normal = (rotationMatrix * vec4(vec3(0, 1, 0), 1.0)).xyz;
-	normal = normalize((normalPos + objectPosition) - treeCenter);
+	localNormal = (rotationMatrix * vec4(vec3(0, 1, 0), 1.0)).xyz;
+	globalNormal = normalize((normalPos + objectPosition) - treeCenter);
+	//normal = mix(localNormal, globalNormal, 0.5);
 
+	localPosition = normalPos;
 	worldPosition = ObjectToWorld(objectPosition, mat4(1)) + position;
 
 	for (int i = 0; i < CASCADE_COUNT; i++) shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
 
-	leafColor = vec3(0.0916, 0.1, 0.0125) * color * 0.75;
+	//leafColor = vec3(0.0916, 0.1, 0.0125) * color * 0.75;
+	//leafColor = vec3(0.0916, 0.1, 0.0125);
+	leafColor = vec3(color);
 
 	gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
 }

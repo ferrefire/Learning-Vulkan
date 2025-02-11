@@ -347,7 +347,7 @@ void main()
 			leafIndex += int(ceil(float(i) / 2.0));
 			leafIndex += (treeVariables.treeLod0RenderCount * treeVariables.leafCountTotal);
 			leafIndex += (treeVariables.treeLod1RenderCount * treeVariables.leafCount1);
-			scaleMult = 3.0 + 1.0;
+			scaleMult = 3.0;
 		}
 		else if (lod == 3)
 		{
@@ -380,11 +380,11 @@ void main()
 
 		leafRan = length(leafPositions[currentLeafIndex].xyz);
 		//float leafLodScale = (currentLeafIndex >= treeVariables.leafCount0 ? (currentLeafIndex % 2 == 0 ? 3.0 : 2.0) : 1.0);
-		float leafLodScale = scaleMult *= 1.25;
+		float leafLodScale = scaleMult;
 		float leafScale = leafLodScale + (Random11(leafRan) * leafLodScale) * 0.25;
 		float leafRotationX = Random01(leafScale + leafRan);
 		float leafRotationY = Random01(leafScale * 2.0 + leafRan * 0.5);
-		float leafColor = 0.5 + Random01(leafScale * 0.5 + leafRan * 2.0 + leafRotationX + leafRotationY) * 0.5;
+		float leafColor = 1.0 + (Random01(leafScale * 0.5 + leafRan * 2.0 + leafRotationX + leafRotationY) - 0.5);
 
 		rotatedPosition -= viewPosition;
 			
