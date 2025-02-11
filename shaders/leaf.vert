@@ -31,6 +31,9 @@ layout(location = 3) out vec4 shadowPositions[CASCADE_COUNT];
 #include "functions.glsl"
 #include "transformation.glsl"
 
+const vec3 treeCenter = vec3(-3.05, 47.22, -5.725);
+//const vec3 treeCenter = vec3(0.0, 40.0, 0.0);
+
 void main()
 {
 	vec3 position = vec3(0);
@@ -52,7 +55,8 @@ void main()
 	vec2 colxnormx = unpackHalf2x16(data[dataIndex].colxnormx);
 	color = colxnormx.x;
 	vec2 normyz = unpackHalf2x16(data[dataIndex].normyz);
-	normal = vec3(colxnormx.y, normyz.x, normyz.y);
+	vec3 normalPos = vec3(colxnormx.y, normyz.x, normyz.y);
+	
 
 	position += variables.viewPosition;
 
@@ -61,6 +65,7 @@ void main()
 	rotationMatrix = rotationMatrix * GetRotationMatrix(radians(rotation.x * 0.5), vec3(1.0, 0.0, 0.0));
     objectPosition = (rotationMatrix * vec4(objectPosition, 1.0)).xyz;
 	//normal = (rotationMatrix * vec4(vec3(0, 1, 0), 1.0)).xyz;
+	normal = normalize((normalPos + objectPosition) - treeCenter);
 
 	worldPosition = ObjectToWorld(objectPosition, mat4(1)) + position;
 
