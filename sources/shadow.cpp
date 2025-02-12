@@ -17,6 +17,8 @@ void Shadow::Create()
 	//GetShadowProjection(0);
 	//GetShadowProjection(1);
 
+	cascadeCount = SHADOW_CASCADE_COUNT;
+
 	shadowCascadeViews.resize(cascadeCount);
 	shadowCascadeProjections.resize(cascadeCount);
 	shadowCascadeTransformations.resize(cascadeCount);

@@ -38,7 +38,7 @@ struct LeafData
 	uint normyz;
 };
 
-layout(std430, set = 1, binding = 0) buffer DataBuffer
+layout(std430, set = 1, binding = 0) readonly restrict buffer DataBuffer
 {
 	TreeData data[];
 };
@@ -71,12 +71,13 @@ layout(set = 1, binding = 3) uniform TreeVariables
 	uint treeTotalRenderCount;
 	float spacing;
 	float spacingMult;
-	uint leafCountTotal;
-	uint leafCount0;
-	uint leafCount1;
-	uint leafCount2;
-	uint leafCount3;
-	uint leafCount4;
+	//uint leafCountTotal;
+	//uint leafCount0;
+	//uint leafCount1;
+	//uint leafCount2;
+	//uint leafCount3;
+	//uint leafCount4;
+	vec4 leafCounts[5];
 } treeVariables;
 
 layout(std430, set = 1, binding = 4) buffer LeavesBuffer
@@ -84,7 +85,7 @@ layout(std430, set = 1, binding = 4) buffer LeavesBuffer
 	LeafData leavesData[];
 };
 
-layout(std430, set = 1, binding = 5) buffer LeafPositionsBuffer
+layout(std430, set = 1, binding = 5) readonly restrict buffer LeafPositionsBuffer
 {
 	vec4 leafPositions[];
 };
@@ -169,32 +170,16 @@ void main()
 		//atomicExchange(countData.leafCount, 0);
 	}
 
-	//vec2 flooredViewPosition = vec2(0);
-	//flooredViewPosition.x = round((variables.viewPosition.x) * treeVariables.spacingMult);
-	//flooredViewPosition.y = round((variables.viewPosition.z) * treeVariables.spacingMult);
 	vec3 viewPosition = variables.viewPosition;
 	vec2 flooredViewPosition = floor(viewPosition.xz * treeVariables.spacingMult);
-
 	ivec2 ixz = ivec2(gl_GlobalInvocationID.xy) - ivec2(treeVariables.treeTotalRenderBase * 0.5);
-
-	//int ix = int(gl_GlobalInvocationID.x) - int(treeVariables.treeTotalRenderBase * 0.5);
-	//int iz = int(gl_GlobalInvocationID.y) - int(treeVariables.treeTotalRenderBase * 0.5);
-
-	//int lod = Inside(ixz);
-	//if (lod == -1) return ;
-
 	ixz += ivec2(flooredViewPosition);
-
 	vec2 worldOffset = ixz;
-
 	ixz += ivec2(floor(variables.terrainOffset.xz * treeVariables.spacingMult));
-
 	vec2 dataIndexVec = vec2(treeVariables.treeBase * 0.5) + ixz;
 
 	if (dataIndexVec.x < 0 || dataIndexVec.x > treeVariables.treeBase || dataIndexVec.y < 0 || dataIndexVec.y > treeVariables.treeBase) return ;
-
 	uint dataIndex = uint(floor(dataIndexVec.x * treeVariables.treeBase + dataIndexVec.y));
-
 	if (data[dataIndex].life == 0) return;
 
 	vec3 offset = vec3(0);
@@ -210,20 +195,17 @@ void main()
 	float z = worldOffset.y * treeVariables.spacing + offset.z;
 	float y = GetTerrainHeight(vec2(x, z)) - 1.0;
 	vec3 worldPosition = vec3(x, y, z);
-
 	float viewDistance = SquaredDistance(worldPosition + vec3(0, 30, 0), viewPosition);
 
 	float lodInter = InsideWorldInter(viewDistance);
 	if (lodInter == -1) return ;
 	int lod = int(floor(lodInter));
 	if (lod == -1) return ;
-
 	float viewFactor = 50.0 / float(lod + 1);
 	float inDis = 1.75;
 	if (lod == 0) inDis = 1.35;
 	if (lod == 1) inDis = 1.8;
 	if (lod == 2) inDis = 1.5;
-	//if (lod == 3) inDis = 1.25;
 
 	if (lod > 2)
 	{
@@ -247,36 +229,9 @@ void main()
 			lod = 1;
 		}
 	}
-	//else if (lod > 0)
-	//{
-	//	if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0) return;
-	//}
-	//else
-	//{
-	//	float checkDis = frustumCheckDis;
-	//	if (lod <= 1) checkDis *=  (1.0 + (1.0 - clamp(dot(variables.viewDirection, variables.lightDirection), 0.0, 1.0)) * 3.0);
-	//	if (viewDistance >= checkDis)
-	//	{
-	//		if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0) return;
-	//	}
-	//}
-	//else if (AreaInView(worldPosition + vec3(0, viewFactor, 0), vec2(viewFactor * 0.75, viewFactor), inDis) == 0) return;
-
-	//float occludeFactor = 50.0 / float(clamp(lod, 1, 4));
-	//if (AreaOccluded(worldPosition + vec3(0, occludeFactor, 0), vec2(occludeFactor * 0.25, occludeFactor), 2.0, 0.005) == 1) return;
-
-	//if (lod > 1)
-	//{
-	//	if (Occluded(WorldToCull(worldPosition), 0.005) == 1) return;
-	//}
 	if (Occluded(WorldToCull(worldPosition + vec3(0, 60, 0)), 0.005) == 1) return;
 
-	//float scale = 1.0;
-	//float color = 1.0;
-
 	uint index = 0;
-
-	//rotation = 0;
 	uint indexOffset = 0;
 
 	if (lod == 0)
@@ -308,27 +263,69 @@ void main()
 	renderData[index + indexOffset].posyroty = packHalf2x16(vec2(worldPosition.y - viewPosition.y, rotation));
 	renderData[index + indexOffset].scaxcoly = packHalf2x16(vec2(scale, color));
 
-	//renderData[index].position = worldPosition - viewPosition;
-	//renderData[index].rotscacol = vec3(rotation, scale, color);
+	if (lod > 4) return;
 
-	//if (lod > -1) return;
+	uint leafDataIndex = index * uint(treeVariables.leafCounts[lod].x) + uint(treeVariables.leafCounts[lod].y);
+	int leafIndex = 0;
+	mat4 rotationMatrix = GetRotationMatrix(radians(rotation * 360.0), vec3(0.0, 1.0, 0.0));
+
+	while (leafIndex < uint(treeVariables.leafCounts[0].x))
+	{
+		vec3 leafLocalPosition = (rotationMatrix * vec4(leafPositions[leafIndex].xyz * scale, 1.0)).xyz;
+		vec3 leafWorldPosition = worldPosition + leafLocalPosition - viewPosition;
+
+		float scaleMult = treeVariables.leafCounts[lod].w;
+		float lodDis = lodInter - lod;
+		if (lod < 4 && lodDis > 0.75 && leafIndex % int(treeVariables.leafCounts[lod + 1].z) == 0)
+		{
+			scaleMult = mix(scaleMult, treeVariables.leafCounts[lod + 1].w, (lodDis - 0.75) * 4.0);
+		}
+		float leafLodScale = 2.0 + scaleMult;
+		if (lod < 4 && lodDis > 0.75 && leafIndex % int(treeVariables.leafCounts[lod + 1].z) != 0)
+		{
+			leafLodScale = mix(leafLodScale, 0.0, (lodDis - 0.75) * 4.0);
+		}
+		float leafRan = length(leafPositions[leafIndex].xyz);
+		float leafScale = leafLodScale + (Random11(leafRan) * leafLodScale) * 0.25;
+		float leafRotationX = Random01(leafIndex * 0.001 + leafRan);
+		float leafRotationY = Random01(leafIndex * 0.001 * 2.0 + leafRan * 0.5);
+		float leafColor = 1.0 + (Random01(leafIndex * 0.001 * 0.5 + leafRan * 2.0 + leafRotationX + leafRotationY) - 0.5);
+
+		LeafData leafData;
+		leafData.posxz = packHalf2x16(leafWorldPosition.xz);
+		leafData.posyroty = packHalf2x16(vec2(leafWorldPosition.y, leafRotationY));
+		leafData.scalxrotx = packHalf2x16(vec2(leafScale * scale, leafRotationX));
+		leafData.colxnormx = packHalf2x16(vec2(leafColor, leafLocalPosition.x));
+		leafData.normyz = packHalf2x16(vec2(leafLocalPosition.y, leafLocalPosition.z));
+		leavesData[leafDataIndex] = leafData;
+
+		leafDataIndex++;
+		leafIndex += int(treeVariables.leafCounts[lod].z);
+	}
+
+	/*
+
+	if (lod > -1) return;
 	if (lod > 4) return;
 
 	mat4 rotationMatrix = GetRotationMatrix(radians(rotation * 360.0), vec3(0.0, 1.0, 0.0));
 	vec3 rotatedPosition = vec3(0);
 	uint leafIndex = 0;
 	float leafRan = 0;
-	int leafCountOffset = lod == 0 ? 0 : int(treeVariables.leafCount0); 
+	//int leafCountOffset = lod == 0 ? 0 : int(treeVariables.leafCount0); 
 	int currentLeafIndex = 0;
-	float disMult = 1.0 + clamp(lodInter - 1.0, 0.0, 2.0);
-	for (int i = 0; (i + leafCountOffset) < treeVariables.leafCountTotal; i++)
+	//float disMult = 1.0 + clamp(lodInter - 1.0, 0.0, 2.0);
+	//for (int i = 0; (i + leafCountOffset) < treeVariables.leafCountTotal; i++)
+	while (leafIndex < treeVariables.leafCountTotal)
 	{
 		float scaleMult = 1.0;
-		currentLeafIndex = i + leafCountOffset;
+		//currentLeafIndex = i + leafCountOffset;
 		//vec3 rotatedNormal = (rotationMatrix * vec4(normalize(leafPositions[currentLeafIndex].xyz - treeCenter), 0.0)).xyz;
-		vec3 rotatedNormal = (rotationMatrix * vec4(leafPositions[currentLeafIndex].xyz * scale, 1.0)).xyz;
-		rotatedPosition = (worldPosition + (rotationMatrix * vec4(leafPositions[currentLeafIndex].xyz * scale, 1.0)).xyz);
-		if (lod == 0)
+		vec3 rotatedLeafPosition = (rotationMatrix * vec4(leafPositions[leafIndex].xyz * scale, 1.0)).xyz;
+		vec3 rotatedNormal = rotatedLeafPosition;
+		rotatedPosition = worldPosition + rotatedLeafPosition;
+
+		/*if (lod == 0)
 		{
 			leafIndex = index * treeVariables.leafCountTotal + i;
 			if (i >= treeVariables.leafCount0) scaleMult = 2.0;
@@ -379,21 +376,28 @@ void main()
 		//if (InView(rotatedPosition, 0) == 0) continue;
 
 		leafRan = length(leafPositions[currentLeafIndex].xyz);
-		//float leafLodScale = (currentLeafIndex >= treeVariables.leafCount0 ? (currentLeafIndex % 2 == 0 ? 3.0 : 2.0) : 1.0);
 		float leafLodScale = scaleMult;
 		float leafScale = leafLodScale + (Random11(leafRan) * leafLodScale) * 0.25;
 		float leafRotationX = Random01(leafScale + leafRan);
 		float leafRotationY = Random01(leafScale * 2.0 + leafRan * 0.5);
 		float leafColor = 1.0 + (Random01(leafScale * 0.5 + leafRan * 2.0 + leafRotationX + leafRotationY) - 0.5);
-
 		rotatedPosition -= viewPosition;
-			
-		//leafIndex = atomicAdd(countData.leafCount, 1);
 
-		leavesData[leafIndex].posxz = packHalf2x16(rotatedPosition.xz);
-		leavesData[leafIndex].posyroty = packHalf2x16(vec2(rotatedPosition.y, leafRotationY));
-		leavesData[leafIndex].scalxrotx = packHalf2x16(vec2(leafScale * scale, leafRotationX));
-		leavesData[leafIndex].colxnormx = packHalf2x16(vec2(leafColor, rotatedNormal.x));
-		leavesData[leafIndex].normyz = packHalf2x16(vec2(rotatedNormal.y, rotatedNormal.z));
+		leafRan = length(leafPositions[leafIndex].xyz);
+		float leafLodScale = lod + 1;
+		float leafScale = leafLodScale + (Random11(leafRan) * leafLodScale) * 0.25;
+		float leafRotationX = Random01(leafScale + leafRan);
+		float leafRotationY = Random01(leafScale * 2.0 + leafRan * 0.5);
+		float leafColor = 1.0 + (Random01(leafScale * 0.5 + leafRan * 2.0 + leafRotationX + leafRotationY) - 0.5);
+		rotatedPosition -= viewPosition;
+
+		int dataIndex = index * treeVariables.leafCount + leafIndex;
+
+		leavesData[dataIndex].posxz = packHalf2x16(rotatedPosition.xz);
+		leavesData[dataIndex].posyroty = packHalf2x16(vec2(rotatedPosition.y, leafRotationY));
+		leavesData[dataIndex].scalxrotx = packHalf2x16(vec2(leafScale * scale, leafRotationX));
+		leavesData[dataIndex].colxnormx = packHalf2x16(vec2(leafColor, rotatedNormal.x));
+		leavesData[dataIndex].normyz = packHalf2x16(vec2(rotatedNormal.y, rotatedNormal.z));
 	}
+	*/
 }

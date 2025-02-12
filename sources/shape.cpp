@@ -90,10 +90,13 @@ void Shape::SetShape(int type, int resolution)
 
 		if (resolution == 1)
 		{
-			AddPosition(glm::vec3(-0.25f, -0.25f, 0.0f));
-			AddPosition(glm::vec3(0.25f, 0.25f, 0.0f));
-			AddPosition(glm::vec3(0.5f, -0.5f, 0.0f));
-			AddPosition(glm::vec3(-0.5f, 0.5f, 0.0f));
+			float height = 0.25f;
+			float width = 0.5f;
+
+			AddPosition(glm::vec3(-height, -height, 0.0f));
+			AddPosition(glm::vec3(height, height, 0.0f));
+			AddPosition(glm::vec3(width, -width, 0.0f));
+			AddPosition(glm::vec3(-width, width, 0.0f));
 
 			Rotate(45.0f, glm::vec3(0, 0, 1));
 

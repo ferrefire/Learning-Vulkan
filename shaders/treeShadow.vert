@@ -34,12 +34,13 @@ layout(set = 1, binding = 1) uniform TreeVariables
 	uint treeTotalRenderCount;
 	float spacing;
 	float spacingMult;
-	uint leafCountTotal;
-	uint leafCount0;
-	uint leafCount1;
-	uint leafCount2;
-	uint leafCount3;
-	uint leafCount4;
+	//uint leafCountTotal;
+	//uint leafCount0;
+	//uint leafCount1;
+	//uint leafCount2;
+	//uint leafCount3;
+	//uint leafCount4;
+	vec4 leafCounts[5];
 } treeVariables;
 
 layout(push_constant, std430) uniform PushConstants

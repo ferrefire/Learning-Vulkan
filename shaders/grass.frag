@@ -24,6 +24,9 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
+	//outColor = vec4(1.0);
+	//return;
+
 	vec3 normal = normalize(objectNormal);
 	vec3 terrainNormal = normalize(terrainNormal);
 	float depth = GetDepth(gl_FragCoord.z);

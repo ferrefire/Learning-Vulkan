@@ -60,24 +60,72 @@ void Trees::CreateMeshes()
 	GenerateTrunkMesh(treeLod0Mesh, branchConfig);
 	treeLod0Mesh.Create();
 
-	leafPositionsTotal.reserve(leafPositions0.size() + leafPositions1.size());
-	leafPositionsTotal.insert(leafPositionsTotal.end(), leafPositions0.begin(), leafPositions0.end());
-	leafPositionsTotal.insert(leafPositionsTotal.end(), leafPositions1.begin(), leafPositions1.end());
+	//leafPositionsTotal.reserve(leafPositions0.size() + leafPositions1.size());
+	//leafPositionsTotal.insert(leafPositionsTotal.end(), leafPositions0.begin(), leafPositions0.end());
+	//leafPositionsTotal.insert(leafPositionsTotal.end(), leafPositions1.begin(), leafPositions1.end());
+	//treeVariables.leafCountTotal = leafPositionsTotal.size();
+	//treeVariables.leafCount0 = leafPositions0.size();
+	//treeVariables.leafCount1 = leafPositions1.size();
+	//treeVariables.leafCount2 = int(floor(float(treeVariables.leafCount1) / 2.0f));
+	//treeVariables.leafCount3 = int(floor(float(treeVariables.leafCount1) / 8.0f));
+	//treeVariables.leafCount4 = int(floor(float(treeVariables.leafCount1) / 16.0f));
 
-	treeVariables.leafCountTotal = leafPositionsTotal.size();
-	treeVariables.leafCount0 = leafPositions0.size();
-	treeVariables.leafCount1 = leafPositions1.size();
-	treeVariables.leafCount2 = int(floor(float(treeVariables.leafCount1) / 2.0f));
-	treeVariables.leafCount3 = int(floor(float(treeVariables.leafCount1) / 8.0f));
-	treeVariables.leafCount4 = int(floor(float(treeVariables.leafCount1) / 16.0f));
-	std::cout << "leaf count: " << treeVariables.leafCountTotal << std::endl;
+	//treeVariables.leafCountTotal = leafPositions.size();
+	//treeVariables.leafCount0 = int(floor(float(treeVariables.leafCountTotal) / 2.0f));
+	//treeVariables.leafCount1 = int(floor(float(treeVariables.leafCountTotal) / 4.0f));
+	//treeVariables.leafCount2 = int(floor(float(treeVariables.leafCountTotal) / 8.0f));
+	//treeVariables.leafCount3 = int(floor(float(treeVariables.leafCountTotal) / 16.0f));
+	//treeVariables.leafCount4 = int(floor(float(treeVariables.leafCountTotal) / 32.0f));
+
+	treeVariables.leafCounts[0].x = leafPositions.size();
+	treeVariables.leafCounts[0].y = 0;
+	treeVariables.leafCounts[0].z = 1;
+	treeVariables.leafCounts[0].w = 1;
+
+	treeVariables.leafCounts[1].x = int(floor(float(treeVariables.leafCounts[0].x) / 2.0f));
+	treeVariables.leafCounts[1].y = treeLod0RenderCount * treeVariables.leafCounts[0].x;
+	treeVariables.leafCounts[1].z = 2;
+	treeVariables.leafCounts[1].w = 2;
+
+	treeVariables.leafCounts[2].x = int(floor(float(treeVariables.leafCounts[0].x) / 4.0f));
+	treeVariables.leafCounts[2].y = treeLod1RenderCount * treeVariables.leafCounts[1].x +
+		treeVariables.leafCounts[1].y;
+	treeVariables.leafCounts[2].z = 4;
+	treeVariables.leafCounts[2].w = 3;
+
+	treeVariables.leafCounts[3].x = int(floor(float(treeVariables.leafCounts[0].x) / 16.0f));
+	treeVariables.leafCounts[3].y = treeLod2RenderCount * treeVariables.leafCounts[2].x +
+		treeVariables.leafCounts[2].y;
+	treeVariables.leafCounts[3].z = 16;
+	treeVariables.leafCounts[3].w = 12;
+
+	treeVariables.leafCounts[4].x = int(floor(float(treeVariables.leafCounts[0].x) / 64.0f));
+	treeVariables.leafCounts[4].y = treeLod3RenderCount * treeVariables.leafCounts[3].x +
+		treeVariables.leafCounts[3].y;
+	treeVariables.leafCounts[4].z = 64;
+	treeVariables.leafCounts[4].w = 24;
+
+	totalLeafCount = (treeLod4RenderCount * treeVariables.leafCounts[4].x) + treeVariables.leafCounts[4].y;
+
+	std::cout << "total leaf count: " << totalLeafCount << std::endl;
+	std::cout << "lod 0 leaf count: " << treeVariables.leafCounts[0].x << std::endl;
+	std::cout << "lod 1 leaf count: " << treeVariables.leafCounts[1].x << std::endl;
+	std::cout << "lod 2 leaf count: " << treeVariables.leafCounts[2].x << std::endl;
+	std::cout << "lod 3 leaf count: " << treeVariables.leafCounts[3].x << std::endl;
+	std::cout << "lod 4 leaf count: " << treeVariables.leafCounts[4].x << std::endl << std::endl;
+
+	std::cout << "lod 0 total leaf count: " << treeVariables.leafCounts[0].x * treeLod0RenderCount << std::endl;
+	std::cout << "lod 1 total leaf count: " << treeVariables.leafCounts[1].x * treeLod1RenderCount << std::endl;
+	std::cout << "lod 2 total leaf count: " << treeVariables.leafCounts[2].x * treeLod2RenderCount << std::endl;
+	std::cout << "lod 3 total leaf count: " << treeVariables.leafCounts[3].x * treeLod3RenderCount << std::endl;
+	std::cout << "lod 4 total leaf count: " << treeVariables.leafCounts[4].x * treeLod4RenderCount << std::endl << std::endl;
 
 	glm::vec4 sumPosition = glm::vec4(0.0);
-	for (int i = 0; i < leafPositionsTotal.size(); i++)
+	for (int i = 0; i < leafPositions.size(); i++)
 	{
-		sumPosition += leafPositionsTotal[i];
+		sumPosition += leafPositions[i];
 	}
-	sumPosition /= leafPositionsTotal.size();
+	sumPosition /= leafPositions.size();
 	Utilities::PrintVec(sumPosition);
 
 	branchConfig.resolution = 12;
@@ -270,13 +318,13 @@ void Trees::CreateBuffers()
 	}
 
 	BufferConfiguration leafPositionsConfiguration;
-	leafPositionsConfiguration.size = sizeof(glm::vec4) * treeVariables.leafCountTotal;
+	leafPositionsConfiguration.size = sizeof(glm::vec4) * treeVariables.leafCounts[0].x;
 	leafPositionsConfiguration.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 	leafPositionsConfiguration.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 	//leafPositionsConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	leafPositionsConfiguration.mapped = false;
 
-	leafPositionsBuffer.Create(leafPositionsTotal.data(), leafPositionsConfiguration);
+	leafPositionsBuffer.Create(leafPositions.data(), leafPositionsConfiguration);
 }
 
 void Trees::CreateGraphicsDescriptor()
@@ -460,12 +508,7 @@ void Trees::CreateComputeRenderDescriptor()
 	for (Buffer &buffer : Leaves::dataBuffers)
 	{
 		descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[i].buffersInfo[index].range = sizeof(LeafData) * 
-			(Trees::treeLod0RenderCount * Trees::treeVariables.leafCountTotal + 
-			Trees::treeLod1RenderCount * Trees::treeVariables.leafCount1 + 
-			Trees::treeLod2RenderCount * Trees::treeVariables.leafCount2 + 
-			Trees::treeLod3RenderCount * Trees::treeVariables.leafCount3 + 
-			Trees::treeLod4RenderCount * Trees::treeVariables.leafCount4);
+		descriptorConfig[i].buffersInfo[index].range = sizeof(LeafData) * totalLeafCount;
 		descriptorConfig[i].buffersInfo[index].offset = 0;
 		index++;
 	}
@@ -475,7 +518,7 @@ void Trees::CreateComputeRenderDescriptor()
 	descriptorConfig[i].stages = COMPUTE_STAGE;
 	descriptorConfig[i].buffersInfo.resize(1);
 	descriptorConfig[i].buffersInfo[0].buffer = leafPositionsBuffer.buffer;
-	descriptorConfig[i].buffersInfo[0].range = sizeof(glm::vec4) * treeVariables.leafCountTotal;
+	descriptorConfig[i].buffersInfo[0].range = sizeof(glm::vec4) * treeVariables.leafCounts[0].x;
 	descriptorConfig[i].buffersInfo[0].offset = 0;
 	i++;
 
@@ -572,9 +615,9 @@ void Trees::Start()
 	//treeVariables.leafCount0 = leafPositions0.size();
 	//treeVariables.leafCount1 = leafPositions1.size();
 	//for (int i = 0; i < Leaves::leafCount; i++) treeVariables.leafPositions[i] = glm::vec4(leafPositions[i], 0.0);
-	std::cout << "leaf count Total: " << treeVariables.leafCountTotal << std::endl;
-	std::cout << "leaf count 0: " << treeVariables.leafCount0 << std::endl;
-	std::cout << "leaf count 1: " << treeVariables.leafCount1 << std::endl;
+	//std::cout << "leaf count Total: " << treeVariables.leafCountTotal << std::endl;
+	//std::cout << "leaf count 0: " << treeVariables.leafCount0 << std::endl;
+	//std::cout << "leaf count 1: " << treeVariables.leafCount1 << std::endl;
 
 	treeRenderCounts.resize(Manager::settings.maxFramesInFlight);
 
@@ -647,7 +690,7 @@ void Trees::RecordComputeCommands(VkCommandBuffer commandBuffer)
 
 void Trees::RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade)
 {
-	if (cascade > 3) return;
+	if (cascade > 2) return;
 
 	shadowPipeline.BindGraphics(commandBuffer);
 
@@ -916,7 +959,7 @@ Shape BranchConfiguration::Generate()
 		glm::mat4 yRotationMatrix = Utilities::GetRotationMatrix(yAngle, glm::vec3(0, 1, 0));
 
 		// glm::mat4 rotationMatrix = Utilities::GetRotationMatrix(glm::vec3(xAngle, yAngle, 0));
-		int l = int(glm::clamp(float(resolution) / 4.0f, 1.0f, float(resolution)));
+		int l = int(glm::clamp(float(resolution) / 2.0f, 1.0f, float(resolution)));
 
 		for (int x = 0; x <= resolution; x++)
 		{
@@ -951,15 +994,15 @@ Shape BranchConfiguration::Generate()
 			int leafIndex = y % l;
 			if (leafIndex == 0 || y == resolution)
 			{
-				for (int i = 0; i < 2; i++)
+				for (int i = 0; i < 1; i++)
 				{
 					glm::vec3 leafOffset = glm::vec3(0);
 					leafOffset.x = Utilities::Random11(branchSeed + y + i);
 					leafOffset.z = Utilities::Random11(leafOffset.x * 0.5 + (branchSeed + y + i) * 2.0 + i);
 					leafOffset.y = Utilities::Random11(leafOffset.x * 2.0 + (branchSeed + y + i) * 0.5 + leafOffset.z + i);
 					glm::vec4 leafPosition = glm::vec4(branch.positions[branch.GetPositionIndex(y, 0)] + base + offset + leafOffset, 0);
-					if (i == 0) Trees::leafPositions0.push_back(leafPosition);
-					else if (i == 1) Trees::leafPositions1.push_back(leafPosition);
+					Trees::leafPositions.push_back(leafPosition);
+					//else if (i == 1) Trees::leafPositions1.push_back(leafPosition);
 				}
 			}
 		}
@@ -1089,13 +1132,13 @@ uint32_t Trees::treeCount = Trees::treeBase * Trees::treeBase;
 //uint32_t Trees::treeTotalRenderBase = Trees::treeLod3RenderBase;
 //uint32_t Trees::treeTotalRenderCount = Trees::treeTotalRenderBase * Trees::treeTotalRenderBase;
 
-uint32_t Trees::treeLod0RenderBase = 16;
+uint32_t Trees::treeLod0RenderBase = 8;
 uint32_t Trees::treeLod0RenderCount = Trees::treeLod0RenderBase * Trees::treeLod0RenderBase;
 uint32_t Trees::treeLod1RenderBase = 16;
 uint32_t Trees::treeLod1RenderCount = Trees::treeLod1RenderBase * Trees::treeLod1RenderBase - Trees::treeLod0RenderCount;
 uint32_t Trees::treeLod2RenderBase = 32;
 uint32_t Trees::treeLod2RenderCount = Trees::treeLod2RenderBase * Trees::treeLod2RenderBase - Trees::treeLod0RenderCount - Trees::treeLod1RenderCount;
-uint32_t Trees::treeLod3RenderBase = 64;
+uint32_t Trees::treeLod3RenderBase = 96;
 uint32_t Trees::treeLod3RenderCount = Trees::treeLod3RenderBase * Trees::treeLod3RenderBase - Trees::treeLod0RenderCount - Trees::treeLod1RenderCount - Trees::treeLod2RenderCount;
 uint32_t Trees::treeLod4RenderBase = 192;
 uint32_t Trees::treeLod4RenderCount = Trees::treeLod4RenderBase * Trees::treeLod4RenderBase - Trees::treeLod0RenderCount - Trees::treeLod1RenderCount - Trees::treeLod2RenderCount - Trees::treeLod3RenderCount;
@@ -1104,9 +1147,11 @@ uint32_t Trees::treeTotalRenderCount = Trees::treeTotalRenderBase * Trees::treeT
 
 std::vector<TreeCountData> Trees::treeRenderCounts;
 
-std::vector<glm::vec4> Trees::leafPositionsTotal;
-std::vector<glm::vec4> Trees::leafPositions0;
-std::vector<glm::vec4> Trees::leafPositions1;
+//std::vector<glm::vec4> Trees::leafPositionsTotal;
+//std::vector<glm::vec4> Trees::leafPositions0;
+//std::vector<glm::vec4> Trees::leafPositions1;
+
+std::vector<glm::vec4> Trees::leafPositions;
 
 Mesh Trees::treeLod0Mesh;
 Mesh Trees::treeLod1Mesh;
@@ -1135,5 +1180,6 @@ std::vector<Buffer> Trees::countBuffers;
 std::vector<Buffer> Trees::variableBuffers;
 
 TreeVariables Trees::treeVariables;
+uint Trees::totalLeafCount = 0;
 
 bool Trees::treesComputed = false;

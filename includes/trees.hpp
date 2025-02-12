@@ -96,12 +96,14 @@ struct TreeVariables
 	alignas(4) float spacing;
 	alignas(4) float spacingMult;
 
-	alignas(4) uint32_t leafCountTotal;
-	alignas(4) uint32_t leafCount0;
-	alignas(4) uint32_t leafCount1;
-	alignas(4) uint32_t leafCount2;
-	alignas(4) uint32_t leafCount3;
-	alignas(4) uint32_t leafCount4;
+	//alignas(4) uint32_t leafCountTotal;
+	//alignas(4) uint32_t leafCount0;
+	//alignas(4) uint32_t leafCount1;
+	//alignas(4) uint32_t leafCount2;
+	//alignas(4) uint32_t leafCount3;
+	//alignas(4) uint32_t leafCount4;
+
+	alignas(16) glm::vec4 leafCounts[5];
 };
 
 class Trees
@@ -128,9 +130,9 @@ class Trees
 
 		static std::vector<TreeCountData> treeRenderCounts;
 
-		static std::vector<glm::vec4> leafPositionsTotal;
-		static std::vector<glm::vec4> leafPositions0;
-		static std::vector<glm::vec4> leafPositions1;
+		static std::vector<glm::vec4> leafPositions;
+		//static std::vector<glm::vec4> leafPositions0;
+		//static std::vector<glm::vec4> leafPositions1;
 
 		static Mesh treeLod0Mesh;
 		static Mesh treeLod1Mesh;
@@ -159,6 +161,7 @@ class Trees
 		static std::vector<Buffer> variableBuffers;
 
 		static TreeVariables treeVariables;
+		static uint totalLeafCount;
 
 		static bool treesComputed;
 

@@ -17,6 +17,9 @@ set(ENABLE_OPT False)
 set(UPDATE_DEPS OFF)
 set(BUILD_TESTS OFF)
 
+#ADD_DEFINITIONS(-DGRASS_ENABLED=false)
+#ADD_DEFINITIONS(-DSHADOWS_ENABLED=false)
+
 include(FetchContent)
 
 FetchContent_Declare(

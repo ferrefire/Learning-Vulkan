@@ -412,14 +412,26 @@ float BlendCascadedShadow(vec3 projectionCoordinates, int lod, int samples)
 	return (0.0);
 }
 
-float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth, int range, int maxCascade)
+bool ValidProjection(vec3 projectionCoordinates)
 {
+	if (abs(projectionCoordinates.x - 0.5) > 0.5) return (false);
+	if (abs(projectionCoordinates.y - 0.5) > 0.5) return (false);
+	if (abs(projectionCoordinates.z - 0.5) > 0.5) return (false);
+	return (true);
+}
+
+float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth)
+{
+	#ifndef SHADOWS_ENABLED
+	return (0.0);
+	#endif
+
 	vec3 projectionCoordinates;
 	vec3 blendCoordinates;
 	float shadow = 0.0;
 	float blendShadow = 0.0;
 	int lod = 0;
-	//int range = 0;
+	int range = 0;
 	//for (int i = CASCADE_COUNT - 1; i >= 0; i--)
 	//{
 	//	//if (lod != -1) break;
@@ -429,7 +441,7 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth, int range
 	//}
 	//if (lod == -1) return (0.0);
 
-	if (range < 0)
+	//if (range < 0)
 	{
 		float depthDistance = depth * variables.ranges.y;
 		if (depthDistance < 10.0) range = 2;
@@ -439,14 +451,30 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth, int range
 	}
 	
 	//range = 0;
-	if (maxCascade < 0) maxCascade = CASCADE_COUNT;
+	//if (maxCascade < 0) maxCascade = CASCADE_COUNT;
 
-	projectionCoordinates = shadowSpaces[0].xyz / shadowSpaces[0].w;
+	for (int i = 0; i < CASCADE_COUNT; i++)
+	{
+		projectionCoordinates = shadowSpaces[i].xyz / shadowSpaces[i].w;
+		projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
+		if (ValidProjection(projectionCoordinates))
+		{
+			shadow = BlendCascadedShadow(projectionCoordinates, i, range);
+			if (shadow > 0.0) return (shadow);
+		}
+	}
+
+	/*projectionCoordinates = shadowSpaces[0].xyz / shadowSpaces[0].w;
 	projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
-	if (abs(projectionCoordinates.x - 0.5) <= 0.5 && abs(projectionCoordinates.y - 0.5) <= 0.5 && abs(projectionCoordinates.z - 0.5) <= 0.5) shadow = BlendCascadedShadow(projectionCoordinates, 0, range);
+	if (abs(projectionCoordinates.x - 0.5) <= 0.5 && abs(projectionCoordinates.y - 0.5) <= 0.5 && abs(projectionCoordinates.z - 0.5) <= 0.5)
+	{
+		shadow = BlendCascadedShadow(projectionCoordinates, 0, range);
+	}
+
+	if (CASCADE_COUNT <= 1) return (shadow);
 
 	//if (CASCADE_COUNT > 1 && shadow == 0.0 && (force || (abs(projectionCoordinates.x - 0.5) >= 0.49 || abs(projectionCoordinates.y - 0.5) >= 0.49)))
-	if (CASCADE_COUNT > 1 && maxCascade > 1 && shadow == 0.0 && (abs(projectionCoordinates.x - 0.5) >= 0.495 || abs(projectionCoordinates.y - 0.5) >= 0.495 || abs(projectionCoordinates.z - 0.5) >= 0.495))
+	if (shadow == 0.0 && (abs(projectionCoordinates.x - 0.5) >= 0.495 || abs(projectionCoordinates.y - 0.5) >= 0.495 || abs(projectionCoordinates.z - 0.5) >= 0.495))
 	{
 		projectionCoordinates = shadowSpaces[1].xyz / shadowSpaces[1].w;
 		projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
@@ -456,7 +484,10 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth, int range
 			if (blendShadow > 0.0) shadow = blendShadow;
 		}
 	}
-	if (CASCADE_COUNT > 2 && maxCascade > 2 && shadow == 0.0 && (abs(projectionCoordinates.x - 0.5) >= 0.495 || abs(projectionCoordinates.y - 0.5) >= 0.495 || abs(projectionCoordinates.z - 0.5) >= 0.495))
+
+	if (CASCADE_COUNT <= 2) return (shadow);
+
+	if (shadow == 0.0 && (abs(projectionCoordinates.x - 0.5) >= 0.495 || abs(projectionCoordinates.y - 0.5) >= 0.495 || abs(projectionCoordinates.z - 0.5) >= 0.495))
 	{
 		projectionCoordinates = shadowSpaces[2].xyz / shadowSpaces[2].w;
 		projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
@@ -467,7 +498,9 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth, int range
 		}
 	}
 
-	if (CASCADE_COUNT > 3 && maxCascade > 3 && shadow == 0.0 && (abs(projectionCoordinates.x - 0.5) >= 0.495 || abs(projectionCoordinates.y - 0.5) >= 0.495 || abs(projectionCoordinates.z - 0.5) >= 0.495))
+	if (CASCADE_COUNT <= 3) return (shadow);
+
+	if (shadow == 0.0 && (abs(projectionCoordinates.x - 0.5) >= 0.495 || abs(projectionCoordinates.y - 0.5) >= 0.495 || abs(projectionCoordinates.z - 0.5) >= 0.495))
 	{
 		projectionCoordinates = shadowSpaces[3].xyz / shadowSpaces[3].w;
 		projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
@@ -478,7 +511,9 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth, int range
 		}
 	}
 
-	if (CASCADE_COUNT > 4 && maxCascade > 4 && shadow == 0.0 && (abs(projectionCoordinates.x - 0.5) >= 0.495 || abs(projectionCoordinates.y - 0.5) >= 0.495 || abs(projectionCoordinates.z - 0.5) >= 0.495))
+	if (CASCADE_COUNT <= 4) return (shadow);
+
+	if (shadow == 0.0 && (abs(projectionCoordinates.x - 0.5) >= 0.495 || abs(projectionCoordinates.y - 0.5) >= 0.495 || abs(projectionCoordinates.z - 0.5) >= 0.495))
 	{
 		projectionCoordinates = shadowSpaces[4].xyz / shadowSpaces[4].w;
 		projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
@@ -487,15 +522,20 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth, int range
 			blendShadow = BlendCascadedShadow(projectionCoordinates, 4, range);
 			if (blendShadow > 0.0) shadow = blendShadow;
 		}
-	}
+	}*/
 
 	return (shadow);
 }
 
-float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth)
-{
-	return (GetCascadedShadow(shadowSpaces, depth, -1, -1));
-}
+//float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth)
+//{
+//	return (GetCascadedShadow(shadowSpaces, depth, ivec2(0, CASCADE_COUNT)));
+//}
+
+//float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth)
+//{
+//	return (GetCascadedShadow(shadowSpaces, depth, -1, -1));
+//}
 //
 //float GetCascadedShadow(vec4 shadowSpace, int lod)
 //{
@@ -504,6 +544,10 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth)
 
 float GetTerrainShadow(vec2 worldPosition)
 {
+	#ifndef TERRAIN_SHADOWS_ENABLED
+	return (0.0);
+	#endif
+
 	vec2 uv;
 
 	for (int i = 0; i < TERRAIN_CASCADE_COUNT; i++)

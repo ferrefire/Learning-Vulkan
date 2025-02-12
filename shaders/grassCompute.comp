@@ -18,7 +18,7 @@ struct CountData
 	uint lodRenderCount;
 };
 
-layout(std430, set = 1, binding = 0) buffer DataBuffer
+layout(std430, set = 1, binding = 0) writeonly buffer DataBuffer
 {
 	GrassData data[];
 };
@@ -39,7 +39,7 @@ layout(std430, set = 1, binding = 1) buffer RenderCount
 //    uint lodRenderCount;
 //};
 
-layout(set = 1, binding = 2) uniform GrassVariables
+layout(set = 1, binding = 2) readonly restrict uniform GrassVariables
 {
 	uint grassBase;
 	float grassBaseMult;
@@ -60,6 +60,11 @@ layout(set = 1, binding = 3) uniform sampler2D clumpingSampler;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
+//const uint groupSize = gl_WorkGroupSize.x * gl_WorkGroupSize.y;
+//shared GrassData sharedData[groupSize];
+//shared int alive[groupSize];
+//shared int groupLod;
+
 #include "variables.glsl"
 #include "functions.glsl"
 #include "heightmap.glsl"
@@ -72,13 +77,13 @@ float random(vec2 st)
 	return (result);
 }
 
-int Inside(vec2 pos)
-{
-	float dis = SquaredDistanceVec2(pos, vec2(0));
-	if (dis > pow(grassVariables.grassTotalBase * 0.5, 2)) return (-1);
-	else if (dis > pow(grassVariables.grassBase * 0.5, 2)) return (1);
-	else return (0);
-}
+//int Inside(vec2 pos)
+//{
+//	float dis = SquaredDistanceVec2(pos, vec2(0));
+//	if (dis > pow(grassVariables.grassTotalBase * 0.5, 2)) return (-1);
+//	else if (dis > pow(grassVariables.grassBase * 0.5, 2)) return (1);
+//	else return (0);
+//}
 
 int InsideWorld(vec3 pos)
 {
@@ -88,47 +93,11 @@ int InsideWorld(vec3 pos)
 	else return (0);
 }
 
-void main()
+/*bool GetFalloff(vec3 position)
 {
-	if (gl_GlobalInvocationID.x >= grassVariables.grassTotalBase || gl_GlobalInvocationID.y >= grassVariables.grassTotalBase) return ;
-	//uint index = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y * grassCount;
-	if (gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.y == 0)
-	{
-		atomicExchange(countData.renderCount, 0);
-		atomicExchange(countData.lodRenderCount, 0);
-	}
-
-	float xp = float(gl_GlobalInvocationID.x) - grassVariables.grassTotalBase * 0.5;
-    float zp = float(gl_GlobalInvocationID.y) - grassVariables.grassTotalBase * 0.5;
-	float yp = 0;
-
-	//int lod = Inside(vec2(xp, zp));
-	//if (lod == -1) return ;
-
-	//vec2 flooredViewPosition = vec2(floor(variables.viewPosition.x * grassVariables.spacingMult), floor(variables.viewPosition.z * grassVariables.spacingMult)) * grassVariables.spacing;
-	vec2 flooredViewPosition = floor(variables.viewPosition.xz * grassVariables.spacingMult);
-
-	//float spacing = grassVariables.spacing;
-
-    float x = (xp + flooredViewPosition.x) * grassVariables.spacing;
-    float z = (zp + flooredViewPosition.y) * grassVariables.spacing;
-    float y = GetTerrainHeight(vec2(x, z));
-
-	vec3 position = vec3(x, y, z);
-
-	int lod = InsideWorld(position);
-	if (lod == -1) return ;
-
-	if (lod == 1 && InView(position + vec3(0, 0.5, 0), 0) == 0) return ;
-
-	//float squaredDistance = SquaredDistance(position, variables.viewPosition);
-	//float maxDistance = pow(grassVariables.grassTotalBase * grassVariables.spacing, 2);
-	//float maxDistanceMult = pow(grassVariables.grassTotalBaseMult * grassVariables.spacingMult, 2);
 	float squaredDistance = distance(position, variables.viewPosition);
 	float maxDistance = grassVariables.grassTotalBase * grassVariables.spacing;
 	float maxDistanceMult = grassVariables.grassTotalBaseMult * grassVariables.spacingMult;
-
-	//float maxDistanceMult = 1.0 / maxDistance;
 
 	float falloff = clamp((clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult) * 1.0, 0.0, 1.0);
 	
@@ -139,7 +108,72 @@ void main()
 	float ranMult = 1.0 - (abs(position.x) + abs(position.z)) * variables.terrainTotalSizeMult * 0.5;
     float ran = random(position.xz * ranMult);
 
-	if (falloff > ran) return ;
+	return (falloff > ran);
+}*/
+
+//void GetClumping(inout vec3 position)
+//{
+//	
+//}
+
+void main()
+{
+	//if (gl_GlobalInvocationID.x >= grassVariables.grassTotalBase || gl_GlobalInvocationID.y >= grassVariables.grassTotalBase) return ;
+	//uint index = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y * grassCount;
+	if (gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.y == 0)
+	{
+		atomicExchange(countData.renderCount, 0);
+		atomicExchange(countData.lodRenderCount, 0);
+	}
+
+	//uint localIndex = gl_LocalInvocationIndex;
+	//alive[localIndex] = 1;
+
+	float xp = float(gl_GlobalInvocationID.x) - grassVariables.grassTotalBase * 0.5;
+    float zp = float(gl_GlobalInvocationID.y) - grassVariables.grassTotalBase * 0.5;
+	float yp = 0;
+
+	//int lod = Inside(vec2(xp, zp));
+	//if (lod == -1) return ;
+
+	vec2 flooredViewPosition = floor(variables.viewPosition.xz * grassVariables.spacingMult);
+    float x = (xp + flooredViewPosition.x) * grassVariables.spacing;
+    float z = (zp + flooredViewPosition.y) * grassVariables.spacing;
+    float y = GetTerrainHeight(vec2(x, z));
+	vec3 position = vec3(x, y, z);
+
+	//if (localIndex == 0)
+	//{
+	//	groupLod = InsideWorld(position);
+	//	if (groupLod == 1 && InView(position + vec3(0, 0.5, 0), 0) == 0) groupLod = -1;
+	//}
+	//barrier();
+	//memoryBarrierShared();
+	//int lod = groupLod;
+
+	int lod = InsideWorld(position);
+
+	//if (lod == -1) return;
+	if (lod == -1 || (lod == 1 && InView(position + vec3(0, 0.5, 0), 0) == 0)) return;
+	//{
+	//	alive[localIndex] = 0;
+	//	if (localIndex > 0) return;
+	//}
+
+	float squaredDistance = distance(position, variables.viewPosition);
+	float maxDistance = grassVariables.grassTotalBase * grassVariables.spacing;
+	float maxDistanceMult = grassVariables.grassTotalBaseMult * grassVariables.spacingMult;
+
+	float falloff = clamp((clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult) * 1.0, 0.0, 1.0);
+	
+	falloff = 1.0 - pow(1.0 - falloff, 8);
+	falloff = clamp(falloff - 0.4, 0.0, 1.0);
+	falloff /= 0.6;
+
+	float ranMult = 1.0 - (abs(position.x) + abs(position.z)) * variables.terrainTotalSizeMult * 0.5;
+    float ran = random(position.xz * ranMult);
+
+	if (falloff > ran) return;
 
 	ran = random(vec2(ran * 100, ran * 200));
 	position.x += ran - 0.5;
@@ -150,20 +184,18 @@ void main()
 	position.xz += clumping.xy;
 	position.y = GetTerrainHeight(position.xz);
 
-	if (lod == 0 && InView(position + vec3(0, 1, 0), 0) == 0 && InView(position, 0) == 0) return ;
+	if (lod == 0 && InView(position + vec3(0, 1, 0), 0) == 0 && InView(position, 0) == 0) return;
 
-	//if (variables.occlusionCulling == 1 && squaredDistance > 100)
 	if (variables.occlusionCulling == 1)
 	{
-		//vec3 clipPosition = WorldToClip(position);
 		vec3 clipPosition = WorldToCull(position);
-		if (Occluded(clipPosition, 0.001) == 1) return ;
+		if (Occluded(clipPosition, 0.001) == 1) return;
 	}
 
 	vec3 terrainNormal = SampleNormalDynamic(position.xz, 0.5);
 
 	float steepness = 1.0 - pow(1.0 - GetSteepness(terrainNormal), 15);
-    if (steepness > 0.5 + (ran - 0.5) * 0.25) return ;
+    if (steepness > 0.5 + (ran - 0.5) * 0.25) return;
 
 	vec3 rotations = vec3(0);
     float wave = 0;
@@ -177,28 +209,51 @@ void main()
     rotations.y *= 360.0;
 
 	float disNorm = clamp((clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult) * 1.0, 0.0, 1.0);
-	//disNorm = clamp(disNorm - 0.1, 0.0, 1.0);
-	//disNorm /= 0.9;
-	//disNorm = 1.0 - pow(1.0 - disNorm, 2.0);
 	float scale = mix(1.0, 4.0, disNorm);
 	float scaleX = 0.5 * pow(scale, 2.0);
 	float scaleY = pow(1.0 - clumping.z, 0.5) * scale;
-
 	float colorVal = random(position.xz * ranMult);
 
-	//if (disNorm > 0.25)
+	GrassData grassData;
+	grassData.posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
+	grassData.normxz = packHalf2x16(terrainNormal.xz);
+	grassData.posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
+	grassData.rot = packHalf2x16(rotations.xy);
+	grassData.scaxy = packHalf2x16(vec2(scaleX, scaleY));
+	grassData.coly = packHalf2x16(vec2(colorVal, colorVal));
+
+	//sharedData[localIndex] = grassData;
+	//barrier();
+	//memoryBarrierShared();
+	//if (localIndex == 0)
 	//{
-	//	scaleX *= 10.0;
-	//	scaleY *= 10.0;
+	//	int aliveCount = 0;
+	//	for (int i = 0; i < groupSize; i++)
+	//	{
+	//		aliveCount += alive[i];
+	//	}
+	//	uint index;
+	//	if (lod == 0) index = atomicAdd(countData.renderCount, aliveCount);
+	//	else if (lod == 1) index = atomicAdd(countData.lodRenderCount, aliveCount) + grassVariables.grassCount;
+	//	for (int i = 0; i < groupSize; i++)
+	//	{
+	//		if (alive[i] == 1)
+	//		{
+	//			data[index] = sharedData[i];
+	//			index++;
+	//		}
+	//	}
 	//}
 
 	uint index;
 	if (lod == 0) index = atomicAdd(countData.renderCount, 1);
 	else if (lod == 1) index = atomicAdd(countData.lodRenderCount, 1) + grassVariables.grassCount;
-	data[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
-	data[index].normxz = packHalf2x16(terrainNormal.xz);
-	data[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
-	data[index].rot = packHalf2x16(rotations.xy);
-	data[index].scaxy = packHalf2x16(vec2(scaleX, scaleY));
-	data[index].coly = packHalf2x16(vec2(colorVal, colorVal));
+	data[index] = grassData;
+
+	//data[index].posxz = packHalf2x16(position.xz - variables.viewPosition.xz);
+	//data[index].normxz = packHalf2x16(terrainNormal.xz);
+	//data[index].posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
+	//data[index].rot = packHalf2x16(rotations.xy);
+	//data[index].scaxy = packHalf2x16(vec2(scaleX, scaleY));
+	//data[index].coly = packHalf2x16(vec2(colorVal, colorVal));
 }

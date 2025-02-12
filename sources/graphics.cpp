@@ -28,6 +28,22 @@
 //#define TIMEOUT UINT64_MAX
 #define TIMEOUT 1000000000
 
+#ifndef GRASS_ENABLED
+#define GRASS_ENABLED true
+#endif
+
+#ifndef TREES_ENABLED
+#define TREES_ENABLED true
+#endif
+
+#ifndef LEAVES_ENABLED
+#define LEAVES_ENABLED true
+#endif
+
+#ifndef SHADOWS_ENABLED
+#define SHADOWS_ENABLED true
+#endif
+
 Graphics::Graphics(Device &device, Window &window) : device{device}, window{window}
 {
 
@@ -132,7 +148,7 @@ void Graphics::RecordGraphicsCommands(uint32_t imageIndex)
 
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-	if (Terrain::HeightMapsGenerated()) submitInfo.waitSemaphoreCount = 2;
+	if (Terrain::HeightMapsGenerated() && SHADOWS_ENABLED) submitInfo.waitSemaphoreCount = 2;
 	else submitInfo.waitSemaphoreCount = 1;
 
 	//submitInfo.waitSemaphoreCount = 2;
@@ -184,24 +200,13 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	scissor.extent = window.swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	START_TIMER(terrainTime);
 	Terrain::RecordGraphicsCommands(commandBuffer);
-	STOP_TIMER(terrainTime, false);
 
-	if (Manager::settings.trees)
-	{
-		START_TIMER(treesTime);
-		Trees::RecordGraphicsCommands(commandBuffer);
-		STOP_TIMER(treesTime, false);
+	if (TREES_ENABLED) Trees::RecordGraphicsCommands(commandBuffer);
 
-		START_TIMER(leavesTime);
-		Leaves::RecordGraphicsCommands(commandBuffer);
-		STOP_TIMER(leavesTime, false);
-	}
+	if (LEAVES_ENABLED) Leaves::RecordGraphicsCommands(commandBuffer);
 
-	START_TIMER(grassTime);
-	Grass::RecordGraphicsCommands(commandBuffer);
-	STOP_TIMER(grassTime, false);
+	if (GRASS_ENABLED) Grass::RecordGraphicsCommands(commandBuffer);
 
 	if (Manager::settings.screenQuad && Terrain::HeightMapsGenerated())
 	{
@@ -364,17 +369,11 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer)
 		scissor.extent.height = Shadow::shadowCascadeResolutions[i];
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		START_TIMER(leavesTime);
-		Leaves::RecordShadowCommands(commandBuffer, i);
-		STOP_TIMER(leavesTime, false);
+		if (LEAVES_ENABLED) Leaves::RecordShadowCommands(commandBuffer, i);
 
-		START_TIMER(treesTime);
-		Trees::RecordShadowCommands(commandBuffer, i);
-		STOP_TIMER(treesTime, false);
+		if (TREES_ENABLED) Trees::RecordShadowCommands(commandBuffer, i);
 
-		START_TIMER(grassTime);
-		Grass::RecordShadowCommands(commandBuffer, i);
-		STOP_TIMER(grassTime, false);
+		if (GRASS_ENABLED) Grass::RecordShadowCommands(commandBuffer, i);
 
 		vkCmdEndRenderPass(commandBuffer);
 	}
@@ -393,13 +392,9 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 	}
 
 	//Terrain::RecordComputeCommands(commandBuffer);
-	START_TIMER(treesTime);
-	Trees::RecordComputeCommands(commandBuffer);
-	STOP_TIMER(treesTime, false);
+	if (TREES_ENABLED) Trees::RecordComputeCommands(commandBuffer);
 
-	START_TIMER(grassTime);
-	Grass::RecordComputeCommands(commandBuffer);
-	STOP_TIMER(grassTime, false);
+	if (GRASS_ENABLED) Grass::RecordComputeCommands(commandBuffer);
 
 	//START_TIMER(dataTime); 
 	//Data::RecordComputeCommands(commandBuffer); //removeee
@@ -425,46 +420,20 @@ void Graphics::Frame()
 
 	if (Terrain::HeightMapsGenerated())
 	{
-		START_TIMER(totalCullTime)
 		RecordCullCommands();
-		STOP_TIMER(totalCullTime, true)
 
-		START_TIMER(totalComputeTime)
 		ComputeFrame();
-		STOP_TIMER(totalComputeTime, true)
 
-		START_TIMER(totalShadowTime)
-		RecordShadowCommands();
-		STOP_TIMER(totalShadowTime, true)
+		if (SHADOWS_ENABLED) RecordShadowCommands();
 	}
 
-	//START_TIMER(totalCullTime)
-	//RecordCullCommands();
-	//STOP_TIMER(totalCullTime, true)
-	//START_TIMER(totalComputeTime)
-	//ComputeFrame();
-	//STOP_TIMER(totalComputeTime, true)
-	//START_TIMER(totalShadowTime)
-	//RecordShadowCommands();
-	//STOP_TIMER(totalShadowTime, true)
-
-	START_TIMER(totalAcquireTime)
 	uint32_t imageIndex;
 	VkResult result = vkAcquireNextImageKHR(device.logicalDevice, window.swapChain, TIMEOUT, 
 		device.imageAvailableSemaphores[Manager::currentFrame], VK_NULL_HANDLE, &imageIndex);
-	STOP_TIMER(totalAcquireTime, true)
 
-	START_TIMER(totalGraphicsTime)
 	RecordGraphicsCommands(imageIndex);
-	STOP_TIMER(totalGraphicsTime, true)
 
-	//RecordCullCommands();
-
-	START_TIMER(totalPresentTime)
 	PresentFrame(imageIndex);
-	STOP_TIMER(totalPresentTime, true)
-
-	//DrawFrame();
 	
 	Manager::currentFrame = (Manager::currentFrame + 1) % Manager::settings.maxFramesInFlight;
 }

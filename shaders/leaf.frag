@@ -21,12 +21,15 @@ layout(location = 0) out vec4 outColor;
 #include "heightmap.glsl"
 
 const vec3 leafTint = vec3(0.0916, 0.1, 0.0125);
+const vec3 translucencyTint = vec3(235, 196, 5) / 255.0;
 
 void main()
 {
 	vec3 leafNormal = localNormal;
 	if (!gl_FrontFacing) leafNormal *= -1;
 	if (dot(leafNormal, globalNormal) < 0.0) leafNormal *= -1;
+	//if (gl_FrontFacing && dot(leafNormal, globalNormal) < 0.0) leafNormal *= -1;
+	//else if (!gl_FrontFacing && dot(leafNormal, globalNormal) > 0.0) leafNormal *= -1;
 	leafNormal = mix(leafNormal, globalNormal, 0.5);
 	//if (!gl_FrontFacing) leafNormal *= -1;
 	float depth = GetDepth(gl_FragCoord.z);
@@ -42,32 +45,33 @@ void main()
 	vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow, 0.1, 0.025);
 	//vec3 leafDiffuse = DiffuseLightingRealistic(leafNormal, worldPosition, shadow, 0.1, 0.1);
 	//vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow);
-	vec3 endColor = leafDiffuse * leafTint;
-	if (shadow >= 1.0) endColor *= leafColor;
+	vec3 endColor = leafDiffuse * leafTint * leafColor.y;
+	if (shadow >= 1.0) endColor *= leafColor.x;
 
 	//float translucency = 1.0;
 	float dis = depth * variables.ranges.y;
 
-    /*if (terrainShadow == 0.0 && dis < 500.0)
+    if (terrainShadow == 0.0 && dis < 500.0)
 	{
 		vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
 		float normDot = clamp(dot(leafNormal, -variables.lightDirection), 0.0, 1.0);
 		normDot += (1.0 - normDot) * 0.2;
 
-		float translucency = pow(clamp(dot(viewDirection, variables.lightDirection), 0.0, 1.0), exp2(10 * 0.5 + 1)) * 1.0 * normDot;
-		if (1.0 - shadow < translucency)
-		{
-			translucency = (translucency * 0.25 + (1.0 - shadow) * 0.75);
-			//if (shadow == 0.0) translucency *= 2.0;
-		}
+		float translucency = pow(clamp(dot(viewDirection, variables.lightDirection), 0.0, 1.0), exp2(10 * 0.625 + 1)) * 1.0 * normDot;
+		translucency *= 1.0 - shadow * 0.975;
+		//if (1.0 - shadow < translucency)
+		//{
+		//	translucency = (translucency * 0.25 + (1.0 - shadow) * 0.75);
+		//	//if (shadow == 0.0) translucency *= 2.0;
+		//}
 
 		if (dis > 250.0)
 		{
 			translucency *= 1.0 - ((dis - 250.0) / 250.0);
 		}
 
-		endColor += lightColor * leafColor * translucency;
-	}*/
+		endColor += translucencyTint * leafTint * translucency * 16.0;
+	}
 
 	//endColor = GroundFog(endColor, depth, worldPosition.y);
 	outColor = vec4(endColor, 1.0);

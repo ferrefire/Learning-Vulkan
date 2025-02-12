@@ -33,8 +33,9 @@ layout(location = 5) out vec4 shadowPositions[CASCADE_COUNT];
 #include "functions.glsl"
 #include "transformation.glsl"
 
-const vec3 treeCenter = vec3(-3.05, 47.22, -5.725);
-//const vec3 treeCenter = vec3(0.0, 40.0, 0.0);
+//const vec3 treeCenter = vec3(-3.05, 47.22, -5.725);
+//const vec3 treeCenter = vec3(7.05, 47.22, -6.125);
+const vec3 treeCenter = vec3(0.0, 40.0, 0.0);
 
 void main()
 {
@@ -76,7 +77,8 @@ void main()
 
 	//leafColor = vec3(0.0916, 0.1, 0.0125) * color * 0.75;
 	//leafColor = vec3(0.0916, 0.1, 0.0125);
-	leafColor = vec3(color);
+	leafColor.x = color;
+	leafColor.y = 1.0 + Random11(vec4(localPosition, gl_VertexIndex)) * 0.5;
 
 	gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
 }

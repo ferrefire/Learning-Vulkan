@@ -482,7 +482,6 @@ void Terrain::PostFrame()
 		glm::vec3 newOffset = glm::vec3(0, -yw, 0);
 		terrainOffset += newOffset;
 		Manager::camera.Move(newOffset);
-
 		Manager::UpdateShaderVariables();
 	}
 
@@ -926,6 +925,7 @@ float Terrain::terrainTotalSize = Terrain::heightMapLength * Terrain::terrainChu
 float Terrain::terrainHeight = 5000;
 
 glm::vec3 Terrain::terrainOffset = glm::vec3(0.0, -2500.0, 0.0);
+//glm::vec3 Terrain::terrainOffset = glm::vec3(0.0, 0.0, 0.0);
 glm::vec2 Terrain::terrainLod0Offset = glm::vec2(0);
 glm::vec2 Terrain::terrainLod1Offset = glm::vec2(0);
 std::vector<glm::vec2> Terrain::terrainShadowOffsets;
