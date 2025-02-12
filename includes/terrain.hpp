@@ -81,7 +81,8 @@ class Terrain
 
 		static std::vector<Object> terrainChunks;
 
-		static Texture grassDiffuseTexture;
+		static std::vector<Texture> grassTextures;
+		//static Texture grassDiffuseTexture;
 		static Texture rockDiffuseTexture;
 		static Texture dirtDiffuseTexture;
 
