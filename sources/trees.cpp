@@ -1180,6 +1180,6 @@ std::vector<Buffer> Trees::countBuffers;
 std::vector<Buffer> Trees::variableBuffers;
 
 TreeVariables Trees::treeVariables;
-uint Trees::totalLeafCount = 0;
+uint32_t Trees::totalLeafCount = 0;
 
 bool Trees::treesComputed = false;

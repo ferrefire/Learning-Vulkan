@@ -93,6 +93,17 @@ vec3 SampleNormalDynamic(vec2 worldPosition, float power)
     return (normalize(normalTS));
 }
 
+vec3 SampleNormalDynamic2(vec2 worldPosition, float power)
+{
+	float left = SampleDynamic(worldPosition - vec2(worldSampleDistance, 0)) * variables.terrainHeight;
+    float right = SampleDynamic(worldPosition + vec2(worldSampleDistance, 0)) * variables.terrainHeight;
+    float down = SampleDynamic(worldPosition - vec2(0, worldSampleDistance)) * variables.terrainHeight;
+    float up = SampleDynamic(worldPosition + vec2(0, worldSampleDistance)) * variables.terrainHeight;
+    vec3 normalTS = normalize(vec3(-(right - left), -(up - down), power));
+
+    return (normalTS);
+}
+
 vec3 SampleNormalArray(vec2 worldPosition, float power)
 {
 	float left = SampleArrayWorld(worldPosition - vec2(worldSampleDistance, 0));
@@ -107,9 +118,30 @@ vec3 SampleNormalArray(vec2 worldPosition, float power)
     return (normalize(normalTS));
 }
 
+vec3 SampleNormalArray2(vec2 worldPosition, float power)
+{
+	float left = SampleArrayWorld(worldPosition - vec2(worldSampleDistance, 0)) * variables.terrainHeight;
+    float right = SampleArrayWorld(worldPosition + vec2(worldSampleDistance, 0)) * variables.terrainHeight;
+    float down = SampleArrayWorld(worldPosition - vec2(0, worldSampleDistance)) * variables.terrainHeight;
+    float up = SampleArrayWorld(worldPosition + vec2(0, worldSampleDistance)) * variables.terrainHeight;
+    vec3 normalTS = normalize(vec3(-(right - left), -(up - down), power));
+
+    return (normalTS);
+}
+
 float GetSteepness(vec3 normal)
 {
     float steepness = dot(normal, vec3(0.0, 1.0, 0.0));
+	steepness = (steepness + 1) * 0.5;
+    //steepness = steepness * steepness;
+    steepness = 1.0 - steepness;
+
+    return steepness;
+}
+
+float GetSteepness2(vec3 normal)
+{
+    float steepness = dot(normal, vec3(0.0, 0.0, 1.0));
 	steepness = (steepness + 1) * 0.5;
     //steepness = steepness * steepness;
     steepness = 1.0 - steepness;

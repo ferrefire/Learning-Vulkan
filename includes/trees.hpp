@@ -161,7 +161,7 @@ class Trees
 		static std::vector<Buffer> variableBuffers;
 
 		static TreeVariables treeVariables;
-		static uint totalLeafCount;
+		static uint32_t totalLeafCount;
 
 		static bool treesComputed;
 

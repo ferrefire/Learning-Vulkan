@@ -55,7 +55,10 @@ void Terrain::CreateTextures()
 	grassTextures[0].CreateTexture("rocky_grass_diff.jpg", grassSamplerConfig);
 	grassTextures[1].CreateTexture("rocky_grass_norm.jpg", grassSamplerConfig);
 
-	rockDiffuseTexture.CreateTexture("rock_diff.jpg", grassSamplerConfig);
+	//rockDiffuseTexture.CreateTexture("rock_diff.jpg", grassSamplerConfig);
+	rockTextures.resize(2);
+	rockTextures[0].CreateTexture("rock_diff.jpg", grassSamplerConfig);
+	rockTextures[1].CreateTexture("rock_norm.jpg", grassSamplerConfig);
 
 	dirtDiffuseTexture.CreateTexture("dirt_diff.jpg", grassSamplerConfig);
 
@@ -127,6 +130,7 @@ void Terrain::CreateGraphicsPipeline()
 	descriptorLayoutConfig[1].count = 2;
 	descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[2].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[2].count = 2;
 	descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[3].stages = FRAGMENT_STAGE;
 
@@ -231,9 +235,17 @@ void Terrain::CreateGraphicsDescriptor()
 
 	descriptorConfig[2].type = IMAGE_SAMPLER;
 	descriptorConfig[2].stages = FRAGMENT_STAGE;
-	descriptorConfig[2].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[2].imageInfo.imageView = rockDiffuseTexture.imageView;
-	descriptorConfig[2].imageInfo.sampler = rockDiffuseTexture.sampler;
+	descriptorConfig[2].count = 2;
+	descriptorConfig[2].imageInfos.resize(2);
+	for (int i = 0; i < rockTextures.size(); i++) 
+	{
+		descriptorConfig[2].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		descriptorConfig[2].imageInfos[i].imageView = rockTextures[i].imageView;
+		descriptorConfig[2].imageInfos[i].sampler = rockTextures[i].sampler;
+	}
+	//descriptorConfig[2].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	//descriptorConfig[2].imageInfo.imageView = rockDiffuseTexture.imageView;
+	//descriptorConfig[2].imageInfo.sampler = rockDiffuseTexture.sampler;
 
 	descriptorConfig[3].type = IMAGE_SAMPLER;
 	descriptorConfig[3].stages = FRAGMENT_STAGE;
@@ -385,8 +397,14 @@ void Terrain::DestroyTextures()
 	}
 	grassTextures.clear();
 
+	for (Texture &texture : rockTextures)
+	{
+		texture.Destroy();
+	}
+	rockTextures.clear();
+
 	//grassDiffuseTexture.Destroy();
-	rockDiffuseTexture.Destroy();
+	//rockDiffuseTexture.Destroy();
 	dirtDiffuseTexture.Destroy();
 
 	heightMapArrayTexture.Destroy();
@@ -898,8 +916,9 @@ Pipeline Terrain::heightMapArrayComputePipeline{Manager::currentDevice, Manager:
 Pipeline Terrain::shadowComputePipeline{Manager::currentDevice, Manager::camera};
 
 std::vector<Texture> Terrain::grassTextures;
+std::vector<Texture> Terrain::rockTextures;
 //Texture Terrain::grassDiffuseTexture{Manager::currentDevice};
-Texture Terrain::rockDiffuseTexture{Manager::currentDevice};
+//Texture Terrain::rockDiffuseTexture{Manager::currentDevice};
 Texture Terrain::dirtDiffuseTexture{Manager::currentDevice};
 
 Texture Terrain::heightMapArrayTexture{Manager::currentDevice};
