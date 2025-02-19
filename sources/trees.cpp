@@ -91,19 +91,19 @@ void Trees::CreateMeshes()
 	treeVariables.leafCounts[2].y = treeLod1RenderCount * treeVariables.leafCounts[1].x +
 		treeVariables.leafCounts[1].y;
 	treeVariables.leafCounts[2].z = 4;
-	treeVariables.leafCounts[2].w = 3;
+	treeVariables.leafCounts[2].w = 2;
 
 	treeVariables.leafCounts[3].x = int(floor(float(treeVariables.leafCounts[0].x) / 16.0f));
 	treeVariables.leafCounts[3].y = treeLod2RenderCount * treeVariables.leafCounts[2].x +
 		treeVariables.leafCounts[2].y;
 	treeVariables.leafCounts[3].z = 16;
-	treeVariables.leafCounts[3].w = 12;
+	treeVariables.leafCounts[3].w = 6;
 
 	treeVariables.leafCounts[4].x = int(floor(float(treeVariables.leafCounts[0].x) / 64.0f));
 	treeVariables.leafCounts[4].y = treeLod3RenderCount * treeVariables.leafCounts[3].x +
 		treeVariables.leafCounts[3].y;
 	treeVariables.leafCounts[4].z = 64;
-	treeVariables.leafCounts[4].w = 24;
+	treeVariables.leafCounts[4].w = 16;
 
 	totalLeafCount = (treeLod4RenderCount * treeVariables.leafCounts[4].x) + treeVariables.leafCounts[4].y;
 

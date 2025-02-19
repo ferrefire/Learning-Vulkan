@@ -277,41 +277,22 @@ void main()
 	//textureNormal = normalize(textureNormal);
 
 	vec3 NT = terrainNormal;
-	vec3 NR = normalize(textureNormal.xzy * 2.0 - 1.0);
+	vec3 NR = textureNormal.xzy * 2.0 - 1.0;
+	//NR.xz *= 0.25;
+	NR = normalize(NR);
+
     vec3 N0 = vec3(0.0, 1.0, 0.0);
     vec3 axis = normalize(cross(N0, NT));
     float angle = acos(clamp(dot(N0, NT), -1.0, 1.0));
 	vec3 RN = RotateR(NR, axis, angle);
-    //vec3 RN = NR * cos(angle) + cross(axis, NR) * sin(angle) + axis * dot(axis, NR) * (1.0 - cos(angle));
-	//vec3 RN = Rotate(NR, -angle, axis);
-
-	//RN = normalize(RN);
-	//vec3 RN = textureNormal * 2.0 - 1.0;
-	//vec3 RN;
-	//RN.x = NT.z * NR.x + NR.z * NT.x;
-	//RN.y = NT.z * NR.y + NR.z * NT.y;
-	//RN.z = NT.z * NR.z - (NT.x * NR.x + NT.y * NR.y);
-	//RN = normalize(RN.xzy);
-
-	//endNormal = Rotate(endNormal, radians(90.0), vec3(0.0, 0.0, 1.0));
 
 	//vec3 RN;
 	//RN.x = NT.y * NR.x + NR.y * NT.x;
 	//RN.z = NT.y * NR.z + NR.y * NT.z;
 	//RN.y = NT.y * NR.y - (NT.x * NR.x + NT.z * NR.z);
-	//RN = normalize(RN);
-
-	//vec3 DU = vec3(0.0, 0.0, 1.0);
-	////vec3 TU = vec3(0.0, 1.0, 0.0);
-	//vec3 TU = terrainNormal;
-	////vec3 axis = cross(NT, NR);
-	//vec3 axis = normalize(cross(TU, DU));
-	////float angle = acos(dot(NR, NT));
-	//float angle = acos(dot(TU, DU));
-	//NR = Rotate(NR, angle, axis);
-	//vec3 endNormal = normalize(NR);
+	//RN = normalize(RN + NT);
 	
-	vec3 endNormal = normalize(NT + RN);
+	vec3 endNormal = normalize(RN + NT);
 
 	//outColor = vec4(endNormal * 0.5 + 0.5, 1.0);
 	//return;
