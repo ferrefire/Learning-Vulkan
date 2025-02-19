@@ -116,7 +116,7 @@ void Texture::CreateTextureImage(std::string name, SamplerConfiguration &sampler
 	VkDeviceSize imageSize;
 	stbi_uc *pixels = Texture::LoadTexture(Utilities::GetPath() + "/textures/" + name, &texWidth, &texHeight, &texChannels);
 	imageSize = texWidth * texHeight * 4; //corrupt image error probably
-	//std::cout << texChannels << std::endl;
+	std::cout << name << ": " << texChannels << std::endl;
 
 	ImageConfiguration imageConfig;
 	imageConfig.createMipmaps = true;
