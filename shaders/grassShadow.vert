@@ -9,7 +9,7 @@ struct GrassData
 	uint posynormy;
 	uint rot;
 	uint scaxy;
-	uint coly;
+	uint colyscaz;
 };
 
 layout(std430, set = 1, binding = 0) buffer DataBuffer
@@ -41,6 +41,7 @@ layout(push_constant, std430) uniform PushConstants
 } pc;
 
 layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec2 inCoordinate;
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -49,6 +50,7 @@ layout(location = 0) in vec3 inPosition;
 void main()
 {
 	//vec3 normal = normalize(mix(vec3(0, 0, -1), vec3(sign(inPosition.x) * 0.5, 0, 0), clamp(abs(inPosition.x) * 10.0, 0.0, 1.0)));
+	vec3 normal = Rotate(vec3(0.0, 0.0, -1.0), radians(30.0) * ((inCoordinate.x - 0.5) * 2.0), vec3(0.0, 1.0, 0.0));
 
 	vec3 position = vec3(0);
 	vec3 rotation = vec3(0);
@@ -71,16 +73,21 @@ void main()
 	scaledPosition.y *= clumpScale.y;
 
 	float angle = radians(ran * (inPosition.y + 0.25));
-	scaledPosition = Rotate(scaledPosition, angle, vec3(1, 0, 0));
-	//normal = Rotate(normal, angle, vec3(1, 0, 0));
+	scaledPosition = Rotate(scaledPosition, -angle, vec3(1, 0, 0));
+	normal = Rotate(normal, -angle, vec3(1, 0, 0));
 
-	ran = rotation.y;
+	//ran = rotation.y;
 
-	angle = radians(ran);
+	angle = radians(rotation.y);
 	scaledPosition = Rotate(scaledPosition, angle, vec3(0, 1, 0));
-	//normal = Rotate(normal, angle, vec3(0, 1, 0));
+	normal = Rotate(normal, angle, vec3(0, 1, 0));
 
 	vec3 worldPosition = ObjectToWorld(scaledPosition, mat4(1)) + position;
+
+	vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
+	float viewDotNormal = dot(normal, viewDirection);
+	float thickenFactor = (1.0 - abs(viewDotNormal));
+	worldPosition += thickenFactor * normal * 0.05;
 
 	//vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
 	//float viewDotNormal = clamp(dot(normal, viewDirection), -1.0, 1.0);

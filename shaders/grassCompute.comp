@@ -9,7 +9,7 @@ struct GrassData
 	uint posynormy;
 	uint rot;
 	uint scaxy;
-	uint coly;
+	uint colyscaz;
 };
 
 struct CountData
@@ -184,6 +184,10 @@ void main()
 	position.xz += clumping.xy;
 	position.y = GetTerrainHeight(position.xz);
 
+	//vec3 clumping = textureLod(clumpingSampler, position.xz * 0.015, 0).rgb;
+	//position.xz += clumping.xy * 5.0;
+	//position.y = GetTerrainHeight(position.xz);
+
 	if (lod == 0 && InView(position + vec3(0, 1, 0), 0) == 0 && InView(position, 0) == 0) return;
 
 	if (variables.occlusionCulling == 1)
@@ -210,10 +214,15 @@ void main()
     rotations.x *= 60.0;
     rotations.y *= 360.0;
 
+	//float clumping = clamp(pow(textureLod(clumpingSampler, position.xz * 0.01, 0).r * 2.0, 2.0) * 0.5);
+	//float clumpingScale = pow(clamp(clumping.z * 1.75, 0.0, 1.0), 1.5);
+
 	float disNorm = clamp((clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult) * 1.0, 0.0, 1.0);
 	float scale = mix(1.0, 4.0, disNorm);
 	float scaleX = 0.5 * pow(scale, 2.0);
+	//float scaleX = 0.5 * pow(scale, 2.0) * pow(clumpingScale, 0.5);
 	float scaleY = pow(1.0 - clumping.z, 0.5) * scale;
+	//float scaleY = 1.0 * scale * clumpingScale;
 	float colorVal = random(position.xz * ranMult);
 
 	GrassData grassData;
@@ -222,7 +231,7 @@ void main()
 	grassData.posynormy = packHalf2x16(vec2(position.y - variables.viewPosition.y, terrainNormal.y));
 	grassData.rot = packHalf2x16(rotations.xy);
 	grassData.scaxy = packHalf2x16(vec2(scaleX, scaleY));
-	grassData.coly = packHalf2x16(vec2(colorVal, colorVal));
+	grassData.colyscaz = packHalf2x16(vec2(colorVal, colorVal));
 
 	//sharedData[localIndex] = grassData;
 	//barrier();

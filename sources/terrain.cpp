@@ -65,15 +65,15 @@ void Terrain::CreateTextures()
 	SamplerConfiguration heightMapSamplerConfig;
 	SamplerConfiguration heightMapArraySamplerConfig;
 
-	ImageConfiguration heightMapArrayConfig = Texture::ImageArrayStorage(1024, 1024, heightMapCount);
+	ImageConfiguration heightMapArrayConfig = Texture::ImageArrayStorage(heightMapResolution, heightMapResolution, heightMapCount);
 	heightMapArrayTexture.CreateImage(heightMapArrayConfig, heightMapArraySamplerConfig);
 	heightMapArrayTexture.TransitionImageLayout(heightMapArrayConfig);
 
-	ImageConfiguration heightMapLod1Config = Texture::ImageStorage(1024, 1024);
+	ImageConfiguration heightMapLod1Config = Texture::ImageStorage(heightMapLod1Resolution, heightMapLod1Resolution);
 	heightMapLod1Texture.CreateImage(heightMapLod1Config, heightMapSamplerConfig);
 	heightMapLod1Texture.TransitionImageLayout(heightMapLod1Config);
 
-	ImageConfiguration heightMapLod0Config = Texture::ImageStorage(1024, 1024);
+	ImageConfiguration heightMapLod0Config = Texture::ImageStorage(heightMapLod0Resolution, heightMapLod0Resolution);
 	heightMapLod0Texture.CreateImage(heightMapLod0Config, heightMapSamplerConfig);
 	heightMapLod0Texture.TransitionImageLayout(heightMapLod0Config);
 
@@ -694,6 +694,7 @@ void Terrain::RenderCulling(VkCommandBuffer commandBuffer)
 void Terrain::ComputeHeightMap(VkCommandBuffer commandBuffer, uint32_t lod)
 {
 	vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
+	int dispatchCount = int(floor(float(lod == 0 ? heightMapLod0Resolution : heightMapLod1Resolution) / 8.0f));
 	// VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
 
 	bool oneTimeBuffer = commandBuffer == nullptr;
@@ -711,7 +712,7 @@ void Terrain::ComputeHeightMap(VkCommandBuffer commandBuffer, uint32_t lod)
 	heightMapComputeVariables.mapScale = (lod == 0 ? terrainLod0Size : (lod == 1 ? terrainLod1Size : terrainChunkSize)) / terrainChunkSize;
 	heightMapComputeVariables.mapOffset = (lod == 0 ? ((terrainLod0Offset + XZ2XY(terrainOffset)) / terrainLod0Size) : ((terrainLod1Offset + XZ2XY(terrainOffset)) / terrainLod1Size));
 	memcpy(heightMapComputeVariablesBuffer.mappedBuffer, &heightMapComputeVariables, sizeof(heightMapComputeVariables));
-	vkCmdDispatch(commandBuffer, 128, 128, 1); //Change dispatch count
+	vkCmdDispatch(commandBuffer, dispatchCount, dispatchCount, 1); //Change dispatch count
 	if (oneTimeBuffer) Manager::currentDevice.EndComputeCommand(commandBuffer);
 
 	currentBoundHeightMap = lod;
@@ -721,6 +722,7 @@ void Terrain::ComputeHeightMapArray(VkCommandBuffer commandBuffer, uint32_t inde
 {
 	int x = (index % heightMapLength) - heightMapRadius;
 	int y = (index / heightMapLength) - heightMapRadius;
+	int dispatchCount = int(floor(float(heightMapResolution) / 8.0f));
 
 	//vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
 
@@ -736,7 +738,7 @@ void Terrain::ComputeHeightMapArray(VkCommandBuffer commandBuffer, uint32_t inde
 	heightMapArrayComputeVariables.currentChunkIndex = index;
 	heightMapArrayComputeVariables.mapOffset = glm::vec2(y, x);
 	memcpy(heightMapArrayComputeVariablesBuffer.mappedBuffer, &heightMapArrayComputeVariables, sizeof(heightMapArrayComputeVariables));
-	vkCmdDispatch(commandBuffer, 128, 128, 1); // Change dispatch count
+	vkCmdDispatch(commandBuffer, dispatchCount, dispatchCount, 1); // Change dispatch count
 	if (oneTimeBuffer) Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
 
@@ -950,6 +952,10 @@ std::vector<Object> Terrain::terrainChunks;
 float Terrain::terrainChunkSize = 10000;
 float Terrain::terrainLod0Size = 2500;
 float Terrain::terrainLod1Size = 5000;
+
+int Terrain::heightMapResolution = 1024;
+int Terrain::heightMapLod0Resolution = 1024;
+int Terrain::heightMapLod1Resolution = 1024;
 
 int Terrain::terrainChunkRadius = 3;
 int Terrain::terrainChunkLength = Terrain::terrainChunkRadius * 2 + 1;

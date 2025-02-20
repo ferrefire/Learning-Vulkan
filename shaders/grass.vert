@@ -13,7 +13,7 @@ struct GrassData
 	uint posynormy;
 	uint rot;
 	uint scaxy;
-	uint coly;
+	uint colyscaz;
 };
 
 layout(std430, set = 1, binding = 0) buffer DataBuffer
@@ -91,7 +91,7 @@ void main()
 	terrainNormal.y = yy.y;
 	rotation.xy = unpackHalf2x16(data[dataIndex].rot);
 	clumpScale = unpackHalf2x16(data[dataIndex].scaxy);
-	colorVal = unpackHalf2x16(data[dataIndex].coly).y;
+	colorVal = unpackHalf2x16(data[dataIndex].colyscaz).y;
 
 	position += variables.viewPosition;
 	float ran = rotation.x;
@@ -116,6 +116,11 @@ void main()
 
 	uv = vec2(inPosition.x * 10.0 + 0.5, inPosition.y);
 
+	vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
+	float viewDotNormal = dot(normal, viewDirection);
+	float thickenFactor = (1.0 - abs(viewDotNormal));
+	worldPosition += thickenFactor * normal * 0.05;
+
 	for (int i = 0; i < CASCADE_COUNT; i++) shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
 
 	//grassColor = vec3(0.25, 0.6, 0.1);
@@ -124,14 +129,14 @@ void main()
 	//grassColor = vec3(0.0916, 0.1, 0.0125) * (1.0 + (colorVal * 0.375 - 0.1875));
 	//grassColor *= 0.75;
 
-	vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
-	float viewDotNormal = clamp(dot(normal, viewDirection), -1.0, 1.0);
-	float upDotNormal = dot(normal, vec3(0, -1, 0)) * 0.5 + 0.5;
-	float dotSign = sign(viewDotNormal);
-	if (dotSign == 0.0) dotSign = 1.0;
-	float thickenFactor = (1.0 - pow(1.0 - abs(viewDotNormal), 4.0)) * dotSign;
-	worldPosition += viewDotNormal * variables.viewRight * 0.025 * (1.0 - upDotNormal);
-	worldPosition += viewDotNormal * variables.viewUp * 0.025 * (upDotNormal);
+	//vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
+	//float viewDotNormal = dot(normal, viewDirection);
+	//float upDotNormal = dot(normal, vec3(0, -1, 0)) * 0.5 + 0.5;
+	//float dotSign = sign(viewDotNormal);
+	//if (dotSign == 0.0) dotSign = 1.0;
+	//float thickenFactor = (1.0 - pow(1.0 - abs(viewDotNormal), 4.0)) * dotSign;
+	//worldPosition += viewDotNormal * variables.viewRight * 0.025 * 4 * (1.0 - upDotNormal);
+	//worldPosition += viewDotNormal * variables.viewUp * 0.025 * 4 * (upDotNormal);
 
 	//for (int i = 0; i < CASCADE_COUNT; i++) shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
 

@@ -103,16 +103,6 @@ float GenerateNoise(vec2 uv, int layers, int curve)
 
 		noise += center * weight * erodeSum;
 
-		//float center = snoise(uv * noiseScale * scale);
-        //float right = snoise((uv + vec2(noiseSampleDistance, 0)) * noiseScale * scale);
-        //float up = snoise((uv + vec2(0, noiseSampleDistance)) * noiseScale * scale);
-		//vec3 derivative = vec3((right - center) / (noiseSampleDistance), 1.0, (up - center) / (noiseSampleDistance));
-		//derivative = normalize(derivative);
-		//float steepness = 1.0 - (dot(derivative, vec3(0, 1, 0)) * 0.5 + 0.5);
-		//erosion += steepness * erosionWeight;
-        //float erodeSum = 1.0 / (1.0 + erosion * 1.5);
-        //noise += center * weight * erodeSum;
-
         maxNoise += weight;
         weight *= 0.375;
 		erosionWeight *= 0.70;
@@ -169,6 +159,43 @@ vec3 GetDerivative(vec2 uv, int layers)
 vec3 GetDerivative(vec2 uv)
 {
     return (GetDerivative(uv, 1, noiseSampleDistance));
+}
+
+float GenerateSimpleNoise(vec2 uv, int layers, float persistance, float detail)
+{
+    float noise = 0;
+    float maxNoise = 0;
+    float weight = 1;
+    float scale = 1;
+
+    for (int i = 0; i < layers; i++)
+    {
+        float value = snoise(uv * noiseScale * scale);
+
+		noise += value * weight;
+
+        maxNoise += weight;
+        weight *= persistance;
+        scale *= detail;
+    }
+
+    noise = InvLerp(0.0, maxNoise, noise);
+
+    return (noise);
+}
+
+vec3 GetSimpleDerivative(vec2 uv, int layers, float sampleDis, float persistance, float detail)
+{
+    float center = GenerateSimpleNoise(uv, layers, persistance, detail);
+	float left = GenerateSimpleNoise((uv + vec2(-sampleDis, 0)), layers, persistance, detail);
+    float right = GenerateSimpleNoise((uv + vec2(sampleDis, 0)), layers, persistance, detail);
+    float down = GenerateSimpleNoise((uv + vec2(0, -sampleDis)), layers, persistance, detail);
+    float up = GenerateSimpleNoise((uv + vec2(0, sampleDis)), layers, persistance, detail);
+    
+	vec3 derivative = vec3(-(right - left), 1.0, -(up - down));
+	derivative = normalize(derivative);
+
+    return (derivative);
 }
 
 #endif

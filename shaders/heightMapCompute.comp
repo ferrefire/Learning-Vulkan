@@ -13,7 +13,7 @@ layout(set = 1, binding = 1) uniform HeightMapComputeVariables
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 const uint resolution = 1024;
-const float resolutionMult = 0.0009765625;
+const float resolutionMult = 1.0 / float(resolution);
 
 #include "noise.glsl"
 

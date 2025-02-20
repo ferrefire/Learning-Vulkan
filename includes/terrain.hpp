@@ -87,6 +87,10 @@ class Terrain
 		//static Texture rockDiffuseTexture;
 		static Texture dirtDiffuseTexture;
 
+		static int heightMapResolution;
+		static int heightMapLod0Resolution;
+		static int heightMapLod1Resolution;
+
 		static Texture heightMapArrayTexture;
 		static Texture heightMapLod0Texture;
 		static Texture heightMapLod1Texture;

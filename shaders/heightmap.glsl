@@ -30,9 +30,9 @@ const float terrainChunkSize = 10000;
 const float terrainChunkSizeMult = 0.0001;
 
 const float terrainLod0Size = 2500;
-const float terrainLod0SizeMult = 0.0004;
+const float terrainLod0SizeMult = 1.0 / terrainLod0Size;
 const float terrainLod1Size = 5000;
-const float terrainLod1SizeMult = 0.0002;
+const float terrainLod1SizeMult = 1.0 / terrainLod1Size;
 
 //const int chunksLength = 5;
 //const float chunksLengthMult = 1.0 / 5.0;

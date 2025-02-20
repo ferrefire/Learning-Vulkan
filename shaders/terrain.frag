@@ -68,33 +68,37 @@ const float rockSteepness = 0.25;
 const vec3 defaultGrassColor = vec3(0.0916, 0.0866, 0.0125);
 const vec3 defaultRockColor = vec3(0.2, 0.1, 0.1);
 
+const vec3 defaultNormal = vec3(0.0, 0.0, 1.0);
+
 struct BlendResults
 {
 	vec3 diffuse;
 	vec3 normal;
 };
 
-vec3 TangentToNormal(vec3 terrainNormal, vec3 textureNormal)
+vec3 TangentToNormal(vec3 TN, vec3 RN)
 {
 	vec3 result;
 
-	//vec3 up = abs(terrainNormal.z) > abs(terrainNormal.x) ? vec3(1, 0, 0) : vec3(0, 0, -1);
-	vec3 terrainTangent;
-	vec3 tan1 = cross(terrainNormal, vec3(0.0, 0.0, 1.0));
-	vec3 tan2 = cross(terrainNormal, vec3(0.0, 1.0, 0.0));
-	if (length(tan1) > length(tan2)) terrainTangent = tan1;
-	else terrainTangent = tan2;
+	//vec3 up = TN.z > TN.x ? vec3(1, 0, 0) : vec3(0, 0, 1);
+	vec3 up = vec3(0.5, 0.5, 1.0);
+	//vec3 terrainTangent;
+	//vec3 tan1 = cross(TN, vec3(0.0, 1.0, 0.0));
+	//vec3 tan2 = cross(TN, vec3(0.0, 0.0, 1.0));
+	//if (length(tan1) > length(tan2)) terrainTangent = tan1;
+	//else terrainTangent = tan2;
+	vec3 terrainTangent = normalize(cross(TN, up));
 
 	//vec3 up = vec3(1, 0, 0);
-    //vec3 terrainTangent = normalize(cross(up, terrainNormal));
-	//vec3 terrainTangent = normalize(Rotate(terrainNormal, radians(90.0), vec3(1.0, 0.0, 0.0)));
-	vec3 terrainBiTangent = cross(terrainTangent, terrainNormal) * 1.0;
-	//mat3 TBN = mat3(terrainTangent.x, terrainBiTangent.x, terrainNormal.x,
-	//				terrainTangent.y, terrainBiTangent.y, terrainNormal.y,
-	//				terrainTangent.z, terrainBiTangent.z, terrainNormal.z);
-	mat3 TBN = mat3(terrainTangent, terrainBiTangent, terrainNormal);
+    //vec3 terrainTangent = normalize(cross(up, TN));
+	//vec3 terrainTangent = normalize(Rotate(TN, radians(90.0), vec3(1.0, 0.0, 0.0)));
+	vec3 terrainBiTangent = normalize(cross(TN, terrainTangent));
+	//mat3 TBN = mat3(terrainTangent.x, terrainBiTangent.x, TN.x,
+	//				terrainTangent.y, terrainBiTangent.y, TN.y,
+	//				terrainTangent.z, terrainBiTangent.z, TN.z);
+	mat3 TBN = mat3(terrainTangent, terrainBiTangent, TN);
 	//result = textureNormal * 2.0 - 1.0;
-	result = normalize(TBN * textureNormal);
+	result = normalize(TBN * RN);
 
 	return (result);
 }
@@ -109,7 +113,6 @@ vec3 BlendTexture(sampler2D textureSampler, int index, float viewDistance, int m
 	float maxDistance = textureLod3Distances[index] - lod3Blend;
 	float maxBlend = lod3Blend * 2;
 	vec2 texUV = inPosition.xz + variables.terrainOffset.xz;
-	vec3 defaultNormal = vec3(0.0, 0.0, 1.0);
 
 	if (maxLod >= 0)
 	{
@@ -220,7 +223,7 @@ BlendResults BlendSteepness(float steepness, float distanceSqrd)
 	{
 		result.diffuse = BlendTexture(grassSamplers[0], 0, distanceSqrd, -1, false);
 		//result.normal = BlendTexture(grassSamplers[1], 0, distanceSqrd, -1, true);
-		result.normal = vec3(0.0, 0.0, 1.0);
+		result.normal = defaultNormal;
 	}
 	if (steepness > rockSteepness - steepnessBlendDistance)
 	{
@@ -296,6 +299,12 @@ void main()
     axis = normalize(cross(N0, NT));
     angle = acos(clamp(dot(N0, NT), -1.0, 1.0));
 	vec3 RN = normalize(RotateR(RRN, axis, angle));
+
+	//vec3 NT = normalWS;
+	//vec3 NR = textureNormal;
+	////NR.xy -= 0.5;
+	////NR = normalize(NR);
+	//vec3 RN = TangentToNormal(NT, NR);
 
 	//vec3 RN;
 	//RN.x = NT.y * RRN.x + RRN.y * NT.x;
