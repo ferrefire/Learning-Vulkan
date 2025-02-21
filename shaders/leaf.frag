@@ -11,7 +11,8 @@ layout(location = 1) in vec3 localPosition;
 layout(location = 2) in vec3 globalNormal;
 layout(location = 3) in vec3 localNormal;
 layout(location = 4) in vec3 leafColor;
-layout(location = 5) in vec4 shadowPositions[CASCADE_COUNT];
+layout(location = 5) in vec3 localCoordinates;
+layout(location = 6) in vec4 shadowPositions[CASCADE_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
@@ -19,12 +20,34 @@ layout(location = 0) out vec4 outColor;
 #include "lighting.glsl"
 #include "depth.glsl"
 #include "heightmap.glsl"
+#include "functions.glsl"
 
 const vec3 leafTint = vec3(0.0916, 0.1, 0.0125);
 const vec3 translucencyTint = vec3(235, 196, 5) / 255.0;
 
+const vec2 discardDistances = vec2(0.125, 0.15);
+const vec2 discardPositions = vec2(0.3, 0.2);
+
+const Triangle discardTriangle0 = Triangle(vec2(0.0, 0.25) * 1.5, vec2(0.25, -0.125) * 1.5, vec2(-0.25, -0.125) * 1.5);
+const Triangle discardTriangle1 = Triangle(vec2(0.0, 0.0) * 1.425, vec2(-0.125, 0.1875) * 1.425, vec2(-0.375, 0.0625) * 1.425);
+const Triangle discardTriangle2 = Triangle(vec2(0.0, 0.0) * 1.425, vec2(-0.125, -0.1875) * 1.425, vec2(-0.375, -0.0625) * 1.425);
+const Triangle discardTriangle3 = Triangle(vec2(0.0, 0.0) * 1.425, vec2(0.125, 0.1875) * 1.425, vec2(0.375, 0.0625) * 1.425);
+const Triangle discardTriangle4 = Triangle(vec2(0.0, 0.0) * 1.425, vec2(0.125, -0.1875) * 1.425, vec2(0.375, -0.0625) * 1.425);
+const Triangle discardTriangle5 = Triangle(vec2(0.0, 0.0) * 1.425, vec2(0.25, 0.25) * 1.425, vec2(-0.25, 0.25) * 1.425);
+
+bool ShouldDiscard(vec2 position)
+{
+	if (InsideTriangle(discardTriangle1, position)) return (true);
+	else if (InsideTriangle(discardTriangle2, position)) return (true);
+	else if (InsideTriangle(discardTriangle3, position)) return (true);
+	else if (InsideTriangle(discardTriangle4, position)) return (true);
+	else return (false);
+}
+
 void main()
 {
+	if (ShouldDiscard(localCoordinates.xz)) discard;
+
 	vec3 leafNormal = localNormal;
 	if (!gl_FrontFacing) leafNormal *= -1;
 	if (dot(leafNormal, globalNormal) < 0.0) leafNormal *= -1;
@@ -58,7 +81,8 @@ void main()
 		normDot += (1.0 - normDot) * 0.2;
 
 		float translucency = pow(clamp(dot(viewDirection, variables.lightDirection), 0.0, 1.0), exp2(10 * 0.625 + 1)) * 1.0 * normDot;
-		translucency *= 1.0 - shadow * 0.975;
+		//translucency *= 1.0 - shadow * 0.975;
+		translucency *= 1.0 - shadow * 0.99;
 		//if (1.0 - shadow < translucency)
 		//{
 		//	translucency = (translucency * 0.25 + (1.0 - shadow) * 0.75);

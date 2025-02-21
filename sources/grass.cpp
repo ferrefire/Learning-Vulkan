@@ -452,9 +452,9 @@ void Grass::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassMesh.indices.size()), grassRenderCounts[Manager::currentFrame].renderCount, 0, 0, 0);
 
-		//grassLodMesh.Bind(commandBuffer);
-		//vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
-		//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassRenderCounts[Manager::currentFrame].lodRenderCount, 0, 0, 0);
+		grassLodMesh.Bind(commandBuffer);
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(grassLodMesh.indices.size()), grassRenderCounts[Manager::currentFrame].lodRenderCount, 0, 0, 0);
 	}
 	else if (cascade == 1)
 	{

@@ -285,6 +285,7 @@ void main()
 		{
 			leafLodScale = mix(leafLodScale, 0.0, (lodDis - 0.75) * 4.0);
 		}
+		//leafLodScale += leafIndex % (int(treeVariables.leafCounts[lod].z) * 2) == 0 ? treeVariables.leafCounts[lod].w * 0.5 : 0.0;
 		float leafRan = length(leafPositions[leafIndex].xyz);
 		float leafScale = leafLodScale + (Random11(leafRan) * leafLodScale) * 0.25;
 		float leafRotationX = Random01(leafIndex * 0.001 + leafRan);

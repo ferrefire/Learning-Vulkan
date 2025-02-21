@@ -216,12 +216,14 @@ void main()
 
 	//float clumping = clamp(pow(textureLod(clumpingSampler, position.xz * 0.01, 0).r * 2.0, 2.0) * 0.5);
 	//float clumpingScale = pow(clamp(clumping.z * 1.75, 0.0, 1.0), 1.5);
+	//float clumpStrength = normalize(vec3(clumping.xy, 1.0)).z;
 
 	float disNorm = clamp((clamp(squaredDistance, 0.0, maxDistance) * maxDistanceMult) * 1.0, 0.0, 1.0);
 	float scale = mix(1.0, 4.0, disNorm);
 	float scaleX = 0.5 * pow(scale, 2.0);
 	//float scaleX = 0.5 * pow(scale, 2.0) * pow(clumpingScale, 0.5);
 	float scaleY = pow(1.0 - clumping.z, 0.5) * scale;
+	//float scaleY = pow(clamp(clumpStrength + 0.1, 0.0, 1.0), 4.0) * scale;
 	//float scaleY = 1.0 * scale * clumpingScale;
 	float colorVal = random(position.xz * ranMult);
 

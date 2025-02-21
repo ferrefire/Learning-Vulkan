@@ -57,8 +57,19 @@ void Trees::CreateMeshes()
 	//branchConfig.blendRange = 8;
 	//branchConfig.minSize = 0.75;
 	branchConfig.lod = 0;
+	branchConfig.leaves = true;
+
+	//Mesh leafPositionsMesh;
+	//GenerateTrunkMesh(leafPositionsMesh, branchConfig);
+	//leafPositionsMesh.Create();
+	//leafPositionsMesh.Destroy();
+	//branchConfig.splitCount = 3;
+	//branchConfig.leaves = false;
+
 	GenerateTrunkMesh(treeLod0Mesh, branchConfig);
 	treeLod0Mesh.Create();
+
+	branchConfig.leaves = false;
 
 	//leafPositionsTotal.reserve(leafPositions0.size() + leafPositions1.size());
 	//leafPositionsTotal.insert(leafPositionsTotal.end(), leafPositions0.begin(), leafPositions0.end());
@@ -80,30 +91,30 @@ void Trees::CreateMeshes()
 	treeVariables.leafCounts[0].x = leafPositions.size();
 	treeVariables.leafCounts[0].y = 0;
 	treeVariables.leafCounts[0].z = 1;
-	treeVariables.leafCounts[0].w = 1;
+	treeVariables.leafCounts[0].w = 1 * 1.5;
 
 	treeVariables.leafCounts[1].x = int(floor(float(treeVariables.leafCounts[0].x) / 2.0f));
 	treeVariables.leafCounts[1].y = treeLod0RenderCount * treeVariables.leafCounts[0].x;
 	treeVariables.leafCounts[1].z = 2;
-	treeVariables.leafCounts[1].w = 2;
+	treeVariables.leafCounts[1].w = 2 * 1.5;
 
-	treeVariables.leafCounts[2].x = int(floor(float(treeVariables.leafCounts[0].x) / 4.0f));
+	treeVariables.leafCounts[2].x = int(floor(float(treeVariables.leafCounts[0].x) / 8.0f));
 	treeVariables.leafCounts[2].y = treeLod1RenderCount * treeVariables.leafCounts[1].x +
 		treeVariables.leafCounts[1].y;
-	treeVariables.leafCounts[2].z = 4;
-	treeVariables.leafCounts[2].w = 2;
+	treeVariables.leafCounts[2].z = 8;
+	treeVariables.leafCounts[2].w = 2 * 4;
 
-	treeVariables.leafCounts[3].x = int(floor(float(treeVariables.leafCounts[0].x) / 16.0f));
+	treeVariables.leafCounts[3].x = int(floor(float(treeVariables.leafCounts[0].x) / 32.0f));
 	treeVariables.leafCounts[3].y = treeLod2RenderCount * treeVariables.leafCounts[2].x +
 		treeVariables.leafCounts[2].y;
-	treeVariables.leafCounts[3].z = 16;
-	treeVariables.leafCounts[3].w = 6;
+	treeVariables.leafCounts[3].z = 32;
+	treeVariables.leafCounts[3].w = 6 * 3;
 
 	treeVariables.leafCounts[4].x = int(floor(float(treeVariables.leafCounts[0].x) / 64.0f));
 	treeVariables.leafCounts[4].y = treeLod3RenderCount * treeVariables.leafCounts[3].x +
 		treeVariables.leafCounts[3].y;
 	treeVariables.leafCounts[4].z = 64;
-	treeVariables.leafCounts[4].w = 16;
+	treeVariables.leafCounts[4].w = 16 * 2;
 
 	totalLeafCount = (treeLod4RenderCount * treeVariables.leafCounts[4].x) + treeVariables.leafCounts[4].y;
 
@@ -162,7 +173,7 @@ void Trees::CreateMeshes()
 	treeLod4Mesh.shape.coordinate = true;
 	treeLod4Mesh.shape.normal = true;
 	treeLod4Mesh.shape.SetShape(CYLINDER, 4);
-	treeLod4Mesh.shape.Scale(glm::vec3(3.0f, 2.5f, 3.0f), true);
+	treeLod4Mesh.shape.Scale(glm::vec3(4.0f, 2.5f, 4.0f), true);
 	//treeLod4Mesh.shape.Move(glm::vec3(0.0f, 20.0f, 0.0f));
 	treeLod4Mesh.RecalculateVertices();
 	treeLod4Mesh.Create();
@@ -989,18 +1000,20 @@ Shape BranchConfiguration::Generate()
 			}
 		}
 
-		if (lod == 0 && iteration > 1)
+		if (leaves && iteration > 2)
 		{
 			int leafIndex = y % l;
 			if (leafIndex == 0 || y == resolution)
 			{
-				for (int i = 0; i < 1; i++)
+				//int density = iteration / 2;
+				int density = 1;
+				for (int i = 0; i < density; i++)
 				{
 					glm::vec3 leafOffset = glm::vec3(0);
 					leafOffset.x = Utilities::Random11(branchSeed + y + i);
 					leafOffset.z = Utilities::Random11(leafOffset.x * 0.5 + (branchSeed + y + i) * 2.0 + i);
 					leafOffset.y = Utilities::Random11(leafOffset.x * 2.0 + (branchSeed + y + i) * 0.5 + leafOffset.z + i);
-					glm::vec4 leafPosition = glm::vec4(branch.positions[branch.GetPositionIndex(y, 0)] + base + offset + leafOffset, 0);
+					glm::vec4 leafPosition = glm::vec4(branch.positions[branch.GetPositionIndex(y, 0)] + base + offset + leafOffset * float(i + 1), 0);
 					Trees::leafPositions.push_back(leafPosition);
 					//else if (i == 1) Trees::leafPositions1.push_back(leafPosition);
 				}
@@ -1032,14 +1045,16 @@ Shape BranchConfiguration::Generate()
 		return (branch);
 	}
 
-	float angleSpacing = 360.0 / splitCount;
+	//int baseBranchReduction = iteration == 0 ? 1 : 0;
+	int baseBranchReduction = 0;
+	float angleSpacing = 360.0 / (splitCount - baseBranchReduction);
 	float angleMax = angleSpacing * angleRandomness;
 	//float angleMax = 0.0;
 	branchSeed = Utilities::Random11(branchSeed);
 	float startAngle = branchSeed * 180.0;
 	//float startAngle = 0.0;
 
-	for (int i = 0; i < splitCount; i++)
+	for (int i = 0; i < (splitCount - baseBranchReduction); i++)
 	{
 		int subResolution = glm::clamp(int(glm::ceil(resolution * 0.5)), 4, resolution);
 
@@ -1093,6 +1108,7 @@ Shape BranchConfiguration::Generate()
 		subBranchConfig.iteration = iteration + 1;
 		subBranchConfig.main = false;
 		subBranchConfig.lod = lod;
+		subBranchConfig.leaves = leaves;
 
 		//if (i == 0) std::cout << iteration << std::endl;
 

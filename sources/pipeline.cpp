@@ -138,7 +138,7 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	tesselationInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO;
 	tesselationInfo.patchControlPoints = 3;
 
-	int stageCount = 1 + (pipelineConfig.tesselation ? 2 : 0) + ((pipelineConfig.shadow || pipelineConfig.cull) ? 0 : 1);
+	int stageCount = 1 + (pipelineConfig.tesselation ? 2 : 0) + (((pipelineConfig.shadow && !pipelineConfig.shadowFragment) || pipelineConfig.cull) ? 0 : 1);
 	int currentStage = 0;
 	std::vector<VkPipelineShaderStageCreateInfo> shaderStages(stageCount);
 
@@ -168,7 +168,7 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 		shaderStages[currentStage++] = tesselationEvaluationShaderStageInfo;
 	}
 
-	if (!pipelineConfig.shadow && !pipelineConfig.cull)
+	if ((!pipelineConfig.shadow || pipelineConfig.shadowFragment) && !pipelineConfig.cull)
 	{
 		fragmentCode = Utilities::FileToBinary((currentPath + "/shaders/" + shader + ".frag.spv").c_str());
 
@@ -292,7 +292,7 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 		vkDestroyShaderModule(device.logicalDevice, tesselationControlShaderModule, nullptr);
 		vkDestroyShaderModule(device.logicalDevice, tesselationEvaluationShaderModule, nullptr);
 	}
-	if (!pipelineConfig.shadow && !pipelineConfig.cull)
+	if ((!pipelineConfig.shadow || pipelineConfig.shadowFragment) && !pipelineConfig.cull)
 	{
 		vkDestroyShaderModule(device.logicalDevice, fragmentShaderModule, nullptr);
 	}

@@ -18,6 +18,7 @@
 
 struct BranchConfiguration
 {
+	bool leaves = false;
 	bool main = false;
 	int iteration = 0;
 	int maxIteration = 7;

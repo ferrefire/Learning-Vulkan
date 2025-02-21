@@ -27,7 +27,8 @@ layout(location = 1) out vec3 localPosition;
 layout(location = 2) out vec3 globalNormal;
 layout(location = 3) out vec3 localNormal;
 layout(location = 4) out vec3 leafColor;
-layout(location = 5) out vec4 shadowPositions[CASCADE_COUNT];
+layout(location = 5) out vec3 localCoordinates;
+layout(location = 6) out vec4 shadowPositions[CASCADE_COUNT];
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -70,6 +71,7 @@ void main()
 	globalNormal = normalize((normalPos + objectPosition) - treeCenter);
 	//normal = mix(localNormal, globalNormal, 0.5);
 
+	localCoordinates = inPosition;
 	localPosition = normalPos;
 	worldPosition = ObjectToWorld(objectPosition, mat4(1)) + position;
 

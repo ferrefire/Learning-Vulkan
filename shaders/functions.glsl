@@ -5,6 +5,13 @@
 #define MAX_TRIANGLE_POINTS 25
 #endif
 
+struct Triangle
+{
+    vec2 p1;
+    vec2 p2;
+    vec2 p3;
+};
+
 // A single iteration of Bob Jenkins' One-At-A-Time hashing algorithm.
 uint hash( uint x ) 
 {
@@ -65,6 +72,16 @@ float SquaredDistanceVec2(vec2 p1, vec2 p2)
 int ValidUV(vec2 uv)
 {
 	return (abs(uv.x - 0.5) <= 0.5 && abs(uv.y - 0.5) <= 0.5) ? 1 : 0;
+}
+
+bool InsideTriangle(Triangle t, vec2 p)
+{
+    float s1 = (t.p2.x - t.p1.x) * (p.y - t.p1.y) - (t.p2.y - t.p1.y) * (p.x - t.p1.x);
+    float s2 = (t.p3.x - t.p2.x) * (p.y - t.p2.y) - (t.p3.y - t.p2.y) * (p.x - t.p2.x);
+    float s3 = (t.p1.x - t.p3.x) * (p.y - t.p3.y) - (t.p1.y - t.p3.y) * (p.x - t.p3.x);
+
+    if ((s1 > 0.0 && s2 > 0.0 && s3 > 0.0) || (s1 < 0.0 && s2 < 0.0 && s3 < 0.0)) return (true);
+    else return (false);
 }
 
 

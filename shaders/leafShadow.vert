@@ -23,6 +23,8 @@ layout(push_constant, std430) uniform PushConstants
 
 layout(location = 0) in vec3 inPosition;
 
+layout(location = 0) out vec3 localCoordinates;
+
 #include "variables.glsl"
 #include "functions.glsl"
 #include "transformation.glsl"
@@ -58,6 +60,8 @@ void main()
 	//leafColor = vec3(0.0916, 0.1, 0.0125) * color;
 
 	//gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
+
+	localCoordinates = inPosition;
 
 	gl_Position = variables.shadowCascadeMatrix[pc.shadowCascade] * vec4(worldPosition, 1.0);
 }

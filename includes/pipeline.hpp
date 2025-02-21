@@ -56,6 +56,7 @@ struct PipelineConfiguration
 	bool foliage = false;
 	bool cullFront = false;
 	bool shadow = false;
+	bool shadowFragment = false;
 	bool cull = false;
 };
 

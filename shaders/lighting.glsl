@@ -453,15 +453,23 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth)
 	//range = 0;
 	//if (maxCascade < 0) maxCascade = CASCADE_COUNT;
 
+	int shadowLod = -1;
+
 	for (int i = 0; i < CASCADE_COUNT; i++)
 	{
+		if (shadowLod != -1 && abs(projectionCoordinates.x - 0.5) <= 0.49 && abs(projectionCoordinates.y - 0.5) <= 0.49) return (shadow);
+
 		projectionCoordinates = shadowSpaces[i].xyz / shadowSpaces[i].w;
 		projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
+
 		if (ValidProjection(projectionCoordinates))
 		{
-			shadow = BlendCascadedShadow(projectionCoordinates, i, range);
-			if (shadow > 0.0) return (shadow);
+			blendShadow = BlendCascadedShadow(projectionCoordinates, i, range);
+			if (blendShadow > shadow) shadow = blendShadow;
+			if (shadow > 0.0 || shadowLod != -1) return (shadow);
+			shadowLod = i;
 		}
+		else if (shadowLod != -1) return (shadow);
 	}
 
 	/*projectionCoordinates = shadowSpaces[0].xyz / shadowSpaces[0].w;
