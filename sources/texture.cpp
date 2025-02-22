@@ -273,7 +273,7 @@ void Texture::CreateSampler(SamplerConfiguration &samplerConfig)
 	samplerInfo.addressModeW = samplerConfig.repeatMode;
 	samplerInfo.anisotropyEnable = samplerConfig.anisotrophic;
 	//samplerInfo.maxAnisotropy = device.properties.limits.maxSamplerAnisotropy;
-	samplerInfo.maxAnisotropy = 8.0;
+	samplerInfo.maxAnisotropy = 1.0;
 	samplerInfo.borderColor = samplerConfig.borderColor;
 	samplerInfo.unnormalizedCoordinates = samplerConfig.unnormalizedCoordinates;
 	samplerInfo.compareEnable = samplerConfig.compare;

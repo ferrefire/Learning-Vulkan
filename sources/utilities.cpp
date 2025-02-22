@@ -78,6 +78,12 @@ float Utilities::SignedFloor(float x)
     else return ceil(x);
 }
 
+float Utilities::SignedCeil(float x)
+{
+    if (x > 0) return ceil(x);
+    else return floor(x);
+}
+
 int Utilities::Fits(float part, float whole)
 {
     float times = whole / part;

@@ -20,13 +20,17 @@ void Terrain::Create()
 	shadowComputeVariables[1].distance = 8192;
 	shadowComputeVariables[2].distance = 32768;
 
-	shadowComputeVariables[0].resolution = 512;
-	shadowComputeVariables[1].resolution = 512;
-	shadowComputeVariables[2].resolution = 512;
+	shadowComputeVariables[0].resolution = 64;
+	shadowComputeVariables[1].resolution = 64;
+	shadowComputeVariables[2].resolution = 64;
 
-	shadowComputeVariables[0].resolutionMultiplier = 1.0 / 512.0;
-	shadowComputeVariables[1].resolutionMultiplier = 1.0 / 512.0;
-	shadowComputeVariables[2].resolutionMultiplier = 1.0 / 512.0;
+	shadowComputeVariables[0].resolutionMultiplier = 1.0 / float(shadowComputeVariables[0].resolution);
+	shadowComputeVariables[1].resolutionMultiplier = 1.0 / float(shadowComputeVariables[1].resolution);
+	shadowComputeVariables[2].resolutionMultiplier = 1.0 / float(shadowComputeVariables[2].resolution);
+
+	shadowComputeVariables[0].spacing = shadowComputeVariables[0].resolutionMultiplier * shadowComputeVariables[0].distance;
+	shadowComputeVariables[1].spacing = shadowComputeVariables[1].resolutionMultiplier * shadowComputeVariables[1].distance;
+	shadowComputeVariables[2].spacing = shadowComputeVariables[2].resolutionMultiplier * shadowComputeVariables[2].distance;
 
 	//Manager::shaderVariables.terrainShadowDistances[0] = shadowComputeVariables.terrainShadowDistances[0];
 
@@ -48,6 +52,8 @@ void Terrain::CreateTextures()
 {
 	SamplerConfiguration grassSamplerConfig;
 	grassSamplerConfig.repeatMode = REPEAT;
+	grassSamplerConfig.mipLodBias = 0.0f;
+	grassSamplerConfig.anisotrophic = VK_TRUE;
 	grassSamplerConfig.mipLodBias = 0.0f;
 
 	//grassDiffuseTexture.CreateTexture("rocky_grass_diff.jpg", grassSamplerConfig);
@@ -742,12 +748,13 @@ void Terrain::ComputeHeightMapArray(VkCommandBuffer commandBuffer, uint32_t inde
 	if (oneTimeBuffer) Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
 
-void Terrain::ComputeShadows(uint32_t index, glm::vec2 newOffset)
+void Terrain::ComputeShadows(uint32_t index)
 {
+	vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
 	int dispatchCount = int(floor(float(shadowComputeVariables[index].resolution) / 8.0));
 	//shadowComputeVariables.index = index;
 	
-	terrainShadowOffsets[index] = newOffset;
+	//terrainShadowOffsets[index] = newOffset;
 	//int dispatchCount = 128;
 
 	//Manager::UpdateShaderVariables();
@@ -762,15 +769,17 @@ void Terrain::ComputeShadows(uint32_t index, glm::vec2 newOffset)
 	vkCmdDispatch(commandBuffer, dispatchCount, dispatchCount, 1);
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
 
-	Manager::UpdateShaderVariables();
+	//terrainShadowOffsets[index] = newOffset;
+
+	//Manager::UpdateShaderVariables();
 }
 
 int ShouldUpdateShadows(glm::vec2 viewPosition)
 {
 	for (int i = TERRAIN_SHADOW_CASCADES - 1; i >= 0; i--)
 	{
-		if (abs(viewPosition.x - Terrain::terrainShadowOffsets[i].x) > Terrain::shadowComputeVariables[i].distance * 0.1 ||
-			abs(viewPosition.y - Terrain::terrainShadowOffsets[i].y) > Terrain::shadowComputeVariables[i].distance * 0.1)
+		if (abs(viewPosition.x - Terrain::terrainShadowOffsets[i].x) > Terrain::shadowComputeVariables[i].distance * (0.075 * (i + 1)) ||
+			abs(viewPosition.y - Terrain::terrainShadowOffsets[i].y) > Terrain::shadowComputeVariables[i].distance * (0.075 * (i + 1)))
 		{
 			return (i);
 		}
@@ -804,18 +813,18 @@ void Terrain::CheckTerrainOffset(VkCommandBuffer commandBuffer)
 	{
 		glm::vec2 newOffset = glm::vec2(Utilities::Fits(terrainChunkSize * terrainStep, xw), Utilities::Fits(terrainChunkSize * terrainStep, zw)) * terrainChunkSize * terrainStep;
 		terrainOffset += XY3XZ(newOffset);
+		terrainLod0Offset -= newOffset;
+		terrainLod1Offset -= newOffset;
 
-		terrainLod0Offset = glm::vec2(0);
-		terrainLod1Offset = glm::vec2(0);
+		//terrainLod0Offset = glm::vec2(0);
+		//terrainLod1Offset = glm::vec2(0);
 
 		Manager::camera.Move(-glm::vec3(newOffset.x, 0, newOffset.y));
 
 		updateTerrainShadows = true;
 
-		//Manager::UpdateShaderVariables();
-
-		ComputeHeightMap(commandBuffer, 1);
-		ComputeHeightMap(commandBuffer, 0);
+		//ComputeHeightMap(commandBuffer, 1);
+		//ComputeHeightMap(commandBuffer, 0);
 	}
 	else if (abs(x1) >= terrainLod1Size * terrainLod1Step || abs(z1) >= terrainLod1Size * terrainLod1Step)
 	{
@@ -854,13 +863,38 @@ void Terrain::CheckTerrainShadowOffset()
 			updateTerrainShadows = false;
 			for (int i = TERRAIN_SHADOW_CASCADES - 1; i >= 0; i--)
 			{
-				ComputeShadows(i, glm::vec2(xw, zw));
+				//float stepSize = Terrain::shadowComputeVariables[i].distance * (0.075 * (i + 1));
+				//xw -= terrainShadowOffsets[i].x;
+				//zw -= terrainShadowOffsets[i].y;
+				//glm::vec2 newOffset = glm::vec2(Utilities::Fits(stepSize, xw), Utilities::Fits(stepSize, zw)) * stepSize;
+				//xw = Utilities::SignedCeil(xw / stepSize) * stepSize;
+				//zw = Utilities::SignedCeil(zw / stepSize) * stepSize;
+				//float shadowSpacing = Terrain::shadowComputeVariables[i].resolutionMultiplier * Terrain::shadowComputeVariables[i].distance;
+				glm::vec2 flooredViewPosition = floor(glm::vec2(xw, zw) / shadowComputeVariables[i].spacing);
+    			float u = (flooredViewPosition.x) * shadowComputeVariables[i].spacing;
+    			float v = (flooredViewPosition.y) * shadowComputeVariables[i].spacing;
+				terrainShadowOffsets[i] = glm::vec2(u, v);
+				ComputeShadows(i);
 			}
 		}
 		else
 		{
-			ComputeShadows(ShouldUpdateShadows(glm::vec2(xw, zw)), glm::vec2(xw, zw));
+			int i = ShouldUpdateShadows(glm::vec2(xw, zw));
+			//float stepSize = Terrain::shadowComputeVariables[i].distance * (0.075 * (i + 1));
+			//xw -= terrainShadowOffsets[i].x;
+			//zw -= terrainShadowOffsets[i].y;
+			//glm::vec2 newOffset = glm::vec2(Utilities::Fits(stepSize, xw), Utilities::Fits(stepSize, zw)) * stepSize;
+			//xw = Utilities::SignedCeil(xw / stepSize) * stepSize;
+			//zw = Utilities::SignedCeil(zw / stepSize) * stepSize;
+			//float shadowSpacing = Terrain::shadowComputeVariables[i].resolutionMultiplier * Terrain::shadowComputeVariables[i].distance;
+			glm::vec2 flooredViewPosition = floor(glm::vec2(xw, zw) / shadowComputeVariables[i].spacing);
+    		float u = (flooredViewPosition.x) * shadowComputeVariables[i].spacing;
+    		float v = (flooredViewPosition.y) * shadowComputeVariables[i].spacing;
+			terrainShadowOffsets[i] = glm::vec2(u, v);
+			ComputeShadows(i);
 		}
+
+		Manager::UpdateShaderVariables();
 	}
 }
 

@@ -26,6 +26,7 @@ class Utilities
 		static bool Contains(const std::string &str, const std::string &find);
 		static std::string GetPath();
 		static float SignedFloor(float x);
+		static float SignedCeil(float x);
 		static int Fits(float part, float whole);
 		static void PrintVec(glm::vec4 vec);
 		static void PrintVec(glm::vec3 vec);

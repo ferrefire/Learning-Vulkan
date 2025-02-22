@@ -457,7 +457,7 @@ float GetCascadedShadow(vec4 shadowSpaces[CASCADE_COUNT], float depth)
 
 	for (int i = 0; i < CASCADE_COUNT; i++)
 	{
-		if (shadowLod != -1 && abs(projectionCoordinates.x - 0.5) <= 0.49 && abs(projectionCoordinates.y - 0.5) <= 0.49) return (shadow);
+		if (shadowLod != -1 && abs(projectionCoordinates.x - 0.5) <= 0.49 && abs(projectionCoordinates.y - 0.5) <= 0.49 && abs(projectionCoordinates.z - 0.5) <= 0.49) return (shadow);
 
 		projectionCoordinates = shadowSpaces[i].xyz / shadowSpaces[i].w;
 		projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
@@ -557,19 +557,23 @@ float GetTerrainShadow(vec2 worldPosition)
 	#endif
 
 	vec2 uv;
+	float shadow = 0.0;
 
-	for (int i = 0; i < TERRAIN_CASCADE_COUNT; i++)
+	for (int i = TERRAIN_CASCADE_COUNT - 1; i >= 0; i--)
 	{
 		uv = (worldPosition - variables.terrainShadowOffsets[i].xy) / variables.terrainShadowDistances[i].x;
 
 		if (abs(uv.x) < 0.5 && abs(uv.y) < 0.5)
 		{
-			float terrainShadow = textureLod(terrainShadowSamplers[i], uv + 0.5, 0).r;
-			return (1.0 - terrainShadow);
+			float terrainShadow = 1.0 - textureLod(terrainShadowSamplers[i], uv + 0.5, 0).r;
+			//if (terrainShadow > 0) shadow = terrainShadow;
+			shadow += terrainShadow;
+			if (shadow >= 1.0) return (1.0);
+			//return (terrainShadow);
 		}
 	}
 
-	return (0);
+	return (shadow);
 }
 
 #endif

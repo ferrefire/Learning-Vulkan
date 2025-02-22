@@ -36,6 +36,7 @@ struct LeafData
 	uint scalxrotx;
 	uint colxnormx;
 	uint normyz;
+	uint rotz;
 };
 
 layout(std430, set = 1, binding = 0) readonly restrict buffer DataBuffer
@@ -290,6 +291,7 @@ void main()
 		float leafScale = leafLodScale + (Random11(leafRan) * leafLodScale) * 0.25;
 		float leafRotationX = Random01(leafIndex * 0.001 + leafRan);
 		float leafRotationY = Random01(leafIndex * 0.001 * 2.0 + leafRan * 0.5);
+		float leafRotationZ = Random01(leafIndex * 0.001 * 0.5 + leafRan * 10.0);
 		float leafColor = 1.0 + (Random01(leafIndex * 0.001 * 0.5 + leafRan * 2.0 + leafRotationX + leafRotationY) - 0.5);
 
 		LeafData leafData;
@@ -298,6 +300,7 @@ void main()
 		leafData.scalxrotx = packHalf2x16(vec2(leafScale * scale, leafRotationX));
 		leafData.colxnormx = packHalf2x16(vec2(leafColor, leafLocalPosition.x));
 		leafData.normyz = packHalf2x16(vec2(leafLocalPosition.y, leafLocalPosition.z));
+		leafData.rotz = packHalf2x16(vec2(leafRotationZ, leafRotationZ));
 		leavesData[leafDataIndex] = leafData;
 
 		leafDataIndex++;

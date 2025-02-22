@@ -13,6 +13,7 @@ struct LeafData
 	uint scalxrotx;
 	uint colxnormx;
 	uint normyz;
+	uint rotz;
 };
 
 layout(std430, set = 1, binding = 0) buffer DataBuffer
@@ -41,7 +42,7 @@ const vec3 treeCenter = vec3(0.0, 40.0, 0.0);
 void main()
 {
 	vec3 position = vec3(0);
-	vec2 rotation = vec2(0);
+	vec3 rotation = vec3(0);
 	float scale = 1.0;
 	float color = 1.0;
 
@@ -60,12 +61,15 @@ void main()
 	color = colxnormx.x;
 	vec2 normyz = unpackHalf2x16(data[dataIndex].normyz);
 	vec3 normalPos = vec3(colxnormx.y, normyz.x, normyz.y);
+	vec2 rotz = unpackHalf2x16(data[dataIndex].rotz);
+	rotation.z = rotz.x * 360.0 - 180.0;
 
 	position += variables.viewPosition;
 
 	vec3 objectPosition = inPosition * scale;
 	mat4 rotationMatrix = GetRotationMatrix(radians(rotation.y), vec3(0.0, 1.0, 0.0));
 	rotationMatrix = rotationMatrix * GetRotationMatrix(radians(rotation.x * 0.5), vec3(1.0, 0.0, 0.0));
+	rotationMatrix = rotationMatrix * GetRotationMatrix(radians(rotation.z * 0.25), vec3(0.0, 0.0, 1.0));
     objectPosition = (rotationMatrix * vec4(objectPosition, 1.0)).xyz;
 	localNormal = (rotationMatrix * vec4(vec3(0, 1, 0), 1.0)).xyz;
 	globalNormal = normalize((normalPos + objectPosition) - treeCenter);

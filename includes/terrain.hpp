@@ -54,6 +54,7 @@ struct ShadowComputeVariables
 	float distance = 0;
 	int resolution =  0;
 	float resolutionMultiplier = 0;
+	float spacing = 0;
 	int lod = 0;
 };
 
@@ -165,7 +166,7 @@ class Terrain
 		static void RecordCullCommands(VkCommandBuffer commandBuffer);
 		static void ComputeHeightMap(VkCommandBuffer commandBuffer, uint32_t lod);
 		static void ComputeHeightMapArray(VkCommandBuffer commandBuffer, uint32_t index);
-		static void ComputeShadows(uint32_t index, glm::vec2 newOffset);
+		static void ComputeShadows(uint32_t index);
 		static void CheckTerrainOffset(VkCommandBuffer commandBuffer);
 		static void CheckTerrainShadowOffset();
 		static void RenderTerrain(VkCommandBuffer commandBuffer);
