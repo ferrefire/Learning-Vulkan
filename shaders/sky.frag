@@ -154,7 +154,7 @@ void main()
 	{
 		vec3 originalColor = subpassLoad(inputColor).rgb;
 
-		float linearDepth = GetDepth(depth);
+		float linearDepth = clamp(GetDepth(depth) * variables.ranges.y, 0.0, 25000.0) / 25000.0;
 
 		//if (linearDepth < 0.01)
 		//{

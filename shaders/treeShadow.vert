@@ -88,7 +88,7 @@ void main()
 
     position += variables.viewPosition;
 
-	mat4 rotationMatrix = GetRotationMatrix(radians(rotation), vec3(0.0, 1.0, 0.0));
+	mat4 rotationMatrix = GetRotationMatrix(rotation, vec3(0.0, 1.0, 0.0));
     vec3 objectPosition = (rotationMatrix * vec4(inPosition  * scale, 1.0)).xyz;
     //normal = (rotationMatrix * vec4(inNormal, 0.0)).xyz;
 

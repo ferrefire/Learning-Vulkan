@@ -67,9 +67,9 @@ void main()
 	position += variables.viewPosition;
 
 	vec3 objectPosition = inPosition * scale;
-	mat4 rotationMatrix = GetRotationMatrix(radians(rotation.y), vec3(0.0, 1.0, 0.0));
-	rotationMatrix = rotationMatrix * GetRotationMatrix(radians(rotation.x * 0.5), vec3(1.0, 0.0, 0.0));
-	rotationMatrix = rotationMatrix * GetRotationMatrix(radians(rotation.z * 0.25), vec3(0.0, 0.0, 1.0));
+	mat4 rotationMatrix = GetRotationMatrix(rotation.y, vec3(0.0, 1.0, 0.0));
+	rotationMatrix = rotationMatrix * GetRotationMatrix(rotation.x * 0.5, vec3(1.0, 0.0, 0.0));
+	//rotationMatrix = rotationMatrix * GetRotationMatrix(rotation.z, vec3(0.0, 0.0, 1.0));
     objectPosition = (rotationMatrix * vec4(objectPosition, 1.0)).xyz;
 	localNormal = (rotationMatrix * vec4(vec3(0, 1, 0), 1.0)).xyz;
 	globalNormal = normalize((normalPos + objectPosition) - treeCenter);

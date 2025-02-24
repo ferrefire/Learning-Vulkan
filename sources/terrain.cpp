@@ -22,7 +22,7 @@ void Terrain::Create()
 
 	shadowComputeVariables[0].resolution = 64;
 	shadowComputeVariables[1].resolution = 64;
-	shadowComputeVariables[2].resolution = 64;
+	shadowComputeVariables[2].resolution = 128;
 
 	shadowComputeVariables[0].resolutionMultiplier = 1.0 / float(shadowComputeVariables[0].resolution);
 	shadowComputeVariables[1].resolutionMultiplier = 1.0 / float(shadowComputeVariables[1].resolution);
@@ -519,7 +519,7 @@ void Terrain::PostFrame()
 		return;
 
 	float yw = Manager::camera.Position().y;
-	if (abs(yw) >= terrainHeight * 0.25)
+	if (abs(yw) >= terrainHeight * terrainStep)
 	{
 		glm::vec3 newOffset = glm::vec3(0, -yw, 0);
 		terrainOffset += newOffset;
@@ -821,7 +821,16 @@ void Terrain::CheckTerrainOffset(VkCommandBuffer commandBuffer)
 
 		Manager::camera.Move(-glm::vec3(newOffset.x, 0, newOffset.y));
 
-		updateTerrainShadows = true;
+		//updateTerrainShadows = true;
+
+		for (int i = TERRAIN_SHADOW_CASCADES - 1; i >= 0; i--)
+		{
+			//glm::vec2 flooredViewPosition = floor(glm::vec2(xw, zw) / shadowComputeVariables[i].spacing);
+    		//float u = (flooredViewPosition.x) * shadowComputeVariables[i].spacing;
+    		//float v = (flooredViewPosition.y) * shadowComputeVariables[i].spacing;
+			terrainShadowOffsets[i] -= newOffset;
+			//ComputeShadows(i);
+		}
 
 		//ComputeHeightMap(commandBuffer, 1);
 		//ComputeHeightMap(commandBuffer, 0);
@@ -863,13 +872,6 @@ void Terrain::CheckTerrainShadowOffset()
 			updateTerrainShadows = false;
 			for (int i = TERRAIN_SHADOW_CASCADES - 1; i >= 0; i--)
 			{
-				//float stepSize = Terrain::shadowComputeVariables[i].distance * (0.075 * (i + 1));
-				//xw -= terrainShadowOffsets[i].x;
-				//zw -= terrainShadowOffsets[i].y;
-				//glm::vec2 newOffset = glm::vec2(Utilities::Fits(stepSize, xw), Utilities::Fits(stepSize, zw)) * stepSize;
-				//xw = Utilities::SignedCeil(xw / stepSize) * stepSize;
-				//zw = Utilities::SignedCeil(zw / stepSize) * stepSize;
-				//float shadowSpacing = Terrain::shadowComputeVariables[i].resolutionMultiplier * Terrain::shadowComputeVariables[i].distance;
 				glm::vec2 flooredViewPosition = floor(glm::vec2(xw, zw) / shadowComputeVariables[i].spacing);
     			float u = (flooredViewPosition.x) * shadowComputeVariables[i].spacing;
     			float v = (flooredViewPosition.y) * shadowComputeVariables[i].spacing;
@@ -880,13 +882,6 @@ void Terrain::CheckTerrainShadowOffset()
 		else
 		{
 			int i = ShouldUpdateShadows(glm::vec2(xw, zw));
-			//float stepSize = Terrain::shadowComputeVariables[i].distance * (0.075 * (i + 1));
-			//xw -= terrainShadowOffsets[i].x;
-			//zw -= terrainShadowOffsets[i].y;
-			//glm::vec2 newOffset = glm::vec2(Utilities::Fits(stepSize, xw), Utilities::Fits(stepSize, zw)) * stepSize;
-			//xw = Utilities::SignedCeil(xw / stepSize) * stepSize;
-			//zw = Utilities::SignedCeil(zw / stepSize) * stepSize;
-			//float shadowSpacing = Terrain::shadowComputeVariables[i].resolutionMultiplier * Terrain::shadowComputeVariables[i].distance;
 			glm::vec2 flooredViewPosition = floor(glm::vec2(xw, zw) / shadowComputeVariables[i].spacing);
     		float u = (flooredViewPosition.x) * shadowComputeVariables[i].spacing;
     		float v = (flooredViewPosition.y) * shadowComputeVariables[i].spacing;
@@ -1007,7 +1002,8 @@ glm::vec3 Terrain::terrainOffset = glm::vec3(0.0, -2500.0, 0.0);
 glm::vec2 Terrain::terrainLod0Offset = glm::vec2(0);
 glm::vec2 Terrain::terrainLod1Offset = glm::vec2(0);
 std::vector<glm::vec2> Terrain::terrainShadowOffsets;
-float Terrain::terrainStep = 0.25f;
+//float Terrain::terrainStep = 0.25f * 0.25f;
+float Terrain::terrainStep = 0.05f;
 float Terrain::terrainLod0Step = 0.125f;
 float Terrain::terrainLod1Step = 0.25f;
 
