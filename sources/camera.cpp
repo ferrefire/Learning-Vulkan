@@ -9,6 +9,7 @@
 
 Camera::Camera(Window &window) : window{window}
 {
+	far = 50000.0;
 	//UpdateProjection();
 	//Move(glm::vec3(0.0, 100.0, -100.0));
 	////Rotate(glm::vec3(-25.0, -135.0, 0.0));
@@ -24,8 +25,12 @@ void Camera::UpdateProjection()
 {
 	cameraWidth = window.width;
 	cameraHeight = window.height;
+
 	projection = glm::perspective(glm::radians(FOV), (float)cameraWidth / (float)cameraHeight, near, far);
 	projection[1][1] *= -1;
+
+	projectionLod = glm::perspective(glm::radians(FOV), (float)cameraWidth / (float)cameraHeight, nearLod, farLod);
+	projectionLod[1][1] *= -1;
 }
 
 void Camera::UpdateView()
@@ -123,6 +128,11 @@ const glm::mat4 &Camera::Projection()
 {
 	if (cameraWidth != window.width || cameraHeight != window.height) UpdateProjection();
 	return (projection);
+}
+
+const glm::mat4 &Camera::ProjectionLod()
+{
+	return (projectionLod);
 }
 
 void Camera::PrintStatus()

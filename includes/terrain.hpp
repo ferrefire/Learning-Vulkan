@@ -67,14 +67,17 @@ class Terrain
 	public:
 		static Mesh lod0Mesh;
 		static Mesh lod1Mesh;
+		static Mesh lod2Mesh;
 
 		static Pipeline graphicsPipeline;
+		static Pipeline graphicsLodPipeline;
 		static Pipeline cullPipeline;
 		static Pipeline heightMapComputePipeline;
 		static Pipeline heightMapArrayComputePipeline;
 		static Pipeline shadowComputePipeline;
 
 		static Descriptor graphicsDescriptor;
+		//static Descriptor graphicsLodDescriptor;
 		static Descriptor cullDescriptor;
 		static Descriptor heightMapComputeDescriptor;
 		static Descriptor heightMapArrayComputeDescriptor;
@@ -110,6 +113,7 @@ class Terrain
 		static float terrainTotalSize;
 		static float terrainHeight;
 
+		static float terrainMeshSize;
 		static float terrainChunkSize;
 		static float terrainLod0Size;
 		static float terrainLod1Size;
@@ -171,7 +175,7 @@ class Terrain
 		static void CheckTerrainShadowOffset();
 		static void RenderTerrain(VkCommandBuffer commandBuffer);
 		static void RenderCulling(VkCommandBuffer commandBuffer);
-		static bool InView(const glm::vec3 &position, float tolerance, const glm::mat4 &projection, const glm::mat4 &view);
-		static bool ChunkInView(glm::vec3 position, float tolerance, glm::mat4 projection, glm::mat4 view, bool main = true);
+		static bool InView(const glm::vec3 &position, float tolerance, const glm::mat4 &projection, const glm::mat4 &view, bool lod);
+		static bool ChunkInView(glm::vec3 position, float tolerance, glm::mat4 projection, glm::mat4 view, bool main, bool lod);
 		static bool HeightMapsGenerated();
 };

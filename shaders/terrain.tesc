@@ -13,8 +13,11 @@
 //    uint chunkIndex;
 //} pc;
 
+//layout(location = 0) in flat int[gl_MaxPatchVertices] inLod;
+
 //layout(vertices = 3) in;
 layout(vertices = 3) out;
+//layout(location = 0) out flat int[3] outLod;
 
 #define SAMPLE_COUNT 3
 
@@ -49,6 +52,8 @@ void main()
 {
     //gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
 
+	//outLod[gl_InvocationID] = inLod[gl_InvocationID];
+
     //if (gl_InvocationID == 0)
     {
         vec3 p0 = (gl_in[0].gl_Position).xyz;
@@ -61,7 +66,8 @@ void main()
 
         vec3 center = (p0 + p1 + p2) * (1.0 / 3.0);
 
-		float depth = GetWorldDepth(center);
+		//bool cull = false;
+		float depth = clamp(GetWorldDepth(center) * variables.ranges.y, 0.0, 25000.0) / 25000.0;
 		//float tolerance = pow(1.0 - depth, 3);
 		bool cull = (InView(center, 0) == 0 && InView(p0, 0) == 0 && InView(p1, 0) == 0 && InView(p2, 0) == 0);
 		if (cull && depth < 0.1)

@@ -117,6 +117,10 @@ void main()
 
 	float depth = subpassLoad(inputDepth).r;
 
+	//vec3 originalColor = subpassLoad(inputColor).rgb;
+	//outColor = vec4(originalColor, 1.0);
+	//return;
+
 	if (depth == 1.0)
 	{
 		vec2 pixelPosition = inCoordinates;
@@ -183,8 +187,6 @@ void main()
 			//finalColor = aerialColor;
 			//finalColor = aerialColor + (originalColor * (1.0 - aerialDensity));
 		}
-
-		
 
 		/*clipSpace = vec3(pixelPosition * vec2(2.0) - vec2(1.0), depth);
 		hPos = inverse(variables.viewMatrix) * vec4(clipSpace, 1.0);

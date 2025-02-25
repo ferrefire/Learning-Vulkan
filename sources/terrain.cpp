@@ -104,6 +104,10 @@ void Terrain::CreateMeshes()
 	lod1Mesh.shape.SetShape(PLANE, 10);
 	lod1Mesh.RecalculateVertices();
 	lod1Mesh.Create();
+
+	lod2Mesh.shape.SetShape(PLANE, 25);
+	lod2Mesh.RecalculateVertices();
+	lod2Mesh.Create();
 }
 
 void Terrain::CreateObjects()
@@ -118,8 +122,8 @@ void Terrain::CreateObjects()
 			terrainChunks[i].mesh = &lod1Mesh;
 			terrainChunks[i].pipeline = &graphicsPipeline;
 			terrainChunks[i].Create();
-			terrainChunks[i].Resize(glm::vec3(terrainChunkSize));
-			terrainChunks[i].Move(glm::vec3(x, 0, y) * terrainChunkSize);
+			terrainChunks[i].Resize(glm::vec3(terrainMeshSize));
+			terrainChunks[i].Move(glm::vec3(x, 0, y) * terrainMeshSize);
 		}
 	}
 }
@@ -130,7 +134,6 @@ void Terrain::CreateGraphicsPipeline()
 	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
 	descriptorLayoutConfig[0].stages = VERTEX_STAGE | TESSELATION_EVALUATION_STAGE;
 	descriptorLayoutConfig[0].count = terrainChunkCount;
-
 	descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[1].stages = FRAGMENT_STAGE;
 	descriptorLayoutConfig[1].count = 2;
@@ -142,13 +145,23 @@ void Terrain::CreateGraphicsPipeline()
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
 	pipelineConfiguration.tesselation = true;
-	pipelineConfiguration.pushConstantCount = 1;
+	pipelineConfiguration.pushConstantCount = 2;
 	pipelineConfiguration.pushConstantStage = VERTEX_STAGE | TESSELATION_EVALUATION_STAGE;
 	pipelineConfiguration.pushConstantSize = sizeof(uint32_t);
 
     VertexInfo vertexInfo = lod0Mesh.MeshVertexInfo();
 
     graphicsPipeline.CreateGraphicsPipeline("terrain", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
+
+	PipelineConfiguration lodPipelineConfiguration = Pipeline::DefaultConfiguration();
+	//lodPipelineConfiguration.tesselation = true;
+	lodPipelineConfiguration.pushConstantCount = 1;
+	lodPipelineConfiguration.pushConstantStage = VERTEX_STAGE;
+	lodPipelineConfiguration.pushConstantSize = sizeof(uint32_t);
+
+	VertexInfo lodVertexInfo = lod2Mesh.MeshVertexInfo();
+
+	graphicsLodPipeline.CreateGraphicsPipeline("terrainLod", descriptorLayoutConfig, lodPipelineConfiguration, lodVertexInfo);
 }
 
 void Terrain::CreateCullPipeline()
@@ -429,6 +442,7 @@ void Terrain::DestroyMeshes()
 {
 	lod0Mesh.Destroy();
 	lod1Mesh.Destroy();
+	lod2Mesh.Destroy();
 }
 
 void Terrain::DestroyObjects()
@@ -444,6 +458,7 @@ void Terrain::DestroyObjects()
 void Terrain::DestroyPipelines()
 {
 	graphicsPipeline.Destroy();
+	graphicsLodPipeline.Destroy();
 	cullPipeline.Destroy();
 	heightMapComputePipeline.Destroy();
 	heightMapArrayComputePipeline.Destroy();
@@ -489,6 +504,15 @@ void Terrain::Start()
 	Manager::shaderVariables.terrainChunksLength = heightMapLength;
 	Manager::shaderVariables.terrainChunksLengthMult = 1.0 / float(heightMapLength);
 	Manager::shaderVariables.terrainHeight = terrainHeight;
+
+	for (Object &chunk : terrainChunks)
+	{
+		for (int i = 0; i < Manager::settings.maxFramesInFlight; i++)
+		{
+			chunk.ModifyPosition().y = 0;
+			chunk.UpdateUniformBuffer(i);
+		}
+	}
 
 	//ComputeHeightMap(nullptr, 1);
 	//ComputeHeightMap(nullptr, 0);
@@ -540,9 +564,9 @@ void Terrain::PostFrame()
 
 void Terrain::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 {
-	graphicsPipeline.BindGraphics(commandBuffer);
-	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
-	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+	//graphicsPipeline.BindGraphics(commandBuffer);
+	//Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+	//graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
 	RenderTerrain(commandBuffer);
 }
 
@@ -581,9 +605,10 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 
 	std::vector<int> lod0Indices;
 	std::vector<int> lod1Indices;
+	std::vector<int> lod2Indices;
 
-	float xs = Manager::camera.Position().x / float(terrainChunkSize);
-	float zs = Manager::camera.Position().z / float(terrainChunkSize);
+	float xs = Manager::camera.Position().x / float(terrainMeshSize);
+	float zs = Manager::camera.Position().z / float(terrainMeshSize);
 
 	for (int xi = -terrainChunkRadius; xi <= terrainChunkRadius; xi++)
 	{
@@ -597,26 +622,64 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 
 			float distance = glm::clamp(glm::distance(glm::vec2(xf, zf), glm::vec2(xs, zs)), 0.0f, float(terrainChunkLength));
 			//bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.ViewOffset());
-			bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.ViewOffset());
+			bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.ViewOffset(), true, false);
+			//bool inLodView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.ProjectionLod(), Manager::camera.ViewOffset(), true, true);
 
-			if ((inView && distance < 1.0) || distance <= 0.75)
+			//if ((inView && distance < 1.0) || distance <= 0.75)
+			/*if (distance <= 0.75)
 			{
 				lod0Indices.push_back(index);
-				terrainChunks[index].ModifyPosition().y = 0;
-				terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
+				//terrainChunks[index].ModifyPosition().y = 0;
+				//terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
 			}
 			else if (inView)
 			{
-				float factor = pow(1.0 - (distance - 1.0) / float(terrainChunkLength - 1), 0.5);
+				//float factor = pow(1.0 - (distance - 1.0) / float(terrainChunkLength - 1), 0.5);
+				float factor = (distance - 0.75) / 0.75;
+				//float factor = 0;
 
-				lod1Indices.push_back(index);
-				terrainChunks[index].ModifyPosition().y = factor * -10.0;
-				terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
+				lod2Indices.push_back(index);
+				//terrainChunks[index].ModifyPosition().y = factor * -50.0;
+				//terrainChunks[index].ModifyPosition().y = 0;
+				//terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
+			}*/
+			//else if (inView)
+			//{
+			//	//float factor = (distance - 1.0) / 2.0;
+			//	//float factor = (distance - 1.5) / (float(terrainChunkLength) - 1.5);
+			//	float factor = 0;
+			//	//float lodFactor = 0;
+			//	lod2Indices.push_back(index);
+			//	//terrainChunks[index].ModifyPosition().y = 0;
+			//	//terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
+			//}
+
+			if (distance <= 0.75)
+			{
+				lod0Indices.push_back(index);
+				//if (terrainOffset.y < -5000.0) lod2Indices.push_back(index);
+				//terrainChunks[index].ModifyPosition().y = -250.0;
+				//terrainChunks[index].UpdateUniformBuffer(Manager::currentFrame);
 			}
+			else if (inView)
+			{
+				lod1Indices.push_back(index);
+				//lod2Indices.push_back(index);
+			}
+			//else if (inView)
+			//{
+			//	lod2Indices.push_back(index);
+			//}
 		}
 	}
 
+	graphicsPipeline.BindGraphics(commandBuffer);
+	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+
 	lod0Mesh.Bind(commandBuffer);
+	uint32_t pushLod = 0;
+	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_EVALUATION_STAGE, sizeof(uint32_t), sizeof(pushLod), &pushLod);
 
 	for (int index : lod0Indices)
 	{
@@ -626,6 +689,8 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 	}
 
 	lod1Mesh.Bind(commandBuffer);
+	pushLod = 1;
+	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_EVALUATION_STAGE, sizeof(uint32_t), sizeof(pushLod), &pushLod);
 
 	for (int index : lod1Indices)
 	{
@@ -633,6 +698,18 @@ void Terrain::RenderTerrain(VkCommandBuffer commandBuffer)
 		vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE | TESSELATION_EVALUATION_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
 		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod1Mesh.indices.size()), 1, 0, 0, 0);
 	}
+
+	/*graphicsLodPipeline.BindGraphics(commandBuffer);
+	Manager::globalDescriptor.Bind(commandBuffer, graphicsLodPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+	graphicsDescriptor.Bind(commandBuffer, graphicsLodPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+	lod2Mesh.Bind(commandBuffer);
+
+	for (int index : lod2Indices)
+	{
+		chunkIndex = index;
+		vkCmdPushConstants(commandBuffer, graphicsLodPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(chunkIndex), &chunkIndex);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(lod2Mesh.indices.size()), 1, 0, 0, 0);
+	}*/
 }
 
 void Terrain::RenderCulling(VkCommandBuffer commandBuffer)
@@ -644,8 +721,8 @@ void Terrain::RenderCulling(VkCommandBuffer commandBuffer)
 	std::vector<int> lod0Indices;
 	//std::vector<int> lod1Indices;
 
-	float xs = Manager::camera.Position().x / float(terrainChunkSize);
-	float zs = Manager::camera.Position().z / float(terrainChunkSize);
+	float xs = Manager::camera.Position().x / float(terrainMeshSize);
+	float zs = Manager::camera.Position().z / float(terrainMeshSize);
 
 	for (int xi = -terrainChunkRadius; xi <= terrainChunkRadius; xi++)
 	{
@@ -659,9 +736,9 @@ void Terrain::RenderCulling(VkCommandBuffer commandBuffer)
 
 			float distance = glm::clamp(glm::distance(glm::vec2(xf, zf), glm::vec2(xs, zs)), 0.0f, float(terrainChunkLength));
 			// bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.ViewOffset());
-			bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.ViewOffset());
+			//bool inView = ChunkInView(terrainChunks[index].GetPosition(), 0, Manager::camera.Projection(), Manager::camera.ViewOffset());
 
-			if ((inView && distance < 1.0) || distance <= 0.75)
+			if (distance <= 0.75)
 			{
 				lod0Indices.push_back(index);
 				//terrainChunks[index].ModifyPosition().y = 0;
@@ -904,7 +981,7 @@ void Terrain::UpdateHeightMapVariables()
 }
 */
 
-bool Terrain::InView(const glm::vec3 &position, float tolerance, const glm::mat4 &projection, const glm::mat4 &view)
+bool Terrain::InView(const glm::vec3 &position, float tolerance, const glm::mat4 &projection, const glm::mat4 &view, bool lod)
 {
 	glm::vec4 viewSpace = projection * view * glm::vec4(position, 1.0);
 
@@ -915,23 +992,24 @@ bool Terrain::InView(const glm::vec3 &position, float tolerance, const glm::mat4
 	clipSpace.y = clipSpace.y * 0.5f + 0.5f;
 	clipSpace.z = viewSpace.w;
 
-	if (clipSpace.z <= 0.0 || clipSpace.z >= Manager::camera.far) return false;
+	//if (clipSpace.z < 0.0 || clipSpace.z > (lod ? Manager::camera.farLod : Manager::camera.far)) return false;
+	if (clipSpace.z < 0.0) return false;
 
 	return !(clipSpace.x < -tolerance || clipSpace.x > 1.0f + tolerance || clipSpace.y < -tolerance || clipSpace.y > 1.0f + tolerance);
 }
 
-bool Terrain::ChunkInView(glm::vec3 position, float tolerance, glm::mat4 projection, glm::mat4 view, bool main)
+bool Terrain::ChunkInView(glm::vec3 position, float tolerance, glm::mat4 projection, glm::mat4 view, bool main, bool lod)
 {
-	if (InView(position, tolerance, projection, view)) return true;
-	else if (InView(position + glm::vec3(Terrain::terrainChunkSize * 0.5, 0, Terrain::terrainChunkSize * 0.5), 
-		tolerance, projection, view)) return true;
-	else if (InView(position + glm::vec3(Terrain::terrainChunkSize * -0.5, 0, Terrain::terrainChunkSize * -0.5), 
-		tolerance, projection, view)) return true;
-	else if (InView(position + glm::vec3(Terrain::terrainChunkSize * -0.5, 0, Terrain::terrainChunkSize * 0.5), 
-		tolerance, projection, view)) return true;
-	else if (InView(position + glm::vec3(Terrain::terrainChunkSize * 0.5, 0, Terrain::terrainChunkSize * -0.5), 
-		tolerance, projection, view)) return true;
-	else if (main) return ChunkInView(position + glm::vec3(0, Terrain::terrainHeight * 0.5, 0), tolerance, projection, view, false);
+	if (InView(position, tolerance, projection, view, lod)) return true;
+	else if (InView(position + glm::vec3(Terrain::terrainMeshSize * 0.5, 0, Terrain::terrainMeshSize * 0.5), 
+		tolerance, projection, view, lod)) return true;
+	else if (InView(position + glm::vec3(Terrain::terrainMeshSize * -0.5, 0, Terrain::terrainMeshSize * -0.5), 
+		tolerance, projection, view, lod)) return true;
+	else if (InView(position + glm::vec3(Terrain::terrainMeshSize * -0.5, 0, Terrain::terrainMeshSize * 0.5), 
+		tolerance, projection, view, lod)) return true;
+	else if (InView(position + glm::vec3(Terrain::terrainMeshSize * 0.5, 0, Terrain::terrainMeshSize * -0.5), 
+		tolerance, projection, view, lod)) return true;
+	else if (main) return ChunkInView(position + glm::vec3(0, Terrain::terrainHeight * 0.5, 0), tolerance, projection, view, false, lod);
 	return false;
 }
 
@@ -941,6 +1019,7 @@ bool Terrain::HeightMapsGenerated()
 }
 
 Pipeline Terrain::graphicsPipeline{Manager::currentDevice, Manager::camera};
+Pipeline Terrain::graphicsLodPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Terrain::cullPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Terrain::heightMapComputePipeline{Manager::currentDevice, Manager::camera};
 Pipeline Terrain::heightMapArrayComputePipeline{Manager::currentDevice, Manager::camera};
@@ -968,6 +1047,7 @@ std::vector<ShadowComputeVariables> Terrain::shadowComputeVariables;
 Buffer Terrain::shadowComputeVariablesBuffer;
 
 Descriptor Terrain::graphicsDescriptor{Manager::currentDevice};
+//Descriptor Terrain::graphicsLodDescriptor{Manager::currentDevice};
 Descriptor Terrain::cullDescriptor{Manager::currentDevice};
 Descriptor Terrain::heightMapComputeDescriptor{Manager::currentDevice};
 Descriptor Terrain::heightMapArrayComputeDescriptor{Manager::currentDevice};
@@ -975,9 +1055,11 @@ Descriptor Terrain::shadowComputeDescriptor{Manager::currentDevice};
 
 Mesh Terrain::lod0Mesh{};
 Mesh Terrain::lod1Mesh{};
+Mesh Terrain::lod2Mesh{};
 
 std::vector<Object> Terrain::terrainChunks;
 
+float Terrain::terrainMeshSize = 10000;
 float Terrain::terrainChunkSize = 10000;
 float Terrain::terrainLod0Size = 2500;
 float Terrain::terrainLod1Size = 5000;

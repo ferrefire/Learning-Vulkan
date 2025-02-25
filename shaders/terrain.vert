@@ -14,10 +14,12 @@ layout(set = 1, binding = 0) uniform ObjectData
 layout(push_constant, std430) uniform PushConstants
 {
     uint chunkIndex;
+    uint chunkLod;
 } pc;
 
 layout(location = 0) in vec3 inPosition;
 
+//layout(location = 0) out flat int outLod;
 //layout(location = 0) out vec3 outPosition;
 //layout(location = 1) out vec2 outTexCoord;
 
@@ -35,8 +37,11 @@ void main()
 	////if (distance(outPosition.xz, variables.viewPosition.xz + vec2(0, 1000)) < 100) position.y += 1;
     //gl_Position = objectData.projection * objectData.view * objectData.model * vec4(position, 1.0);
 
+	//vec3 worldPosition = ObjectToWorld(inPosition, objectDatas[pc.chunkIndex].model);
 	vec3 worldPosition = ObjectToWorld(inPosition, objectDatas[pc.chunkIndex].model);
-	worldPosition.y += GetTerrainHeight(worldPosition.xz);
+	worldPosition.y = GetTerrainHeight(worldPosition.xz);
+
+    //outLod = gl_InstanceIndex;
 
 	gl_Position = vec4(worldPosition, 1);
 }

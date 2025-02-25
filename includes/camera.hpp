@@ -24,15 +24,18 @@ class Camera
 		glm::mat4 view = glm::mat4(1.0f);
 		glm::mat4 viewOffset = glm::mat4(1.0f);
 		glm::mat4 projection = glm::mat4(1.0f);
+		glm::mat4 projectionLod = glm::mat4(1.0f);
 
 	public:
 		Camera(Window &window);
 		~Camera();
 
 		float near = 0.1f;
+		float nearLod = 0.1f;
 		//float far = 5000.0f;
 		//float far = 25000.0f;
 		float far = 50000.0f;
+		float farLod = 75000.0f;
 		float FOV = 45.0f;
 		//float speed = 1.0f;
 		float speed = 25.0f;
@@ -67,6 +70,7 @@ class Camera
 		const glm::mat4 &View();
 		const glm::mat4 &ViewOffset();
 		const glm::mat4 &Projection();
+		const glm::mat4 &ProjectionLod();
 
 		std::vector<glm::vec4> GetFrustumCorners(float nearDis, float farDis);
 		std::vector<glm::vec4> GetFrustumCorners(float nearDis, float farDis, glm::mat4 tempView);

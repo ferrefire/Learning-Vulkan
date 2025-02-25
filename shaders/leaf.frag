@@ -25,14 +25,14 @@ layout(location = 0) out vec4 outColor;
 const vec3 leafTint = vec3(0.0916, 0.1, 0.0125);
 const vec3 translucencyTint = vec3(235, 196, 5) / 255.0;
 
-const vec2 discardDistances = vec2(0.125, 0.15);
-const vec2 discardPositions = vec2(0.3, 0.2);
+const vec4 discardDistances = vec4(0.125 * 1.1, 0.1875, 0.375 * 0.9, 0.0625 * 1.75);
+//const vec4 discardDistances = vec4(0.125, 0.1875, 0.375, 0.0625);
 
 const Triangle discardTriangle0 = Triangle(vec2(0.0, 0.25) * 1.5, vec2(0.25, -0.125) * 1.5, vec2(-0.25, -0.125) * 1.5);
-const Triangle discardTriangle1 = Triangle(vec2(0.0, 0.0) * 1.425, vec2(-0.125, 0.1875) * 1.425, vec2(-0.375, 0.0625) * 1.425);
-const Triangle discardTriangle2 = Triangle(vec2(0.0, 0.0) * 1.425, vec2(-0.125, -0.1875) * 1.425, vec2(-0.375, -0.0625) * 1.425);
-const Triangle discardTriangle3 = Triangle(vec2(0.0, 0.0) * 1.425, vec2(0.125, 0.1875) * 1.425, vec2(0.375, 0.0625) * 1.425);
-const Triangle discardTriangle4 = Triangle(vec2(0.0, 0.0) * 1.425, vec2(0.125, -0.1875) * 1.425, vec2(0.375, -0.0625) * 1.425);
+const Triangle discardTriangle1 = Triangle(vec2(0.0, 0.0) * 1.425, vec2(-discardDistances.x, discardDistances.y) * 1.425, vec2(-discardDistances.z, discardDistances.w) * 1.425);
+const Triangle discardTriangle2 = Triangle(vec2(0.0, 0.0) * 1.425, vec2(-discardDistances.x, -discardDistances.y) * 1.425, vec2(-discardDistances.z, -discardDistances.w) * 1.425);
+const Triangle discardTriangle3 = Triangle(vec2(0.0, 0.0) * 1.425, vec2(discardDistances.x, discardDistances.y) * 1.425, vec2(discardDistances.z, discardDistances.w) * 1.425);
+const Triangle discardTriangle4 = Triangle(vec2(0.0, 0.0) * 1.425, vec2(discardDistances.x, -discardDistances.y) * 1.425, vec2(discardDistances.z, -discardDistances.w) * 1.425);
 const Triangle discardTriangle5 = Triangle(vec2(0.0, 0.0) * 1.425, vec2(0.25, 0.25) * 1.425, vec2(-0.25, 0.25) * 1.425);
 
 bool ShouldDiscard(vec2 position)
@@ -59,13 +59,28 @@ void main()
 	//float shadow = 0.0;
 	float terrainShadow = GetTerrainShadow(worldPosition.xz);
 	float shadow = terrainShadow;
+	ShadowResults shadowResults;
+	shadowResults.reduction = 1.0;
 	if (terrainShadow < 1.0)
-		shadow = clamp(shadow + GetCascadedShadow(shadowPositions, depth), 0.0, 1.0);
+	{
+		shadowResults = GetCascadedShadowResults(shadowPositions, depth);
+		shadow = clamp(shadow + shadowResults.shadow, 0.0, 1.0);
+	}
+
+	float diffuseEdgeBlend = 1.0;
+	//if (shadowResults.lod > 2 && shadowResults.edgeBlend <= 0.5 && shadowResults.edgeBlend >= 0.4) diffuseEdgeBlend = 1.0 - (shadowResults.edgeBlend - 0.4) * 10.0;
+	if ((shadowResults.lod == -1 || shadowResults.lod > 2) && shadowResults.reduction < 1.0) 
+	{
+		//outColor = vec4(vec3(shadowResults.reduction), 1.0);
+		//return;
+		diffuseEdgeBlend = shadowResults.reduction;
+	}
+
 	//float shadow = GetCascadedShadow(shadowPositions, depth);
 	//leafNormal = normalize(leafNormal);
 	//vec3 terrainNormal = SampleNormalDynamic(worldPosition.xz, 1.0);
 	//vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow, 0.25, 0.1);
-	vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow, 0.1, 0.025);
+	vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow, 0.025 + 0.075 * diffuseEdgeBlend, 0.025);
 	//vec3 leafDiffuse = DiffuseLightingRealistic(leafNormal, worldPosition, shadow, 0.1, 0.1);
 	//vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow);
 	vec3 endColor = leafDiffuse * leafTint * leafColor.y;

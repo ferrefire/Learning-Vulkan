@@ -6,34 +6,12 @@
 #define CASCADE_COUNT 3
 #endif
 
-//#define OBJECT_DATA_COUNT 25
-//layout(set = 1, binding = 0) uniform ObjectData
-//{
-//    mat4 model;
-//} objectDatas[OBJECT_DATA_COUNT];
-//
-//layout(push_constant, std430) uniform PushConstants
-//{
-//    uint chunkIndex;
-//} pc;
-
-//layout(set = 1, binding = 2) uniform sampler2D grassSampler;
-//layout(set = 1, binding = 1) uniform sampler2D grassDiffuseSampler;
 layout(set = 1, binding = 1) uniform sampler2D grassSamplers[2];
 layout(set = 1, binding = 2) uniform sampler2D rockSamplers[2];
-//layout(set = 1, binding = 6) uniform sampler2D grassNormalSampler;
-//layout(set = 1, binding = 7) uniform sampler2D grassSpecularSampler;
-//layout(set = 1, binding = 2) uniform sampler2D rockDiffuseSampler;
 layout(set = 1, binding = 3) uniform sampler2D dirtDiffuseSampler;
 
 layout(location = 0) in vec3 inPosition;
-layout(location = 1) in flat uint chunkLod;
-layout(location = 2) in vec4 shadowPositions[CASCADE_COUNT];
-
-//layout(location = 1) in vec4 shadowLod0Position;
-//layout(location = 2) in vec4 shadowLod1Position;
-//layout(location = 1) in mat3 tbn;
-//layout(location = 1) in vec2 inTexCoord;
+layout(location = 1) in vec4 shadowPositions[CASCADE_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
@@ -77,33 +55,6 @@ struct BlendResults
 	vec3 diffuse;
 	vec3 normal;
 };
-
-vec3 TangentToNormal(vec3 TN, vec3 RN)
-{
-	vec3 result;
-
-	//vec3 up = TN.z > TN.x ? vec3(1, 0, 0) : vec3(0, 0, 1);
-	vec3 up = vec3(0.5, 0.5, 1.0);
-	//vec3 terrainTangent;
-	//vec3 tan1 = cross(TN, vec3(0.0, 1.0, 0.0));
-	//vec3 tan2 = cross(TN, vec3(0.0, 0.0, 1.0));
-	//if (length(tan1) > length(tan2)) terrainTangent = tan1;
-	//else terrainTangent = tan2;
-	vec3 terrainTangent = normalize(cross(TN, up));
-
-	//vec3 up = vec3(1, 0, 0);
-    //vec3 terrainTangent = normalize(cross(up, TN));
-	//vec3 terrainTangent = normalize(Rotate(TN, radians(90.0), vec3(1.0, 0.0, 0.0)));
-	vec3 terrainBiTangent = normalize(cross(TN, terrainTangent));
-	//mat3 TBN = mat3(terrainTangent.x, terrainBiTangent.x, TN.x,
-	//				terrainTangent.y, terrainBiTangent.y, TN.y,
-	//				terrainTangent.z, terrainBiTangent.z, TN.z);
-	mat3 TBN = mat3(terrainTangent, terrainBiTangent, TN);
-	//result = textureNormal * 2.0 - 1.0;
-	result = normalize(TBN * RN);
-
-	return (result);
-}
 
 vec3 BlendTexture(sampler2D textureSampler, int index, float viewDistance, int maxLod, bool normal)
 {
@@ -217,13 +168,16 @@ BlendResults BlendSteepness(float steepness, float distanceSqrd)
 
 	if (steepness >= rockSteepness + steepnessBlendDistance)
 	{
-		result.diffuse = BlendTexture(rockSamplers[0], 1, distanceSqrd, -1, false);
-		result.normal = BlendTexture(rockSamplers[1], 1, distanceSqrd, -1, true);
+		//result.diffuse = BlendTexture(rockSamplers[0], 1, distanceSqrd, -1, false);
+		result.diffuse = defaultColors[1];
+		//result.normal = BlendTexture(rockSamplers[1], 1, distanceSqrd, -1, true);
+		result.normal = defaultNormal;
 		return (result);
 	}
 	if (steepness < rockSteepness + steepnessBlendDistance)
 	{
-		result.diffuse = BlendTexture(grassSamplers[0], 0, distanceSqrd, -1, false);
+		//result.diffuse = BlendTexture(grassSamplers[0], 0, distanceSqrd, -1, false);
+		result.diffuse = defaultColors[0];
 		//result.normal = BlendTexture(grassSamplers[1], 0, distanceSqrd, -1, true);
 		result.normal = defaultNormal;
 	}
@@ -234,8 +188,8 @@ BlendResults BlendSteepness(float steepness, float distanceSqrd)
 
 		result.diffuse *= (1.0 - blendFactor);
 		result.normal *= (1.0 - blendFactor);
-		result.diffuse += BlendTexture(rockSamplers[0], 1, distanceSqrd, -1, false) * blendFactor;
-		result.normal += (BlendTexture(rockSamplers[1], 1, distanceSqrd, -1, true)) * blendFactor;
+		result.diffuse += defaultColors[1] * blendFactor;
+		result.normal += defaultNormal * blendFactor;
 	}
 
 	return (result);
@@ -251,18 +205,26 @@ vec3 RotateR(vec3 v, vec3 k, float theta)
 
 void main()
 {
-	//vec2 terrainShadowUV = (inPosition.xz - variables.terrainShadowOffset) / 5000.0;
-	//if (abs(terrainShadowUV.x) < 0.5 && abs(terrainShadowUV.y) < 0.5)
-	//{
-	//	float terrainShadow = GetTerrainShadow(terrainShadowUV + 0.5);
-	//	outColor = vec4(vec3(terrainShadow), 1.0);
-	//	return;
-	//}
-
 	float distanceSqrd = SquaredDistance(inPosition, variables.viewPosition);
-	float depth = GetDepth(gl_FragCoord.z);
+	//float depth = GetDepth(gl_FragCoord.z);
+	//float depth = GetDepth(gl_FragCoord.z, 0.1, 100000.0);
 	//vec3 viewDirection = normalize(variables.viewPosition - inPosition);
 	//vec3 terrainNormal = SampleNormalDynamic(inPosition.xz, 1.0);
+	//if (10000.0 + gl_FragCoord.z * 90000.0 > 25000.0)
+	//{
+	//	//gl_FragDepth = 0.998 + gl_FragCoord.z * 0.001;
+	//	gl_FragDepth = 0.999;
+	//	outColor = vec4(1.0);
+	//}
+	//else
+	//{
+	//	discard;
+	//}
+	//gl_FragDepth = 0.999999 + gl_FragCoord.z * 0.000001;
+	//gl_FragDepth = 0.9999999;
+	//outColor = vec4(1.0);
+	//return;
+	//gl_FragDepth = GetWorldDepth(inPosition);
 
 	Normals terrainNormals = SampleNormalsDynamic(inPosition.xz, 1.0);
 	vec3 normalWS = terrainNormals.normalWS;
@@ -286,21 +248,21 @@ void main()
 	//textureNormal = normalize(textureNormal);
 
 	//textureNormal.xy *= 1.0 + clamp(depth * 2.0, 0.0, 2.0);
-	vec3 NR = normalize(textureNormal);
-	vec3 NT = vec3(0.0, 1.0, 0.0);
-    vec3 N0 = vec3(0.0, 0.0, 1.0);
-    vec3 axis = normalize(cross(N0, NT));
-    float angle = acos(clamp(dot(N0, NT), -1.0, 1.0));
-	vec3 RRN = normalize(RotateR(NR, axis, angle));
+	//vec3 NR = normalize(textureNormal);
+	//vec3 NT = vec3(0.0, 1.0, 0.0);
+    //vec3 N0 = vec3(0.0, 0.0, 1.0);
+    //vec3 axis = normalize(cross(N0, NT));
+    //float angle = acos(clamp(dot(N0, NT), -1.0, 1.0));
+	//vec3 RRN = normalize(RotateR(NR, axis, angle));
 
-	//RRN.xz *= 0.5;
-	//RRN = normalize(RRN);
-	NT = normalWS;
-	//NR = textureNormal.xzy * 2.0 - 1.0;
-    N0 = vec3(0.0, 1.0, 0.0);
-    axis = normalize(cross(N0, NT));
-    angle = acos(clamp(dot(N0, NT), -1.0, 1.0));
-	vec3 RN = normalize(RotateR(RRN, axis, angle));
+	////RRN.xz *= 0.5;
+	////RRN = normalize(RRN);
+	//NT = normalWS;
+	////NR = textureNormal.xzy * 2.0 - 1.0;
+    //N0 = vec3(0.0, 1.0, 0.0);
+    //axis = normalize(cross(N0, NT));
+    //angle = acos(clamp(dot(N0, NT), -1.0, 1.0));
+	//vec3 RN = normalize(RotateR(RRN, axis, angle));
 
 	//vec3 NT = normalWS;
 	//vec3 NR = textureNormal;
@@ -314,7 +276,7 @@ void main()
 	//RN.y = NT.y * RRN.y - (NT.x * RRN.x + NT.z * RRN.z);
 	//RN = normalize(RN);
 	
-	vec3 endNormal = RN;
+	//vec3 endNormal = RN;
 	//vec3 endNormal = normalize(RN);
 
 	//outColor = vec4((depth > 0.1 ? normalWS : endNormal) * 0.5 + 0.5, 1.0);
@@ -322,32 +284,27 @@ void main()
 
 	float shadow = 0.0;
 	shadow = GetTerrainShadow(inPosition.xz);
-	if (shadow < 1.0)
-		shadow = clamp(shadow + GetCascadedShadow(shadowPositions, depth), 0.0, 1.0);
+	//if (shadow < 1.0)
+	//	shadow = clamp(shadow + GetCascadedShadow(shadowPositions, depth), 0.0, 1.0);
 
 	//float shadow = GetCascadedShadow(shadowPositions, depth);
 
-	vec3 diffuse = DiffuseLighting(endNormal, shadow);
+	vec3 diffuse = DiffuseLighting(normalWS, shadow);
 	//vec3 terrainDiffuse = DiffuseLighting(terrainNormal.xzy, shadow);
 	//vec3 diffuse = clamp(terrainDiffuse * normalDiffuse, vec3(ambient), terrainDiffuse);
 	
 	//vec4 shadowSpace = variables.shadowProjection * variables.shadowView * vec4(inPosition, 1.0);
 
 	vec3 combinedColor = textureColor * diffuse;
+	//vec3 combinedColor = vec3(0.75) * diffuse;
 	//vec3 endColor = Fog(combinedColor, depth);
 	//vec3 endColor = GroundFog(combinedColor, depth, inPosition.y);
 	vec3 endColor = combinedColor;
-
-	if (chunkLod == 1)
-	{
-		//endColor = vec3(0.0);
-		//gl_FragDepth = gl_FragCoord.z;
-	}
+	//if (GetDepth(gl_FragCoord.z, 0.1, 60000.0) * 60000.0 > variables.ranges.y) endColor = vec3(0.0);
+	//gl_FragDepth = 1.0 - pow(1.0 - gl_FragCoord.z, 1.125);
 
 	//textureNormal = textureNormal * 0.5 + 0.5;
 	//if (blendResults.index == 1) textureNormal = terrainNormal * 0.5 + 0.5;
-	//if (inLod == 1) gl_FragDepth = 0.999999 + gl_FragCoord.z * 0.000001;
-	//if (inLod == 1) gl_FragDepth = 0.99999999;
 
 	//outColor = vec4(textureNormal, 1.0);
 	outColor = vec4(endColor, 1.0);

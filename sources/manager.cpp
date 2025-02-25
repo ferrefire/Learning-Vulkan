@@ -355,6 +355,7 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.view = camera.View();
 	shaderVariables.projection = camera.Projection();
 	shaderVariables.viewMatrix = shaderVariables.projection * shaderVariables.view;
+	shaderVariables.viewLodMatrix = camera.ProjectionLod() * shaderVariables.view;
 
 	Shadow::SetCascadeProjections();
 	Shadow::SetCascadeViews();

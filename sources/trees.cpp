@@ -91,30 +91,30 @@ void Trees::CreateMeshes()
 	treeVariables.leafCounts[0].x = leafPositions.size();
 	treeVariables.leafCounts[0].y = 0;
 	treeVariables.leafCounts[0].z = 1;
-	treeVariables.leafCounts[0].w = 1 * 1.5;
+	treeVariables.leafCounts[0].w = 1 * 1.0;
 
 	treeVariables.leafCounts[1].x = int(floor(float(treeVariables.leafCounts[0].x) / 2.0f));
 	treeVariables.leafCounts[1].y = treeLod0RenderCount * treeVariables.leafCounts[0].x;
 	treeVariables.leafCounts[1].z = 2;
-	treeVariables.leafCounts[1].w = 2 * 1.5;
+	treeVariables.leafCounts[1].w = 2 * 1.0;
 
 	treeVariables.leafCounts[2].x = int(floor(float(treeVariables.leafCounts[0].x) / 8.0f));
 	treeVariables.leafCounts[2].y = treeLod1RenderCount * treeVariables.leafCounts[1].x +
 		treeVariables.leafCounts[1].y;
 	treeVariables.leafCounts[2].z = 8;
-	treeVariables.leafCounts[2].w = 2 * 4;
+	treeVariables.leafCounts[2].w = 2 * 3;
 
-	treeVariables.leafCounts[3].x = int(floor(float(treeVariables.leafCounts[0].x) / 32.0f));
+	treeVariables.leafCounts[3].x = int(floor(float(treeVariables.leafCounts[0].x) / 48.0f));
 	treeVariables.leafCounts[3].y = treeLod2RenderCount * treeVariables.leafCounts[2].x +
 		treeVariables.leafCounts[2].y;
-	treeVariables.leafCounts[3].z = 32;
-	treeVariables.leafCounts[3].w = 6 * 3;
+	treeVariables.leafCounts[3].z = 48;
+	treeVariables.leafCounts[3].w = 6 * 2.5;
 
-	treeVariables.leafCounts[4].x = int(floor(float(treeVariables.leafCounts[0].x) / 64.0f));
+	treeVariables.leafCounts[4].x = int(floor(float(treeVariables.leafCounts[0].x) / 96.0f));
 	treeVariables.leafCounts[4].y = treeLod3RenderCount * treeVariables.leafCounts[3].x +
 		treeVariables.leafCounts[3].y;
-	treeVariables.leafCounts[4].z = 64;
-	treeVariables.leafCounts[4].w = 16 * 2;
+	treeVariables.leafCounts[4].z = 96;
+	treeVariables.leafCounts[4].w = 16 * 2.0;
 
 	totalLeafCount = (treeLod4RenderCount * treeVariables.leafCounts[4].x) + treeVariables.leafCounts[4].y;
 
@@ -1156,7 +1156,7 @@ uint32_t Trees::treeLod2RenderBase = 32;
 uint32_t Trees::treeLod2RenderCount = Trees::treeLod2RenderBase * Trees::treeLod2RenderBase - Trees::treeLod0RenderCount - Trees::treeLod1RenderCount;
 uint32_t Trees::treeLod3RenderBase = 96;
 uint32_t Trees::treeLod3RenderCount = Trees::treeLod3RenderBase * Trees::treeLod3RenderBase - Trees::treeLod0RenderCount - Trees::treeLod1RenderCount - Trees::treeLod2RenderCount;
-uint32_t Trees::treeLod4RenderBase = 192;
+uint32_t Trees::treeLod4RenderBase = 192 + 64;
 uint32_t Trees::treeLod4RenderCount = Trees::treeLod4RenderBase * Trees::treeLod4RenderBase - Trees::treeLod0RenderCount - Trees::treeLod1RenderCount - Trees::treeLod2RenderCount - Trees::treeLod3RenderCount;
 uint32_t Trees::treeTotalRenderBase = Trees::treeLod4RenderBase;
 uint32_t Trees::treeTotalRenderCount = Trees::treeTotalRenderBase * Trees::treeTotalRenderBase;
