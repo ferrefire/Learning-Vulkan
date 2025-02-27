@@ -5,6 +5,8 @@
 #define MAX_TRIANGLE_POINTS 25
 #endif
 
+#define POW(x) (x * x)
+
 struct Triangle
 {
     vec2 p1;
@@ -82,6 +84,14 @@ bool InsideTriangle(Triangle t, vec2 p)
 
     if ((s1 > 0.0 && s2 > 0.0 && s3 > 0.0) || (s1 < 0.0 && s2 < 0.0 && s3 < 0.0)) return (true);
     else return (false);
+}
+
+vec3 NormalizeSum(vec3 vec)
+{
+    float sum = vec.x + vec.y + vec.z;
+    vec /= sum;
+
+    return (vec);
 }
 
 

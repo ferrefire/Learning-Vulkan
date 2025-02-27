@@ -23,8 +23,8 @@ struct BranchConfiguration
 	int iteration = 0;
 	int maxIteration = 7;
 	//float seed = 103.84f;
-	float seed = 50.0f;
-	//float seed = 8.35f;
+	//float seed = 50.0f;
+	float seed = 8.35f;
 	int lod = 0;
 
 	int resolution = 24;
@@ -37,7 +37,7 @@ struct BranchConfiguration
 	float reach = 2.0f;
 	float thickness = 0.6f;
 	float length = 0.75f;
-	glm::vec2 steepness = glm::vec2(-5.0f, 50.0f);
+	glm::vec2 steepness = glm::vec2(-10.0f, 45.0f);
 
 	glm::vec3 base = glm::vec3(0);
 	glm::vec3 offset = glm::vec3(0);

@@ -61,6 +61,7 @@ struct SamplerConfiguration
     //VkSamplerAddressMode repeatMode = MIRRORED_REPEAT;
     //VkBool32 anisotrophic = VK_FALSE;
     VkBool32 anisotrophic = VK_FALSE;
+    float anisotrophicSampleCount = 0.0;
     VkBorderColor borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
     VkBool32 unnormalizedCoordinates = VK_FALSE;
     VkBool32 compare = VK_FALSE;

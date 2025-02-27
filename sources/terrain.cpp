@@ -54,17 +54,20 @@ void Terrain::CreateTextures()
 	grassSamplerConfig.repeatMode = REPEAT;
 	grassSamplerConfig.mipLodBias = 0.0f;
 	grassSamplerConfig.anisotrophic = VK_TRUE;
+	grassSamplerConfig.anisotrophicSampleCount = 4.0;
 	grassSamplerConfig.mipLodBias = 0.0f;
 
 	//grassDiffuseTexture.CreateTexture("rocky_grass_diff.jpg", grassSamplerConfig);
-	grassTextures.resize(2);
+	grassTextures.resize(3);
 	grassTextures[0].CreateTexture("rocky_grass_diff.jpg", grassSamplerConfig);
-	grassTextures[1].CreateTexture("rocky_grass_norm_inv.jpg", grassSamplerConfig);
+	grassTextures[1].CreateTexture("rocky_grass_norm.jpg", grassSamplerConfig);
+	grassTextures[2].CreateTexture("rocky_grass_ao.jpg", grassSamplerConfig);
 
 	//rockDiffuseTexture.CreateTexture("rock_diff.jpg", grassSamplerConfig);
-	rockTextures.resize(2);
+	rockTextures.resize(3);
 	rockTextures[0].CreateTexture("rock_diff.jpg", grassSamplerConfig);
-	rockTextures[1].CreateTexture("rock_norm_inv.jpg", grassSamplerConfig);
+	rockTextures[1].CreateTexture("rock_norm.jpg", grassSamplerConfig);
+	rockTextures[2].CreateTexture("rock_ao.jpg", grassSamplerConfig);
 
 	dirtDiffuseTexture.CreateTexture("dirt_diff.jpg", grassSamplerConfig);
 
@@ -136,10 +139,10 @@ void Terrain::CreateGraphicsPipeline()
 	descriptorLayoutConfig[0].count = terrainChunkCount;
 	descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[1].stages = FRAGMENT_STAGE;
-	descriptorLayoutConfig[1].count = 2;
+	descriptorLayoutConfig[1].count = 3;
 	descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[2].stages = FRAGMENT_STAGE;
-	descriptorLayoutConfig[2].count = 2;
+	descriptorLayoutConfig[2].count = 3;
 	descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[3].stages = FRAGMENT_STAGE;
 
@@ -240,8 +243,8 @@ void Terrain::CreateGraphicsDescriptor()
 
 	descriptorConfig[1].type = IMAGE_SAMPLER;
 	descriptorConfig[1].stages = FRAGMENT_STAGE;
-	descriptorConfig[1].count = 2;
-	descriptorConfig[1].imageInfos.resize(2);
+	descriptorConfig[1].count = 3;
+	descriptorConfig[1].imageInfos.resize(3);
 	for (int i = 0; i < grassTextures.size(); i++) 
 	{
 		descriptorConfig[1].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
@@ -254,8 +257,8 @@ void Terrain::CreateGraphicsDescriptor()
 
 	descriptorConfig[2].type = IMAGE_SAMPLER;
 	descriptorConfig[2].stages = FRAGMENT_STAGE;
-	descriptorConfig[2].count = 2;
-	descriptorConfig[2].imageInfos.resize(2);
+	descriptorConfig[2].count = 3;
+	descriptorConfig[2].imageInfos.resize(3);
 	for (int i = 0; i < rockTextures.size(); i++) 
 	{
 		descriptorConfig[2].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;

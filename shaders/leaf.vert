@@ -37,7 +37,7 @@ layout(location = 6) out vec4 shadowPositions[CASCADE_COUNT];
 
 //const vec3 treeCenter = vec3(-3.05, 47.22, -5.725);
 //const vec3 treeCenter = vec3(7.05, 47.22, -6.125);
-const vec3 treeCenter = vec3(0.0, 45.0, 0.0);
+const vec3 treeCenter = vec3(0.0, 40.0, 0.0);
 
 void main()
 {

@@ -103,6 +103,14 @@ const int frustumCheckDis = 35 * 35;
 //const vec3 treeCenter = vec3(-3.05, 47.22, -5.725);
 const vec3 treeCenter = vec3(0.0, 40.0, 0.0);
 
+const float leafBlendDistance = 0.5;
+const float leafBlendStart = 1.0 - leafBlendDistance;
+const float leafBlendMult = 1.0 / leafBlendDistance;
+
+const float leafFadeDistance = 0.25;
+const float leafFadeStart = 1.0 - leafFadeDistance;
+const float leafFadeMult = 1.0 / leafFadeDistance;
+
 int Inside(vec2 pos)
 {
 	float dis = SquaredDistanceVec2(pos, vec2(0));
@@ -277,14 +285,16 @@ void main()
 
 		float scaleMult = treeVariables.leafCounts[lod].w;
 		float lodDis = lodInter - lod;
-		if (lod < 4 && lodDis > 0.75 && leafIndex % int(treeVariables.leafCounts[lod + 1].z) == 0)
+		if (lod < 4 && lodDis > leafBlendStart && leafIndex % int(treeVariables.leafCounts[lod + 1].z) == 0)
 		{
-			scaleMult = mix(scaleMult, treeVariables.leafCounts[lod + 1].w, (lodDis - 0.75) * 4.0);
+			//if (lodDis > 0.75) scaleMult = treeVariables.leafCounts[lod + 1].w;
+			//else scaleMult = mix(scaleMult, treeVariables.leafCounts[lod + 1].w, ((lodDis + 0.25) - 0.75) * 4.0);
+			scaleMult = mix(scaleMult, treeVariables.leafCounts[lod + 1].w, (lodDis - leafBlendStart) * leafBlendMult);
 		}
 		float leafLodScale = 2.0 + scaleMult;
-		if (lod < 4 && lodDis > 0.75 && leafIndex % int(treeVariables.leafCounts[lod + 1].z) != 0)
+		if (lod < 4 && lodDis > leafFadeStart && leafIndex % int(treeVariables.leafCounts[lod + 1].z) != 0)
 		{
-			leafLodScale = mix(leafLodScale, 0.0, (lodDis - 0.75) * 4.0);
+			leafLodScale = mix(leafLodScale, 0.1, (lodDis - leafFadeStart) * leafFadeMult);
 		}
 		//leafLodScale += leafIndex % (int(treeVariables.leafCounts[lod].z) * 2) == 0 ? treeVariables.leafCounts[lod].w * 0.5 : 0.0;
 		float leafRan = length(leafPositions[leafIndex].xyz) + dataIndex;

@@ -56,15 +56,17 @@ void Trees::CreateMeshes()
 	branchConfig.resolution = 24;
 	//branchConfig.blendRange = 8;
 	//branchConfig.minSize = 0.75;
+	branchConfig.minSize = 0.1;
 	branchConfig.lod = 0;
 	branchConfig.leaves = true;
 
-	//Mesh leafPositionsMesh;
-	//GenerateTrunkMesh(leafPositionsMesh, branchConfig);
-	//leafPositionsMesh.Create();
-	//leafPositionsMesh.Destroy();
+	Mesh leafPositionsMesh;
+	GenerateTrunkMesh(leafPositionsMesh, branchConfig);
+	leafPositionsMesh.Create();
+	leafPositionsMesh.Destroy();
 	//branchConfig.splitCount = 3;
-	//branchConfig.leaves = false;
+	branchConfig.leaves = false;
+	branchConfig.minSize = 0.15;
 
 	GenerateTrunkMesh(treeLod0Mesh, branchConfig);
 	treeLod0Mesh.Create();
@@ -88,33 +90,35 @@ void Trees::CreateMeshes()
 	//treeVariables.leafCount3 = int(floor(float(treeVariables.leafCountTotal) / 16.0f));
 	//treeVariables.leafCount4 = int(floor(float(treeVariables.leafCountTotal) / 32.0f));
 
+	float decreaseFactor = 2.0;
+
 	treeVariables.leafCounts[0].x = leafPositions.size();
 	treeVariables.leafCounts[0].y = 0;
 	treeVariables.leafCounts[0].z = 1;
-	treeVariables.leafCounts[0].w = 1 * 1.0;
+	treeVariables.leafCounts[0].w = 1 * 0.25;
 
-	treeVariables.leafCounts[1].x = int(floor(float(treeVariables.leafCounts[0].x) / 2.0f));
+	treeVariables.leafCounts[1].x = int(floor(float(treeVariables.leafCounts[0].x) / (2.0f * decreaseFactor)));
 	treeVariables.leafCounts[1].y = treeLod0RenderCount * treeVariables.leafCounts[0].x;
-	treeVariables.leafCounts[1].z = 2;
+	treeVariables.leafCounts[1].z = 2 * decreaseFactor;
 	treeVariables.leafCounts[1].w = 2 * 1.0;
 
-	treeVariables.leafCounts[2].x = int(floor(float(treeVariables.leafCounts[0].x) / 8.0f));
+	treeVariables.leafCounts[2].x = int(floor(float(treeVariables.leafCounts[0].x) / (8.0f * decreaseFactor)));
 	treeVariables.leafCounts[2].y = treeLod1RenderCount * treeVariables.leafCounts[1].x +
 		treeVariables.leafCounts[1].y;
-	treeVariables.leafCounts[2].z = 8;
-	treeVariables.leafCounts[2].w = 2 * 3;
+	treeVariables.leafCounts[2].z = 8 * decreaseFactor;
+	treeVariables.leafCounts[2].w = 2 * 4;
 
-	treeVariables.leafCounts[3].x = int(floor(float(treeVariables.leafCounts[0].x) / 48.0f));
+	treeVariables.leafCounts[3].x = int(floor(float(treeVariables.leafCounts[0].x) / (48.0f * decreaseFactor)));
 	treeVariables.leafCounts[3].y = treeLod2RenderCount * treeVariables.leafCounts[2].x +
 		treeVariables.leafCounts[2].y;
-	treeVariables.leafCounts[3].z = 48;
-	treeVariables.leafCounts[3].w = 6 * 2.5;
+	treeVariables.leafCounts[3].z = 48 * decreaseFactor;
+	treeVariables.leafCounts[3].w = 6 * 3.0;
 
-	treeVariables.leafCounts[4].x = int(floor(float(treeVariables.leafCounts[0].x) / 96.0f));
+	treeVariables.leafCounts[4].x = int(floor(float(treeVariables.leafCounts[0].x) / (96.0f * decreaseFactor)));
 	treeVariables.leafCounts[4].y = treeLod3RenderCount * treeVariables.leafCounts[3].x +
 		treeVariables.leafCounts[3].y;
-	treeVariables.leafCounts[4].z = 96;
-	treeVariables.leafCounts[4].w = 16 * 2.0;
+	treeVariables.leafCounts[4].z = 96 * decreaseFactor;
+	treeVariables.leafCounts[4].w = 16 * 2.5;
 
 	totalLeafCount = (treeLod4RenderCount * treeVariables.leafCounts[4].x) + treeVariables.leafCounts[4].y;
 
@@ -149,7 +153,7 @@ void Trees::CreateMeshes()
 	branchConfig.minSize = 0.5;
 	branchConfig.lod = 2;
 	GenerateTrunkMesh(treeLod2Mesh, branchConfig);
-	treeLod2Mesh.shape.Scale(glm::vec3(1.5, 1.0, 1.0));
+	treeLod2Mesh.shape.Scale(glm::vec3(1.0, 1.0, 1.0));
 	treeLod2Mesh.RecalculateVertices();
 	treeLod2Mesh.Create();
 
@@ -157,7 +161,7 @@ void Trees::CreateMeshes()
 	branchConfig.minSize = 0.75;
 	branchConfig.lod = 3;
 	GenerateTrunkMesh(treeLod3Mesh, branchConfig);
-	treeLod3Mesh.shape.Scale(glm::vec3(2.25, 1.0, 2.25));
+	treeLod3Mesh.shape.Scale(glm::vec3(2.25, 1.5, 2.25));
 	treeLod3Mesh.RecalculateVertices();
 	treeLod3Mesh.Create();
 
@@ -970,7 +974,7 @@ Shape BranchConfiguration::Generate()
 		glm::mat4 yRotationMatrix = Utilities::GetRotationMatrix(yAngle, glm::vec3(0, 1, 0));
 
 		// glm::mat4 rotationMatrix = Utilities::GetRotationMatrix(glm::vec3(xAngle, yAngle, 0));
-		int l = int(glm::clamp(float(resolution) / 2.0f, 1.0f, float(resolution)));
+		int l = int(glm::clamp(float(resolution) / 4.0f, 1.0f, float(resolution)));
 
 		for (int x = 0; x <= resolution; x++)
 		{
@@ -1000,20 +1004,26 @@ Shape BranchConfiguration::Generate()
 			}
 		}
 
-		if (leaves && iteration > 2)
+		if (leaves && iteration > 1)
 		{
 			int leafIndex = y % l;
 			if (leafIndex == 0 || y == resolution)
 			{
-				//int density = iteration / 2;
+				//int density = 1 + iteration / 2;
 				int density = 1;
+				
+				//if (y == resolution) offsetFactor = 1.0f;
 				for (int i = 0; i < density; i++)
 				{
+					//float offsetFactor = i * 0.75f;
+					//float offsetFactor = glm::clamp((5.0f - iteration) * 2.0f, 0.0f, 5.0f);
+					float offsetFactor = 2.0f;
+					if (y == resolution) offsetFactor = 0.0f;
 					glm::vec3 leafOffset = glm::vec3(0);
-					leafOffset.x = Utilities::Random11(branchSeed + y + i);
+					leafOffset.x = Utilities::Random11(branchSeed + y + i) * 2.0f;
 					leafOffset.z = Utilities::Random11(leafOffset.x * 0.5 + (branchSeed + y + i) * 2.0 + i);
 					leafOffset.y = Utilities::Random11(leafOffset.x * 2.0 + (branchSeed + y + i) * 0.5 + leafOffset.z + i);
-					glm::vec4 leafPosition = glm::vec4(branch.positions[branch.GetPositionIndex(y, 0)] + base + offset + leafOffset * float(i + 1), 0);
+					glm::vec4 leafPosition = glm::vec4(branch.positions[branch.GetPositionIndex(y, 0)] + base + offset + leafOffset * offsetFactor, 0);
 					Trees::leafPositions.push_back(leafPosition);
 					//else if (i == 1) Trees::leafPositions1.push_back(leafPosition);
 				}
@@ -1041,6 +1051,7 @@ Shape BranchConfiguration::Generate()
 	if (scale.x <= minSize || iteration >= maxIteration) splitCount = 0;
 	if (splitCount <= 0)
 	{
+		//if (lod == 0) std::cout << iteration << std::endl;
 		//if (lod == 0) std::cout << iteration << std::endl;
 		return (branch);
 	}

@@ -16,6 +16,7 @@ layout(location = 3) in vec4 shadowPositions[CASCADE_COUNT];
 layout(location = 0) out vec4 outColor;
 
 const vec3 trunkColor = (vec3(156, 121, 70) / 255.0);
+const vec3 trunkLodColor = (vec3(48, 32, 16) / 255.0);
 
 #include "variables.glsl"
 #include "lighting.glsl"
@@ -34,7 +35,9 @@ void main()
 
 	vec3 diffuse = DiffuseLighting(normal, shadow, 0.025 * 0.5);
 	//vec3 diffuse = DiffuseLightingRealistic(normal, worldPosition, shadow, 0.025, 0.025);
-	vec3 texColor = texture(treeDiffuseSampler, inCoord * 0.25).xyz * trunkColor;
+	vec3 texColor;
+	if (depth * variables.ranges.y < 250.0) texColor = texture(treeDiffuseSampler, inCoord * 0.25).xyz * trunkColor;
+	else texColor = trunkLodColor;
 	vec3 combinedColor = diffuse * texColor;
 	
 	
