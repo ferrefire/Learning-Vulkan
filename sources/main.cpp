@@ -33,10 +33,6 @@ void Setup(int argc, char **argv)
 		{
 			Manager::settings.discrete = false;
 		}
-		else if (std::string(argv[i]).compare("ms") == 0)
-		{
-			Manager::settings.mssa = true;
-		}
 		else if (std::string(argv[i]).compare("vl") == 0)
 		{
 			Manager::settings.validationLayersActive = false;

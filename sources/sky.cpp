@@ -46,6 +46,7 @@ void Sky::CreatePipelines()
 	skyPipelineConfiguration.depthStencil.depthCompareOp = VK_COMPARE_OP_ALWAYS;
 	skyPipelineConfiguration.rasterization.cullMode = VK_CULL_MODE_NONE;
 	skyPipelineConfiguration.subpass = 1;
+	skyPipelineConfiguration.multisampling.rasterizationSamples = Manager::currentDevice.MaxSampleCount();
 
 	VertexInfo vertexInfo = skyMesh.MeshVertexInfo();
 

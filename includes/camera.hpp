@@ -42,6 +42,7 @@ class Camera
 
 		bool canMove = true;
 		bool canLook = true;
+		bool flying = true;
 
 		float lastX = 0;
 		float lastY = 0;

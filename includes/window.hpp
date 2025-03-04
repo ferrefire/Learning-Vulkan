@@ -37,6 +37,7 @@ class Window
 
 		Texture depthTexture;
 		Texture colorTexture;
+		Texture multiSampleTexture;
 		//Texture shadowTexture;
 
 		bool framebufferResized = false;
@@ -55,6 +56,7 @@ class Window
 		void CreateFramebuffers();
 		void CreateColorResources();
 		void CreateDepthResources();
+		void CreateMultiSampleResources();
 		//void CreateShadowResources();
 		void CreateRenderPass();
 		//void CreateShadowPass();
@@ -66,6 +68,7 @@ class Window
 		void DestroyFramebuffers();
 		void DestroyDepthResources();
 		void DestroyColorResources();
+		void DestroyMultiSampleResources();
 		//void DestroyShadowResources();
 		void DestroyRenderPass();
 		//void DestroyShadowPass();

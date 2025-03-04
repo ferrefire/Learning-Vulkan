@@ -614,4 +614,9 @@ float GetTerrainShadow(vec2 worldPosition)
 	return (shadow);
 }
 
+vec3 ToStandard(vec3 color)
+{
+	return (pow(color, vec3(1.0 / 2.2)));
+}
+
 #endif

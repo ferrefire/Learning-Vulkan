@@ -8,6 +8,8 @@
 
 void Data::Create()
 {
+	generalData.resize(Manager::settings.maxFramesInFlight);
+
     CreatePipelines();
     CreateBuffers();
     CreateDescriptors();
@@ -136,7 +138,6 @@ void Data::DestroyBuffers()
 
 void Data::Start()
 {
-    generalData.resize(Manager::settings.maxFramesInFlight);
 	//intersectData.resize(intersectCount);
 }
 

@@ -35,9 +35,30 @@ layout(location = 6) out vec4 shadowPositions[CASCADE_COUNT];
 #include "functions.glsl"
 #include "transformation.glsl"
 
+struct RotateResults
+{
+	vec3 position;
+	vec3 normal;
+};
+
 //const vec3 treeCenter = vec3(-3.05, 47.22, -5.725);
 //const vec3 treeCenter = vec3(7.05, 47.22, -6.125);
 const vec3 treeCenter = vec3(0.0, 40.0, 0.0);
+
+RotateResults RotateLeaf(vec3 objectPosition, vec3 rotations, float scale)
+{
+	vec3 scaledPosition = inPosition * scale;
+	mat4 rotationMatrix = GetRotationMatrix(radians(rotations.y), vec3(0.0, 1.0, 0.0));
+	rotationMatrix = rotationMatrix * GetRotationMatrix(radians(rotations.x * 0.5), vec3(1.0, 0.0, 0.0));
+	//rotationMatrix = rotationMatrix * GetRotationMatrix(radians(rotations.z * 0.25), vec3(0.0, 0.0, 1.0));
+    vec3 rotatedPosition = (rotationMatrix * vec4(scaledPosition, 1.0)).xyz;
+	vec3 rotatedNormal = normalize((rotationMatrix * vec4(vec3(0, 1, 0), 1.0)).xyz);
+
+	RotateResults results;
+	results.position = rotatedPosition;
+	results.normal = rotatedNormal;
+	return (results);
+}
 
 void main()
 {
@@ -66,18 +87,42 @@ void main()
 
 	position += variables.viewPosition;
 
-	vec3 objectPosition = inPosition * scale;
-	mat4 rotationMatrix = GetRotationMatrix(radians(rotation.y), vec3(0.0, 1.0, 0.0));
-	rotationMatrix = rotationMatrix * GetRotationMatrix(radians(rotation.x * 0.5), vec3(1.0, 0.0, 0.0));
-	//rotationMatrix = rotationMatrix * GetRotationMatrix(radians(rotation.z * 0.25), vec3(0.0, 0.0, 1.0));
-    objectPosition = (rotationMatrix * vec4(objectPosition, 1.0)).xyz;
-	localNormal = normalize((rotationMatrix * vec4(vec3(0, 1, 0), 1.0)).xyz);
-	globalNormal = normalize((normalPos + objectPosition) - treeCenter);
-	//normal = mix(localNormal, globalNormal, 0.5);
+	//vec3 objectPosition = inPosition * scale;
+	//mat4 rotationMatrix = GetRotationMatrix(radians(rotation.y), vec3(0.0, 1.0, 0.0));
+	//rotationMatrix = rotationMatrix * GetRotationMatrix(radians(rotation.x * 0.5), vec3(1.0, 0.0, 0.0));
+	////rotationMatrix = rotationMatrix * GetRotationMatrix(radians(rotation.z * 0.25), vec3(0.0, 0.0, 1.0));
+    //objectPosition = (rotationMatrix * vec4(objectPosition, 1.0)).xyz;
+	//localNormal = normalize((rotationMatrix * vec4(vec3(0, 1, 0), 1.0)).xyz);
+	//globalNormal = normalize((normalPos + objectPosition) - treeCenter);
 
 	localCoordinates = inPosition;
 	localPosition = normalPos;
-	worldPosition = ObjectToWorld(objectPosition, mat4(1)) + position;
+
+	RotateResults rotateResults = RotateLeaf(inPosition, rotation, scale);
+
+	localNormal = rotateResults.normal;
+	globalNormal = normalize((normalPos + rotateResults.position) - treeCenter);
+	worldPosition = ObjectToWorld(rotateResults.position, mat4(1)) + position;
+
+	/*vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
+	float viewDotNormal = dot(localNormal, viewDirection);
+	//float rotateFactor = sign(viewDotNormal) - clamp(viewDotNormal * 4.0, -1.0, 1.0);
+	float rotateFactor = (1.0 - abs(clamp(viewDotNormal * 4.0, -1.0, 1.0)));
+
+	if (abs(rotateFactor) > 0.0)
+	{
+		vec3 weights = abs(localNormal);
+		weights = NormalizeSum(weights);
+
+		rotation.y += rotateFactor * 90.0 * (1.0 - weights.y);
+		rotation.x += rotateFactor * 90.0 * weights.y;
+
+		rotateResults = RotateLeaf(inPosition + localNormal * rotateFactor, rotation, scale);
+
+		localNormal = rotateResults.normal;
+		globalNormal = normalize((normalPos + rotateResults.position) - treeCenter);
+		worldPosition = ObjectToWorld(rotateResults.position, mat4(1)) + position;
+	}*/
 
 	for (int i = 0; i < CASCADE_COUNT; i++) shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
 
@@ -85,6 +130,7 @@ void main()
 	//leafColor = vec3(0.0916, 0.1, 0.0125);
 	leafColor.x = color;
 	leafColor.y = 1.0 + Random11(vec4(localPosition, gl_VertexIndex)) * 0.5;
+	//if (thickenFactor > 0.75) leafColor.y = 0.0;
 
 	gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
 }

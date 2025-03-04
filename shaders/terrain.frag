@@ -86,7 +86,9 @@ const vec3 defaultNormal = vec3(0.5, 0.5, 1.0);
 const vec3 defaultAO = vec3(1.0, 1.0, 1.0);
 
 const BlendConfig grassConfig = BlendConfig(0.5, POW(25.0), 30.0, 0.25, 0.2, 1.5, 1.1, vec3(0.0916, 0.0866, 0.0125), 4, 2.0);
+//const BlendConfig grassConfig = BlendConfig(0.5, POW(25.0), 30.0, 0.25, 0.2, 1.5, 1.1, pow(vec3(0.0916, 0.0866, 0.0125), vec3(1.0 / 2.2)), 4, 2.0);
 const BlendConfig rockConfig = BlendConfig(0.5, POW(50.0), 25.0, 0.1, 0.2, 1.0, 1.25, vec3(0.3, 0.175, 0.15), 4, 7.5);
+//const BlendConfig rockConfig = BlendConfig(0.5, POW(50.0), 25.0, 0.1, 0.2, 1.0, 1.25, pow(vec3(0.3, 0.175, 0.15), vec3(1.0 / 2.2)), 4, 7.5);
 
 const int maxNormalLod = 0;
 const float maxNormalDistance = 625;
@@ -398,12 +400,13 @@ void main()
 	//vec3 endColor = Fog(combinedColor, depth);
 	//vec3 endColor = GroundFog(combinedColor, depth, inPosition.y);
 	vec3 endColor = combinedColor;
+	//vec3 endColor = ToStandard(combinedColor);
 
-	if (chunkLod == 1)
-	{
-		//endColor = vec3(0.0);
-		//gl_FragDepth = gl_FragCoord.z;
-	}
+	//if (chunkLod == 1)
+	//{
+	//	//endColor = vec3(0.0);
+	//	//gl_FragDepth = gl_FragCoord.z;
+	//}
 
 	//textureNormal = textureNormal * 0.5 + 0.5;
 	//if (blendResults.index == 1) textureNormal = terrainNormal * 0.5 + 0.5;

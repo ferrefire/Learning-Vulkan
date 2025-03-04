@@ -80,10 +80,9 @@ void Window::CreateResources()
 	CreateSwapChain();
 	CreateImageViews();
 	CreateRenderPass();
-	//CreateShadowPass();
 	CreateColorResources();
 	CreateDepthResources();
-	//CreateShadowResources();
+	CreateMultiSampleResources();
 	CreateFramebuffers();
 }
 
@@ -176,6 +175,7 @@ VkSurfaceFormatKHR Window::ChooseSwapSurfaceFormat(const std::vector<VkSurfaceFo
 	for (const auto &availableFormat : availableFormats)
     {
         if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+        //if (availableFormat.format == VK_FORMAT_R8G8B8A8_UNORM && availableFormat.colorSpace == VK_COLOR_SPACE_PASS_THROUGH_EXT)
         {
 			std::cout << "Correct surface format found" << std::endl;
             return availableFormat;
@@ -272,7 +272,7 @@ void Window::CreateFramebuffers()
 	{
 		std::vector<VkImageView> attachments;
 
-		if (!Manager::settings.mssa)
+		if (!Manager::settings.msaa)
 		{
 			attachments.resize(3);
 			attachments[0] = swapChainTextures[i].imageView;
@@ -281,10 +281,11 @@ void Window::CreateFramebuffers()
 		}
 		else
 		{
-			attachments.resize(3);
-			attachments[0] = colorTexture.imageView;
-			attachments[1] = depthTexture.imageView;
-			attachments[2] = swapChainTextures[i].imageView;
+			attachments.resize(4);
+			attachments[3] = swapChainTextures[i].imageView;
+			attachments[1] = colorTexture.imageView;
+			attachments[2] = depthTexture.imageView; 
+			attachments[0] = multiSampleTexture.imageView;
 		}
 		//std::array<VkImageView, 2> attachments = {swapChainImageViews[i], depthImageView};
 		//std::array<VkImageView, 3> attachments = {colorTexture.imageView, depthTexture.imageView, swapChainTextures[i].imageView};
@@ -318,7 +319,8 @@ void Window::CreateDepthResources()
 	imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
 	//imageConfig.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 	imageConfig.aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
-	imageConfig.sampleCount = device.MaxSampleCount();
+	//imageConfig.sampleCount = device.MaxSampleCount();
+	imageConfig.sampleCount = VK_SAMPLE_COUNT_1_BIT;
 
 	SamplerConfiguration samplerConfig;
 
@@ -336,11 +338,36 @@ void Window::CreateColorResources()
 	imageConfig.format = swapChainImageFormat;
 	imageConfig.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
 	imageConfig.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
-	imageConfig.sampleCount = device.MaxSampleCount();
+	//imageConfig.sampleCount = device.MaxSampleCount();
+	imageConfig.sampleCount = VK_SAMPLE_COUNT_1_BIT;
+	//imageConfig.format = RGB8;
 
 	SamplerConfiguration samplerConfig;
 
 	colorTexture.CreateImage(imageConfig, samplerConfig);
+}
+
+void Window::CreateMultiSampleResources()
+{
+	if (!Manager::settings.msaa) return;
+
+	if (multiSampleTexture.image != nullptr || multiSampleTexture.imageMemory != nullptr || multiSampleTexture.imageView != nullptr)
+		throw std::runtime_error("cannot create color resources because they already exist");
+
+	ImageConfiguration imageConfig;
+	imageConfig.width = swapChainExtent.width;
+	imageConfig.height = swapChainExtent.height;
+	imageConfig.format = swapChainImageFormat;
+	//imageConfig.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+	imageConfig.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	imageConfig.aspect = VK_IMAGE_ASPECT_COLOR_BIT;
+	imageConfig.sampleCount = device.MaxSampleCount();
+	//imageConfig.format = RGB8;
+	//imageConfig.sampleCount = VK_SAMPLE_COUNT_1_BIT;
+
+	SamplerConfiguration samplerConfig;
+
+	multiSampleTexture.CreateImage(imageConfig, samplerConfig);
 }
 
 /*
@@ -386,7 +413,9 @@ void Window::CreateRenderPass()
 
 	VkAttachmentDescription colorAttachment{};
 	colorAttachment.format = swapChainImageFormat;
+	//colorAttachment.format = RGB8;
 	colorAttachment.samples = device.MaxSampleCount();
+	//colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 	colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -401,6 +430,7 @@ void Window::CreateRenderPass()
 	VkAttachmentDescription depthAttachment{};
 	depthAttachment.format = device.FindDepthFormat();
 	depthAttachment.samples = device.MaxSampleCount();
+	//depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 	depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 	depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -427,10 +457,25 @@ void Window::CreateRenderPass()
 	swapchainAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	swapchainAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	swapchainAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	if (Manager::settings.msaa) swapchainAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 	VkAttachmentReference swapchainAttachmentRef{};
 	swapchainAttachmentRef.attachment = 0;
 	swapchainAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	VkAttachmentDescription multiSampleAttachment{};
+	multiSampleAttachment.format = swapChainImageFormat;
+	multiSampleAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	multiSampleAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	multiSampleAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	multiSampleAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	multiSampleAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	multiSampleAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	multiSampleAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+	VkAttachmentReference multiSampleAttachmentRef{};
+	multiSampleAttachmentRef.attachment = 3;
+	multiSampleAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 	VkAttachmentReference inputReferences[2]{};
 	inputReferences[0].attachment = 1;
@@ -445,24 +490,26 @@ void Window::CreateRenderPass()
 	postProcessingPass.pColorAttachments = &swapchainAttachmentRef;
 	postProcessingPass.inputAttachmentCount = 2;
 	postProcessingPass.pInputAttachments = inputReferences;
+	if (Manager::settings.msaa) postProcessingPass.pResolveAttachments = &multiSampleAttachmentRef;
 
 	VkSubpassDependency dependency{};
 	dependency.srcSubpass = 0;
 	dependency.dstSubpass = 1;
 	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	if (Manager::settings.msaa) dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
 	dependency.srcAccessMask = 0;
+	if (Manager::settings.msaa) dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-	VkAttachmentDescription attachments[] = {swapchainAttachment, colorAttachment, depthAttachment};
+	VkAttachmentDescription attachments[] = {swapchainAttachment, colorAttachment, depthAttachment, multiSampleAttachment};
 	VkSubpassDescription subpasses[] = {subpass, postProcessingPass};
 
 	VkRenderPassCreateInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 	renderPassInfo.attachmentCount = 3;
+	if (Manager::settings.msaa) renderPassInfo.attachmentCount = 4;
 	renderPassInfo.pAttachments = attachments;
-	//renderPassInfo.subpassCount = 1;
-	//renderPassInfo.pSubpasses = &subpass;
 	renderPassInfo.subpassCount = 2;
 	renderPassInfo.pSubpasses = subpasses;
 	renderPassInfo.dependencyCount = 1;
@@ -534,6 +581,7 @@ void Window::RecreateSwapChain()
 
 	DestroyDepthResources();
 	DestroyColorResources();
+	DestroyMultiSampleResources();
 	DestroyFramebuffers();
 	DestroyImageViews();
 	DestroySwapChain();
@@ -545,6 +593,7 @@ void Window::RecreateSwapChain()
 	CreateImageViews();
 	CreateColorResources();
 	CreateDepthResources();
+	CreateMultiSampleResources();
 	CreateFramebuffers();
 
 	recreatingSwapchain = false;
@@ -554,10 +603,9 @@ void Window::DestroyResources()
 {
 	DestroyFramebuffers();
 	DestroyRenderPass();
-	//DestroyShadowPass();
 	DestroyDepthResources();
 	DestroyColorResources();
-	//DestroyShadowResources();
+	DestroyMultiSampleResources();
 	DestroyImageViews();
 	DestroySwapChain();
 }
@@ -658,6 +706,13 @@ void Window::DestroyDepthResources()
 void Window::DestroyColorResources()
 {
 	colorTexture.Destroy();
+}
+
+void Window::DestroyMultiSampleResources()
+{
+	if (!Manager::settings.msaa) return;
+
+	multiSampleTexture.Destroy();
 }
 
 /*

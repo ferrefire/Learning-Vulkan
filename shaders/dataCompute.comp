@@ -12,17 +12,6 @@ layout(std430, set = 1, binding = 0) buffer Data
 	GeneralData generalData;
 };
 
-//struct IntersectData
-//{
-//	vec3 position;
-//    uint check;
-//};
-
-//layout(std430, set = 1, binding = 0) buffer Data
-//{
-//	IntersectData intersectData[];
-//};
-
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 #include "variables.glsl"
@@ -33,7 +22,7 @@ layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 void main()
 {
-    generalData.viewHeight = SampleDynamic(variables.viewPosition.xz) * 5000.0;
+    generalData.viewHeight = GetTerrainHeight(variables.viewPosition.xz);
 
     /*vec3 frustumCorner12 = (variables.frustumCorner1 + variables.frustumCorner2) * 0.5;
     vec3 frustumCorner13 = (variables.frustumCorner1 + variables.frustumCorner3) * 0.5;

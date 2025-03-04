@@ -4,6 +4,7 @@
 #include "utilities.hpp"
 #include "input.hpp"
 #include "terrain.hpp"
+#include "data.hpp"
 
 #include <iostream>
 
@@ -42,6 +43,8 @@ void Camera::UpdateView()
 void Camera::Move(const glm::vec3 &amount)
 {
 	position += amount;
+
+	if (!flying) position.y = glm::clamp(position.y, Data::GetGeneralData().viewHeight + 4.0f, 25000.0f);
 
 	UpdateView();
 }
@@ -160,21 +163,30 @@ void Camera::UpdateMovement()
 
 	if (!canMove) return;
 
+	if (Input::GetKey(GLFW_KEY_F).pressed)
+	{
+		flying = !flying;
+	}
+
 	if (Input::GetKey(GLFW_KEY_W).down)
 	{
-		Move(Front() * speed * Time::deltaTime);
+		if (flying) Move(Front() * speed * Time::deltaTime);
+		else if (!flying) Move(glm::normalize(XZ3XZ(Front())) * speed * Time::deltaTime);
 	}
 	if (Input::GetKey(GLFW_KEY_S).down)
 	{
-		Move(-Front() * speed * Time::deltaTime);
+		if (flying) Move(-Front() * speed * Time::deltaTime);
+		else if (!flying) Move(glm::normalize(XZ3XZ(-Front())) * speed * Time::deltaTime);
 	}
 	if (Input::GetKey(GLFW_KEY_D).down)
 	{
-		Move(Side() * speed * Time::deltaTime);
+		if (flying) Move(Side() * speed * Time::deltaTime);
+		else if (!flying) Move(glm::normalize(XZ3XZ(Side())) * speed * Time::deltaTime);
 	}
 	if (Input::GetKey(GLFW_KEY_A).down)
 	{
-		Move(-Side() * speed * Time::deltaTime);
+		if (flying) Move(-Side() * speed * Time::deltaTime);
+		else if (!flying) Move(glm::normalize(XZ3XZ(-Side())) * speed * Time::deltaTime);
 	}
 	if (Input::GetKey(GLFW_KEY_SPACE).down)
 	{
@@ -184,6 +196,8 @@ void Camera::UpdateMovement()
 	{
 		Move(-Up() * speed * Time::deltaTime);
 	}
+
+	if (!flying) Move(glm::vec3(0.0f, -9.81f * Time::deltaTime, 0.0f));
 }
 
 void Camera::UpdateRotation(double xpos, double ypos)

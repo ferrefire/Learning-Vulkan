@@ -393,8 +393,8 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 
 	//Terrain::RecordComputeCommands(commandBuffer);
 	if (TREES_ENABLED) Trees::RecordComputeCommands(commandBuffer);
-
 	if (GRASS_ENABLED) Grass::RecordComputeCommands(commandBuffer);
+	Data::RecordComputeCommands(commandBuffer);
 
 	//START_TIMER(dataTime); 
 	//Data::RecordComputeCommands(commandBuffer); //removeee
@@ -474,7 +474,7 @@ void Graphics::ComputeFrame()
 
 	Trees::SetData();
 	Grass::SetData();
-	//Data::SetData();
+	Data::SetData();
 }
 
 void Graphics::DrawFrame() 

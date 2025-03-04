@@ -23,6 +23,7 @@ layout(location = 0) out vec4 outColor;
 #include "functions.glsl"
 
 const vec3 leafTint = vec3(0.0916, 0.1, 0.0125);
+//const vec3 leafTint = pow(vec3(0.0916, 0.1, 0.0125), vec3(1.0 / 2.2));
 const vec3 translucencyTint = vec3(235, 196, 5) / 255.0;
 
 const vec4 discardDistances = vec4(0.125 * 1.1, 0.1875, 0.375 * 0.9, 0.0625 * 1.75);

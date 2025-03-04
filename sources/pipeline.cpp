@@ -242,7 +242,8 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 		//pipelineConfig.rasterization.lineWidth = 3.0f;
 	}
 
-	pipelineConfig.multisampling.rasterizationSamples = device.MaxSampleCount();
+	//pipelineConfig.multisampling.rasterizationSamples = device.MaxSampleCount();
+	//pipelineConfig.multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
 	if (pipelineConfig.foliage)
 	{
@@ -260,6 +261,11 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 		pipelineConfig.rasterization.depthBiasEnable = VK_TRUE;
 		pipelineConfig.rasterization.depthBiasConstantFactor = 4.0f;
 		pipelineConfig.rasterization.depthBiasSlopeFactor = 1.5f;
+	}
+
+	if (!pipelineConfig.shadow && !pipelineConfig.cull)
+	{
+		pipelineConfig.multisampling.rasterizationSamples = device.MaxSampleCount();
 	}
 
 	VkGraphicsPipelineCreateInfo graphicsPipelineInfo{};

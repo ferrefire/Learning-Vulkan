@@ -32,8 +32,8 @@ struct Settings
 	bool fullscreen = false;
 	bool wireframe = false;
 	bool discrete = true;
-	bool mssa = false;
-	VkSampleCountFlagBits maxSamples = VK_SAMPLE_COUNT_4_BIT;
+	bool msaa = false;
+	VkSampleCountFlagBits maxSamples = VK_SAMPLE_COUNT_2_BIT;
 	//VkSampleCountFlagBits maxSampleCount = VK_SAMPLE_COUNT_64_BIT;
 	const std::vector<const char*> validationLayers = {	"VK_LAYER_KHRONOS_validation" };
 	bool validationLayersActive = true;

@@ -9,6 +9,7 @@
 
 #define XZ2XY(vec) glm::vec2(vec.x, vec.z)
 #define XY3XZ(vec) glm::vec3(vec.x, 0, vec.y)
+#define XZ3XZ(vec) glm::vec3(vec.x, 0, vec.z)
 #define Y3Y(vec) glm::vec3(0, vec.y, 0)
 
 class Utilities

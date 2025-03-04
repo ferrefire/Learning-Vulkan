@@ -217,4 +217,5 @@ void main()
 	}
 
 	outColor = vec4(finalColor, 1.0);
+	//outColor = vec4(ToStandard(finalColor), 1.0);
 }
