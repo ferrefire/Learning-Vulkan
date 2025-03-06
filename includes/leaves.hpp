@@ -37,6 +37,7 @@ class Leaves
 
 		static Pipeline graphicsPipeline;
 		static Pipeline shadowPipeline;
+		static Pipeline capturePipeline;
 
 		static Descriptor graphicsDescriptor;
 		static Descriptor shadowDescriptor;
@@ -61,6 +62,7 @@ class Leaves
 		static void Frame();
 		static void RecordGraphicsCommands(VkCommandBuffer commandBuffer);
 		static void RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade);
+		static void RecordCaptureCommands(VkCommandBuffer commandBuffer);
 		static void RenderLeaves(VkCommandBuffer commandBuffer);
 		static void RenderShadows(VkCommandBuffer commandBuffer, int cascade);
 };

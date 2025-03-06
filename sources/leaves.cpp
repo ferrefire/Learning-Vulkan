@@ -4,6 +4,7 @@
 #include "shape.hpp"
 #include "time.hpp"
 #include "trees.hpp"
+#include "capture.hpp"
 
 #include <iostream>
 
@@ -47,6 +48,9 @@ void Leaves::CreateGraphicsPipeline()
 	VertexInfo vertexInfo = leafMeshLod1.MeshVertexInfo();
 
 	graphicsPipeline.CreateGraphicsPipeline("leaf", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
+
+	pipelineConfiguration.capture = true;
+	capturePipeline.CreateGraphicsPipeline("leaf", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
 }
 
 void Leaves::CreateShadowPipeline()
@@ -135,6 +139,7 @@ void Leaves::DestroyPipelines()
 {
 	graphicsPipeline.Destroy();
 	shadowPipeline.Destroy();
+	capturePipeline.Destroy();
 }
 
 void Leaves::DestroyMeshes()
@@ -186,9 +191,26 @@ void Leaves::RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade)
 	RenderShadows(commandBuffer, cascade);
 }
 
+void Leaves::RecordCaptureCommands(VkCommandBuffer commandBuffer)
+{
+	capturePipeline.BindGraphics(commandBuffer);
+	Manager::globalDescriptor.Bind(commandBuffer, capturePipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+	graphicsDescriptor.Bind(commandBuffer, capturePipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+	RenderLeaves(commandBuffer);
+}
+
 void Leaves::RenderLeaves(VkCommandBuffer commandBuffer)
 {
 	leafMeshLod1.Bind(commandBuffer);
+	
+
+	//if (Capture::capturing)
+	//{
+	//	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
+	//		1 * Trees::treeVariables.leafCounts[0].x, 0, 0, 0);
+	//	return;
+	//}
+
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()), 
 		Trees::treeRenderCounts[Manager::currentFrame].lod0Count * Trees::treeVariables.leafCounts[0].x, 0, 0, 0);
 
@@ -208,6 +230,10 @@ void Leaves::RenderLeaves(VkCommandBuffer commandBuffer)
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()),
 		Trees::treeRenderCounts[Manager::currentFrame].lod4Count * Trees::treeVariables.leafCounts[4].x,
 		0, 0, Trees::treeVariables.leafCounts[4].y);
+
+	//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()),
+	//	Trees::treeRenderCounts[Manager::currentFrame].lod5Count * Trees::treeVariables.leafCounts[5].x,
+	//	0, 0, Trees::treeVariables.leafCounts[5].y);
 }
 
 void Leaves::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
@@ -306,6 +332,7 @@ Mesh Leaves::leafMeshLod2;
 
 Pipeline Leaves::graphicsPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Leaves::shadowPipeline{Manager::currentDevice, Manager::camera};
+Pipeline Leaves::capturePipeline{Manager::currentDevice, Manager::camera};
 
 Descriptor Leaves::graphicsDescriptor{Manager::currentDevice};
 Descriptor Leaves::shadowDescriptor{Manager::currentDevice};

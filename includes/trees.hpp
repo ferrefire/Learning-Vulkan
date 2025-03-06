@@ -56,6 +56,7 @@ struct TreeCountData
 	uint32_t lod2Count;
 	uint32_t lod3Count;
 	uint32_t lod4Count;
+	uint32_t lod5Count;
 	//uint32_t leafCount;
 };
 
@@ -91,6 +92,8 @@ struct TreeVariables
 	alignas(4) uint32_t treeLod3RenderCount;
 	alignas(4) uint32_t treeLod4RenderBase;
 	alignas(4) uint32_t treeLod4RenderCount;
+	alignas(4) uint32_t treeLod5RenderBase;
+	alignas(4) uint32_t treeLod5RenderCount;
 	alignas(4) uint32_t treeTotalRenderBase;
 	alignas(4) uint32_t treeTotalRenderCount;
 
@@ -126,6 +129,8 @@ class Trees
 		static uint32_t treeLod3RenderCount;
 		static uint32_t treeLod4RenderBase;
 		static uint32_t treeLod4RenderCount;
+		static uint32_t treeLod5RenderBase;
+		static uint32_t treeLod5RenderCount;
 		static uint32_t treeTotalRenderBase;
 		static uint32_t treeTotalRenderCount;
 
@@ -140,10 +145,13 @@ class Trees
 		static Mesh treeLod2Mesh;
 		static Mesh treeLod3Mesh;
 		static Mesh treeLod4Mesh;
+		static Mesh treeLod5Mesh;
 
 		static Pipeline graphicsPipeline;
+		static Pipeline graphicsLodPipeline;
 		static Pipeline shadowPipeline;
 		static Pipeline cullPipeline;
+		static Pipeline capturePipeline;
 		static Pipeline computeSetupPipeline;
 		static Pipeline computeRenderPipeline;
 
@@ -165,6 +173,7 @@ class Trees
 		static uint32_t totalLeafCount;
 
 		static bool treesComputed;
+		static bool shouldUpdateLodTree;
 
 		static void Create();
 		static void CreateMeshes();
@@ -195,12 +204,14 @@ class Trees
 		static void RecordComputeCommands(VkCommandBuffer commandBuffer);
 		static void RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade);
 		static void RecordCullCommands(VkCommandBuffer commandBuffer);
+		static void RecordCaptureCommands(VkCommandBuffer commandBuffer);
 		static void RenderTrees(VkCommandBuffer commandBuffer);
 		static void RenderShadows(VkCommandBuffer commandBuffer, int cascade);
 		static void RenderCulling(VkCommandBuffer commandBuffer);
 		static void ComputeTreeSetup();
-		static void ComputeTreeRender(VkCommandBuffer commandBuffer);
+		static void ComputeTreeRender(VkCommandBuffer commandBuffer, bool capture = false);
 		static void SetData();
+		static void CaptureTree();
 
 		static void GenerateTrunkMesh(Mesh &mesh, BranchConfiguration config);
 		//static Shape GenerateBranchShape(BranchConfiguration branchConfig);

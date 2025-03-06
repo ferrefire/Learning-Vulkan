@@ -380,6 +380,7 @@ void main()
 	//vec3 endNormal = normalize(normalWS + textureNormal * 1.0);
 
 	//outColor = vec4((depth > 0.1 ? normalWS : endNormal) * 0.5 + 0.5, 1.0);
+	//outColor = vec4(normalWS * 0.5 + 0.5, 1.0);
 	//return;
 
 	float shadow = 0.0;

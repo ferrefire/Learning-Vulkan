@@ -7,6 +7,7 @@
 #include "texture.hpp"
 #include "shadow.hpp"
 #include "culling.hpp"
+#include "capture.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -91,6 +92,7 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 
 	if (pipelineConfig.shadow) pipelineConfig.renderPass = Shadow::shadowCascadePass;
 	else if (pipelineConfig.cull) pipelineConfig.renderPass = Culling::cullPass;
+	else if (pipelineConfig.capture) pipelineConfig.renderPass = Capture::capturePass;
 	else pipelineConfig.renderPass = Manager::currentWindow.renderPass;
 
 	//CreateGlobalDescriptorSetLayout(descriptorsInfo.globalDescriptorLayoutConfig);
@@ -226,7 +228,6 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 		pushConstantRange.stageFlags = pipelineConfig.pushConstantStage;
 		pushConstantRange.offset = 0;
 		pushConstantRange.size = pipelineConfig.pushConstantSize * pipelineConfig.pushConstantCount;
-		//pipelineLayoutInfo.pushConstantRangeCount = pipelineConfig.pushConstantCount;
 		pipelineLayoutInfo.pushConstantRangeCount = 1;
 		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 	}
@@ -304,7 +305,7 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	}
 }
 
-void Pipeline::CreateComputePipeline(std::string shader, std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig)
+void Pipeline::CreateComputePipeline(std::string shader, std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig, PushConstantConfiguration pushConstantConfig)
 {
 	if (computePipeline) throw std::runtime_error("cannot create compute pipeline because it already exists");
 
@@ -336,6 +337,18 @@ void Pipeline::CreateComputePipeline(std::string shader, std::vector<DescriptorL
 	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
 	pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
+	pipelineLayoutInfo.pushConstantRangeCount = 0;
+	pipelineLayoutInfo.pPushConstantRanges = nullptr;
+
+	VkPushConstantRange pushConstantRange{};
+	if (pushConstantConfig.pushConstantCount > 0)
+	{
+		pushConstantRange.stageFlags = pushConstantConfig.pushConstantStage;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = pushConstantConfig.pushConstantSize * pushConstantConfig.pushConstantCount;
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+	}
 
 	if (vkCreatePipelineLayout(device.logicalDevice, &pipelineLayoutInfo, nullptr, &computePipelineLayout) != VK_SUCCESS)
 	{

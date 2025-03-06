@@ -29,7 +29,8 @@ layout(location = 2) out vec3 globalNormal;
 layout(location = 3) out vec3 localNormal;
 layout(location = 4) out vec3 leafColor;
 layout(location = 5) out vec3 localCoordinates;
-layout(location = 6) out vec4 shadowPositions[CASCADE_COUNT];
+layout(location = 6) out float baseRotation;
+layout(location = 7) out vec4 shadowPositions[CASCADE_COUNT];
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -44,6 +45,7 @@ struct RotateResults
 //const vec3 treeCenter = vec3(-3.05, 47.22, -5.725);
 //const vec3 treeCenter = vec3(7.05, 47.22, -6.125);
 const vec3 treeCenter = vec3(0.0, 40.0, 0.0);
+//const vec3 treeCenter = vec3(0.0, 10.0, 0.0);
 
 RotateResults RotateLeaf(vec3 objectPosition, vec3 rotations, float scale)
 {
@@ -85,6 +87,7 @@ void main()
 	vec2 rotz = unpackHalf2x16(data[dataIndex].rotz);
 	rotation.z = rotz.x * 360.0 - 180.0;
 
+	baseRotation = rotz.x;
 	position += variables.viewPosition;
 
 	//vec3 objectPosition = inPosition * scale;

@@ -454,6 +454,29 @@ void Shape::SetShape(int type, int resolution)
 
 		if (coordinate) RecalculateCoordinates();
 	}
+	else if (type == CROSS)
+	{
+		std::vector<Shape> shapes(resolution);
+		shapes[0] = Shape(QUAD, true, true);
+
+		float angleStep = 180.0f / float(resolution);
+		for (int i = 1; i < resolution; i++)
+		{
+			shapes[i] = Shape(QUAD, true, true);
+			shapes[i].Rotate(-(angleStep * float(i)), glm::vec3(0.0f, 1.0f, 0.0f));
+		}
+
+		for (Shape &shape : shapes)
+		{
+			Join(shape);
+		}
+
+		//Shape forwards = Shape(QUAD, true, true);
+        //forwards.Rotate(-90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+		//Join(sidewards);
+		//Join(forwards);
+	}
+	
 }
 
 void Shape::AddPosition(glm::vec3 pos)

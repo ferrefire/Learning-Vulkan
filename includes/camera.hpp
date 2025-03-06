@@ -55,6 +55,7 @@ class Camera
 		void SetPosition(const glm::vec3 &newPosition);
 		void Rotate(const glm::vec3 &degrees);
 		void SetRotation(const glm::vec3 &newRotation);
+		void SetProjection(const glm::mat4 &newProjection);
 		void UpdateProjection();
 		void UpdateView();
 

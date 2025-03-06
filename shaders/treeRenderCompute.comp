@@ -9,6 +9,7 @@ struct CountData
 	uint lod2Count;
 	uint lod3Count;
 	uint lod4Count;
+	uint lod5Count;
 	//uint leafCount;
 };
 
@@ -68,6 +69,8 @@ layout(set = 1, binding = 3) uniform TreeVariables
 	uint treeLod3RenderCount;
 	uint treeLod4RenderBase;
 	uint treeLod4RenderCount;
+	uint treeLod5RenderBase;
+	uint treeLod5RenderCount;
 	uint treeTotalRenderBase;
 	uint treeTotalRenderCount;
 	float spacing;
@@ -90,6 +93,11 @@ layout(std430, set = 1, binding = 5) readonly restrict buffer LeafPositionsBuffe
 {
 	vec4 leafPositions[];
 };
+
+layout(push_constant, std430) uniform PushConstants
+{
+    uint capturing;
+} pc;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
@@ -136,13 +144,18 @@ int InsideWorld(vec3 pos)
 float InsideWorldInter(float dis)
 {
 	//float dis = SquaredDistance(pos, variables.viewPosition);
-	float dis4 = pow(treeVariables.treeTotalRenderBase * treeVariables.spacing * 0.5, 2);
+	float dis5 = pow(treeVariables.treeTotalRenderBase * treeVariables.spacing * 0.5, 2);
+	float dis4 = pow(treeVariables.treeLod4RenderBase * treeVariables.spacing * 0.5, 2);
 	float dis3 = pow(treeVariables.treeLod3RenderBase * treeVariables.spacing * 0.5, 2);
 	float dis2 = pow(treeVariables.treeLod2RenderBase * treeVariables.spacing * 0.5, 2);
 	float dis1 = pow(treeVariables.treeLod1RenderBase * treeVariables.spacing * 0.5, 2);
 	float dis0 = pow(treeVariables.treeLod0RenderBase * treeVariables.spacing * 0.5, 2);
 
-	if (dis >= dis4) return (-1);
+	if (dis >= dis5) return (-1);
+	else if (dis >= dis4)
+	{
+		return (5.0 + ((dis - dis4) / (dis5 - dis4)));
+	}
 	else if (dis >= dis3)
 	{
 		return (4.0 + ((dis - dis3) / (dis4 - dis3)));
@@ -169,15 +182,22 @@ void main()
 {
 	if (gl_GlobalInvocationID.x > treeVariables.treeTotalRenderBase || gl_GlobalInvocationID.y > treeVariables.treeTotalRenderBase) return;
 
-	if (gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.y == 0)
+	if ((gl_GlobalInvocationID.x != 0 || gl_GlobalInvocationID.y != 0) && pc.capturing == 1) return;
+
+	bool captured = false;
+
+	if ((gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.y == 0) || pc.capturing == 1)
 	{
 		atomicExchange(countData.lod0Count, 0);
 		atomicExchange(countData.lod1Count, 0);
 		atomicExchange(countData.lod2Count, 0);
 		atomicExchange(countData.lod3Count, 0);
 		atomicExchange(countData.lod4Count, 0);
+		atomicExchange(countData.lod5Count, 0);
 		//atomicExchange(countData.leafCount, 0);
 	}
+
+	if (pc.capturing == 1) captured = true;
 
 	vec3 viewPosition = variables.viewPosition;
 	vec2 flooredViewPosition = floor(viewPosition.xz * treeVariables.spacingMult);
@@ -187,9 +207,9 @@ void main()
 	ixz += ivec2(floor(variables.terrainOffset.xz * treeVariables.spacingMult));
 	vec2 dataIndexVec = vec2(treeVariables.treeBase * 0.5) + ixz;
 
-	if (dataIndexVec.x < 0 || dataIndexVec.x > treeVariables.treeBase || dataIndexVec.y < 0 || dataIndexVec.y > treeVariables.treeBase) return ;
+	if (dataIndexVec.x < 0 || dataIndexVec.x > treeVariables.treeBase || dataIndexVec.y < 0 || dataIndexVec.y > treeVariables.treeBase) if (!captured) return ;
 	uint dataIndex = uint(floor(dataIndexVec.x * treeVariables.treeBase + dataIndexVec.y));
-	if (data[dataIndex].life == 0) return;
+	if (data[dataIndex].life == 0) if (!captured) return;
 
 	vec3 offset = vec3(0);
 	offset.xz = unpackHalf2x16(data[dataIndex].posxz);
@@ -207,8 +227,10 @@ void main()
 	float viewDistance = SquaredDistance(worldPosition + vec3(0, 30, 0), viewPosition);
 
 	float lodInter = InsideWorldInter(viewDistance);
+	if (captured) lodInter = 2.0;
 	if (lodInter == -1) return ;
 	int lod = int(floor(lodInter));
+	if (captured) lod = 2;
 	if (lod == -1) return ;
 	float viewFactor = 50.0 / float(lod + 1);
 	float inDis = 1.75;
@@ -216,29 +238,32 @@ void main()
 	if (lod == 1) inDis = 1.8;
 	if (lod == 2) inDis = 1.5;
 
-	if (lod > 2)
+	if (!captured)
 	{
-		if (InView(worldPosition, 0) == 0) return;
-	}
-	else if (lod > 1)
-	{
-		if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0) return;
-	}
-	else if (lod > 0)
-	{
-		if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0)
+		if (lod > 2)
 		{
-			lod = 3;
+			if (InView(worldPosition, 0) == 0) return;
+		}
+		else if (lod > 1)
+		{
+			if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0) return;
+		}
+		else if (lod > 0)
+		{
+			if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0)
+			{
+				lod = 3;
+			}
+		}
+		else
+		{
+			if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0)
+			{
+				lod = 1;
+			}
 		}
 	}
-	else
-	{
-		if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0)
-		{
-			lod = 1;
-		}
-	}
-	if (Occluded(WorldToCull(worldPosition + vec3(0, 60, 0)), 0.005) == 1) return;
+	if (Occluded(WorldToCull(worldPosition + vec3(0, 60, 0)), 0.005) == 1) if (!captured) return;
 
 	uint index = 0;
 	uint indexOffset = 0;
@@ -266,6 +291,20 @@ void main()
 	{
 		index = atomicAdd(countData.lod4Count, 1);
 		indexOffset = treeVariables.treeLod0RenderCount + treeVariables.treeLod1RenderCount + treeVariables.treeLod2RenderCount + treeVariables.treeLod3RenderCount;
+	}
+	else if (lod == 5)
+	{
+		index = atomicAdd(countData.lod5Count, 1);
+		indexOffset = treeVariables.treeLod0RenderCount + treeVariables.treeLod1RenderCount + treeVariables.treeLod2RenderCount + treeVariables.treeLod3RenderCount + treeVariables.treeLod4RenderCount;
+	}
+
+	if (captured)
+	{
+		//worldPosition = vec3(0.0, -32.5, 100.0);
+		worldPosition = vec3(0.0, 0.0, 0.0);
+		rotation = 0.0;
+		scale = 1.0;
+		color = 1.0;
 	}
 
 	renderData[index + indexOffset].posxz = packHalf2x16(worldPosition.xz - viewPosition.xz);
@@ -297,12 +336,20 @@ void main()
 			leafLodScale = mix(leafLodScale, 0.1, (lodDis - leafFadeStart) * leafFadeMult);
 		}
 		//leafLodScale += leafIndex % (int(treeVariables.leafCounts[lod].z) * 2) == 0 ? treeVariables.leafCounts[lod].w * 0.5 : 0.0;
-		float leafRan = length(leafPositions[leafIndex].xyz) + dataIndex;
+		float leafRan = length(leafPositions[leafIndex].xyz) + (captured ? 0 : dataIndex);
 		float leafScale = leafLodScale + (Random11(leafRan) * leafLodScale) * 0.25;
 		float leafRotationX = Random01(leafIndex * 0.001 + leafRan);
 		float leafRotationY = Random01(leafIndex * 0.001 * 2.0 + leafRan * 0.5);
 		float leafRotationZ = Random01(leafIndex * 0.001 * 0.5 + leafRan * 10.0);
 		float leafColor = 1.0 + (Random01(leafIndex * 0.001 * 0.5 + leafRan * 2.0 + leafRotationX + leafRotationY) - 0.5);
+
+		leafRotationZ = 1.0;
+		if (captured)
+		{
+			//leafScale -= 20.0;
+			leafScale -= 0.0;
+			leafRotationZ = 0.0;
+		}
 
 		LeafData leafData;
 		leafData.posxz = packHalf2x16(leafWorldPosition.xz);

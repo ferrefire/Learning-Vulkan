@@ -29,6 +29,8 @@ layout(set = 1, binding = 1) uniform TreeVariables
 	uint treeLod3RenderCount;
 	uint treeLod4RenderBase;
 	uint treeLod4RenderCount;
+	uint treeLod5RenderBase;
+	uint treeLod5RenderCount;
 	uint treeTotalRenderBase;
 	uint treeTotalRenderCount;
 	float spacing;
@@ -39,7 +41,7 @@ layout(set = 1, binding = 1) uniform TreeVariables
 	//uint leafCount2;
 	//uint leafCount3;
 	//uint leafCount4;
-	vec4 leafCounts[5];
+	vec4 leafCounts[6];
 } treeVariables;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;

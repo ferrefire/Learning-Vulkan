@@ -79,7 +79,7 @@ struct ShaderVariables
 	alignas(4) uint32_t shadowCascades;
 	alignas(16) glm::vec4 terrainShadowOffsets[3];
 	alignas(16) glm::vec4 terrainShadowDistances[3];
-	//alignas(4) float terrainShadowDistance1;
+	alignas(4) uint32_t capturing = 0;
 };
 
 class Manager

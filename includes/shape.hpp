@@ -12,6 +12,7 @@
 #define BLADE 4
 #define CYLINDER 5
 #define LEAF 6
+#define CROSS 7
 
 #define INDEX_TYPE VK_INDEX_TYPE_UINT16
 //#define INDEX_TYPE VK_INDEX_TYPE_UINT32

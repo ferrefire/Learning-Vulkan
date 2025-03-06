@@ -12,7 +12,8 @@ layout(location = 2) in vec3 globalNormal;
 layout(location = 3) in vec3 localNormal;
 layout(location = 4) in vec3 leafColor;
 layout(location = 5) in vec3 localCoordinates;
-layout(location = 6) in vec4 shadowPositions[CASCADE_COUNT];
+layout(location = 6) in float baseRotation;
+layout(location = 7) in vec4 shadowPositions[CASCADE_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
@@ -58,11 +59,12 @@ void main()
 	//if (!gl_FrontFacing) leafNormal *= -1;
 	float depth = GetDepth(gl_FragCoord.z);
 	//float shadow = 0.0;
-	float terrainShadow = GetTerrainShadow(worldPosition.xz);
+	float terrainShadow = 0.0;
+	if (baseRotation != 0.0) terrainShadow = GetTerrainShadow(worldPosition.xz);
 	float shadow = terrainShadow;
 	ShadowResults shadowResults;
 	shadowResults.reduction = 1.0;
-	if (terrainShadow < 1.0)
+	if (baseRotation != 0.0 && terrainShadow < 1.0)
 	{
 		shadowResults = GetCascadedShadowResults(shadowPositions, depth);
 		shadow = clamp(shadow + shadowResults.shadow, 0.0, 1.0);
@@ -81,7 +83,7 @@ void main()
 	//leafNormal = normalize(leafNormal);
 	//vec3 terrainNormal = SampleNormalDynamic(worldPosition.xz, 1.0);
 	//vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow, 0.25, 0.1);
-	vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow, 0.025 + 0.075 * diffuseEdgeBlend, 0.025);
+	vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow, 0.025 + 0.075 * diffuseEdgeBlend * (baseRotation != 0.0 ? 1.0 : 0.0), 0.025);
 	//vec3 leafDiffuse = DiffuseLightingRealistic(leafNormal, worldPosition, shadow, 0.1, 0.1);
 	//vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow);
 	vec3 endColor = leafDiffuse * leafTint * leafColor.y;
@@ -90,7 +92,7 @@ void main()
 	//float translucency = 1.0;
 	float dis = depth * variables.ranges.y;
 
-    if (terrainShadow == 0.0 && dis < 500.0)
+    if (baseRotation != 0.0 && terrainShadow == 0.0 && dis < 500.0)
 	{
 		vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
 		float normDot = clamp(dot(leafNormal, -variables.lightDirection), 0.0, 1.0);

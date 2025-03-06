@@ -11,8 +11,6 @@ struct TreeRenderData
 	uint posxz;
 	uint posyroty;
 	uint scaxcoly;
-	//vec3 position;
-	//vec3 rotscacol;
 };
 
 layout(std430, set = 1, binding = 0) buffer RenderBuffer
@@ -61,7 +59,7 @@ layout(location = 2) in vec3 inNormal;
 layout(location = 0) out vec2 coord;
 layout(location = 1) out vec3 normal;
 layout(location = 2) out vec3 worldPosition;
-layout(location = 3) out vec4 shadowPositions[CASCADE_COUNT];
+//layout(location = 3) out vec4 shadowPositions[CASCADE_COUNT];
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -89,33 +87,23 @@ void main()
 	scale = scaxcoly.x;
 	color = scaxcoly.y;
 
-	//position = renderData[dataIndex].position;
-	//rotation = renderData[dataIndex].rotscacol.x * 360.0;
-	//scale = renderData[dataIndex].rotscacol.y;
-	//color = renderData[dataIndex].rotscacol.z;
-
     position += variables.viewPosition;
 
 	vec3 scaledPosition = inPosition * scale;
+
+    //rotation = 0.0;
 
 	mat4 rotationMatrix = GetRotationMatrix(radians(rotation), vec3(0.0, 1.0, 0.0));
     vec3 objectPosition = (rotationMatrix * vec4(scaledPosition, 1.0)).xyz;
     normal = (rotationMatrix * vec4(inNormal, 0.0)).xyz;
 
 	coord = inCoordinate;
+    //coord.x = 1.0 - coord.x;
+    coord.y = 1.0 - coord.y;
 
-	//if (gl_InstanceIndex == 0 && pc.treeLod == 0)
-	//{
-	//	position = vec3(-250, 750, -2050);
-	//	objectPosition = inPosition;
-	//	normal = inNormal;
-	//}
-
-    //vec3 worldPosition = ObjectToWorld(inPosition * vec3(1.5, 15, 1.5), mat4(1)) + position + vec3(0, 7.5, 0);
     worldPosition = ObjectToWorld(objectPosition, mat4(1)) + position;
 
-	//normal = inNormal;
     gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
 
-	for (int i = 0; i < CASCADE_COUNT; i++) shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
+	//for (int i = 0; i < CASCADE_COUNT; i++) shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
 }

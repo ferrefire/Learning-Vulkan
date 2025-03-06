@@ -58,6 +58,7 @@ struct PipelineConfiguration
 	bool shadow = false;
 	bool shadowFragment = false;
 	bool cull = false;
+	bool capture = false;
 };
 
 struct DescriptorLayoutConfiguration
@@ -65,6 +66,13 @@ struct DescriptorLayoutConfiguration
     VkDescriptorType type;
     VkShaderStageFlags stages;
 	uint32_t count = 1;
+};
+
+struct PushConstantConfiguration
+{
+	uint32_t pushConstantCount = 0;
+	uint32_t pushConstantSize = 0;
+	VkShaderStageFlags pushConstantStage = ALL_STAGE;
 };
 
 class Pipeline
@@ -91,7 +99,7 @@ class Pipeline
 		VkPipeline computePipeline = nullptr;
 
 		void CreateGraphicsPipeline(std::string shader, std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig, PipelineConfiguration &pipelineConfig, VertexInfo &vertexInfo);
-		void CreateComputePipeline(std::string shader, std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig);
+		void CreateComputePipeline(std::string shader, std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig, PushConstantConfiguration pushConstantConfig = PushConstantConfiguration{});
 		// void CreateDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig, VkDescriptorSetLayout *descriptorSetLayout);
 		// void CreateGlobalDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig);
 		void CreateObjectDescriptorSetLayout(std::vector<DescriptorLayoutConfiguration> &descriptorLayoutConfig);

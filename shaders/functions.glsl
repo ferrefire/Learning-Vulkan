@@ -88,7 +88,7 @@ bool InsideTriangle(Triangle t, vec2 p)
 
 vec3 NormalizeSum(vec3 vec)
 {
-    float sum = vec.x + vec.y + vec.z;
+    float sum = abs(vec.x) + abs(vec.y) + abs(vec.z);
     vec /= sum;
 
     return (vec);

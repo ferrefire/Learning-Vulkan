@@ -12,6 +12,7 @@
 #include "data.hpp"
 #include "leaves.hpp"
 #include "sky.hpp"
+#include "capture.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -336,7 +337,10 @@ void Graphics::RecordShadowCommands()
 
 void Graphics::RenderShadows(VkCommandBuffer commandBuffer)
 {
-	for (int i = 0; i < Shadow::cascadeCount; i++)
+	int cascadeRange = Shadow::cascadeCount;
+	if (Capture::capturing) cascadeRange = 1;
+
+	for (int i = 0; i < cascadeRange; i++)
 	{
 		VkRenderPassBeginInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -644,50 +648,25 @@ void Graphics::Create()
 	//	Shadow::shadowCascadeDistances[3] *= 0.75;
 	//}
 
-	//Time::StartTimer(timer);
 	Culling::Create();
-	//Time::StopTimer(timer, "culling");
-
-	//Time::StartTimer(timer);
 	Shadow::Create();
-	//Time::StopTimer(timer, "shadow");
+	Capture::Create();
 
 	Manager::CreateShaderVariableBuffers();
 	Manager::CreateDescriptorSetLayout();
 
-	//Time::StartTimer(timer);
 	Texture::CreateDefaults();
 	Mesh::CreateDefaults();
-	//Time::StopTimer(timer, "defaults");
 
-	//Time::StartTimer(timer);
 	Terrain::Create();
-	//Time::StopTimer(timer, "terrain");
-
 	Sky::Create();
 
 	Manager::CreateDescriptor();
 
-	//Time::StartTimer(timer);
 	Grass::Create();
-	//Time::StopTimer(timer, "grass");
-
-	if (Manager::settings.trees)
-	{
-		//Time::StartTimer(timer);
-		Trees::Create();
-		//Time::StopTimer(timer, "trees");
-
-		//Time::StartTimer(timer);
-		Leaves::Create();
-		//Time::StopTimer(timer, "leaves");
-	}
-
-	//Time::StartTimer(timer);
+	Trees::Create();
+	Leaves::Create();
 	Data::Create();
-	//Time::StopTimer(timer, "data");
-
-	
 
 	if (Manager::settings.screenQuad)
 	{
@@ -711,9 +690,9 @@ void Graphics::Create()
 		std::vector<DescriptorConfiguration> descriptorConfig(1);
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
-		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
-		descriptorConfig[0].imageInfo.imageView = Sky::aerialTexture.imageView;
-		descriptorConfig[0].imageInfo.sampler = Sky::aerialTexture.sampler;
+		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+		descriptorConfig[0].imageInfo.imageView = Capture::colorTexture.imageView;
+		descriptorConfig[0].imageInfo.sampler = Capture::colorTexture.sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}
@@ -762,6 +741,7 @@ void Graphics::Destroy()
 	Leaves::Destroy();
 	Data::Destroy();
 	Sky::Destroy();
+	Capture::Destroy();
 	Manager::screenQuadDescriptor.Destroy();
 	Manager::Clean();
 

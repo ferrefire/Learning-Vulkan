@@ -92,6 +92,11 @@ void Camera::SetRotation(const glm::vec3 &newRotation)
 	UpdateView();
 }
 
+void Camera::SetProjection(const glm::mat4 &newProjection)
+{
+	this->projection = newProjection;
+}
+
 const glm::vec3 &Camera::Position()
 {
 	return (position);
