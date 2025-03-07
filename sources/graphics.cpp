@@ -37,6 +37,10 @@
 #define TREES_ENABLED true
 #endif
 
+#ifndef QUAD_TREES_ENABLED
+#define QUAD_TREES_ENABLED true
+#endif
+
 #ifndef LEAVES_ENABLED
 #define LEAVES_ENABLED true
 #endif
@@ -650,7 +654,7 @@ void Graphics::Create()
 
 	Culling::Create();
 	Shadow::Create();
-	Capture::Create();
+	//Capture::Create();
 
 	Manager::CreateShaderVariableBuffers();
 	Manager::CreateDescriptorSetLayout();
@@ -691,8 +695,8 @@ void Graphics::Create()
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
 		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[0].imageInfo.imageView = Capture::colorTexture.imageView;
-		descriptorConfig[0].imageInfo.sampler = Capture::colorTexture.sampler;
+		descriptorConfig[0].imageInfo.imageView = Terrain::heightMapLod1Texture.imageView;
+		descriptorConfig[0].imageInfo.sampler = Terrain::heightMapLod1Texture.sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}
@@ -741,7 +745,7 @@ void Graphics::Destroy()
 	Leaves::Destroy();
 	Data::Destroy();
 	Sky::Destroy();
-	Capture::Destroy();
+	//Capture::Destroy();
 	Manager::screenQuadDescriptor.Destroy();
 	Manager::Clean();
 

@@ -107,7 +107,7 @@ struct TreeVariables
 	//alignas(4) uint32_t leafCount3;
 	//alignas(4) uint32_t leafCount4;
 
-	alignas(16) glm::vec4 leafCounts[5];
+	alignas(16) glm::vec4 leafCounts[6];
 };
 
 class Trees

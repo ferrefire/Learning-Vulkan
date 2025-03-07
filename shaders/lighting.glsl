@@ -495,7 +495,7 @@ ShadowResults GetCascadedShadowResults(vec4 shadowSpaces[CASCADE_COUNT], float d
 	projectionCoordinates = shadowSpaces[CASCADE_COUNT - 1].xyz / shadowSpaces[CASCADE_COUNT - 1].w;
 	projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
 	//edgeBlend = clamp(max(max(abs(projectionCoordinates.x - 0.5), projectionCoordinates.y - 0.25), projectionCoordinates.z - 0.5), 0.0, 0.5);
-	edgeBlend = max(max(abs(projectionCoordinates.x - 0.5), projectionCoordinates.y - 0.5), projectionCoordinates.z - 0.5);
+	edgeBlend = max(max(abs(projectionCoordinates.x - 0.5), abs(projectionCoordinates.y - 0.5)), abs(projectionCoordinates.z - 0.5));
 	//edgeBlend = clamp(max(abs(projectionCoordinates.x - 0.5), projectionCoordinates.y - 0.25), 0.0, 0.5);
 	if (edgeBlend >= 0.4) result.reduction = clamp(1.0 - (edgeBlend - 0.4) * 10.0, 0.0, 1.0);
 	if (lod > (CASCADE_COUNT - 2) && edgeBlend <= 0.5) shadow *= result.reduction;

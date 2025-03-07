@@ -49,8 +49,8 @@ void Leaves::CreateGraphicsPipeline()
 
 	graphicsPipeline.CreateGraphicsPipeline("leaf", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
 
-	pipelineConfiguration.capture = true;
-	capturePipeline.CreateGraphicsPipeline("leaf", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
+	//pipelineConfiguration.capture = true;
+	//capturePipeline.CreateGraphicsPipeline("leaf", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
 }
 
 void Leaves::CreateShadowPipeline()
@@ -139,7 +139,7 @@ void Leaves::DestroyPipelines()
 {
 	graphicsPipeline.Destroy();
 	shadowPipeline.Destroy();
-	capturePipeline.Destroy();
+	//capturePipeline.Destroy();
 }
 
 void Leaves::DestroyMeshes()
@@ -231,9 +231,9 @@ void Leaves::RenderLeaves(VkCommandBuffer commandBuffer)
 		Trees::treeRenderCounts[Manager::currentFrame].lod4Count * Trees::treeVariables.leafCounts[4].x,
 		0, 0, Trees::treeVariables.leafCounts[4].y);
 
-	//vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()),
-	//	Trees::treeRenderCounts[Manager::currentFrame].lod5Count * Trees::treeVariables.leafCounts[5].x,
-	//	0, 0, Trees::treeVariables.leafCounts[5].y);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(leafMeshLod1.indices.size()),
+		Trees::treeRenderCounts[Manager::currentFrame].lod5Count * Trees::treeVariables.leafCounts[5].x,
+		0, 0, Trees::treeVariables.leafCounts[5].y);
 }
 
 void Leaves::RenderShadows(VkCommandBuffer commandBuffer, int cascade)

@@ -11,7 +11,7 @@
 #endif
 
 layout(set = 1, binding = 2) uniform sampler2D treeDiffuseSampler;
-layout(set = 1, binding = 3) uniform sampler2D treeLodSamplers[SIDE_COUNT];
+//layout(set = 1, binding = 3) uniform sampler2D treeLodSamplers[SIDE_COUNT];
 
 layout(location = 0) in vec2 inCoord;
 layout(location = 1) in vec3 inNormal;

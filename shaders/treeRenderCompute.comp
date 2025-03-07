@@ -81,7 +81,7 @@ layout(set = 1, binding = 3) uniform TreeVariables
 	//uint leafCount2;
 	//uint leafCount3;
 	//uint leafCount4;
-	vec4 leafCounts[5];
+	vec4 leafCounts[6];
 } treeVariables;
 
 layout(std430, set = 1, binding = 4) buffer LeavesBuffer
@@ -232,11 +232,19 @@ void main()
 	int lod = int(floor(lodInter));
 	if (captured) lod = 2;
 	if (lod == -1) return ;
-	float viewFactor = 50.0 / float(lod + 1);
-	float inDis = 1.75;
-	if (lod == 0) inDis = 1.35;
-	if (lod == 1) inDis = 1.8;
-	if (lod == 2) inDis = 1.5;
+	float lodDis = lodInter - lod;
+	//float viewFactor = 50.0 / float(lod + 1);
+	//float inDis = 1.75;
+	//if (lod == 0) inDis = 1.35;
+	//if (lod == 1) inDis = 1.8;
+	//if (lod == 2) inDis = 1.5;
+
+	if (lod == 5 && lodDis > 0.5)
+	{
+		float fadeDiff = ((lodDis - 0.5) * 2.0) - Random01(float(dataIndex));
+		if (fadeDiff > 0.0) return;
+		if (abs(fadeDiff) < 0.2) scale *= clamp(abs(fadeDiff) * 5.0, 0.1, 1.0);
+	}
 
 	if (!captured)
 	{
@@ -311,7 +319,7 @@ void main()
 	renderData[index + indexOffset].posyroty = packHalf2x16(vec2(worldPosition.y - viewPosition.y, rotation));
 	renderData[index + indexOffset].scaxcoly = packHalf2x16(vec2(scale, color));
 
-	if (lod > 4) return;
+	if (lod > 5) return;
 
 	uint leafDataIndex = index * uint(treeVariables.leafCounts[lod].x) + uint(treeVariables.leafCounts[lod].y);
 	int leafIndex = 0;
@@ -323,15 +331,14 @@ void main()
 		vec3 leafWorldPosition = worldPosition + leafLocalPosition - viewPosition;
 
 		float scaleMult = treeVariables.leafCounts[lod].w;
-		float lodDis = lodInter - lod;
-		if (lod < 4 && lodDis > leafBlendStart && leafIndex % int(treeVariables.leafCounts[lod + 1].z) == 0)
+		if (lod < 5 && lodDis > leafBlendStart && leafIndex % int(treeVariables.leafCounts[lod + 1].z) == 0)
 		{
 			//if (lodDis > 0.75) scaleMult = treeVariables.leafCounts[lod + 1].w;
 			//else scaleMult = mix(scaleMult, treeVariables.leafCounts[lod + 1].w, ((lodDis + 0.25) - 0.75) * 4.0);
 			scaleMult = mix(scaleMult, treeVariables.leafCounts[lod + 1].w, (lodDis - leafBlendStart) * leafBlendMult);
 		}
 		float leafLodScale = 2.0 + scaleMult;
-		if (lod < 4 && lodDis > leafFadeStart && leafIndex % int(treeVariables.leafCounts[lod + 1].z) != 0)
+		if (lod < 5 && lodDis > leafFadeStart && leafIndex % int(treeVariables.leafCounts[lod + 1].z) != 0)
 		{
 			leafLodScale = mix(leafLodScale, 0.1, (lodDis - leafFadeStart) * leafFadeMult);
 		}
