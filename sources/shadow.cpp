@@ -299,17 +299,24 @@ void Shadow::SetCascadeViews()
 		float near = 0.0f;
 		for (int j = i; j > 0; j--) near += shadowCascadeDistances[j - 1];
 		//if (i > 0) near = shadowCascadeDistances[i - 1];
-		glm::vec3 focus = Manager::camera.Position() + Manager::camera.Front() * (near + shadowCascadeDistances[i]) * 0.5f;
+		//glm::vec3 focus = Manager::camera.Position() + Manager::camera.Front() * (near * 0.5f + shadowCascadeDistances[i] * 0.5f);
+		glm::vec3 focus = Manager::camera.Position() + Manager::camera.Front() * (near * 0.5f + shadowCascadeDistances[i] * 0.5f);
+		//glm::vec3 focus = Manager::camera.Position() + Manager::camera.Front() * (shadowCascadeDistances[i]);
 		//glm::vec3 focus = Manager::camera.Position();
 
 		//direction = Manager::camera.View() * glm::vec4(direction, 0.0);
 
 		glm::vec3 front = glm::normalize(-direction);
+		//glm::vec3 front = Manager::camera.Front();
 		glm::vec3 side = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
 		glm::vec3 up = glm::normalize(glm::cross(side, front));
 
-		glm::vec3 position = focus + direction * shadowCascadeDistances[i] * 4.0f * (i == 0 ? 2.0f : 1.0f);
-		shadowCascadeViews[i] = glm::lookAt(position, position + front, up);
+		//glm::vec3 position = focus + direction * shadowCascadeDistances[i] * 0.5f * shadowCascadeDepths[i];
+		glm::vec3 position = focus;
+		//shadowCascadeViews[i] = glm::lookAt(position, position + front, up);
+		//shadowCascadeViews[i] = glm::lookAt(position, position + front, Manager::camera.Up());
+		//shadowCascadeViews[i] = glm::lookAt(glm::vec3(0.0), front, up);
+		shadowCascadeViews[i] = glm::lookAt(position, position + front, Manager::camera.Front());
 	}
 }
 
@@ -343,7 +350,8 @@ glm::mat4 Shadow::CreateBoundedProjection(int lod, float near, float far, float 
 	//float diff = glm::d
 	//float offset = glm::max(max.x, max.y);
 
-	return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, far * depthMult);
+	return glm::ortho(min.x, max.x, min.y, max.y, -far, far);
+	//return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, far * depthMult);
 	//return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, far * depthMult);
 	//return glm::ortho(min.x, max.x, min.y, max.y, 1.0f, max.z * depthMult);
 }
@@ -879,14 +887,15 @@ void Shadow::SetCascadeProjections()
 {
 	for (int i = 0; i < cascadeCount; i++)
 	{
-		//float near = 1.0f;
-		//if (i > 0) near = shadowCascadeDistances[i - 1];
-
 		shadowCascadeProjections[i] = glm::ortho(-shadowCascadeDistances[i] * 0.5f, shadowCascadeDistances[i] * 0.5f,
-			 -shadowCascadeDistances[i] * 0.5f, shadowCascadeDistances[i] * 0.5f, 1.0f, shadowCascadeDistances[i] * 8.0f
-			  * (i == 0 ? 2.0f : 1.0f));
+			-shadowCascadeDistances[i] * 0.5f, shadowCascadeDistances[i] * 0.5f, -shadowCascadeDistances[i] * shadowCascadeDepths[i], shadowCascadeDistances[i] * shadowCascadeDepths[i]);
 		shadowCascadeProjections[i][1][1] *= -1;
 
+		//float near = 0.0f;
+		//for (int j = i; j > 0; j--) near += shadowCascadeDistances[j - 1];
+
+		//float near = 1.0f;
+		//if (i > 0) near = shadowCascadeDistances[i - 1];
 		//shadowCascadeProjections[i] = CreateBoundedProjection(i, near, shadowCascadeDistances[i], 2.0f);
 		//shadowCascadeProjections[i][1][1] *= -1;
 	}
@@ -956,7 +965,16 @@ void Shadow::SetCascadeTransformations()
 
 		glm::mat4 T1 = glm::translate(glm::mat4(1.0f), glm::vec3(-u.x, -u.y, 0));*/
 
-		glm::mat4 R = glm::rotate(glm::mat4(1.0f), glm::radians(-Manager::camera.Angles().y + 45.0f), glm::vec3(0, 0, 1));
+		glm::mat4 R = glm::rotate(glm::mat4(1.0f), glm::radians(-Manager::lightAngles.y), glm::vec3(0, 0, 1));
+		R = glm::rotate(R, glm::radians(-Manager::camera.Angles().y), glm::vec3(0, 0, 1));
+		
+		//R = glm::rotate(R, glm::radians(-Manager::lightAngles.x), glm::vec3(1, 0, 0));
+		//R = glm::rotate(R, glm::radians(-Manager::lightAngles.z), glm::vec3(0, 0, 1));
+
+		//float near = 0.0f;
+		//for (int j = i; j > 0; j--) near += shadowCascadeDistances[j - 1];
+		//glm::vec3 focus = Manager::camera.Position() + Manager::camera.Front() * (near * 0.5f + shadowCascadeDistances[i] * 0.5f);
+		//glm::mat4 T1 = glm::translate(glm::mat4(1.0f), focus);
 
 		shadowCascadeTransformations[i] = R;
 	}
@@ -1209,10 +1227,13 @@ std::vector<Texture> Shadow::shadowCascadeTextures;
 std::vector<glm::mat4> Shadow::shadowCascadeViews;
 std::vector<glm::mat4> Shadow::shadowCascadeProjections;
 std::vector<glm::mat4> Shadow::shadowCascadeTransformations;
-//std::vector<float> Shadow::shadowCascadeDistances = {100, 250, 750, 3000, 7000};
 std::vector<float> Shadow::shadowCascadeDistances = {100, 250, 750, 2500, 4000};
-//std::vector<int> Shadow::shadowCascadeResolutions = {2048, 2048, 2048, 2048, 2048};
+//std::vector<float> Shadow::shadowCascadeDistances = {50, 125, 375, 1250, 2000};
 std::vector<int> Shadow::shadowCascadeResolutions = {2048, 2048, 2048, 2048, 2048};
+std::vector<float> Shadow::shadowCascadeDepths = {8.0, 4.0, 2.0, 2.0, 1.0};
+
+//std::vector<float> Shadow::shadowCascadeDistances = {100, 250, 750, 3000, 7000};
+//std::vector<int> Shadow::shadowCascadeResolutions = {2048, 2048, 2048, 2048, 2048};
 
 bool Shadow::trapezoidal = false;
 

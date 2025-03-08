@@ -69,7 +69,11 @@ void Terrain::CreateTextures()
 	rockTextures[1].CreateTexture("rock_norm.jpg", grassSamplerConfig);
 	rockTextures[2].CreateTexture("rock_ao.jpg", grassSamplerConfig);
 
-	dirtDiffuseTexture.CreateTexture("dirt_diff.jpg", grassSamplerConfig);
+	//dirtDiffuseTexture.CreateTexture("dirt_diff.jpg", grassSamplerConfig);
+	dirtTextures.resize(3);
+	dirtTextures[0].CreateTexture("rocky_dirt_diff.jpg", grassSamplerConfig);
+	dirtTextures[1].CreateTexture("rocky_dirt_norm.jpg", grassSamplerConfig);
+	dirtTextures[2].CreateTexture("rocky_dirt_ao.jpg", grassSamplerConfig);
 
 	SamplerConfiguration heightMapSamplerConfig;
 	SamplerConfiguration heightMapArraySamplerConfig;
@@ -145,6 +149,7 @@ void Terrain::CreateGraphicsPipeline()
 	descriptorLayoutConfig[2].count = 3;
 	descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[3].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[3].count = 3;
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
 	pipelineConfiguration.tesselation = true;
@@ -271,9 +276,17 @@ void Terrain::CreateGraphicsDescriptor()
 
 	descriptorConfig[3].type = IMAGE_SAMPLER;
 	descriptorConfig[3].stages = FRAGMENT_STAGE;
-	descriptorConfig[3].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[3].imageInfo.imageView = dirtDiffuseTexture.imageView;
-	descriptorConfig[3].imageInfo.sampler = dirtDiffuseTexture.sampler;
+	descriptorConfig[3].count = 3;
+	descriptorConfig[3].imageInfos.resize(3);
+	for (int i = 0; i < dirtTextures.size(); i++) 
+	{
+		descriptorConfig[3].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		descriptorConfig[3].imageInfos[i].imageView = dirtTextures[i].imageView;
+		descriptorConfig[3].imageInfos[i].sampler = dirtTextures[i].sampler;
+	}
+	//descriptorConfig[3].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	//descriptorConfig[3].imageInfo.imageView = dirtDiffuseTexture.imageView;
+	//descriptorConfig[3].imageInfo.sampler = dirtDiffuseTexture.sampler;
 
 	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
 }
@@ -425,9 +438,15 @@ void Terrain::DestroyTextures()
 	}
 	rockTextures.clear();
 
+	for (Texture &texture : dirtTextures)
+	{
+		texture.Destroy();
+	}
+	dirtTextures.clear();
+
 	//grassDiffuseTexture.Destroy();
 	//rockDiffuseTexture.Destroy();
-	dirtDiffuseTexture.Destroy();
+	//dirtDiffuseTexture.Destroy();
 
 	heightMapArrayTexture.Destroy();
 	heightMapLod1Texture.Destroy();
@@ -507,6 +526,7 @@ void Terrain::Start()
 	Manager::shaderVariables.terrainChunksLength = heightMapLength;
 	Manager::shaderVariables.terrainChunksLengthMult = 1.0 / float(heightMapLength);
 	Manager::shaderVariables.terrainHeight = terrainHeight;
+	Manager::shaderVariables.waterHeight = glm::vec2(waterHeight, waterBlendDistance);
 
 	for (Object &chunk : terrainChunks)
 	{
@@ -1030,9 +1050,10 @@ Pipeline Terrain::shadowComputePipeline{Manager::currentDevice, Manager::camera}
 
 std::vector<Texture> Terrain::grassTextures;
 std::vector<Texture> Terrain::rockTextures;
+std::vector<Texture> Terrain::dirtTextures;
 //Texture Terrain::grassDiffuseTexture{Manager::currentDevice};
 //Texture Terrain::rockDiffuseTexture{Manager::currentDevice};
-Texture Terrain::dirtDiffuseTexture{Manager::currentDevice};
+//Texture Terrain::dirtDiffuseTexture{Manager::currentDevice};
 
 Texture Terrain::heightMapArrayTexture{Manager::currentDevice};
 Texture Terrain::heightMapLod0Texture{Manager::currentDevice};
@@ -1081,6 +1102,8 @@ int Terrain::heightMapCount = Terrain::heightMapLength * Terrain::heightMapLengt
 
 float Terrain::terrainTotalSize = Terrain::heightMapLength * Terrain::terrainChunkSize;
 float Terrain::terrainHeight = 5000;
+float Terrain::waterHeight = 750.0f;
+float Terrain::waterBlendDistance = 25.0f;
 
 glm::vec3 Terrain::terrainOffset = glm::vec3(0.0, -2500.0, 0.0);
 //glm::vec3 Terrain::terrainOffset = glm::vec3(0.0, 0.0, 0.0);

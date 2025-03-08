@@ -202,7 +202,7 @@ void Camera::UpdateMovement()
 		Move(-Up() * speed * Time::deltaTime);
 	}
 
-	if (!flying) Move(glm::vec3(0.0f, -9.81f * Time::deltaTime, 0.0f));
+	if (!flying) Move(glm::vec3(0.0f, -9.81f * Time::deltaTime * 10.0f, 0.0f));
 }
 
 void Camera::UpdateRotation(double xpos, double ypos)

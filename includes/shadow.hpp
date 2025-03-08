@@ -50,6 +50,7 @@ class Shadow
 		static std::vector<glm::mat4> shadowCascadeTransformations;
 		static std::vector<float> shadowCascadeDistances;
 		static std::vector<int> shadowCascadeResolutions;
+		static std::vector<float> shadowCascadeDepths;
 
 		//static VkRenderPass shadowTrapezoidPass;
 		//static VkFramebuffer shadowLod0FrameBuffer;

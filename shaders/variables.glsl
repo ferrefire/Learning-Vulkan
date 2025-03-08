@@ -38,6 +38,7 @@ layout(set = 0, binding = 0) uniform Variables
 	int terrainChunksLength;
 	float terrainChunksLengthMult;
 	float terrainHeight;
+	vec2 waterHeight;
 	float time;
 	uint occlusionCulling;
 	uint shadows;

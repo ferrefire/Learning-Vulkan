@@ -97,8 +97,9 @@ void main()
 
 	float lifeRan = random(vec2(ix + iz, index));
 
-	if (noiseVal > treeChance + (ran * 2.0 - 1.0) * treeChanceRandomness)
-		life = 0;
+	if (SampleArrayWorld(vec2(px, pz)) * variables.terrainHeight < variables.waterHeight.x + variables.waterHeight.y) life = 0;
+
+	if (noiseVal > treeChance + (ran * 2.0 - 1.0) * treeChanceRandomness) life = 0;
 
 	if (life == 1)
 	{

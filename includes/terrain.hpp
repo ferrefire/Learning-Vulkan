@@ -87,9 +87,10 @@ class Terrain
 
 		static std::vector<Texture> grassTextures;
 		static std::vector<Texture> rockTextures;
+		static std::vector<Texture> dirtTextures;
 		//static Texture grassDiffuseTexture;
 		//static Texture rockDiffuseTexture;
-		static Texture dirtDiffuseTexture;
+		//static Texture dirtDiffuseTexture;
 
 		static int heightMapResolution;
 		static int heightMapLod0Resolution;
@@ -112,6 +113,8 @@ class Terrain
 
 		static float terrainTotalSize;
 		static float terrainHeight;
+		static float waterHeight;
+		static float waterBlendDistance;
 
 		static float terrainMeshSize;
 		static float terrainChunkSize;

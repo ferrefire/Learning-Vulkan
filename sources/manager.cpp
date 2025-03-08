@@ -371,7 +371,8 @@ void Manager::UpdateShaderVariables()
 	Shadow::SetCascadeTransformations();
 	for (int i = 0; i < Shadow::cascadeCount; i++)
 	{
-		shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeTransformations[i] * Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
+		//shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeTransformations[i] * Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
+		shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
 	}
 
 	shaderVariables.cullMatrix = Culling::cullProjection * shaderVariables.view;

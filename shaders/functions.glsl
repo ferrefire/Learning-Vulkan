@@ -6,6 +6,9 @@
 #endif
 
 #define POW(x) (x * x)
+#define ENCODE_COLOR(col) (pow(col, vec3(1.0 / 2.2)))
+#define DECODE_COLOR(col) (pow(col, vec3(2.2)))
+#define NORMALIZE_COLOR(col) (col / 255.0)
 
 struct Triangle
 {
