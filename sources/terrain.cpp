@@ -76,6 +76,10 @@ void Terrain::CreateTextures()
 	dirtTextures[2].CreateTexture("rocky_dirt_ao.jpg", grassSamplerConfig);
 
 	SamplerConfiguration heightMapSamplerConfig;
+	//heightMapSamplerConfig.anisotrophic = VK_TRUE;
+	//heightMapSamplerConfig.anisotrophicSampleCount = 2.0;
+	//heightMapSamplerConfig.minFilter = VK_FILTER_NEAREST;
+	//heightMapSamplerConfig.magFilter = VK_FILTER_NEAREST;
 	SamplerConfiguration heightMapArraySamplerConfig;
 
 	ImageConfiguration heightMapArrayConfig = Texture::ImageArrayStorage(heightMapResolution, heightMapResolution, heightMapCount);
@@ -565,16 +569,16 @@ void Terrain::PostFrame()
 	if (!HeightMapsGenerated())
 		return;
 
-	float yw = Manager::camera.Position().y;
-	if (abs(yw) >= terrainHeight * terrainStep)
-	{
-		glm::vec3 newOffset = glm::vec3(0, -yw, 0);
-		terrainOffset += newOffset;
-		Manager::camera.Move(newOffset);
-		Manager::UpdateShaderVariables();
-	}
+	//float yw = Manager::camera.Position().y;
+	//if (abs(yw) >= terrainHeight * terrainStep)
+	//{
+	//	glm::vec3 newOffset = glm::vec3(0, -yw, 0);
+	//	terrainOffset += newOffset;
+	//	Manager::camera.Move(newOffset);
+	//	Manager::UpdateShaderVariables();
+	//}
 
-	if (Time::newSubTick)
+	//if (Time::newSubTick)
 	{
 		CheckTerrainOffset(nullptr);
 	}
@@ -901,41 +905,38 @@ void Terrain::CheckTerrainOffset(VkCommandBuffer commandBuffer)
 	float x1 = xw - terrainLod1Offset.x;
 	float z1 = zw - terrainLod1Offset.y;
 
-	//if (abs(yw) >= terrainHeight * 0.25)
-	//{
-	//	glm::vec3 newOffset = glm::vec3(0, -yw, 0);
-	//	terrainOffset += newOffset;
-	//	Manager::camera.Move(newOffset);
-	//	Manager::UpdateShaderVariables();
-	//}
-
-	if (abs(xw) >= terrainChunkSize * terrainStep || abs(zw) >= terrainChunkSize * terrainStep)
+	if (abs(xw) >= terrainChunkSize * terrainStep || abs(zw) >= terrainChunkSize * terrainStep || abs(yw) >= terrainHeight * terrainStep)
 	{
-		glm::vec2 newOffset = glm::vec2(Utilities::Fits(terrainChunkSize * terrainStep, xw), Utilities::Fits(terrainChunkSize * terrainStep, zw)) * terrainChunkSize * terrainStep;
-		terrainOffset += XY3XZ(newOffset);
-		terrainLod0Offset -= newOffset;
-		terrainLod1Offset -= newOffset;
-
-		//terrainLod0Offset = glm::vec2(0);
-		//terrainLod1Offset = glm::vec2(0);
-
-		Manager::camera.Move(-glm::vec3(newOffset.x, 0, newOffset.y));
-
-		//updateTerrainShadows = true;
-
-		for (int i = TERRAIN_SHADOW_CASCADES - 1; i >= 0; i--)
+		glm::vec3 newOffset = glm::vec3(0);
+		if (abs(xw) >= terrainChunkSize * terrainStep || abs(zw) >= terrainChunkSize * terrainStep)
 		{
-			//glm::vec2 flooredViewPosition = floor(glm::vec2(xw, zw) / shadowComputeVariables[i].spacing);
-    		//float u = (flooredViewPosition.x) * shadowComputeVariables[i].spacing;
-    		//float v = (flooredViewPosition.y) * shadowComputeVariables[i].spacing;
-			terrainShadowOffsets[i] -= newOffset;
-			//ComputeShadows(i);
+			glm::vec2 horizontalOffset = glm::vec2(Utilities::Fits(terrainChunkSize * terrainStep, xw), Utilities::Fits(terrainChunkSize * terrainStep, zw)) * terrainChunkSize * terrainStep;
+			terrainLod0Offset -= horizontalOffset;
+			terrainLod1Offset -= horizontalOffset;
+			newOffset.x = horizontalOffset.x;
+			newOffset.z = horizontalOffset.y;
+
+			for (int i = TERRAIN_SHADOW_CASCADES - 1; i >= 0; i--)
+			{
+				terrainShadowOffsets[i] -= horizontalOffset;
+			}
+		}
+		if (abs(yw) >= terrainHeight * terrainStep)
+		{
+			newOffset.y = yw;
 		}
 
-		//ComputeHeightMap(commandBuffer, 1);
-		//ComputeHeightMap(commandBuffer, 0);
+		terrainOffset += newOffset;
+		Manager::camera.Move(-newOffset);
+
+		Manager::UpdateShaderVariables();
+
+		return;
 	}
-	else if (abs(x1) >= terrainLod1Size * terrainLod1Step || abs(z1) >= terrainLod1Size * terrainLod1Step)
+
+	if (!Time::newSubTick) return;
+
+	if (abs(x1) >= terrainLod1Size * terrainLod1Step || abs(z1) >= terrainLod1Size * terrainLod1Step)
 	{
 		glm::vec2 newOffset = glm::vec2(Utilities::Fits(terrainLod1Size * terrainLod1Step, x1), Utilities::Fits(terrainLod1Size * terrainLod1Step, z1)) * terrainLod1Size * terrainLod1Step;
 		terrainLod1Offset += newOffset;
@@ -1105,7 +1106,7 @@ float Terrain::terrainHeight = 5000;
 float Terrain::waterHeight = 750.0f;
 float Terrain::waterBlendDistance = 25.0f;
 
-glm::vec3 Terrain::terrainOffset = glm::vec3(0.0, -2500.0, 0.0);
+glm::vec3 Terrain::terrainOffset = glm::vec3(0.0, 2500.0, 0.0);
 //glm::vec3 Terrain::terrainOffset = glm::vec3(0.0, 0.0, 0.0);
 glm::vec2 Terrain::terrainLod0Offset = glm::vec2(0);
 glm::vec2 Terrain::terrainLod1Offset = glm::vec2(0);

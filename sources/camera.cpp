@@ -37,7 +37,7 @@ void Camera::UpdateProjection()
 void Camera::UpdateView()
 {
 	view = glm::lookAt(position, position + front, up);
-	viewOffset = glm::lookAt(position - Y3Y(Terrain::terrainOffset), position - Y3Y(Terrain::terrainOffset) + front, up);
+	viewOffset = glm::lookAt(position + Y3Y(Terrain::terrainOffset), position + Y3Y(Terrain::terrainOffset) + front, up);
 }
 
 void Camera::Move(const glm::vec3 &amount)

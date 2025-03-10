@@ -207,10 +207,10 @@ vec3 BlendTexture(sampler2D textureSampler, BlendConfig config, int maxLod, int 
 	float maxDistance = lodDistances[maxLod] - lodBlends[maxLod];
 	float maxBlend = lodBlends[maxLod] * 2;
 
-	//vec2 texUV = inPosition.xz + variables.terrainOffset.xz;
-	vec3 texUV = inPosition;
-	texUV.xz += variables.terrainOffset.xz;
-	texUV.y -= variables.terrainOffset.y;
+	vec3 texUV = inPosition + variables.terrainOffset;
+	//vec3 texUV = inPosition;
+	//texUV.xz += variables.terrainOffset.xz;
+	//texUV.y -= variables.terrainOffset.y;
 
 	vec3 defaultResult = vec3(0.0);
 	if (type == DIFFUSE) defaultResult = config.defaultColor;
@@ -347,6 +347,9 @@ void main()
 	//	return;
 	//}
 
+	//outColor = vec4(vec3(SampleDynamic(inPosition.xz)), 1.0);
+	//return;
+
 	float distanceSqrd = SquaredDistance(inPosition, variables.viewPosition);
 	float depth = GetDepth(gl_FragCoord.z);
 	//vec3 viewDirection = normalize(variables.viewPosition - inPosition);
@@ -364,7 +367,7 @@ void main()
 	float steepness = 1.0 - pow(1.0 - GetSteepness(normalWS), 1.5);
 	//vec3 textureColor = BlendSteepness(steepness, distanceSqrd) * 1.5;
 	//vec3 textureColor = BlendSteepness(steepness, distanceSqrd, terrainNormal);
-	BlendResults blendResults = BlendSteepness(inPosition.y - variables.terrainOffset.y, steepness, distanceSqrd, normalWS);
+	BlendResults blendResults = BlendSteepness(inPosition.y + variables.terrainOffset.y, steepness, distanceSqrd, normalWS);
 	vec3 textureColor = blendResults.diffuse;
 	vec3 textureNormal = blendResults.normal;
 	vec3 textureAmbient = blendResults.ambient;

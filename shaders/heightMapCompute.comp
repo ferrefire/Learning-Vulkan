@@ -6,8 +6,8 @@ layout(set = 1, binding = 0, r16) uniform image2D heightMapTexture;
 
 layout(set = 1, binding = 1) uniform HeightMapComputeVariables 
 {
-  float mapScale;
-  vec2 mapOffset;
+	float mapScale;
+	vec2 mapOffset;
 } heightMapComputeVariables;
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
@@ -19,11 +19,14 @@ const float resolutionMult = 1.0 / float(resolution);
 
 void main()
 {
-  //imageStore(heightMapTexture, ivec2(gl_GlobalInvocationID.xy), vec4(float(gl_GlobalInvocationID.x + gl_GlobalInvocationID.y) / 1024.0, 0, 0, 0));
+  	//imageStore(heightMapTexture, ivec2(gl_GlobalInvocationID.xy), vec4(float(gl_GlobalInvocationID.x + gl_GlobalInvocationID.y) / 1024.0, 0, 0, 0));
 
-  vec2 index = gl_GlobalInvocationID.xy;
-  vec2 uv = index * resolutionMult - 0.5 + heightMapComputeVariables.mapOffset;
-  uv *= heightMapComputeVariables.mapScale;
+  	vec2 index = gl_GlobalInvocationID.xy;
+  	vec2 uv = index * resolutionMult - 0.5 + heightMapComputeVariables.mapOffset;
+  	//vec2 uv = index * resolutionMult;
+  	//uv -= 0.5;
+  	//uv += heightMapComputeVariables.mapOffset;
+  	uv *= heightMapComputeVariables.mapScale;
 
-  imageStore(heightMapTexture, ivec2(index), vec4(GenerateNoise(uv, 8, 0), 0, 0, 0));
+  	imageStore(heightMapTexture, ivec2(gl_GlobalInvocationID.xy), vec4(GenerateNoise(uv, 8, 0), 0, 0, 0));
 }

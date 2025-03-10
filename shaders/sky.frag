@@ -128,7 +128,7 @@ void main()
 		vec4 hPos = inverse(variables.viewMatrix) * vec4(clipSpace, 1.0);
 		vec3 rayDirection = normalize(hPos.xyz / hPos.w - variables.viewPosition);
 		rayDirection = normalize(Rotate(rayDirection, radians(-90.0), vec3(1.0, 0.0, 0.0)));
-		vec3 rayStart = vec3(0.0, 0.0, PR + RADIUS_OFFSET + (variables.viewPosition.y - variables.terrainOffset.y) * 0.001);
+		vec3 rayStart = vec3(0.0, 0.0, PR + RADIUS_OFFSET + (variables.viewPosition.y + variables.terrainOffset.y) * 0.001);
 
 		float viewHeight = length(rayStart);
 

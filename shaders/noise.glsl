@@ -8,21 +8,26 @@
 
 #include "curve.glsl"
 
+//precision highp float;
+//precision highp vec2;
+//precision highp vec3;
+//precision highp vec4;
+
 const int noiseLayers = 8;
 const float noiseScale = 0.75;
 const float noiseSampleDistance = 0.0001;
-const float noiseSampleDistanceMult = 1666.666;
+//const float noiseSampleDistanceMult = 1666.666;
 
 float blendDistance = 1.0;
 
 vec3 mod289(vec3 x)
 {
-    return x - floor(x / 289.0) * 289.0;
+    return (x - floor(x / 289.0) * 289.0);
 }
 
 vec2 mod289(vec2 x)
 {
-    return x - floor(x / 289.0) * 289.0;
+    return (x - floor(x / 289.0) * 289.0);
 }
 
 vec3 permute(vec3 x)
@@ -32,14 +37,14 @@ vec3 permute(vec3 x)
 
 vec3 taylorInvSqrt(vec3 r)
 {
-    return 1.79284291400159 - 0.85373472095314 * r;
+    return (1.79284291400159 - 0.85373472095314 * r);
 }
 
 float snoise(vec2 v)
 {
     const vec4 C = vec4( 0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
     vec2 i  = floor(v + dot(v, C.yy));
-    vec2 x0 = v -   i + dot(i, C.xx);
+    vec2 x0 = v - i + dot(i, C.xx);
 
     vec2 i1;
     i1.x = step(x0.y, x0.x);

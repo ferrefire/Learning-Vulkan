@@ -23,6 +23,7 @@ layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 void main()
 {
     generalData.viewHeight = GetTerrainHeight(variables.viewPosition.xz);
+    //generalData.viewHeight = SampleDynamic(variables.viewPosition.xz);
 
     /*vec3 frustumCorner12 = (variables.frustumCorner1 + variables.frustumCorner2) * 0.5;
     vec3 frustumCorner13 = (variables.frustumCorner1 + variables.frustumCorner3) * 0.5;

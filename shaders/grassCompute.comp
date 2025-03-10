@@ -142,7 +142,7 @@ void main()
     float y = GetTerrainHeight(vec2(x, z));
 	vec3 position = vec3(x, y, z);
 
-	float worldHeight = position.y - variables.terrainOffset.y;
+	float worldHeight = position.y + variables.terrainOffset.y;
 	if (worldHeight < variables.waterHeight.x + variables.waterHeight.y)
 	{
 		if (worldHeight < variables.waterHeight.x - variables.waterHeight.y) return;

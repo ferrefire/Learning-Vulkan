@@ -37,7 +37,7 @@ void main()
 	vec3 rayDirection = normalize(hPos.xyz / hPos.w - variables.viewPosition);
 	rayDirection = normalize(Rotate(rayDirection, radians(-90.0), vec3(1.0, 0.0, 0.0)));
 	//vec3 rayStart = vec3(0.0, 0.0, PR + (variables.viewPosition.y - variables.terrainOffset.y) * 0.0001);
-	vec3 rayStart = vec3(0.0, 0.0, PR + RADIUS_OFFSET + (variables.viewPosition.y - variables.terrainOffset.y) * 0.001);
+	vec3 rayStart = vec3(0.0, 0.0, PR + RADIUS_OFFSET + (variables.viewPosition.y + variables.terrainOffset.y) * 0.001);
 
 	float slice = (float(gl_GlobalInvocationID.z) + 0.5) / resolution.z;
 	slice *= slice;

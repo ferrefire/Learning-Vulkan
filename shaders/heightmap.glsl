@@ -1,6 +1,8 @@
 #ifndef HEIGHTMAP_INCLUDED
 #define HEIGHTMAP_INCLUDED
 
+//precision highp float;
+
 //layout(set = 1, binding = 1) uniform sampler2DArray heightMapArraySampler;
 //layout(set = 1, binding = 2) uniform sampler2D heightMapLod0Sampler;
 //layout(set = 1, binding = 3) uniform sampler2D heightMapLod1Sampler;
@@ -22,6 +24,7 @@ layout(set = 0, binding = 3) uniform sampler2D heightMapLod1Sampler;
 
 const float worldSampleDistance = 1;
 const float worldSampleDistanceMult = 0.0002;
+//const float worldSampleDistanceMult = (worldSampleDistance / 5000.0);
 
 //const float terrainTotalSize = 50000;
 //const float terrainTotalSizeMult = 1.0 / 50000.0;
@@ -56,6 +59,7 @@ float SampleArray(vec2 uvPosition)
 	uvPosition = (uvPosition * variables.terrainChunksLength * 2.0) * 0.5 + 0.5; //+ uv offset
 
 	return textureLod(heightMapArraySampler, vec3(uvPosition, indexUV.x * variables.terrainChunksLength + indexUV.y), 0).r;
+	//return texture(heightMapArraySampler, vec3(uvPosition, indexUV.x * variables.terrainChunksLength + indexUV.y)).r;
 	
 	//return textureLod(heightMapSampler, uvPosition, 0).r;
 }
@@ -71,6 +75,7 @@ float SampleDynamic(vec2 worldPosition)
 	else if (abs(worldPosition.x - variables.terrainLod1Offset.x) < terrainLod1Size * 0.5 && abs(worldPosition.y - variables.terrainLod1Offset.y) < terrainLod1Size * 0.5)
 	{
 		return textureLod(heightMapLod1Sampler, (worldPosition - variables.terrainLod1Offset) * terrainLod1SizeMult + 0.5, 0).r;
+		//return texture(heightMapLod1Sampler, (worldPosition - variables.terrainLod1Offset) * terrainLod1SizeMult + 0.5).r;
 	}
 	else
 	{
@@ -144,7 +149,7 @@ float GetTerrainHeight(vec2 worldPosition)
 {
 	float result = SampleDynamic(worldPosition);
 	result *= variables.terrainHeight;
-	result += variables.terrainOffset.y;
+	result -= variables.terrainOffset.y;
 
 	return (result);
 }

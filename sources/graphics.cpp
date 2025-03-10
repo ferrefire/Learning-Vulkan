@@ -694,9 +694,9 @@ void Graphics::Create()
 		std::vector<DescriptorConfiguration> descriptorConfig(1);
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
-		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[0].imageInfo.imageView = Terrain::heightMapLod1Texture.imageView;
-		descriptorConfig[0].imageInfo.sampler = Terrain::heightMapLod1Texture.sampler;
+		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
+		descriptorConfig[0].imageInfo.imageView = Terrain::heightMapLod0Texture.imageView;
+		descriptorConfig[0].imageInfo.sampler = Terrain::heightMapLod0Texture.sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}
