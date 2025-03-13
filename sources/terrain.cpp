@@ -87,10 +87,12 @@ void Terrain::CreateTextures()
 	heightMapArrayTexture.TransitionImageLayout(heightMapArrayConfig);
 
 	ImageConfiguration heightMapLod1Config = Texture::ImageStorage(heightMapLod1Resolution, heightMapLod1Resolution);
+	heightMapLod1Config.format = R32;
 	heightMapLod1Texture.CreateImage(heightMapLod1Config, heightMapSamplerConfig);
 	heightMapLod1Texture.TransitionImageLayout(heightMapLod1Config);
 
 	ImageConfiguration heightMapLod0Config = Texture::ImageStorage(heightMapLod0Resolution, heightMapLod0Resolution);
+	heightMapLod0Config.format = R32;
 	heightMapLod0Texture.CreateImage(heightMapLod0Config, heightMapSamplerConfig);
 	heightMapLod0Texture.TransitionImageLayout(heightMapLod0Config);
 

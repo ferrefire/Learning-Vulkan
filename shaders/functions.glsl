@@ -97,5 +97,21 @@ vec3 NormalizeSum(vec3 vec)
     return (vec);
 }
 
+vec4 PackUnorm4x4(float value)
+{
+	value = clamp(value, 0.0, 1.0);
+	float scaled = value * 65535.0;
+
+	float r = mod(scaled, 16.0);
+	scaled = floor(scaled / 16.0); 
+	float g = mod(scaled, 16.0);
+	scaled = floor(scaled / 16.0); 
+	float b = mod(scaled, 16.0);
+	scaled = floor(scaled / 16.0); 
+	float a = mod(scaled, 16.0);
+
+	return (vec4(r, g, b, a) / 15.0);
+}
+
 
 #endif

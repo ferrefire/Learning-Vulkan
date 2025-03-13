@@ -6,6 +6,7 @@
 //uniform float noiseSampleDistance;
 //uniform float noiseSampleDistanceMult;
 
+//#include "perlinNoise.glsl"
 #include "curve.glsl"
 
 //precision highp float;
@@ -78,6 +79,14 @@ float InvLerp(float a, float b, float v)
 {
     return (v - a) / (b - a);
 }
+
+/*float GenerateNoise(vec2 uv, int layers, int curve)
+{
+	//float noise = float(perlin(abs(uv.x), abs(uv.y), 0.0));
+	//float noise = snoise(uv);
+	float noise = abs(uv.y) - floor(abs(uv.y));
+	return (noise);
+}*/
 
 float GenerateNoise(vec2 uv, int layers, int curve)
 {
