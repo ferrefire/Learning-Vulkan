@@ -12,7 +12,7 @@ struct LeafData
 	uint rotz;
 };
 
-layout(std430, set = 1, binding = 0) buffer DataBuffer
+layout(std430, set = 1, binding = 0) readonly buffer DataBuffer
 {
 	LeafData data[];
 };

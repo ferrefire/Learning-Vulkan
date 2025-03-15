@@ -15,7 +15,7 @@ struct TreeRenderData
 	//vec3 rotscacol;
 };
 
-layout(std430, set = 1, binding = 0) buffer RenderBuffer
+layout(std430, set = 1, binding = 0) readonly buffer RenderBuffer
 {
 	TreeRenderData renderData[];
 };
