@@ -44,7 +44,7 @@ struct RotateResults
 
 //const vec3 treeCenter = vec3(-3.05, 47.22, -5.725);
 //const vec3 treeCenter = vec3(7.05, 47.22, -6.125);
-const vec3 treeCenter = vec3(0.0, 40.0, 0.0);
+const vec3 treeCenter = vec3(0.0, 30.0, 0.0);
 //const vec3 treeCenter = vec3(0.0, 10.0, 0.0);
 
 RotateResults RotateLeaf(vec3 objectPosition, vec3 rotations, float scale)

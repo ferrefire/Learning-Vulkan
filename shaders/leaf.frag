@@ -25,6 +25,7 @@ layout(location = 0) out vec4 outColor;
 
 //const vec3 leafTint = vec3(0.0916, 0.1, 0.0125);
 const vec3 leafTint = DECODE_COLOR(vec3(93, 99, 44) / 255.0);
+//const vec3 leafTint = DECODE_COLOR(vec3(84, 89, 40) / 255.0);
 //const vec3 leafTint = pow(vec3(0.0916, 0.1, 0.0125), vec3(1.0 / 2.2));
 const vec3 translucencyTint = vec3(235, 196, 5) / 255.0;
 

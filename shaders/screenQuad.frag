@@ -12,9 +12,9 @@ layout(location = 0) out vec4 outColor;
 void main()
 {
 	discard;
-    vec3 val = vec3(texture(textureSampler, inCoordinates).r);
+    //vec3 val = vec3(texture(textureSampler, inCoordinates).r);
     //vec3 val = vec3(texelFetch(textureSampler, ivec2((inCoordinates) * 1024.0), 0).r);
-    //vec3 val = texture(textureSampler, inCoordinates).rgb;
+    vec3 val = texture(textureSampler, inCoordinates).rgb;
 
 	//int xi = int(floor(inCoordinates.x / 0.125));
 	//float x = (inCoordinates.x - (xi * 0.125)) * 8.0;

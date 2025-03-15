@@ -125,8 +125,10 @@ void Manager::CreateDescriptorSetLayout()
 	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[i].stages = ALL_STAGE;
 	descriptorLayoutConfig[i++].count = TERRAIN_SHADOW_CASCADES;
-	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[i].type = STORAGE_BUFFER;
 	descriptorLayoutConfig[i++].stages = ALL_STAGE;
+	//descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	//descriptorLayoutConfig[i++].stages = ALL_STAGE;
 	//descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
 	//descriptorLayoutConfig[i++].stages = FRAGMENT_STAGE;
 
@@ -229,11 +231,18 @@ void Manager::CreateDescriptor()
 	//escriptorConfig[j].imageInfo.imageView = Terrain::terrainShadowTextures[0].imageView;
 	//escriptorConfig[j++].imageInfo.sampler = Terrain::terrainShadowTextures[0].sampler;
 
-	descriptorConfig[j].type = IMAGE_SAMPLER;
+	//descriptorConfig[j].type = IMAGE_SAMPLER;
+	//descriptorConfig[j].stages = ALL_STAGE;
+	//descriptorConfig[j].imageInfo.imageLayout = LAYOUT_GENERAL;
+	//descriptorConfig[j].imageInfo.imageView = Sky::viewTexture.imageView;
+	//descriptorConfig[j++].imageInfo.sampler = Sky::viewTexture.sampler;
+
+	descriptorConfig[j].type = STORAGE_BUFFER;
 	descriptorConfig[j].stages = ALL_STAGE;
-	descriptorConfig[j].imageInfo.imageLayout = LAYOUT_GENERAL;
-	descriptorConfig[j].imageInfo.imageView = Sky::viewTexture.imageView;
-	descriptorConfig[j++].imageInfo.sampler = Sky::viewTexture.sampler;
+	descriptorConfig[j].buffersInfo.resize(1);
+	descriptorConfig[j].buffersInfo[0].buffer = Sky::colorBuffer.buffer;
+	descriptorConfig[j].buffersInfo[0].range = sizeof(glm::vec4);
+	descriptorConfig[j++].buffersInfo[0].offset = 0;
 
 	globalDescriptor.Create(descriptorConfig, globalDescriptorSetLayout);
 }

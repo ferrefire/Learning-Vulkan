@@ -2,15 +2,20 @@
 
 #extension GL_ARB_shading_language_include : require
 
+#ifndef VIEW_COMPUTE
+#define VIEW_COMPUTE
+#endif
+
 layout(set = 1, binding = 0, rgba16) uniform image2D viewTexture;
 layout (set = 1, binding = 1) uniform sampler2D transmittanceSampler;
 layout (set = 1, binding = 2) uniform sampler2D scatterSampler;
 
-layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+layout(std430, set = 0, binding = 7) buffer SunBuffer
+{
+	vec4 sunColor;
+};
 
-#ifndef VIEW_COMPUTE
-#define VIEW_COMPUTE
-#endif
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 const vec2 resolution = vec2(192.0, 128.0);
 const vec2 resolutionMult = 1.0 / resolution;
@@ -50,4 +55,9 @@ void main()
 
 	vec3 luminance = Luminance(rayStart, rayDirection, localSunDirection);
 	imageStore(viewTexture, ivec2(index), vec4(luminance, 1.0));
+
+	if (ivec2(index).x == 0 && ivec2(index).y == 62)
+	{
+		sunColor = vec4(mix(ToStandard(luminance) * 2.0, LIGHT_COLOR, clamp(sunDirection.z * 2.0, 0.0, 1.0)), 1.0);
+	}
 }

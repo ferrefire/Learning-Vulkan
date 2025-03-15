@@ -14,15 +14,22 @@
 #endif
 
 #ifndef LIGHT_COLOR
-#define LIGHT_COLOR vec3(1.0, 0.933, 0.89) * 2.0
+#define LIGHT_COLOR vec3(1.0, 0.933, 0.89) * 1.5
 #endif
 
 layout(set = 0, binding = 5) uniform sampler2DShadow shadowSamplers[CASCADE_COUNT];
 layout(set = 0, binding = 6) uniform sampler2D terrainShadowSamplers[TERRAIN_CASCADE_COUNT];
-layout(set = 0, binding = 7) uniform sampler2D skyViewSampler;
+//layout(set = 0, binding = 7) uniform sampler2D skyViewSampler;
+
+#ifndef VIEW_COMPUTE
+layout(std430, set = 0, binding = 7) readonly buffer SunBuffer
+{
+	vec4 sunColor;
+};
+#endif
 
 //const vec3 lightColor = vec3(2);
-const vec3 lightColor = vec3(1.0, 0.933, 0.89) * 2.0;
+const vec3 lightColor = vec3(1.0, 0.933, 0.89) * 1.5;
 //const vec3 lightDirection = vec3(0.25, 0.5, 0.25);
 
 const float ambient = 0.1 * 0.5;
@@ -78,10 +85,22 @@ vec3 DiffuseLightingRealistic(vec3 normal, vec3 position, float shadow)
 	return (DiffuseLightingRealistic(normal, position, shadow, ambient, ambient));
 }*/
 
+vec3 ToStandard(vec3 color)
+{
+	return (pow(color, vec3(1.0 / 2.2)));
+}
+
+vec3 ColorToStandard(vec3 color)
+{
+	return (pow(color / 255.0, vec3(1.0 / 2.2)));
+}
+
 vec3 DiffuseLighting(vec3 normal, float shadow, float ao, float ao2)
 {
+	//vec3 sunColor = textureLod(skyViewSampler, vec2(0.0, 0.49), 0.0).rgb * 2.0;
+
 	float diffuseStrength = mix(max(dot(normal, variables.lightDirection), ao), ao2, shadow);
-	vec3 diffuse = lightColor * diffuseStrength;
+	vec3 diffuse = sunColor.rgb * diffuseStrength;
 
 	return diffuse;
 }
@@ -618,16 +637,6 @@ float GetTerrainShadow(vec2 worldPosition)
 	}
 
 	return (shadow);
-}
-
-vec3 ToStandard(vec3 color)
-{
-	return (pow(color, vec3(1.0 / 2.2)));
-}
-
-vec3 ColorToStandard(vec3 color)
-{
-	return (pow(color / 255.0, vec3(1.0 / 2.2)));
 }
 
 #endif

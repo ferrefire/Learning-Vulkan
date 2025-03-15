@@ -33,6 +33,8 @@ class Sky
 		static Texture viewTexture;
 		static Texture aerialTexture;
 
+		static Buffer colorBuffer;
+
 		static bool transmittanceComputed;
 		static bool transmittanceReady;
 		static bool scatterComputed;
@@ -47,12 +49,14 @@ class Sky
 		static void CreateMesh();
 		static void CreatePipelines();
 		static void CreateTextures();
+		static void CreateBuffers();
 		static void CreateDescriptors();
 
 		static void Destroy();
 		static void DestroyMesh();
 		static void DestroyPipelines();
 		static void DestroyTextures();
+		static void DestroyBuffers();
 		static void DestroyDescriptors();
 
 		static void Start();

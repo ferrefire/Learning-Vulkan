@@ -10,6 +10,7 @@ void Sky::Create()
 	CreateMesh();
 	CreatePipelines();
 	CreateTextures();
+	CreateBuffers();
 	CreateDescriptors();
 }
 
@@ -122,6 +123,18 @@ void Sky::CreateTextures()
 	aerialTexture.TransitionImageLayout(aerialConfig);
 }
 
+void Sky::CreateBuffers()
+{
+	BufferConfiguration bufferConfiguration;
+	bufferConfiguration.size = sizeof(glm::vec4);
+	bufferConfiguration.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+	bufferConfiguration.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+	bufferConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	bufferConfiguration.mapped = false;
+
+	colorBuffer.Create(bufferConfiguration);
+}
+
 void Sky::CreateDescriptors()
 {
 	std::vector<DescriptorConfiguration> skyDescriptorConfig(4);
@@ -221,6 +234,7 @@ void Sky::Destroy()
 	DestroyPipelines();
 	DestroyMesh();
 	DestroyTextures();
+	DestroyBuffers();
 	DestroyDescriptors();
 }
 
@@ -244,6 +258,11 @@ void Sky::DestroyTextures()
 	scatterTexture.Destroy();
 	viewTexture.Destroy();
 	aerialTexture.Destroy();
+}
+
+void Sky::DestroyBuffers()
+{
+	colorBuffer.Destroy();
 }
 
 void Sky::DestroyDescriptors()
@@ -415,6 +434,8 @@ Texture Sky::transmittanceTexture{Manager::currentDevice};
 Texture Sky::scatterTexture{Manager::currentDevice};
 Texture Sky::viewTexture{Manager::currentDevice};
 Texture Sky::aerialTexture{Manager::currentDevice};
+
+Buffer Sky::colorBuffer;
 
 Descriptor Sky::skyDescriptor{Manager::currentDevice};
 Descriptor Sky::transmittanceDescriptor{Manager::currentDevice};
