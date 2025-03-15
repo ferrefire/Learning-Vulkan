@@ -126,6 +126,9 @@ void Texture::CreateTextureImage(std::string name, SamplerConfiguration &sampler
 	//imageConfig.layout = VK_IMAGE_LAYOUT_UNDEFINED;
 	imageConfig.transitionLayout = LAYOUT_TRNSFR_DST;
 	imageConfig.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+	
+	if (Utilities::Contains(name, "_norm.jpg"))
+		imageConfig.format = RGB8;
 
 	Buffer stagingBuffer;
 	stagingBuffer.CreateStagingBuffer(pixels, imageSize);

@@ -59,14 +59,14 @@ void Terrain::CreateTextures()
 
 	//grassDiffuseTexture.CreateTexture("rocky_grass_diff.jpg", grassSamplerConfig);
 	grassTextures.resize(3);
-	grassTextures[0].CreateTexture("rocky_grass_diff.jpg", grassSamplerConfig);
-	grassTextures[1].CreateTexture("rocky_grass_norm.jpg", grassSamplerConfig);
+	grassTextures[0].CreateTexture("leafy_grass_diff.jpg", grassSamplerConfig);
+	grassTextures[1].CreateTexture("leafy_grass_norm.jpg", grassSamplerConfig);
 	grassTextures[2].CreateTexture("rocky_grass_ao.jpg", grassSamplerConfig);
 
 	//rockDiffuseTexture.CreateTexture("rock_diff.jpg", grassSamplerConfig);
 	rockTextures.resize(3);
-	rockTextures[0].CreateTexture("rock_diff.jpg", grassSamplerConfig);
-	rockTextures[1].CreateTexture("rock_norm.jpg", grassSamplerConfig);
+	rockTextures[0].CreateTexture("large_rock_diff.jpg", grassSamplerConfig);
+	rockTextures[1].CreateTexture("large_rock_norm.jpg", grassSamplerConfig);
 	rockTextures[2].CreateTexture("rock_ao.jpg", grassSamplerConfig);
 
 	//dirtDiffuseTexture.CreateTexture("dirt_diff.jpg", grassSamplerConfig);

@@ -65,6 +65,10 @@ layout(location = 5) out vec4 shadowPositions[CASCADE_COUNT];
 #include "functions.glsl"
 #include "transformation.glsl"
 
+//const vec3 grassTint = DECODE_COLOR(vec3(94, 122, 48) / 255.0);
+//const vec3 grassTint = DECODE_COLOR(vec3(106, 125, 49) / 255.0);
+const vec3 grassTint = DECODE_COLOR(vec3(93, 99, 44) / 255.0);
+
 float random(vec2 st)
 {
     return fract(sin(dot(st.xy * 0.001, vec2(12.9898,78.233))) * 43758.5453123);
@@ -125,7 +129,8 @@ void main()
 
 	//grassColor = vec3(0.25, 0.6, 0.1);
 	//grassColor = vec3(0.0916, 0.0866, 0.0125) * 1.5;
-	grassColor = vec3(0.0916, 0.1, 0.0125) * (1.0 + (colorVal * 0.5 - 0.25));
+	//grassColor = vec3(0.0916, 0.1, 0.0125) * (1.0 + (colorVal * 0.5 - 0.25));
+	grassColor = grassTint * (1.0 + (colorVal * 0.5 - 0.25));
 	//grassColor = vec3(0.0916, 0.1, 0.0125) * (1.0 + (colorVal * 0.375 - 0.1875));
 	//grassColor *= 0.75;
 

@@ -63,6 +63,8 @@ struct BlendConfig
 	float distanceIncrease;
 	float startScale;
 	float scaleIncrease;
+	float startNormal;
+	float normalIncrease;
 	float startAmbient;
 	float ambientIncrease;
 	vec3 defaultColor;
@@ -87,10 +89,13 @@ const vec3[] defaultColors = {vec3(0.0916, 0.0866, 0.0125), vec3(0.3, 0.175, 0.1
 const vec3 defaultNormal = vec3(0.5, 0.5, 1.0);
 const vec3 defaultAO = vec3(1.0, 1.0, 1.0);
 
-const BlendConfig grassConfig = BlendConfig(0.5, POW(25.0), 30.0, 0.275, 0.2, 1.5, 1.1, vec3(0.0916, 0.0866, 0.0125), vec3(1.0), 4, 2.0);
-const BlendConfig rockConfig = BlendConfig(0.75, POW(50.0), 25.0, 0.1, 0.2, 1.0, 1.25, DECODE_COLOR(vec3(148, 120, 83) / 255.0), vec3(1.0), 4, 7.5);
-const BlendConfig dirtConfig = BlendConfig(0.75, POW(20.0), 30.0, 0.275, 0.2875, 1.5, 1.1, DECODE_COLOR(vec3(89, 74, 62) / 255.0), vec3(1.0), 4, 1.0);
+const BlendConfig grassConfig = BlendConfig(0.5, POW(25.0), 30.0, 0.15, 0.2, 0.5, 1.0, 1.5, 1.1, DECODE_COLOR(vec3(93, 99, 44) / 255.0), vec3(1.0), 4, 2.0);
+const BlendConfig rockConfig = BlendConfig(0.75, POW(50.0), 25.0, 0.1, 0.2, 1.0, 1.0, 1.0, 1.25, DECODE_COLOR(vec3(145, 141, 128) / 255.0), vec3(1.0), 4, 7.5);
+const BlendConfig dirtConfig = BlendConfig(0.75, POW(20.0), 30.0, 0.275, 0.2875, 1.0, 1.0, 1.5, 1.1, DECODE_COLOR(vec3(89, 74, 62) / 255.0), vec3(1.0), 4, 1.0);
 
+//145, 141, 128
+//0.0916, 0.0866, 0.0125
+//148, 120, 83
 //vec3(204, 223, 255)
 //vec3(255, 203, 31) * 1.25
 //vec3(66, 89, 41)
@@ -155,31 +160,71 @@ struct BlendResults
 	return (result);
 }*/
 
-vec3 TriplanarBlending(sampler2D textureSampler, vec3 uv, vec3 weights)
+vec3 UnpackNormal(vec4 packedNormal, float scale)
 {
-	//vec3 xy = texture(textureSampler, uv.xy).rgb;
-	//vec3 yz = texture(textureSampler, uv.yz).rgb;
-	//vec3 zx = texture(textureSampler, uv.zx).rgb;
-	//vec3 result = xy * weights.x + yz * weights.y + zx * weights.z;
+	vec3 normal;
+	//normal.xy = packedNormal.rg * 2.0 - 1.0;
+	//normal.z = max(1.0e-16, sqrt(1.0 - clamp(dot(normal.xy, normal.xy), 0.0, 1.0)));
+	//normal.xy *= scale;
 
+	normal = (packedNormal * 2.0 - 1.0).xyz;
+	normal.xy *= scale;
+
+	return (normalize(normal));
+	//return ((normal));
+}
+
+vec3 TriplanarColorBlending(sampler2D textureSampler, vec3 uv, vec3 weights)
+{
 	vec3 xz = texture(textureSampler, uv.xz).rgb;
 	vec3 xy = texture(textureSampler, uv.xy).rgb;
 	vec3 zy = texture(textureSampler, uv.zy).rgb;
 	vec3 result = xz * weights.y + xy * weights.z + zy * weights.x;
 
-	//vec3 xy = texture(textureSampler, uv.xy).rgb;
-	//vec3 yz = texture(textureSampler, uv.yz).rgb;
-	//vec3 zx = texture(textureSampler, uv.zx).rgb;
-	//vec3 result = xy * weights.z + yz * weights.x + zx * weights.y;
+	return (result);
+}
+
+vec3 TriplanarNormalBlending(sampler2D textureSampler, vec3 uv, vec3 weights, vec3 normal, float power)
+{
+	vec2 uvX = uv.zy;
+	vec2 uvY = uv.xz;
+	vec2 uvZ = uv.xy;
+
+	vec3 tangentX = UnpackNormal(texture(textureSampler, uvX), power);
+	vec3 tangentY = UnpackNormal(texture(textureSampler, uvY), power);
+	vec3 tangentZ = UnpackNormal(texture(textureSampler, uvZ), power);
+
+	tangentX = vec3(tangentX.xy + normal.zy, abs(tangentX.z) * normal.x);
+	tangentY = vec3(tangentY.xy + normal.xz, abs(tangentY.z) * normal.y);
+	tangentZ = vec3(tangentZ.xy + normal.xy, abs(tangentZ.z) * normal.z);
+
+	//tangentX = normalize(vec3(tangentX.xy + normal.zy, normal.x));
+	//tangentY = normalize(vec3(tangentY.xy + normal.xz, normal.y));
+	//tangentZ = normalize(vec3(tangentZ.xy + normal.xy, normal.z));
+
+	//vec3 axisSign = sign(normal);
+	//tangentX.z *= axisSign.x;
+	//tangentY.z *= axisSign.y;
+	//tangentZ.z *= axisSign.z;
+
+	//vec3 result = normalize(tangentX.zyx * weights.x + tangentY.xzy * weights.y + tangentZ.xyz * weights.z);
+	vec3 result = normalize(tangentX.zyx * weights.x + tangentY.xzy * weights.y + tangentZ.xyz * weights.z);
 
 	return (result);
 }
 
-vec3 BlendTexture(sampler2D textureSampler, BlendConfig config, int maxLod, int type, float viewDistance, vec3 weights)
+vec3 TriplanarBlending(sampler2D textureSampler, vec3 uv, vec3 weights, vec3 normal, int type, float power)
+{
+	if (type == NORMAL) return (TriplanarNormalBlending(textureSampler, uv, weights, normal, power));
+	else return (TriplanarColorBlending(textureSampler, uv, weights));
+}
+
+vec3 BlendTexture(sampler2D textureSampler, BlendConfig config, int maxLod, int type, float viewDistance, vec3 weights, vec3 normal)
 {
 	vec3 result = vec3(0);
 
 	float currentAmbient = config.startAmbient;
+	float currentNormal = config.startNormal;
 
 	float currentScale = config.startScale;
 	float[maxLods] lodScales;
@@ -214,7 +259,7 @@ vec3 BlendTexture(sampler2D textureSampler, BlendConfig config, int maxLod, int 
 
 	vec3 defaultResult = vec3(0.0);
 	if (type == DIFFUSE) defaultResult = config.defaultColor;
-	else if (type == NORMAL) defaultResult = defaultNormal;
+	else if (type == NORMAL) defaultResult = normal;
 	else if (type == AO) defaultResult = defaultAO;
 
 	if (viewDistance >= maxDistance + maxBlend)
@@ -230,7 +275,7 @@ vec3 BlendTexture(sampler2D textureSampler, BlendConfig config, int maxLod, int 
 		{
 			if (viewDistance < lodDistances[i] + lodBlends[i])
 			{
-				result = TriplanarBlending(textureSampler, texUV * lodScales[i], weights);
+				result = TriplanarBlending(textureSampler, texUV * lodScales[i], weights, normal, type, currentNormal);
 				if (type == AO) result = pow(result, vec3(currentAmbient));
 
 				if (viewDistance > lodDistances[i] - lodBlends[i])
@@ -240,7 +285,7 @@ vec3 BlendTexture(sampler2D textureSampler, BlendConfig config, int maxLod, int 
 
 					result *= (1.0 - blendFactor);
 					vec3 resultBlend = defaultResult;
-					if (i < maxLod) resultBlend = TriplanarBlending(textureSampler, texUV * lodScales[i + 1], weights);
+					if (i < maxLod) resultBlend = TriplanarBlending(textureSampler, texUV * lodScales[i + 1], weights, normal, type, currentNormal * config.normalIncrease);
 
 					if (type == AO) resultBlend = pow(resultBlend, vec3(currentAmbient * config.ambientIncrease));
 					result += resultBlend * (blendFactor);
@@ -249,6 +294,7 @@ vec3 BlendTexture(sampler2D textureSampler, BlendConfig config, int maxLod, int 
 				break;
 			}
 			currentAmbient *= config.ambientIncrease;
+			currentNormal *= config.normalIncrease;
 		}
 
 		if (viewDistance > maxDistance)
@@ -270,7 +316,7 @@ vec3 BlendTexture(sampler2D textureSampler, BlendConfig config, int maxLod, int 
 BlendResults BlendSteepness(float height, float steepness, float distanceSqrd, vec3 normal)
 {
 	BlendResults result;
-	result.normal = defaultNormal;
+	result.normal = normal;
 	result.ambient = defaultAO;
 	vec3 weights = abs(normal);
 	weights = NormalizeSum(weights);
@@ -279,23 +325,23 @@ BlendResults BlendSteepness(float height, float steepness, float distanceSqrd, v
 
 	if (steepness >= rockSteepness + steepnessBlendDistance)
 	{
-		result.diffuse = BlendTexture(rockSamplers[0], rockConfig, 3, DIFFUSE, distanceSqrd, weights);
-		//result.normal = BlendTexture(rockSamplers[1], 1, NORMAL, distanceSqrd, weights);
-		result.ambient = BlendTexture(rockSamplers[2], rockConfig, 4, AO, distanceSqrd, weights);
+		result.diffuse = BlendTexture(rockSamplers[0], rockConfig, 3, DIFFUSE, distanceSqrd, weights, normal);
+		result.normal = BlendTexture(rockSamplers[1], rockConfig, 4, NORMAL, distanceSqrd, weights, normal);
+		result.ambient = BlendTexture(rockSamplers[2], rockConfig, 4, AO, distanceSqrd, weights, normal);
 		return (result);
 	}
 	if (height <= variables.waterHeight.x - variables.waterHeight.y)
 	{
-		result.diffuse = BlendTexture(dirtSamplers[0], dirtConfig, 3, DIFFUSE, distanceSqrd, weights);
-		//result.normal = BlendTexture(dirtSamplers[1], 1, NORMAL, distanceSqrd, weights);
-		result.ambient = BlendTexture(dirtSamplers[2], dirtConfig, 4, AO, distanceSqrd, weights);
+		result.diffuse = BlendTexture(dirtSamplers[0], dirtConfig, 3, DIFFUSE, distanceSqrd, weights, normal);
+		result.normal = BlendTexture(dirtSamplers[1], dirtConfig, 3, NORMAL, distanceSqrd, weights, normal);
+		result.ambient = BlendTexture(dirtSamplers[2], dirtConfig, 4, AO, distanceSqrd, weights, normal);
 		//return (result);
 	}
 	else if (steepness < rockSteepness + steepnessBlendDistance)
 	{
-		result.diffuse = BlendTexture(grassSamplers[0], grassConfig, 3, DIFFUSE, distanceSqrd, weights);
-		//result.normal = BlendTexture(grassSamplers[1], 0, NORMAL, distanceSqrd, weights);
-		result.ambient = BlendTexture(grassSamplers[2], grassConfig, 3, AO, distanceSqrd, weights);
+		result.diffuse = BlendTexture(grassSamplers[0], grassConfig, 3, DIFFUSE, distanceSqrd, weights, normal);
+		result.normal = BlendTexture(grassSamplers[1], grassConfig, 4, NORMAL, distanceSqrd, weights, normal);
+		result.ambient = BlendTexture(grassSamplers[2], grassConfig, 3, AO, distanceSqrd, weights, normal);
 	}
 	if (height < variables.waterHeight.x + variables.waterHeight.y)
 	{
@@ -305,10 +351,11 @@ BlendResults BlendSteepness(float height, float steepness, float distanceSqrd, v
 		result.diffuse *= blendFactor;
 		result.normal *= blendFactor;
 		result.ambient *= blendFactor;
-		result.diffuse += BlendTexture(dirtSamplers[0], dirtConfig, 3, DIFFUSE, distanceSqrd, weights) * (1.0 - blendFactor);
-		//result.normal += BlendTexture(dirtSamplers[1], 1, NORMAL, distanceSqrd, weights) * (1.0 - blendFactor);
-		result.normal += defaultNormal * (1.0 - blendFactor);
-		vec3 ambient = BlendTexture(dirtSamplers[2], dirtConfig, 4, AO, distanceSqrd, weights);
+		result.diffuse += BlendTexture(dirtSamplers[0], dirtConfig, 3, DIFFUSE, distanceSqrd, weights, normal) * (1.0 - blendFactor);
+		//result.normal += BlendTexture(dirtSamplers[1], 1, NORMAL, distanceSqrd, weights, normal) * (1.0 - blendFactor);
+		//result.normal += normal * (1.0 - blendFactor);
+		result.normal += BlendTexture(dirtSamplers[1], dirtConfig, 3, NORMAL, distanceSqrd, weights, normal) * (1.0 - blendFactor);
+		vec3 ambient = BlendTexture(dirtSamplers[2], dirtConfig, 4, AO, distanceSqrd, weights, normal);
 		result.ambient += ambient * (1.0 - blendFactor);
 	}
 	if (steepness > rockSteepness - steepnessBlendDistance)
@@ -319,10 +366,11 @@ BlendResults BlendSteepness(float height, float steepness, float distanceSqrd, v
 		result.diffuse *= (1.0 - blendFactor);
 		result.normal *= (1.0 - blendFactor);
 		result.ambient *= (1.0 - blendFactor);
-		result.diffuse += BlendTexture(rockSamplers[0], rockConfig, 3, DIFFUSE, distanceSqrd, weights) * blendFactor;
-		//result.normal += BlendTexture(rockSamplers[1], 1, NORMAL, distanceSqrd, weights) * blendFactor;
-		result.normal += defaultNormal * blendFactor;
-		vec3 ambient = BlendTexture(rockSamplers[2], rockConfig, 4, AO, distanceSqrd, weights);
+		result.diffuse += BlendTexture(rockSamplers[0], rockConfig, 3, DIFFUSE, distanceSqrd, weights, normal) * blendFactor;
+		//result.normal += BlendTexture(rockSamplers[1], 1, NORMAL, distanceSqrd, weights, normal) * blendFactor;
+		//result.normal += defaultNormal * blendFactor;
+		result.normal += BlendTexture(rockSamplers[1], rockConfig, 4, NORMAL, distanceSqrd, weights, normal) * blendFactor;
+		vec3 ambient = BlendTexture(rockSamplers[2], rockConfig, 4, AO, distanceSqrd, weights, normal);
 		result.ambient += ambient * blendFactor;
 	}
 
@@ -378,22 +426,37 @@ void main()
 	//textureNormal.xy *= 2.0;
 	//textureNormal = normalize(textureNormal);
 
-	////textureNormal.xy *= 1.0 + clamp(depth * 2.0, 0.0, 2.0);
-	//vec3 NR = normalize(textureNormal);
-	//vec3 NT = vec3(0.0, 1.0, 0.0);
-    //vec3 N0 = vec3(0.0, 0.0, 1.0);
+	/*vec3 NR = normalize(textureNormal * 2.0 - 1.0);
+	vec3 NT = vec3(0.0, 1.0, 0.0);
+    vec3 N0 = vec3(0.0, 0.0, 1.0);
+    vec3 axis = normalize(cross(N0, NT));
+    float angle = acos(clamp(dot(N0, NT), -1.0, 1.0));
+	vec3 RRN = normalize(RotateR(NR, axis, angle));
+
+	//RRN.xz *= 0.5;
+	//RRN = normalize(RRN);
+	NT = normalWS;
+	//NR = textureNormal.xzy * 2.0 - 1.0;
+    N0 = vec3(0.0, 1.0, 0.0);
+    axis = normalize(cross(N0, NT));
+    angle = acos(clamp(dot(N0, NT), -1.0, 1.0));
+	vec3 RN = normalize(RotateR(RRN, axis, angle));*/
+
+	vec3 RN = textureNormal;
+	//RN = (RN * 2.0 - 1.0);
+	//RN = normalize(Rotate(RN, radians(90.0), vec3(1, 0, 0)));
+
+	//vec3 NT = normalWS;
+    //vec3 N0 = vec3(0.0, 1.0, 0.0);
     //vec3 axis = normalize(cross(N0, NT));
     //float angle = acos(clamp(dot(N0, NT), -1.0, 1.0));
-	//vec3 RRN = normalize(RotateR(NR, axis, angle));
+	//RN = normalize(RotateR(RN, axis, angle));
 
-	////RRN.xz *= 0.5;
-	////RRN = normalize(RRN);
-	//NT = normalWS;
-	////NR = textureNormal.xzy * 2.0 - 1.0;
-    //N0 = vec3(0.0, 1.0, 0.0);
-    //axis = normalize(cross(N0, NT));
-    //angle = acos(clamp(dot(N0, NT), -1.0, 1.0));
-	//vec3 RN = normalize(RotateR(RRN, axis, angle));
+	//outColor = vec4(0.0, textureNormal.g, 0.0, 1.0);
+	//outColor = vec4(textureNormal * 0.5 + 0.5, 1.0);
+	//return;
+
+	//vec3 RN = Rotate(NR, radians(90.0), vec3(0.0, 0.0, 1.0));
 
 	//vec3 NT = normalWS;
 	//vec3 NR = textureNormal;
@@ -411,7 +474,8 @@ void main()
 	//vec3 endNormal = normalize(RN);
 
 	//textureNormal = normalize(textureNormal.xzy * 2.0 - 1.0);
-	//vec3 endNormal = normalize(normalWS + textureNormal * 1.0);
+	//vec3 endNormal = normalize(normalWS + RN * 0.25);
+	vec3 endNormal = RN;
 
 	//outColor = vec4((depth > 0.1 ? normalWS : endNormal) * 0.5 + 0.5, 1.0);
 	//outColor = vec4(normalWS * 0.5 + 0.5, 1.0);
@@ -424,7 +488,8 @@ void main()
 
 	//float shadow = GetCascadedShadow(shadowPositions, depth);
 
-	vec3 diffuse = DiffuseLighting(normalWS, shadow);
+	vec3 diffuse = DiffuseLighting(endNormal, shadow);
+	//vec3 diffuse = DiffuseLighting(normalWS, shadow);
 	//vec3 terrainDiffuse = DiffuseLighting(terrainNormal.xzy, shadow);
 	//vec3 diffuse = clamp(terrainDiffuse * normalDiffuse, vec3(ambient), terrainDiffuse);
 	
