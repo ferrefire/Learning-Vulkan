@@ -25,6 +25,7 @@ layout(set = 0, binding = 6) uniform sampler2D terrainShadowSamplers[TERRAIN_CAS
 layout(std430, set = 0, binding = 7) readonly buffer SunBuffer
 {
 	vec4 sunColor;
+	vec4 skyColor;
 };
 #endif
 
@@ -33,6 +34,8 @@ const vec3 lightColor = vec3(1.0, 0.933, 0.89) * 1.5;
 //const vec3 lightDirection = vec3(0.25, 0.5, 0.25);
 
 const float ambient = 0.1 * 0.5;
+const float ambientMult = 2.0;
+//const float ambient = 0.4;
 const float shadowDis = 250.0;
 const float shadowDepth = shadowDis / 25000.0;
 const float shadowDepthMult = 1.0 / (shadowDis / 25000.0);
@@ -42,6 +45,7 @@ const float texelSizes[] = {1.0 / 4096.0, 1.0 / 4096.0, 1.0 / 2048.0, 1.0 / 2048
 const float cascadeDistances[] = {50 / 25000.0, 175 / 25000.0, 500 / 25000.0, 900 / 25000.0};
 //const int samples = 2;
 
+#include "functions.glsl"
 #include "depth.glsl"
 //#include "variables.glsl"
 //#include "heightmap.glsl"
@@ -99,8 +103,9 @@ vec3 DiffuseLighting(vec3 normal, float shadow, float ao, float ao2)
 {
 	//vec3 sunColor = textureLod(skyViewSampler, vec2(0.0, 0.49), 0.0).rgb * 2.0;
 
-	float diffuseStrength = mix(max(dot(normal, variables.lightDirection), ao), ao2, shadow);
+	float diffuseStrength = mix(max(dot(normal, variables.lightDirection), ao * ambientMult), ao2 * ambientMult, shadow);
 	vec3 diffuse = sunColor.rgb * diffuseStrength;
+	//vec3 diffuse = vec3(diffuseStrength);
 
 	return diffuse;
 }
@@ -147,7 +152,7 @@ vec3 SpecularLighting(vec3 normal, vec3 viewDirection, float shininess)
 {
 	vec3 halfwayDirection = normalize(variables.lightDirection + viewDirection);
 	float specular = pow(max(dot(normal, halfwayDirection), 0.0), shininess);
-	vec3 specularColor = lightColor * specular;
+	vec3 specularColor = (sunColor.rgb * 2.0) * specular;
 
 	return specularColor;
 }
@@ -637,6 +642,13 @@ float GetTerrainShadow(vec2 worldPosition)
 	}
 
 	return (shadow);
+}
+
+vec3 FinalLighting(vec3 color, vec3 diffuse)
+{
+	vec3 result = DECODE_COLOR(color * diffuse);
+
+	return (result);
 }
 
 #endif

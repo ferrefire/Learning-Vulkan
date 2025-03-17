@@ -38,4 +38,7 @@ class Water
         static void DestroyTextures();
         static void DestroyPipelines();
         static void DestroyDescriptors();
+
+		static void RecordGraphicsCommands(VkCommandBuffer commandBuffer);
+		static void RenderWater(VkCommandBuffer commandBuffer);
 };

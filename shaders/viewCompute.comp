@@ -13,6 +13,7 @@ layout (set = 1, binding = 2) uniform sampler2D scatterSampler;
 layout(std430, set = 0, binding = 7) buffer SunBuffer
 {
 	vec4 sunColor;
+	vec4 skyColor;
 };
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
@@ -58,6 +59,11 @@ void main()
 
 	if (ivec2(index).x == 0 && ivec2(index).y == 62)
 	{
-		sunColor = vec4(mix(ToStandard(luminance) * 2.0, LIGHT_COLOR, clamp(sunDirection.z * 2.0, 0.0, 1.0)), 1.0);
+		sunColor = vec4(mix(ToStandard(luminance) * 2.0, LIGHT_COLOR, clamp(sunDirection.z, 0.0, 1.0)), 1.0);
+	}
+
+	if (ivec2(index).x == 191 && ivec2(index).y == 80)
+	{
+		skyColor = vec4(luminance, 1.0);
 	}
 }

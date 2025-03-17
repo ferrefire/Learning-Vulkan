@@ -176,9 +176,9 @@ vec3 UnpackNormal(vec4 packedNormal, float scale)
 
 vec3 TriplanarColorBlending(sampler2D textureSampler, vec3 uv, vec3 weights)
 {
-	vec3 xz = texture(textureSampler, uv.xz).rgb;
-	vec3 xy = texture(textureSampler, uv.xy).rgb;
-	vec3 zy = texture(textureSampler, uv.zy).rgb;
+	vec3 xz = (texture(textureSampler, uv.xz).rgb);
+	vec3 xy = (texture(textureSampler, uv.xy).rgb);
+	vec3 zy = (texture(textureSampler, uv.zy).rgb);
 	vec3 result = xz * weights.y + xy * weights.z + zy * weights.x;
 
 	return (result);
@@ -306,7 +306,7 @@ vec3 BlendTexture(sampler2D textureSampler, BlendConfig config, int maxLod, int 
 		}
 	}
 
-	if (type == DIFFUSE && config.tintColor != vec3(1.0)) result = DECODE_COLOR(ENCODE_COLOR(result) * config.tintColor);
+	//if (type == DIFFUSE && config.tintColor != vec3(1.0)) result = DECODE_COLOR(ENCODE_COLOR(result) * config.tintColor);
 
 	return (result);
 }
@@ -496,10 +496,10 @@ void main()
 	//vec4 shadowSpace = variables.shadowProjection * variables.shadowView * vec4(inPosition, 1.0);
 
 	//vec3 combinedColor = textureColor * diffuse;
-	vec3 combinedColor = textureColor * textureAmbient * diffuse;
+	//vec3 combinedColor = textureColor * textureAmbient * diffuse;
 	//vec3 endColor = Fog(combinedColor, depth);
 	//vec3 endColor = GroundFog(combinedColor, depth, inPosition.y);
-	vec3 endColor = combinedColor;
+	//vec3 endColor = combinedColor;
 	//vec3 endColor = ToStandard(combinedColor);
 
 	//if (chunkLod == 1)
@@ -514,5 +514,9 @@ void main()
 	//if (inLod == 1) gl_FragDepth = 0.99999999;
 
 	//outColor = vec4(textureNormal, 1.0);
-	outColor = vec4(endColor, 1.0);
+
+	//vec3 finalColor = FinalLighting(textureColor * textureAmbient, diffuse);
+	vec3 finalColor = textureColor * textureAmbient * diffuse;
+
+	outColor = vec4(finalColor, 1.0);
 }

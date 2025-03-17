@@ -44,12 +44,12 @@ void main()
 	//return;
 
 	//float aoDepth = depth;
-	float ao = clamp(depth * variables.ranges.y * 100.0, 0.0, 25000.0);
-	ao /= 25000.0;
+	//float ao = clamp(depth * variables.ranges.y * 100.0, 0.0, 25000.0);
+	//ao /= 25000.0;
 	
-	vec3 bladeDiffuse = DiffuseLighting(normal, shadow, 0.0, ambient);
+	//vec3 bladeDiffuse = DiffuseLighting(normal, shadow, 0.0, ambient);
 
-	vec3 bladeColor = mix(grassColor.xyz * mix(0.3, 0.5, ao), grassColor.xyz, uv.y);
+	vec3 bladeColor = mix(grassColor.xyz * 0.3, grassColor.xyz, uv.y);
 
 	vec3 terrainDiffuse = DiffuseLighting(terrainNormal, shadow);
 	//vec3 terrainDiffuse = DiffuseLightingRealistic(terrainNormal, worldPosition, shadow);
@@ -57,7 +57,9 @@ void main()
 	//vec3 diffuse = clamp(terrainDiffuse * 0.9 + bladeDiffuse, vec3(0.0), lightColor);
 	//vec3 diffuse = clamp(terrainDiffuse + bladeDiffuse, vec3(0.0), lightColor);
 	vec3 diffuse = terrainDiffuse;
-	vec3 combinedColor = (diffuse * bladeColor);
+	//vec3 finalColor = FinalLighting(bladeColor, diffuse);
+	vec3 finalColor = bladeColor * diffuse;
+	//vec3 combinedColor = (diffuse * bladeColor);
 	//vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
 
 	if (shadow < 0.9)
@@ -68,7 +70,8 @@ void main()
 		//vec3 bladeSpecular = SpecularLightingRealistic(normal, viewDirection, 16, worldPosition);
 		//vec3 terrainSpecular = SpecularLightingRealistic(terrainNormal, viewDirection, 32, worldPosition);
 		//combinedColor += (bladeSpecular * terrainSpecular);
-		combinedColor += (bladeSpecular * terrainSpecular) * (1.0 - shadow);
+		//combinedColor += (bladeSpecular * terrainSpecular) * (1.0 - shadow);
+		finalColor += (bladeSpecular * terrainSpecular) * (1.0 - shadow);
 	}
 	//else
 	//{
@@ -85,5 +88,5 @@ void main()
 
 	//combinedColor = GroundFog(combinedColor, depth, 0);
 
-	outColor = vec4(combinedColor, 1.0);
+	outColor = vec4(finalColor, 1.0);
 }

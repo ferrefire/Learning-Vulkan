@@ -4,7 +4,9 @@
 void Water::Create()
 {
     CreateMeshes();
+	CreateTextures();
     CreatePipelines();
+	CreateDescriptors();
 }
 
 void Water::CreateMeshes()
@@ -24,15 +26,22 @@ void Water::CreateTextures()
 	normalSamplerConfig.mipLodBias = 0.0f;
 
     normalTextures.resize(1);
-
-
+	normalTextures[0].CreateTexture("wave_norm.jpg", normalSamplerConfig);
 }
 
 void Water::CreatePipelines()
 {
-    std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(0);
+    std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(3);
+	descriptorLayoutConfig[0].type = INPUT_ATTACHMENT;
+	descriptorLayoutConfig[0].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[1].type = INPUT_ATTACHMENT;
+	descriptorLayoutConfig[1].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[2].stages = FRAGMENT_STAGE;
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
+	pipelineConfiguration.subpass = 1;
+	pipelineConfiguration.depthStencil.depthWriteEnable = VK_FALSE;
 
 	VertexInfo vertexInfo = waterMesh.MeshVertexInfo();
 
@@ -41,21 +50,71 @@ void Water::CreatePipelines()
 
 void Water::CreateDescriptors()
 {
-    /*std::vector<DescriptorConfiguration> descriptorConfig(1);
+    std::vector<DescriptorConfiguration> descriptorConfig(3);
 
-	descriptorConfig[0].type = STORAGE_BUFFER;
-	descriptorConfig[0].stages = VERTEX_STAGE;
-	descriptorConfig[0].buffersInfo.resize(dataBuffers.size());
-	int index = 0;
-	for (Buffer &buffer : dataBuffers)
+	descriptorConfig[0].type = INPUT_ATTACHMENT;
+	descriptorConfig[0].stages = FRAGMENT_STAGE;
+	descriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	descriptorConfig[0].imageInfo.imageView = Manager::currentWindow.colorTexture.imageView;
+
+	descriptorConfig[1].type = INPUT_ATTACHMENT;
+	descriptorConfig[1].stages = FRAGMENT_STAGE;
+	descriptorConfig[1].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	descriptorConfig[1].imageInfo.imageView = Manager::currentWindow.depthTexture.imageView;
+
+	descriptorConfig[2].type = IMAGE_SAMPLER;
+	descriptorConfig[2].stages = FRAGMENT_STAGE;
+	descriptorConfig[2].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	descriptorConfig[2].imageInfo.imageView = normalTextures[0].imageView;
+	descriptorConfig[2].imageInfo.sampler = normalTextures[0].sampler;
+
+	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
+}
+
+void Water::Destroy()
+{
+	DestroyMeshes();
+	DestroyTextures();
+	DestroyPipelines();
+	DestroyDescriptors();
+}
+
+void Water::DestroyMeshes()
+{
+	waterMesh.Destroy();
+}
+
+void Water::DestroyTextures()
+{
+	for (Texture &texture : normalTextures)
 	{
-		descriptorConfig[0].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[0].buffersInfo[index].range = sizeof(LeafData) * Trees::totalLeafCount;
-		descriptorConfig[0].buffersInfo[index].offset = 0;
-		index++;
+		texture.Destroy();
 	}
+	normalTextures.clear();
+}
 
-	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);*/
+void Water::DestroyPipelines()
+{
+	graphicsPipeline.Destroy();
+}
+
+void Water::DestroyDescriptors()
+{
+	graphicsDescriptor.Destroy();
+}
+
+void Water::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
+{
+	graphicsPipeline.BindGraphics(commandBuffer);
+	Manager::globalDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+	graphicsDescriptor.Bind(commandBuffer, graphicsPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+	RenderWater(commandBuffer);
+}
+
+void Water::RenderWater(VkCommandBuffer commandBuffer)
+{
+	waterMesh.Bind(commandBuffer);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(waterMesh.indices.size()), 1, 0, 0, 0);
 }
 
 Mesh Water::waterMesh{};

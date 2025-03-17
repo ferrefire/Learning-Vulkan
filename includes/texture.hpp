@@ -46,8 +46,9 @@ struct ImageConfiguration
     uint32_t depth = 1;
     uint32_t mipLevels = 1;
     uint32_t arrayLayers = 1;
-    VkFormat format = R8G8B8A8;
-    VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+	VkFormat format = R8G8B8A8;
+	//VkFormat format = RGB8;
+	VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
     //VkImageLayout layout = LAYOUT_READ_ONLY;
     VkImageLayout initialLayout = LAYOUT_UNDEFINED;
     VkImageLayout transitionLayout = LAYOUT_READ_ONLY;

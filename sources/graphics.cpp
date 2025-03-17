@@ -13,6 +13,7 @@
 #include "leaves.hpp"
 #include "sky.hpp"
 #include "capture.hpp"
+#include "water.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -38,7 +39,7 @@
 #endif
 
 #ifndef QUAD_TREES_ENABLED
-#define QUAD_TREES_ENABLED true
+#define QUAD_TREES_ENABLED false
 #endif
 
 #ifndef LEAVES_ENABLED
@@ -47,6 +48,10 @@
 
 #ifndef SHADOWS_ENABLED
 #define SHADOWS_ENABLED true
+#endif
+
+#ifndef WATER_ENABLED
+#define WATER_ENABLED true
 #endif
 
 Graphics::Graphics(Device &device, Window &window) : device{device}, window{window}
@@ -225,6 +230,8 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	vkCmdNextSubpass(commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
 	Sky::RecordCommands(commandBuffer);
+
+	if (WATER_ENABLED) Water::RecordGraphicsCommands(commandBuffer);
 
 	vkCmdEndRenderPass(commandBuffer);
 }
@@ -670,6 +677,7 @@ void Graphics::Create()
 	Grass::Create();
 	Trees::Create();
 	Leaves::Create();
+	Water::Create();
 	Data::Create();
 
 	if (Manager::settings.screenQuad)
@@ -745,6 +753,7 @@ void Graphics::Destroy()
 	Leaves::Destroy();
 	Data::Destroy();
 	Sky::Destroy();
+	Water::Destroy();
 	//Capture::Destroy();
 	Manager::screenQuadDescriptor.Destroy();
 	Manager::Clean();

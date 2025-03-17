@@ -241,7 +241,7 @@ void Manager::CreateDescriptor()
 	descriptorConfig[j].stages = ALL_STAGE;
 	descriptorConfig[j].buffersInfo.resize(1);
 	descriptorConfig[j].buffersInfo[0].buffer = Sky::colorBuffer.buffer;
-	descriptorConfig[j].buffersInfo[0].range = sizeof(glm::vec4);
+	descriptorConfig[j].buffersInfo[0].range = sizeof(glm::vec4) * 2;
 	descriptorConfig[j++].buffersInfo[0].offset = 0;
 
 	globalDescriptor.Create(descriptorConfig, globalDescriptorSetLayout);

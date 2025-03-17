@@ -126,7 +126,7 @@ void Sky::CreateTextures()
 void Sky::CreateBuffers()
 {
 	BufferConfiguration bufferConfiguration;
-	bufferConfiguration.size = sizeof(glm::vec4);
+	bufferConfiguration.size = sizeof(glm::vec4) * 2;
 	bufferConfiguration.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 	bufferConfiguration.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 	bufferConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
