@@ -8,7 +8,9 @@
 
 layout (input_attachment_index = 0, set = 1, binding = 0) uniform subpassInput inputColor;
 layout (input_attachment_index = 1, set = 1, binding = 1) uniform subpassInput inputDepth;
-layout(set = 1, binding = 2) uniform sampler2D waterNormalSampler;
+layout (set = 1, binding = 2) uniform sampler2D viewSampler;
+layout (set = 1, binding = 3) uniform sampler3D aerialSampler;
+layout(set = 1, binding = 4) uniform sampler2D waterNormalSampler;
 
 layout(location = 0) in vec3 worldPosition;
 layout(location = 1) in vec4 shadowPositions[CASCADE_COUNT];
@@ -18,42 +20,151 @@ layout(location = 0) out vec4 outColor;
 #include "variables.glsl"
 #include "functions.glsl"
 #include "lighting.glsl"
+#include "atmosphere.glsl"
+#include "transformation.glsl"
+#include "heightmap.glsl"
 
 const vec3 waterTint = DECODE_COLOR(vec3(5, 41, 35) / 255.0);
 const float waterDensity = 2500.0;
+const vec2 scatterResolution = vec2(32, 32);
+
+const int maxBlend = 4;
+const float startDistance = 100.0;
+const float distanceIncrease = 10.0;
+const float startScale = 0.075;
+const float scaleIncrease = 0.2;
+const float startSpeed = 0.01;
+const float speedIncrease = 1.0;
+const float startPower = 1.0;
+const float powerIncrease = 1.0;
+const float blendDistance = 0.75;
+
+vec3 SampleNormal(vec2 uv, float power)
+{
+	vec3 normal = (texture(waterNormalSampler, uv).rgb * 2.0 - 1.0).xzy;
+	normal.xz *= power;
+	normal = normalize(normal);
+
+	return (normal);
+}
+
+vec3 GetSkyColor(vec3 normal)
+{
+	vec3 rayDirection = normal;
+	rayDirection = normalize(Rotate(rayDirection, radians(-90.0), vec3(1.0, 0.0, 0.0)));
+	vec3 sunDirection = variables.rotatedLightDirection;
+	float lightAngle = acos(dot(normalize(vec3(sunDirection.xy, 0.0)), normalize(vec3(rayDirection.xy, 0.0))));
+	vec3 rayStart = vec3(0.0, 0.0, PR + RADIUS_OFFSET + (worldPosition.y + variables.terrainOffset.y) * 0.001);
+	float viewHeight = length(rayStart);
+	vec3 upVector = normalize(rayStart);
+	float viewAngle = acos(dot(rayDirection, upVector));
+	bool surfaceIntersect = SphereIntersectNearest(rayStart, rayDirection, PR) >= 0.0;
+	vec2 uv = ViewUV(vec2(viewAngle, lightAngle), scatterResolution, viewHeight, surfaceIntersect);
+	vec3 currentSkyColor = texture(viewSampler, uv).rgb;
+
+	return (currentSkyColor);
+}
+
+vec4 GetAerialColor()
+{
+	float linearDepth = clamp(GetDepth(gl_FragCoord.z) * variables.ranges.y, 0.0, 25000.0) / 25000.0;
+	float modDepth = clamp(linearDepth + 0.1, 0.0, 1.0);
+	vec4 aerialPerspective = texture(aerialSampler, vec3(gl_FragCoord.xy / variables.resolution.xy, modDepth));
+	vec4 aerialColor = vec4(aerialPerspective.rgb * LIGHT_COLOR * 5.333, aerialPerspective.a);
+
+	return (aerialColor);
+}
+
+vec3 BlendNormal(vec2 uv, vec2 time, float viewDistance)
+{
+	vec3 result = vec3(0.0, 1.0, 0.0);
+
+	float currentDistance = startDistance;
+	float currentBlend = currentDistance * blendDistance;
+	float currentScale = startScale;
+	float currentPower = startPower;
+	float currentSpeed = startSpeed;
+
+	for (int i = 0; i < maxBlend; i++)
+	{
+		currentBlend = currentDistance * blendDistance;
+		if (viewDistance <= currentDistance + currentBlend)
+		{
+			result = SampleNormal(uv * currentScale + time * currentSpeed, currentPower);
+
+			if (viewDistance >= currentDistance - currentBlend)
+			{
+				float blendFactor = viewDistance - (currentDistance - currentBlend);
+				blendFactor /= currentBlend * 2;
+
+				result *= (1.0 - blendFactor);
+				vec3 resultBlend = SampleNormal(uv * (currentScale * scaleIncrease) + (time * (currentSpeed * speedIncrease)), (currentPower * powerIncrease));
+				result += resultBlend * (blendFactor);
+			}
+
+			break;
+		}
+		currentDistance *= distanceIncrease;
+		currentScale *= scaleIncrease;
+		currentPower *= powerIncrease;
+		currentSpeed *= speedIncrease;
+	}
+
+	result = normalize(result);
+	return (result);
+
+	//if (viewDistance > maxDistance)
+	//{
+	//	float blendFactor = viewDistance - (maxDistance);
+	//	blendFactor /= maxBlend;
+	//	result *= (1.0 - blendFactor);
+	//	result += defaultResult * blendFactor;
+	//}
+}
 
 void main()
 {
 	float depth = subpassLoad(inputDepth).r;
 	if (gl_FragCoord.z > depth) discard;
-
-	//float bottomDepth = clamp(GetDepth(depth) * variables.ranges.y, 0.0, 500.0) / 500.0;
-	//float surfaceDepth = clamp(GetDepth(gl_FragCoord.z) * variables.ranges.y, 0.0, 500.0) / 500.0;
+	
 	float bottomDepth = GetDepth(depth);
 	float surfaceDepth = GetDepth(gl_FragCoord.z);
-
 	float waterDepth = (bottomDepth - surfaceDepth);
 	float fogFactor = clamp(exp2(-waterDensity * waterDepth), 0.25, 1.0) - 0.25;
 
 	float shadow = 1.0 - GetTerrainShadow(worldPosition.xz);
 
-	vec3 normal = (texture(waterNormalSampler, worldPosition.xz * 0.0075).rgb * 2.0 - 1.0).xzy;
-	normal.xz *= 1.5;
+	vec2 uv = worldPosition.xz + variables.terrainOffset.xz;
+	float viewDistance = distance(variables.viewPosition, worldPosition);
+
+	vec3 normal = BlendNormal(uv, vec2(variables.time), viewDistance);
+	normal += BlendNormal(uv * 0.25, vec2(-variables.time), viewDistance);
+	normal += BlendNormal(uv * 0.05, vec2(-variables.time, variables.time), viewDistance);
+	normal += BlendNormal(uv * 2.5, vec2(variables.time, -variables.time), viewDistance);
 	normal = normalize(normal);
+
+	float coastDistance = clamp(worldPosition.y - GetTerrainHeight(worldPosition.xz), 10.0, 50.0) / 50.0;
+
+	vec3 skyNormal = normal;
+	skyNormal.xz *= 16.0 * coastDistance;
+	skyNormal = normalize(skyNormal);
+
+	vec3 specularNormal = normal;
+	specularNormal.xz *= 2.0 * coastDistance;
+	specularNormal = normalize(specularNormal);
+
+	vec3 currentSkyColor = GetSkyColor(skyNormal) * sunColor.rgb;
+	vec4 aerialColor = GetAerialColor();
 
 	vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
 
 	vec3 originalColor = subpassLoad(inputColor).rgb;
 
-	//vec3 diffuse = DiffuseLighting(normal, (1.0 - shadow));
-	//vec3 surface = mix(waterTint, skyColor.rgb, pow(max(dot(normal, vec3(0.0, 1.0, 0.0)), 0.0), 16.0));
-	vec3 surface = skyColor.rgb;
-	//vec3 diffuse = surface * mix(0.5, 1.0, shadow);
-	vec3 diffuse = surface * DiffuseLighting(normal, (1.0 - shadow), 0.25);
-	vec3 specular = SpecularLighting(normal, viewDirection, 128.0 * 4.0);
+	vec3 diffuse = currentSkyColor * mix(0.5, 1.0, shadow);
+	vec3 specular = SpecularLighting(specularNormal, viewDirection, 128.0 * 8.0);
 
-	//vec3 finalColor = skyColor.rgb * (waterDepth) + originalColor * (1.0 - waterDepth);
 	vec3 finalColor = mix(diffuse, originalColor, fogFactor) + (specular * shadow);
+	finalColor = mix(finalColor, aerialColor.rgb, 1.0 - aerialColor.a);
 
 	outColor = vec4(finalColor, 1.0);
 }
