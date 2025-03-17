@@ -143,17 +143,18 @@ void main()
 	normal += BlendNormal(uv * 2.5, vec2(variables.time, -variables.time), viewDistance);
 	normal = normalize(normal);
 
-	float coastDistance = clamp(worldPosition.y - GetTerrainHeight(worldPosition.xz), 10.0, 50.0) / 50.0;
+	//float coastDistance = clamp(worldPosition.y - GetTerrainHeight(worldPosition.xz), 10.0, 50.0) / 50.0;
+	float coastDistance = 1.0;
 
 	vec3 skyNormal = normal;
 	skyNormal.xz *= 16.0 * coastDistance;
 	skyNormal = normalize(skyNormal);
 
 	vec3 specularNormal = normal;
-	specularNormal.xz *= 2.0 * coastDistance;
+	specularNormal.xz *= 2.0;
 	specularNormal = normalize(specularNormal);
 
-	vec3 currentSkyColor = GetSkyColor(skyNormal) * sunColor.rgb;
+	vec3 currentSkyColor = GetSkyColor(skyNormal) * sunColor.rgb * 0.5;
 	vec4 aerialColor = GetAerialColor();
 
 	vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
