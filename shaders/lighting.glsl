@@ -153,7 +153,7 @@ vec3 SpecularLighting(vec3 normal, vec3 viewDirection, float shininess)
 {
 	vec3 halfwayDirection = normalize(variables.lightDirection + viewDirection);
 	float specular = pow(max(dot(normal, halfwayDirection), 0.0), shininess);
-	vec3 specularColor = (sunColor.rgb * 2.0) * specular;
+	vec3 specularColor = (sunColor.rgb * 1.0) * specular;
 
 	return specularColor;
 }

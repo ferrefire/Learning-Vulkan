@@ -155,7 +155,8 @@ class Trees
 		static Pipeline computeSetupPipeline;
 		static Pipeline computeRenderPipeline;
 
-		static Texture diffuseTexture;
+		//static Texture diffuseTexture;
+		static std::vector<Texture> treeTextures;
 
 		static Descriptor graphicsDescriptor;
 		static Descriptor shadowDescriptor;

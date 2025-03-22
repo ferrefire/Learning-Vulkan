@@ -127,7 +127,7 @@ void Texture::CreateTextureImage(std::string name, SamplerConfiguration &sampler
 	imageConfig.transitionLayout = LAYOUT_TRNSFR_DST;
 	imageConfig.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
 	
-	if (Utilities::Contains(name, "_norm.jpg"))
+	if (Utilities::Contains(name, "_norm.jpg") || Utilities::Contains(name, "_ao.jpg"))
 		imageConfig.format = RGB8;
 
 	Buffer stagingBuffer;

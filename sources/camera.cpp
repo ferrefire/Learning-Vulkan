@@ -145,7 +145,7 @@ const glm::mat4 &Camera::ProjectionLod()
 
 void Camera::PrintStatus()
 {
-	std::cout << "position: (" << Position().x + Terrain::terrainOffset.x << ", " << Position().y + Terrain::terrainOffset.y + 2500.0 << ", " << Position().z + Terrain::terrainOffset.z << ") rotation: (" << Angles().x << ", " << 
+	std::cout << "position: (" << Position().x + Terrain::terrainOffset.x << ", " << Position().y + Terrain::terrainOffset.y - 2500.0 << ", " << Position().z + Terrain::terrainOffset.z << ") rotation: (" << Angles().x << ", " << 
 		Angles().y << ", " << Angles().z << ")" << std::endl;
 
 	//glm::mat4 tempView = glm::lookAt(glm::vec3(0), glm::vec3(0, 0, 1), glm::vec3(0, 1, 0));

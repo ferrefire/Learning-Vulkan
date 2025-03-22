@@ -44,6 +44,7 @@ layout(location = 0) out vec4 outColor;
 #include "functions.glsl"
 #include "depth.glsl"
 #include "transformation.glsl"
+#include "sampling.glsl"
 
 //struct BlendDefaults
 //{
@@ -122,7 +123,7 @@ const float rockSteepness = 0.25;
 //const vec3 defaultGrassColor = vec3(0.0916, 0.0866, 0.0125);
 //const vec3 defaultRockColor = vec3(0.2, 0.1, 0.1);
 
-const float triplanarBlendStrength = 16.0;
+const float triplanarBlendStrength = 2.0;
 const float[] ambientStrengths = {1.5, 1.0};
 const int maxLods = 5;
 
@@ -160,63 +161,10 @@ struct BlendResults
 	return (result);
 }*/
 
-vec3 UnpackNormal(vec4 packedNormal, float scale)
-{
-	vec3 normal;
-	//normal.xy = packedNormal.rg * 2.0 - 1.0;
-	//normal.z = max(1.0e-16, sqrt(1.0 - clamp(dot(normal.xy, normal.xy), 0.0, 1.0)));
-	//normal.xy *= scale;
-
-	normal = (packedNormal * 2.0 - 1.0).xyz;
-	normal.xy *= scale;
-
-	return (normalize(normal));
-	//return ((normal));
-}
-
-vec3 TriplanarColorBlending(sampler2D textureSampler, vec3 uv, vec3 weights)
-{
-	vec3 xz = (texture(textureSampler, uv.xz).rgb);
-	vec3 xy = (texture(textureSampler, uv.xy).rgb);
-	vec3 zy = (texture(textureSampler, uv.zy).rgb);
-	vec3 result = xz * weights.y + xy * weights.z + zy * weights.x;
-
-	return (result);
-}
-
-vec3 TriplanarNormalBlending(sampler2D textureSampler, vec3 uv, vec3 weights, vec3 normal, float power)
-{
-	vec2 uvX = uv.zy;
-	vec2 uvY = uv.xz;
-	vec2 uvZ = uv.xy;
-
-	vec3 tangentX = UnpackNormal(texture(textureSampler, uvX), power);
-	vec3 tangentY = UnpackNormal(texture(textureSampler, uvY), power);
-	vec3 tangentZ = UnpackNormal(texture(textureSampler, uvZ), power);
-
-	tangentX = vec3(tangentX.xy + normal.zy, abs(tangentX.z) * normal.x);
-	tangentY = vec3(tangentY.xy + normal.xz, abs(tangentY.z) * normal.y);
-	tangentZ = vec3(tangentZ.xy + normal.xy, abs(tangentZ.z) * normal.z);
-
-	//tangentX = normalize(vec3(tangentX.xy + normal.zy, normal.x));
-	//tangentY = normalize(vec3(tangentY.xy + normal.xz, normal.y));
-	//tangentZ = normalize(vec3(tangentZ.xy + normal.xy, normal.z));
-
-	//vec3 axisSign = sign(normal);
-	//tangentX.z *= axisSign.x;
-	//tangentY.z *= axisSign.y;
-	//tangentZ.z *= axisSign.z;
-
-	//vec3 result = normalize(tangentX.zyx * weights.x + tangentY.xzy * weights.y + tangentZ.xyz * weights.z);
-	vec3 result = normalize(tangentX.zyx * weights.x + tangentY.xzy * weights.y + tangentZ.xyz * weights.z);
-
-	return (result);
-}
-
 vec3 TriplanarBlending(sampler2D textureSampler, vec3 uv, vec3 weights, vec3 normal, int type, float power)
 {
-	if (type == NORMAL) return (TriplanarNormalBlending(textureSampler, uv, weights, normal, power));
-	else return (TriplanarColorBlending(textureSampler, uv, weights));
+	if (type == NORMAL) return (SampleTriplanarNormal(textureSampler, uv, weights, normal, power));
+	else return (SampleTriplanarColor(textureSampler, uv, weights));
 }
 
 vec3 BlendTexture(sampler2D textureSampler, BlendConfig config, int maxLod, int type, float viewDistance, vec3 weights, vec3 normal)
@@ -318,10 +266,8 @@ BlendResults BlendSteepness(float height, float steepness, float distanceSqrd, v
 	BlendResults result;
 	result.normal = normal;
 	result.ambient = defaultAO;
-	vec3 weights = abs(normal);
-	weights = NormalizeSum(weights);
-	weights = pow(weights, vec3(triplanarBlendStrength));
-	weights = NormalizeSum(weights);
+
+	vec3 weights = GetWeights(normal, triplanarBlendStrength);
 
 	if (steepness >= rockSteepness + steepnessBlendDistance)
 	{
@@ -418,7 +364,7 @@ void main()
 	BlendResults blendResults = BlendSteepness(inPosition.y + variables.terrainOffset.y, steepness, distanceSqrd, normalWS);
 	vec3 textureColor = blendResults.diffuse;
 	vec3 textureNormal = blendResults.normal;
-	vec3 textureAmbient = blendResults.ambient;
+	vec3 textureAmbient = DECODE_COLOR(blendResults.ambient);
 	
 	//textureNormal = vec3(0.5, 0.5, 1.0);
 	//textureNormal.xz *= 2.0;

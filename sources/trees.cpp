@@ -30,12 +30,12 @@ void Trees::Create()
 	std::cout << treeTotalRenderCount << std::endl;
 
 	CreateMeshes();
+	CreateTextures();
 	CreateGraphicsPipeline();
 	if (Manager::settings.shadows) CreateShadowPipeline();
 	//CreateCullPipeline();
 	CreateComputeSetupPipeline();
 	CreateComputeRenderPipeline();
-	CreateTextures();
 	CreateBuffers();
 	CreateGraphicsDescriptor();
 	if (Manager::settings.shadows) CreateShadowDescriptor();
@@ -213,6 +213,7 @@ void Trees::CreateGraphicsPipeline()
 	descriptorLayoutConfig[1].stages = VERTEX_STAGE;
 	descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[2].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[2].count = treeTextures.size();
 	//descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
 	//descriptorLayoutConfig[3].stages = FRAGMENT_STAGE;
 	//descriptorLayoutConfig[3].count = Capture::captureCount;
@@ -312,7 +313,12 @@ void Trees::CreateTextures()
 	samplerConfig.repeatMode = REPEAT;
 	samplerConfig.mipLodBias = 0.0f;
 
-	diffuseTexture.CreateTexture("tree_diff.jpg", samplerConfig);
+	treeTextures.resize(3);
+	treeTextures[0].CreateTexture("tree_diff.jpg", samplerConfig);
+	treeTextures[1].CreateTexture("tree_norm.jpg", samplerConfig);
+	treeTextures[2].CreateTexture("tree_ao.jpg", samplerConfig);
+
+	//diffuseTexture.CreateTexture("tree_diff.jpg", samplerConfig);
 }
 
 void Trees::CreateBuffers()
@@ -408,9 +414,17 @@ void Trees::CreateGraphicsDescriptor()
 
 	descriptorConfig[2].type = IMAGE_SAMPLER;
 	descriptorConfig[2].stages = FRAGMENT_STAGE;
-	descriptorConfig[2].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	descriptorConfig[2].imageInfo.imageView = diffuseTexture.imageView;
-	descriptorConfig[2].imageInfo.sampler = diffuseTexture.sampler;
+	descriptorConfig[2].count = treeTextures.size();
+	descriptorConfig[2].imageInfos.resize(treeTextures.size());
+	for (int i = 0; i < treeTextures.size(); i++)
+	{
+		descriptorConfig[2].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		descriptorConfig[2].imageInfos[i].imageView = treeTextures[i].imageView;
+		descriptorConfig[2].imageInfos[i].sampler = treeTextures[i].sampler;
+	}
+	//descriptorConfig[2].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+	//descriptorConfig[2].imageInfo.imageView = diffuseTexture.imageView;
+	//descriptorConfig[2].imageInfo.sampler = diffuseTexture.sampler;
 
 	//descriptorConfig[3].type = IMAGE_SAMPLER;
 	//descriptorConfig[3].stages = FRAGMENT_STAGE;
@@ -619,7 +633,12 @@ void Trees::DestroyPipelines()
 
 void Trees::DestroyTextures()
 {
-	diffuseTexture.Destroy();
+	//diffuseTexture.Destroy();
+	for (Texture &texture : treeTextures)
+	{
+		texture.Destroy();
+	}
+	treeTextures.clear();
 }
 
 void Trees::DestroyBuffers()
@@ -1327,7 +1346,8 @@ Pipeline Trees::capturePipeline{Manager::currentDevice, Manager::camera};
 Pipeline Trees::computeSetupPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Trees::computeRenderPipeline{Manager::currentDevice, Manager::camera};
 
-Texture Trees::diffuseTexture{Manager::currentDevice};
+//Texture Trees::diffuseTexture{Manager::currentDevice};
+std::vector<Texture> Trees::treeTextures;
 
 Descriptor Trees::graphicsDescriptor{Manager::currentDevice};
 Descriptor Trees::shadowDescriptor{Manager::currentDevice};

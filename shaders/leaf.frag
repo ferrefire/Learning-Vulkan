@@ -114,7 +114,7 @@ void main()
 			translucency *= 1.0 - ((dis - 250.0) / 250.0);
 		}
 
-		endColor += translucencyTint * leafTint * translucency * 16.0;
+		endColor += (sunColor.rgb) * leafTint * translucency * 16.0;
 	}
 
 	//endColor = GroundFog(endColor, depth, worldPosition.y);

@@ -38,6 +38,17 @@ const float speedIncrease = 1.0;
 const float startPower = 1.0;
 const float powerIncrease = 1.0;
 const float blendDistance = 0.75;
+//const float startSkyPower = 4.0;
+//const float skyPowerIncrease = 1.5;
+//const float startSpecularPower = 2.0;
+//const float specularPowerIncrease = 1.25;
+
+
+struct WaveNormals
+{
+	vec3 skyNormal;
+	vec3 specularNormal;
+};
 
 vec3 SampleNormal(vec2 uv, float power)
 {
@@ -78,12 +89,20 @@ vec4 GetAerialColor()
 vec3 BlendNormal(vec2 uv, vec2 time, float viewDistance)
 {
 	vec3 result = vec3(0.0, 1.0, 0.0);
+	/*WaveNormals result;
+	result.skyNormal = vec3(0.0, 1.0, 0.0);
+	result.specularNormal = vec3(0.0, 1.0, 0.0);
+
+	float currentSkyPower = startSkyPower;
+	float currentSpecularPower = startSpecularPower;
+	vec3 currentNormal;*/
 
 	float currentDistance = startDistance;
 	float currentBlend = currentDistance * blendDistance;
 	float currentScale = startScale;
-	float currentPower = startPower;
 	float currentSpeed = startSpeed;
+	float currentPower = startPower;
+	
 
 	for (int i = 0; i < maxBlend; i++)
 	{
@@ -91,6 +110,15 @@ vec3 BlendNormal(vec2 uv, vec2 time, float viewDistance)
 		if (viewDistance <= currentDistance + currentBlend)
 		{
 			result = SampleNormal(uv * currentScale + time * currentSpeed, currentPower);
+			/*currentNormal = SampleNormal(uv * currentScale + time * currentSpeed, 1.0);
+
+			result.skyNormal = currentNormal;
+			result.skyNormal.xz *= currentSkyPower;
+			result.skyNormal = normalize(result.skyNormal);
+
+			result.specularNormal = currentNormal;
+			result.specularNormal.xz *= currentSpecularPower;
+			result.specularNormal = normalize(result.specularNormal);*/
 
 			if (viewDistance >= currentDistance - currentBlend)
 			{
@@ -100,16 +128,35 @@ vec3 BlendNormal(vec2 uv, vec2 time, float viewDistance)
 				result *= (1.0 - blendFactor);
 				vec3 resultBlend = SampleNormal(uv * (currentScale * scaleIncrease) + (time * (currentSpeed * speedIncrease)), (currentPower * powerIncrease));
 				result += resultBlend * (blendFactor);
+				
+				/*vec3 currentNormalBlend = SampleNormal(uv * (currentScale * scaleIncrease) + (time * (currentSpeed * speedIncrease)), 1.0);
+
+				vec3 currentSkyNormalBlend = currentNormalBlend;
+				currentSkyNormalBlend.xz *= (currentSkyPower * skyPowerIncrease);
+				currentSkyNormalBlend = normalize(currentSkyNormalBlend);
+				result.skyNormal *= (1.0 - blendFactor);
+				result.skyNormal += currentSkyNormalBlend * (blendFactor);
+
+				vec3 currentSpecularNormalBlend = currentNormalBlend;
+				currentSpecularNormalBlend.xz *= (currentSpecularPower * specularPowerIncrease);
+				currentSpecularNormalBlend = normalize(currentSpecularNormalBlend);
+				result.specularNormal *= (1.0 - blendFactor);
+				result.specularNormal += currentSpecularNormalBlend * (blendFactor);*/
 			}
 
 			break;
 		}
 		currentDistance *= distanceIncrease;
 		currentScale *= scaleIncrease;
-		currentPower *= powerIncrease;
 		currentSpeed *= speedIncrease;
+		currentPower *= powerIncrease;
+
+		//currentSkyPower *= skyPowerIncrease;
+		//currentSpecularPower *= specularPowerIncrease;
 	}
 
+	//result.skyNormal = normalize(result.skyNormal);
+	//result.specularNormal = normalize(result.specularNormal);
 	result = normalize(result);
 	return (result);
 
@@ -137,6 +184,22 @@ void main()
 	vec2 uv = worldPosition.xz + variables.terrainOffset.xz;
 	float viewDistance = distance(variables.viewPosition, worldPosition);
 
+	/*WaveNormals normals = BlendNormal(uv, vec2(variables.time), viewDistance);
+	vec3 skyNormal = normals.skyNormal;
+	vec3 specularNormal = normals.specularNormal;
+	normals = BlendNormal(uv * 0.25, vec2(-variables.time), viewDistance);
+	skyNormal += normals.skyNormal;
+	specularNormal += normals.specularNormal;
+	normals = BlendNormal(uv * 0.05, vec2(-variables.time, variables.time), viewDistance);
+	skyNormal += normals.skyNormal;
+	specularNormal += normals.specularNormal;
+	normals = BlendNormal(uv * 2.5, vec2(variables.time, -variables.time), viewDistance);
+	skyNormal += normals.skyNormal;
+	specularNormal += normals.specularNormal;
+
+	skyNormal = normalize(skyNormal);
+	specularNormal = normalize(specularNormal);*/
+
 	vec3 normal = BlendNormal(uv, vec2(variables.time), viewDistance);
 	normal += BlendNormal(uv * 0.25, vec2(-variables.time), viewDistance);
 	normal += BlendNormal(uv * 0.05, vec2(-variables.time, variables.time), viewDistance);
@@ -151,10 +214,10 @@ void main()
 	skyNormal = normalize(skyNormal);
 
 	vec3 specularNormal = normal;
-	specularNormal.xz *= 2.0;
+	specularNormal.xz *= 3.0;
 	specularNormal = normalize(specularNormal);
 
-	vec3 currentSkyColor = GetSkyColor(skyNormal) * sunColor.rgb;
+	vec3 currentSkyColor = GetSkyColor(skyNormal) * sunColor.rgb * 0.375;
 	vec4 aerialColor = GetAerialColor();
 
 	vec3 viewDirection = normalize(variables.viewPosition - worldPosition);

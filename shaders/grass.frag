@@ -65,6 +65,7 @@ void main()
 	if (shadow < 0.9)
 	{
 		vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
+		//vec3 bladeSpecular = SpecularLighting(normal, viewDirection, 16);
 		vec3 bladeSpecular = SpecularLighting(normal, viewDirection, 16);
 		vec3 terrainSpecular = SpecularLighting(terrainNormal, viewDirection, 32);
 		//vec3 bladeSpecular = SpecularLightingRealistic(normal, viewDirection, 16, worldPosition);
@@ -72,6 +73,7 @@ void main()
 		//combinedColor += (bladeSpecular * terrainSpecular);
 		//combinedColor += (bladeSpecular * terrainSpecular) * (1.0 - shadow);
 		finalColor += (bladeSpecular * terrainSpecular) * (1.0 - shadow);
+		//finalColor += (bladeSpecular) * (1.0 - shadow);
 	}
 	//else
 	//{
