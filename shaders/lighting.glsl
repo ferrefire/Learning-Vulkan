@@ -14,7 +14,8 @@
 #endif
 
 #ifndef LIGHT_COLOR
-#define LIGHT_COLOR vec3(1.0, 0.933, 0.89) * 1.5
+//#define LIGHT_COLOR vec3(1.0, 0.933, 0.89) * 1.5
+#define LIGHT_COLOR DECODE_COLOR(vec3(255, 233, 201) / 255.0) * 2.0
 #endif
 
 layout(set = 0, binding = 5) uniform sampler2DShadow shadowSamplers[CASCADE_COUNT];
@@ -30,7 +31,7 @@ layout(std430, set = 0, binding = 7) readonly buffer SunBuffer
 #endif
 
 //const vec3 lightColor = vec3(2);
-const vec3 lightColor = vec3(1.0, 0.933, 0.89) * 1.5;
+//const vec3 lightColor = vec3(1.0, 0.933, 0.89) * 1.5;
 //const vec3 lightDirection = vec3(0.25, 0.5, 0.25);
 
 const float ambient = 0.1 * 0.5;

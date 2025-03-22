@@ -25,7 +25,7 @@ layout(location = 0) out vec4 outColor;
 #include "heightmap.glsl"
 
 const vec3 waterTint = DECODE_COLOR(vec3(5, 41, 35) / 255.0);
-const float waterDensity = 2500.0;
+const float waterDensity = 750.0;
 const vec2 scatterResolution = vec2(32, 32);
 
 const int maxBlend = 4;
@@ -154,7 +154,7 @@ void main()
 	specularNormal.xz *= 2.0;
 	specularNormal = normalize(specularNormal);
 
-	vec3 currentSkyColor = GetSkyColor(skyNormal) * sunColor.rgb * 0.5;
+	vec3 currentSkyColor = GetSkyColor(skyNormal) * sunColor.rgb;
 	vec4 aerialColor = GetAerialColor();
 
 	vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
