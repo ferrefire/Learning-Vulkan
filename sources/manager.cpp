@@ -12,6 +12,7 @@
 #include "leaves.hpp"
 #include "sky.hpp"
 #include "capture.hpp"
+#include "wind.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -108,7 +109,7 @@ void Manager::CreateShaderVariableBuffers()
 void Manager::CreateDescriptorSetLayout()
 {
 	int i = 0;
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(8);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(9);
 	descriptorLayoutConfig[i].type = UNIFORM_BUFFER;
 	descriptorLayoutConfig[i++].stages = ALL_STAGE;
 	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
@@ -126,6 +127,8 @@ void Manager::CreateDescriptorSetLayout()
 	descriptorLayoutConfig[i].stages = ALL_STAGE;
 	descriptorLayoutConfig[i++].count = TERRAIN_SHADOW_CASCADES;
 	descriptorLayoutConfig[i].type = STORAGE_BUFFER;
+	descriptorLayoutConfig[i++].stages = ALL_STAGE;
+	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
 	descriptorLayoutConfig[i++].stages = ALL_STAGE;
 	//descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
 	//descriptorLayoutConfig[i++].stages = ALL_STAGE;
@@ -149,7 +152,7 @@ void Manager::CreateDescriptor()
 	//Pipeline::CreateDescriptorSetLayout(descriptorLayoutConfig, &globalDescriptorSetLayout);
 
 	int j = 0;
-	std::vector<DescriptorConfiguration> descriptorConfig(8);
+	std::vector<DescriptorConfiguration> descriptorConfig(9);
 	descriptorConfig[j].type = UNIFORM_BUFFER;
 	descriptorConfig[j].stages = ALL_STAGE;
 	descriptorConfig[j].buffersInfo.resize(shaderVariableBuffers.size());
@@ -243,6 +246,12 @@ void Manager::CreateDescriptor()
 	descriptorConfig[j].buffersInfo[0].buffer = Sky::colorBuffer.buffer;
 	descriptorConfig[j].buffersInfo[0].range = sizeof(glm::vec4) * 2;
 	descriptorConfig[j++].buffersInfo[0].offset = 0;
+
+	descriptorConfig[j].type = IMAGE_SAMPLER;
+	descriptorConfig[j].stages = ALL_STAGE;
+	descriptorConfig[j].imageInfo.imageLayout = LAYOUT_GENERAL;
+	descriptorConfig[j].imageInfo.imageView = Wind::windTexture.imageView;
+	descriptorConfig[j++].imageInfo.sampler = Wind::windTexture.sampler;
 
 	globalDescriptor.Create(descriptorConfig, globalDescriptorSetLayout);
 }

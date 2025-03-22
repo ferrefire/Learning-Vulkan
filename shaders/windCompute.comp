@@ -1,0 +1,28 @@
+#version 450
+
+#extension GL_ARB_shading_language_include : require
+
+layout(set = 1, binding = 0, r16) uniform image2D windTexture;
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+const uint resolution = 256;
+const float resolutionMult = 1.0 / 256.0;
+
+const float scale = 10.0;
+
+#include "noise.glsl"
+#include "variables.glsl"
+
+void main()
+{
+    vec2 index = gl_GlobalInvocationID.xy;
+    vec2 uv = index * resolutionMult;
+    uv *= scale;
+    uv += variables.time * 0.5;
+
+    float value = pow(GenerateSimpleNoise(uv, 1, 0.5, 0.5), 0.75);
+    //float value = GenerateSimpleNoise(uv, 2, 0.5, 0.5);
+
+    imageStore(windTexture, ivec2(index), vec4(value));
+}

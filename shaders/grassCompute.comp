@@ -58,6 +58,8 @@ layout(set = 1, binding = 2) readonly restrict uniform GrassVariables
 
 layout(set = 1, binding = 3) uniform sampler2D clumpingSampler;
 
+layout(set = 0, binding = 8) uniform sampler2D windSampler;
+
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 //const uint groupSize = gl_WorkGroupSize.x * gl_WorkGroupSize.y;
@@ -213,7 +215,8 @@ void main()
 
 	vec3 rotations = vec3(0);
     float wave = 0;
-	if (grassVariables.windStrength > 0.0) wave = (sin(variables.time * 2 + (x + z) * 0.1 * grassVariables.windFrequency) * 0.5 + 0.5) * grassVariables.windStrength;
+	wave = 1.0 - textureLod(windSampler, position.xz * 0.005, 0).r;
+	//if (grassVariables.windStrength > 0.0) wave = (sin(variables.time * 2 + (x + z) * 0.1 * grassVariables.windFrequency) * 0.5 + 0.5) * grassVariables.windStrength;
     ran = random(position.xz * ranMult + vec2(position.y, -position.y) * 0.01);
     rotations.x = mix(0.25, 1.0, ran);
 	rotations.x = mix(rotations.x, 1.0 + (ran - 0.5) * 0.25, wave);

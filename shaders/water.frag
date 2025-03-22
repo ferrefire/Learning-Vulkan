@@ -217,7 +217,7 @@ void main()
 	specularNormal.xz *= 3.0;
 	specularNormal = normalize(specularNormal);
 
-	vec3 currentSkyColor = GetSkyColor(skyNormal) * sunColor.rgb * 0.375;
+	vec3 currentSkyColor = GetSkyColor(skyNormal) * sunColor.rgb * 0.75;
 	vec4 aerialColor = GetAerialColor();
 
 	vec3 viewDirection = normalize(variables.viewPosition - worldPosition);

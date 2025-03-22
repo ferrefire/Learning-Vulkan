@@ -14,6 +14,7 @@
 #include "sky.hpp"
 #include "capture.hpp"
 #include "water.hpp"
+#include "wind.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -410,6 +411,7 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 	if (TREES_ENABLED) Trees::RecordComputeCommands(commandBuffer);
 	if (GRASS_ENABLED) Grass::RecordComputeCommands(commandBuffer);
 	Data::RecordComputeCommands(commandBuffer);
+	Wind::RecordComputeCommands(commandBuffer);
 
 	//START_TIMER(dataTime); 
 	//Data::RecordComputeCommands(commandBuffer); //removeee
@@ -671,6 +673,7 @@ void Graphics::Create()
 
 	Terrain::Create();
 	Sky::Create();
+	Wind::Create();
 
 	Manager::CreateDescriptor();
 
@@ -703,8 +706,8 @@ void Graphics::Create()
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
 		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
-		descriptorConfig[0].imageInfo.imageView = Sky::viewTexture.imageView;
-		descriptorConfig[0].imageInfo.sampler = Sky::viewTexture.sampler;
+		descriptorConfig[0].imageInfo.imageView = Wind::windTexture.imageView;
+		descriptorConfig[0].imageInfo.sampler = Wind::windTexture.sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}
@@ -754,6 +757,7 @@ void Graphics::Destroy()
 	Data::Destroy();
 	Sky::Destroy();
 	Water::Destroy();
+	Wind::Destroy();
 	//Capture::Destroy();
 	Manager::screenQuadDescriptor.Destroy();
 	Manager::Clean();
