@@ -22,6 +22,7 @@ void main()
     uv += variables.time * 0.5;
 
     float value = pow(GenerateSimpleNoise(uv, 1, 0.5, 0.5), 0.75);
+    //float value = pow(GenerateSimpleNoise(uv, 1, 0.5, 0.5), 0.25);
     //float value = GenerateSimpleNoise(uv, 2, 0.5, 0.5);
 
     imageStore(windTexture, ivec2(index), vec4(value));

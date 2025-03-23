@@ -74,7 +74,8 @@ void Input::Start()
 
 	//Manager::camera.Move(glm::vec3(-21.3, 504.7, -2006.0));
 	//Manager::camera.Move(glm::vec3(2583.95, -731.684, 1943.87));
-	Manager::camera.Move(glm::vec3(2583.95, 4268.32 - 5000.0, 1948.87));
+	//Manager::camera.Move(glm::vec3(2583.95, 4268.32 - 5000.0, 1948.87));
+	Manager::camera.Move(glm::vec3(3235.13, -1081.11, 912.83));
 
 	//Manager::camera.Move(glm::vec3(-21.3, 504.7, -2001.0));
 	//Manager::camera.Move(glm::vec3(-21.3, 504.7, -2001.0));
@@ -85,7 +86,8 @@ void Input::Start()
 
 	//Manager::camera.Rotate(glm::vec3(-27.6, -135.4, 0.0));
 	//Manager::camera.Rotate(glm::vec3(-34.8999, 213.799, 0));
-	Manager::camera.Rotate(glm::vec3(3.19995, 155.999, 0));
+	//Manager::camera.Rotate(glm::vec3(3.19995, 155.999, 0));
+	Manager::camera.Rotate(glm::vec3(-16.5, 378.999, 0));
 
 	// Manager::camera.SetRotation(glm::vec3(1.4, -8.8, 0.0));
 }
