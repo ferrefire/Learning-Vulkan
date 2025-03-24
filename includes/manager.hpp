@@ -85,6 +85,16 @@ struct ShaderVariables
 	alignas(4) uint32_t capturing = 0;
 };
 
+struct DescriptorInfo
+{
+	uint32_t totalDescriptorCount = 0;
+	uint32_t uniformBufferCount = 0;
+	uint32_t storageBufferCount = 0;
+	uint32_t imageSamplerCount = 0;
+	uint32_t imageStorageCount = 0;
+	uint32_t inputAttatchmentCount = 0;
+};
+
 class Manager
 {
 	private:
@@ -129,7 +139,9 @@ class Manager
 		static std::vector<glm::vec3> cameraIntersects;
 		static std::vector<int> cameraIntersectIndexes;
 
-		static glm::vec3 lightAngles; 
+		static glm::vec3 lightAngles;
+
+		static DescriptorInfo descriptorInfo;
 
 		static void Setup();
 		static void Create();

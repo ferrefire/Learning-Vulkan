@@ -24,7 +24,7 @@ void Descriptor::Create(std::vector<DescriptorConfiguration> configs, VkDescript
 	descriptorConfigs = std::vector<DescriptorConfiguration>(configs);
 
 	//CreateDescriptorSetLayout(configuration);
-	CreateDescriptorPool();
+	//CreateDescriptorPool();
 	CreateDescriptorSets(descriptorSetLayout);
 }
 
@@ -75,6 +75,13 @@ void Descriptor::CreateDescriptorPool()
 		poolSizes[index].type = config.type;
 		poolSizes[index].descriptorCount = count * config.count;
 		index++;
+
+		Manager::descriptorInfo.totalDescriptorCount += count * config.count;
+		if (config.type == UNIFORM_BUFFER) Manager::descriptorInfo.uniformBufferCount += count * config.count;
+		if (config.type == STORAGE_BUFFER) Manager::descriptorInfo.storageBufferCount += count * config.count;
+		if (config.type == IMAGE_SAMPLER) Manager::descriptorInfo.imageSamplerCount += count * config.count;
+		if (config.type == IMAGE_STORAGE) Manager::descriptorInfo.imageStorageCount += count * config.count;
+		if (config.type == INPUT_ATTACHMENT) Manager::descriptorInfo.inputAttatchmentCount += count * config.count;
 	}
 
 	VkDescriptorPoolCreateInfo poolInfo{};
@@ -98,7 +105,8 @@ void Descriptor::CreateDescriptorSets(VkDescriptorSetLayout descriptorSetLayout)
 	std::vector<VkDescriptorSetLayout> layouts(count, descriptorSetLayout);
 	VkDescriptorSetAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.descriptorPool = descriptorPool;
+	//allocInfo.descriptorPool = descriptorPool;
+	allocInfo.descriptorPool = Manager::currentDevice.descriptorPool;
 	allocInfo.descriptorSetCount = count;
 	allocInfo.pSetLayouts = layouts.data();
 
@@ -113,7 +121,7 @@ void Descriptor::CreateDescriptorSets(VkDescriptorSetLayout descriptorSetLayout)
 
 void Descriptor::Destroy()
 {
-	DestroyDescriptorPool();
+	//DestroyDescriptorPool();
 	//DestroyDescriptorSetLayout();
 }
 

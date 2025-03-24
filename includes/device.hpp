@@ -64,6 +64,8 @@ class Device
         VkCommandPool computeCommandPool = nullptr;
 		std::vector<VkCommandBuffer> computeCommandBuffers;
 
+		VkDescriptorPool descriptorPool = nullptr;
+
 		VkSemaphore computeFinishedSemaphore = nullptr;
 		std::vector<VkSemaphore> imageAvailableSemaphores;
         std::vector<VkSemaphore> renderFinishedSemaphores;
@@ -95,6 +97,9 @@ class Device
         void CreateCommandPools();
         void CreateCommandBuffers();
         void DestroyCommandPools();
+
+		void CreateDescriptorPool();
+		void DestroyDescriptorPool();
 
 		VkCommandBuffer BeginGraphicsCommand();
 		VkCommandBuffer BeginComputeCommand();

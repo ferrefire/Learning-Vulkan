@@ -289,6 +289,13 @@ void Manager::Start()
 	Data::Start();
 
 	cinematic.Start();
+
+	std::cout << "total descriptor count: " << descriptorInfo.totalDescriptorCount << std::endl;
+	std::cout << "uniform buffer count: " << descriptorInfo.uniformBufferCount << std::endl;
+	std::cout << "storage buffer count: " << descriptorInfo.storageBufferCount << std::endl;
+	std::cout << "image sampler count: " << descriptorInfo.imageSamplerCount << std::endl;
+	std::cout << "image storage count: " << descriptorInfo.imageStorageCount << std::endl;
+	std::cout << "input attatchment count: " << descriptorInfo.inputAttatchmentCount << std::endl;
 }
 
 void Manager::PreFrame()
@@ -601,3 +608,5 @@ std::vector<glm::vec3> Manager::cameraIntersects;
 std::vector<int> Manager::cameraIntersectIndexes;
 
 glm::vec3 Manager::lightAngles = glm::vec3(-35.0f, -135.0f, 0.0f);
+
+DescriptorInfo Manager::descriptorInfo;

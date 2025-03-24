@@ -138,7 +138,7 @@ void main()
 	//int lod = Inside(vec2(xp, zp));
 	//if (lod == -1) return ;
 
-	vec2 flooredViewPosition = floor(variables.viewPosition.xz * grassVariables.spacingMult);
+	vec2 flooredViewPosition = floor((variables.viewPosition.xz) * grassVariables.spacingMult);
     float x = (xp + flooredViewPosition.x) * grassVariables.spacing;
     float z = (zp + flooredViewPosition.y) * grassVariables.spacing;
     float y = GetTerrainHeight(vec2(x, z));

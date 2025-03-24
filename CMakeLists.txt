@@ -6,10 +6,15 @@ option(DEV "DEV" OFF)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-FILE(GLOB SOURCE_FILES sources/*.cpp)
+#set(IMGUI_DIR build/_deps/imgui-src)
+
+FILE(GLOB SOURCE_FILES sources/*.cpp build/_deps/imgui-src/*.cpp build/_deps/imgui-src/backends/imgui_impl_vulkan.cpp 
+	build/_deps/imgui-src/backends/imgui_impl_glfw.cpp)
+
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-target_include_directories(${PROJECT_NAME} PUBLIC "includes" "build/_deps/stb_image-subbuild/stb_image-populate-prefix/src")
+target_include_directories(${PROJECT_NAME} PUBLIC "includes" "build/_deps/stb_image-subbuild/stb_image-populate-prefix/src" 
+	"build/_deps/imgui-src" "build/_deps/imgui-src/backends")
 
 set(GLFW_BUILD_WAYLAND False)#check false replace by off
 set(BUILD_WSI_WAYLAND_SUPPORT False)
@@ -57,6 +62,15 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable("Vulkan-Loader")
 target_link_libraries(${PROJECT_NAME} PUBLIC "vulkan")
+
+FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG 4806a1924ff6181180bf5e4b8b79ab4394118875
+	GIT_SHALLOW 1
+)
+FetchContent_MakeAvailable("imgui")
+#target_link_libraries(${PROJECT_NAME} PUBLIC "ImGui")
 
 if(DEV)
 	FetchContent_Declare(

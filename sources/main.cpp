@@ -2,6 +2,7 @@
 #include "time.hpp"
 #include "input.hpp"
 #include "utilities.hpp"
+#include "ui.hpp"
 //#include "mesh.hpp"
 
 #define GLFW_INCLUDE_VULKAN
@@ -73,6 +74,9 @@ int main(int argc, char **argv)
 	Setup(argc, argv);
 
 	Manager::Setup();
+
+	UI::Create();
+
 	Manager::Start();
 
 	while (Manager::currentWindow.IsOpen())
@@ -80,6 +84,7 @@ int main(int argc, char **argv)
 		Time::Frame();
 		Input::Frame();
 		Manager::Frame();
+		UI::Frame();
 
 		Manager::currentGraphics.Frame();
 
@@ -91,6 +96,8 @@ int main(int argc, char **argv)
 	}
 
 	Manager::currentDevice.WaitForIdle();
+
+	UI::Destroy();
 
 	Manager::Quit(EXIT_SUCCESS);
 }

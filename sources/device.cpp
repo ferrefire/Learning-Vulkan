@@ -560,6 +560,38 @@ void Device::EndComputeCommand(VkCommandBuffer commandBuffer)
 	vkFreeCommandBuffers(logicalDevice, computeCommandPool, 1, &commandBuffer);
 }
 
+void Device::CreateDescriptorPool()
+{
+	VkDescriptorPoolSize poolSizes[] = 
+	{
+		{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 300},
+		{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 50},
+		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 100},
+		{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 25},
+		{VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 15},
+	};
+
+	VkDescriptorPoolCreateInfo poolInfo{};
+	poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	poolInfo.poolSizeCount = static_cast<uint32_t>(std::size(poolSizes));
+	poolInfo.pPoolSizes = poolSizes;
+	poolInfo.maxSets = 500;
+	poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+
+	if (vkCreateDescriptorPool(logicalDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create descriptor pool");
+	}
+}
+
+void Device::DestroyDescriptorPool()
+{
+	if (!descriptorPool) return;
+
+	vkDestroyDescriptorPool(logicalDevice, descriptorPool, nullptr);
+	descriptorPool = nullptr;
+}
+
 VkSampleCountFlagBits Device::MaxSampleCount() 
 {
 	if (!Manager::settings.msaa) return (VK_SAMPLE_COUNT_1_BIT);
