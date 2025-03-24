@@ -13,13 +13,16 @@ struct LeafData
 	uint scalxrotx;
 	uint colxnormx;
 	uint normyz;
-	uint rotz;
+	uint sturdiness;
+	//uint rotz;
 };
 
 layout(std430, set = 1, binding = 0) readonly buffer DataBuffer
 {
 	LeafData data[];
 };
+
+layout(set = 0, binding = 8) uniform sampler2D windSampler;
 
 layout(location = 0) in vec3 inPosition;
 
@@ -29,8 +32,8 @@ layout(location = 2) out vec3 globalNormal;
 layout(location = 3) out vec3 localNormal;
 layout(location = 4) out vec3 leafColor;
 layout(location = 5) out vec3 localCoordinates;
-layout(location = 6) out float baseRotation;
-layout(location = 7) out vec4 shadowPositions[CASCADE_COUNT];
+//layout(location = 6) out float baseRotation;
+layout(location = 6) out vec4 shadowPositions[CASCADE_COUNT];
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -84,10 +87,11 @@ void main()
 	color = colxnormx.x;
 	vec2 normyz = unpackHalf2x16(data[dataIndex].normyz);
 	vec3 normalPos = vec3(colxnormx.y, normyz.x, normyz.y);
-	vec2 rotz = unpackHalf2x16(data[dataIndex].rotz);
-	rotation.z = rotz.x * 360.0 - 180.0;
+	//vec2 rotz = unpackHalf2x16(data[dataIndex].rotz);
+	//rotation.z = rotz.x * 360.0 - 180.0;
+	float sturdiness = unpackHalf2x16(data[dataIndex].sturdiness).x;
 
-	baseRotation = rotz.x;
+	//baseRotation = rotz.x;
 	position += variables.viewPosition;
 
 	//vec3 objectPosition = inPosition * scale;
@@ -106,6 +110,13 @@ void main()
 	localNormal = rotateResults.normal;
 	globalNormal = normalize((normalPos + rotateResults.position) - treeCenter);
 	worldPosition = ObjectToWorld(rotateResults.position, mat4(1)) + position;
+
+	if (sturdiness > 0.0)
+	{
+		vec2 windUV = (worldPosition.xz + variables.terrainOffset.xz) * variables.windDistanceMult;
+		float wave = 1.0 - textureLod(windSampler, windUV, 0).r;
+		worldPosition.xz += wave * sturdiness * variables.windStrength;
+	}
 
 	/*vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
 	float viewDotNormal = dot(localNormal, viewDirection);

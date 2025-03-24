@@ -409,6 +409,9 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.terrainLod1Offset = Terrain::terrainLod1Offset;
 	//shaderVariables.terrainShadowOffset = Terrain::terrainShadowOffset;
 
+	shaderVariables.windDistanceMult = 0.005;
+	shaderVariables.windStrength = 5.0;
+
 	shaderVariables.time = Time::GetCurrentTime();
 
 	shaderVariables.occlusionCulling = settings.occlussionCulling ? 1 : 0;

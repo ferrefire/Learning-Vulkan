@@ -1077,11 +1077,16 @@ Shape BranchConfiguration::Generate()
 
 		for (int x = 0; x <= resolution; x++)
 		{
-			branch.positions[branch.GetPositionIndex(y, x)] = xRotationMatrix * glm::vec4(branch.positions[branch.GetPositionIndex(y, x)], 1);
-			branch.positions[branch.GetPositionIndex(y, x)] = yRotationMatrix * glm::vec4(branch.positions[branch.GetPositionIndex(y, x)], 1);
+			int branchIndex = branch.GetPositionIndex(y, x);
 
-			branch.normals[branch.GetPositionIndex(y, x)] = xRotationMatrix * glm::vec4(branch.normals[branch.GetPositionIndex(y, x)], 0);
-			branch.normals[branch.GetPositionIndex(y, x)] = yRotationMatrix * glm::vec4(branch.normals[branch.GetPositionIndex(y, x)], 0);
+			branch.positions[branchIndex] = xRotationMatrix * glm::vec4(branch.positions[branchIndex], 1);
+			branch.positions[branchIndex] = yRotationMatrix * glm::vec4(branch.positions[branchIndex], 1);
+
+			branch.normals[branchIndex] = xRotationMatrix * glm::vec4(branch.normals[branchIndex], 0);
+			branch.normals[branchIndex] = yRotationMatrix * glm::vec4(branch.normals[branchIndex], 0);
+
+			//branch.coordinates[branchIndex] = glm::vec2(glm::mix(sturdiness.x, sturdiness.y, gradient));
+			branch.coordinates[branchIndex] = glm::vec2(sturdiness.y);
 
 			if (y == resolution && x == resolution && branch.centerMergePoint != -1)
 			{
@@ -1090,6 +1095,9 @@ Shape BranchConfiguration::Generate()
 
 				branch.normals[branch.centerMergePoint] = xRotationMatrix * glm::vec4(branch.normals[branch.centerMergePoint], 0);
 				branch.normals[branch.centerMergePoint] = yRotationMatrix * glm::vec4(branch.normals[branch.centerMergePoint], 0);
+
+				//branch.coordinates[branch.centerMergePoint] = glm::vec2(glm::mix(sturdiness.x, sturdiness.y, gradient));
+				branch.coordinates[branch.centerMergePoint] = glm::vec2(sturdiness.y);
 			}
 
 			if (main)
@@ -1098,8 +1106,7 @@ Shape BranchConfiguration::Generate()
 				float lhalf = l * 0.5;
 				float lol = abs(float(p) - lhalf);
 				float amount = lol / lhalf;
-				branch.positions[branch.GetPositionIndex(y, x)] = branch.positions[branch.GetPositionIndex(y, x)] * 
-					glm::vec3(1.0 + pow(1.0 - gradient, 8.0) * 1.25 * amount);
+				branch.positions[branchIndex] = branch.positions[branchIndex] * glm::vec3(1.0 + pow(1.0 - gradient, 8.0) * 1.25 * amount);
 			}
 		}
 
@@ -1122,7 +1129,8 @@ Shape BranchConfiguration::Generate()
 					leafOffset.x = Utilities::Random11(branchSeed + y + i) * 2.0f;
 					leafOffset.z = Utilities::Random11(leafOffset.x * 0.5 + (branchSeed + y + i) * 2.0 + i);
 					leafOffset.y = Utilities::Random11(leafOffset.x * 2.0 + (branchSeed + y + i) * 0.5 + leafOffset.z + i);
-					glm::vec4 leafPosition = glm::vec4(branch.positions[branch.GetPositionIndex(y, 0)] + base + offset + leafOffset * offsetFactor, 0);
+					glm::vec4 leafPosition = glm::vec4(branch.positions[branch.GetPositionIndex(y, 0)] + base + offset + 
+						leafOffset * offsetFactor, sturdiness.y);
 					Trees::leafPositions.push_back(leafPosition);
 					//else if (i == 1) Trees::leafPositions1.push_back(leafPosition);
 				}
@@ -1219,6 +1227,8 @@ Shape BranchConfiguration::Generate()
 		subBranchConfig.main = false;
 		subBranchConfig.lod = lod;
 		subBranchConfig.leaves = leaves;
+		subBranchConfig.sturdiness.x = sturdiness.y;
+		subBranchConfig.sturdiness.y = sturdiness.y + 0.1;
 
 		//if (i == 0) std::cout << iteration << std::endl;
 

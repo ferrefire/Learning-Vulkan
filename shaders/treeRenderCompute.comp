@@ -37,7 +37,8 @@ struct LeafData
 	uint scalxrotx;
 	uint colxnormx;
 	uint normyz;
-	uint rotz;
+	uint sturdiness;
+	//uint rotz;
 };
 
 layout(std430, set = 1, binding = 0) readonly restrict buffer DataBuffer
@@ -260,10 +261,10 @@ void main()
 			lod = 3;
 		}
 	}
-	else
+	/*else
 	{
 		if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0) lod = 1;
-	}
+	}*/
 	if (Occluded(WorldToCull(worldPosition + vec3(0, 60, 0)), 0.005) == 1) return;
 
 	uint index = 0;
@@ -352,13 +353,17 @@ void main()
 		//	leafRotationZ = 0.0;
 		//}
 
+		float leafSturdiness = 0.0;
+		if (lod <= 2) leafSturdiness = leafPositions[leafIndex].w;
+
 		LeafData leafData;
 		leafData.posxz = packHalf2x16(leafWorldPosition.xz);
 		leafData.posyroty = packHalf2x16(vec2(leafWorldPosition.y, leafRotationY));
 		leafData.scalxrotx = packHalf2x16(vec2(leafScale * scale, leafRotationX));
 		leafData.colxnormx = packHalf2x16(vec2(leafColor, leafLocalPosition.x));
 		leafData.normyz = packHalf2x16(vec2(leafLocalPosition.y, leafLocalPosition.z));
-		leafData.rotz = packHalf2x16(vec2(leafRotationZ, leafRotationZ));
+		leafData.sturdiness = packHalf2x16(vec2(leafSturdiness));
+		//leafData.rotz = packHalf2x16(vec2(leafRotationZ, leafRotationZ));
 		leavesData[leafDataIndex] = leafData;
 
 		leafDataIndex++;

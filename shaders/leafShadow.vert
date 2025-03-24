@@ -9,7 +9,8 @@ struct LeafData
 	uint scalxrotx;
 	uint colxnormx;
 	uint normyz;
-	uint rotz;
+	uint sturdiness;
+	//uint rotz;
 };
 
 layout(std430, set = 1, binding = 0) readonly buffer DataBuffer
@@ -21,6 +22,8 @@ layout(push_constant, std430) uniform PushConstants
 {
 	uint shadowCascade;
 } pc;
+
+layout(set = 0, binding = 8) uniform sampler2D windSampler;
 
 layout(location = 0) in vec3 inPosition;
 
@@ -68,8 +71,9 @@ void main()
 	vec2 scalxrotx = unpackHalf2x16(data[dataIndex].scalxrotx);
 	scale = scalxrotx.x;
 	rotation.x = scalxrotx.y * 360.0 - 180.0;
-	vec2 rotz = unpackHalf2x16(data[dataIndex].rotz);
-	rotation.z = rotz.x * 360.0 - 180.0;
+	//vec2 rotz = unpackHalf2x16(data[dataIndex].rotz);
+	//rotation.z = rotz.x * 360.0 - 180.0;
+	float sturdiness = unpackHalf2x16(data[dataIndex].sturdiness).x;
 
 	position += variables.viewPosition;
 
@@ -85,6 +89,13 @@ void main()
 
 	//vec3 localNormal = rotateResults.normal;
 	vec3 worldPosition = ObjectToWorld(rotateResults.position, mat4(1)) + position;
+
+	if (sturdiness > 0.0)
+	{
+		vec2 windUV = (worldPosition.xz + variables.terrainOffset.xz) * variables.windDistanceMult;
+		float wave = 1.0 - textureLod(windSampler, windUV, 0).r;
+		worldPosition.xz += wave * sturdiness * variables.windStrength;
+	}
 
 	/*vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
 	float viewDotNormal = dot(localNormal, viewDirection);

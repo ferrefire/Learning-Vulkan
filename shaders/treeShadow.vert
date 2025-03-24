@@ -51,8 +51,10 @@ layout(push_constant, std430) uniform PushConstants
     uint shadowCascade;
 } pc;
 
+layout(set = 0, binding = 8) uniform sampler2D windSampler;
+
 layout(location = 0) in vec3 inPosition;
-//layout(location = 1) in vec2 inCoordinate;
+layout(location = 1) in vec2 inCoordinate;
 //layout(location = 2) in vec3 inNormal;
 
 //layout(location = 0) out vec2 coord;
@@ -97,6 +99,13 @@ void main()
 
 	//coord = inCoordinate;
     vec3 worldPosition = ObjectToWorld(objectPosition, mat4(1)) + position;
+
+	if (pc.treeLod <= 2)
+	{
+		vec2 windUV = (worldPosition.xz + variables.terrainOffset.xz) * variables.windDistanceMult;
+		float wave = 1.0 - textureLod(windSampler, windUV, 0).r;
+		worldPosition.xz += wave * inCoordinate.x * variables.windStrength;
+	}
 
     //gl_Position = variables.projection * variables.view * vec4(worldPosition, 1.0);
     //gl_Position = variables.shadowLod1Matrix * vec4(worldPosition, 1.0);

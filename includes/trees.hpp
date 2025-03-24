@@ -37,8 +37,9 @@ struct BranchConfiguration
 	float reach = 2.0f;
 	float thickness = 0.6f;
 	float length = 0.75f;
+	
+	glm::vec2 sturdiness = glm::vec2(0);
 	glm::vec2 steepness = glm::vec2(-10.0f, 45.0f);
-
 	glm::vec3 base = glm::vec3(0);
 	glm::vec3 offset = glm::vec3(0);
 	glm::vec3 angles = glm::vec3(0);

@@ -66,7 +66,7 @@ void main()
 	{
 		vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
 		//vec3 bladeSpecular = SpecularLighting(normal, viewDirection, 16);
-		vec3 bladeSpecular = SpecularLighting(normal, viewDirection, 16);
+		vec3 bladeSpecular = SpecularLighting(normal, viewDirection, 32);
 		vec3 terrainSpecular = SpecularLighting(terrainNormal, viewDirection, 32);
 		//vec3 bladeSpecular = SpecularLightingRealistic(normal, viewDirection, 16, worldPosition);
 		//vec3 terrainSpecular = SpecularLightingRealistic(terrainNormal, viewDirection, 32, worldPosition);

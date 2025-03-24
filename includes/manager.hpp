@@ -73,6 +73,8 @@ struct ShaderVariables
 	alignas(4) float terrainChunksLengthMult;
 	alignas(4) float terrainHeight;
 	alignas(8) glm::vec2 waterHeight;
+	alignas(4) float windDistanceMult;
+	alignas(4) float windStrength;
 	alignas(4) float time;
 	alignas(4) uint32_t occlusionCulling;
 	alignas(4) uint32_t shadows;

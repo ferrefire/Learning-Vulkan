@@ -31,6 +31,9 @@ const vec3 trunkLodColor = (vec3(48, 32, 16) / 255.0);
 
 void main()
 {
+	//outColor = vec4(vec3(inCoord.x), 1.0);
+	//return;
+
 	//float shadow = 0.0;
 	vec3 normal = normalize(inNormal);
 	float depth = GetDepth(gl_FragCoord.z);

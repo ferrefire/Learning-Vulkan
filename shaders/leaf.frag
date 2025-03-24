@@ -12,8 +12,8 @@ layout(location = 2) in vec3 globalNormal;
 layout(location = 3) in vec3 localNormal;
 layout(location = 4) in vec3 leafColor;
 layout(location = 5) in vec3 localCoordinates;
-layout(location = 6) in float baseRotation;
-layout(location = 7) in vec4 shadowPositions[CASCADE_COUNT];
+//layout(location = 6) in float baseRotation;
+layout(location = 6) in vec4 shadowPositions[CASCADE_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
@@ -94,7 +94,7 @@ void main()
 	//float translucency = 1.0;
 	float dis = depth * variables.ranges.y;
 
-    if (baseRotation != 0.0 && terrainShadow == 0.0 && dis < 500.0)
+    if (terrainShadow == 0.0 && dis < 500.0)
 	{
 		vec3 viewDirection = normalize(worldPosition - variables.viewPosition);
 		float normDot = clamp(dot(leafNormal, -variables.lightDirection), 0.0, 1.0);

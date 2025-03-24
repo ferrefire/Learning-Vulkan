@@ -39,6 +39,8 @@ layout(set = 0, binding = 0) uniform Variables
 	float terrainChunksLengthMult;
 	float terrainHeight;
 	vec2 waterHeight;
+	float windDistanceMult;
+	float windStrength;
 	float time;
 	uint occlusionCulling;
 	uint shadows;

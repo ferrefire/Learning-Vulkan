@@ -11,8 +11,6 @@ struct TreeRenderData
 	uint posxz;
 	uint posyroty;
 	uint scaxcoly;
-	//vec3 position;
-	//vec3 rotscacol;
 };
 
 layout(std430, set = 1, binding = 0) readonly buffer RenderBuffer
@@ -20,7 +18,7 @@ layout(std430, set = 1, binding = 0) readonly buffer RenderBuffer
 	TreeRenderData renderData[];
 };
 
-layout(set = 1, binding = 1) uniform TreeVariables
+layout(set = 1, binding = 1) uniform TreeVariables //make readonly
 {
 	uint treeBase;
 	uint treeCount;
@@ -40,12 +38,6 @@ layout(set = 1, binding = 1) uniform TreeVariables
 	uint treeTotalRenderCount;
 	float spacing;
 	float spacingMult;
-	//uint leafCountTotal;
-	//uint leafCount0;
-	//uint leafCount1;
-	//uint leafCount2;
-	//uint leafCount3;
-	//uint leafCount4;
 	vec4 leafCounts[6];
 } treeVariables;
 
@@ -53,6 +45,8 @@ layout(push_constant, std430) uniform PushConstants
 {
     uint treeLod;
 } pc;
+
+layout(set = 0, binding = 8) uniform sampler2D windSampler;
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inCoordinate;
@@ -113,9 +107,19 @@ void main()
 
     //vec3 worldPosition = ObjectToWorld(inPosition * vec3(1.5, 15, 1.5), mat4(1)) + position + vec3(0, 7.5, 0);
     worldPosition = ObjectToWorld(objectPosition, mat4(1)) + position;
+	vec3 originalPosition = worldPosition;
+
+	if (pc.treeLod <= 2)
+	{
+		vec2 windUV = (worldPosition.xz + variables.terrainOffset.xz) * variables.windDistanceMult;
+		float wave = 1.0 - textureLod(windSampler, windUV, 0).r;
+		worldPosition.xz += wave * inCoordinate.x * variables.windStrength;
+	}
 
 	//normal = inNormal;
     gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);
 
 	for (int i = 0; i < CASCADE_COUNT; i++) shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
+
+	worldPosition = originalPosition;
 }
