@@ -83,6 +83,7 @@ class UI
 
 		static std::vector<Menu> menus;
 
+		static bool showFPS;
 		static bool enabled;
 
 		static void Create();
@@ -98,6 +99,7 @@ class UI
 		static void TriggerKeyboardInput(bool mode);
 		static void TriggerMouseInput(bool mode);
 
+		static void RenderFPS();
 		static void RenderTextComponent(TextComponent &textComponent);
 		static void RenderSliderComponent(SliderComponent &sliderComponent);
 

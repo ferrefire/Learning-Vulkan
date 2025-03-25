@@ -957,7 +957,7 @@ void Trees::ComputeTreeSetup()
 void Trees::ComputeTreeRender(VkCommandBuffer commandBuffer, bool capture)
 {
 	uint32_t computeCount = ceil(float(treeTotalRenderBase) / 8.0f);
-	if (capture) computeCount = 1;
+	//if (capture) computeCount = 1;
 
 	//VkCommandBuffer commandBuffer = Manager::currentDevice.BeginComputeCommand();
 	bool oneTimeBuffer = commandBuffer == nullptr;
@@ -967,9 +967,9 @@ void Trees::ComputeTreeRender(VkCommandBuffer commandBuffer, bool capture)
 	Manager::globalDescriptor.Bind(commandBuffer, computeRenderPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
 	computeRenderDescriptor.Bind(commandBuffer, computeRenderPipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
 
-	uint32_t isCapturing = 0;
-	if (capture) isCapturing = 1;
-	vkCmdPushConstants(commandBuffer, computeRenderPipeline.computePipelineLayout, COMPUTE_STAGE, 0, sizeof(uint32_t), &isCapturing);
+	//uint32_t isCapturing = 0;
+	//if (capture) isCapturing = 1;
+	//vkCmdPushConstants(commandBuffer, computeRenderPipeline.computePipelineLayout, COMPUTE_STAGE, 0, sizeof(uint32_t), &isCapturing);
 
 	vkCmdDispatch(commandBuffer, computeCount, computeCount, 1);
 

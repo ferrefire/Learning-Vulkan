@@ -524,7 +524,8 @@ void Grass::ComputeClumping()
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
 
-uint32_t Grass::grassBase = (256 + 128) / GRASS_COUNT_DIV;
+//uint32_t Grass::grassBase = (256 + 128) / GRASS_COUNT_DIV;
+uint32_t Grass::grassBase = (256) / GRASS_COUNT_DIV;
 //uint32_t Grass::grassBase = 128;
 uint32_t Grass::grassCount = Grass::grassBase * Grass::grassBase;
 

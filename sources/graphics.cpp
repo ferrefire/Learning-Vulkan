@@ -56,6 +56,10 @@
 #define WATER_ENABLED true
 #endif
 
+#ifndef WIND_ENABLED
+#define WIND_ENABLED true
+#endif
+
 #ifndef UI_ENABLED
 #define UI_ENABLED true
 #endif
@@ -227,14 +231,14 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 
 	if (GRASS_ENABLED) Grass::RecordGraphicsCommands(commandBuffer);
 
-	if (Manager::settings.screenQuad && Terrain::HeightMapsGenerated())
-	{
-		Manager::screenQuad.pipeline->BindGraphics(commandBuffer);
-		Manager::globalDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
-		Manager::screenQuadDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
-		Manager::screenQuad.mesh->Bind(commandBuffer);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Manager::screenQuad.mesh->indices.size()), 1, 0, 0, 0);
-	}
+	//if (Manager::settings.screenQuad && Terrain::HeightMapsGenerated())
+	//{
+	//	Manager::screenQuad.pipeline->BindGraphics(commandBuffer);
+	//	Manager::globalDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+	//	Manager::screenQuadDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+	//	Manager::screenQuad.mesh->Bind(commandBuffer);
+	//	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Manager::screenQuad.mesh->indices.size()), 1, 0, 0, 0);
+	//}
 
 	vkCmdNextSubpass(commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -421,7 +425,7 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 	if (TREES_ENABLED) Trees::RecordComputeCommands(commandBuffer);
 	if (GRASS_ENABLED) Grass::RecordComputeCommands(commandBuffer);
 	Data::RecordComputeCommands(commandBuffer);
-	Wind::RecordComputeCommands(commandBuffer);
+	if (WIND_ENABLED) Wind::RecordComputeCommands(commandBuffer);
 
 	//START_TIMER(dataTime); 
 	//Data::RecordComputeCommands(commandBuffer); //removeee
@@ -718,9 +722,9 @@ void Graphics::Create()
 		std::vector<DescriptorConfiguration> descriptorConfig(1);
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
-		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[0].imageInfo.imageView = Shadow::shadowCascadeTextures[0].imageView;
-		descriptorConfig[0].imageInfo.sampler = Shadow::shadowCascadeTextures[0].sampler;
+		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
+		descriptorConfig[0].imageInfo.imageView = Wind::windTexture.imageView;
+		descriptorConfig[0].imageInfo.sampler = Wind::windTexture.sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}

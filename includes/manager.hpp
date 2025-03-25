@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef SHADOW_CASCADE_COUNT
-#define SHADOW_CASCADE_COUNT 1
+#define SHADOW_CASCADE_COUNT 5
 #endif
 
 #ifndef SHADOW_RES_DIV
@@ -45,7 +45,7 @@ struct Settings
 	bool wireframe = false;
 	bool discrete = true;
 	bool msaa = false;
-	VkSampleCountFlagBits maxSamples = VK_SAMPLE_COUNT_2_BIT;
+	VkSampleCountFlagBits maxSamples = VK_SAMPLE_COUNT_1_BIT;
 	//VkSampleCountFlagBits maxSampleCount = VK_SAMPLE_COUNT_64_BIT;
 	const std::vector<const char*> validationLayers = {	"VK_LAYER_KHRONOS_validation" };
 	bool validationLayersActive = true;

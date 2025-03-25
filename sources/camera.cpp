@@ -291,5 +291,5 @@ std::vector<glm::vec4> Camera::GetFrustumCorners(float nearDis, float farDis)
             }
         }
     }
-    return frustumCorners;
+    return (frustumCorners);
 }

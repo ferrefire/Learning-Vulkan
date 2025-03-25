@@ -1,6 +1,7 @@
 #include "ui.hpp"
 #include "manager.hpp"
 #include "terrain.hpp"
+#include "graphics.hpp"
 
 #include <iostream>
 
@@ -29,7 +30,7 @@ void UI::CreateContext()
 	//io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
 	io->ConfigFlags |= ImGuiConfigFlags_NoMouse;
 	io->ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
-	io->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+	//io->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
 	io->ConfigDockingWithShift = true;
 	io->ConfigWindowsMoveFromTitleBarOnly = true;
 	// io->ConfigViewportsNoAutoMerge = true;
@@ -86,6 +87,11 @@ void UI::Frame()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
+	if (showFPS)
+	{
+		RenderFPS();
+	}
+
 	if (enabled)
 	{
 		for (Menu &menu : menus)
@@ -128,6 +134,8 @@ void UI::Frame()
 
 void UI::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 {
+	if (!io) return;
+
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 }
 
@@ -172,9 +180,18 @@ Menu &UI::NewMenu(std::string title)
 	return (menus[menus.size() - 1]);
 }
 
+void UI::RenderFPS()
+{
+	if (!io) return;
+
+	ImGui::Begin("statistics");
+	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io->Framerate, io->Framerate);
+	ImGui::End();
+}
+
 void UI::RenderTextComponent(TextComponent &textComponent)
 {
-	ImGui::Text(textComponent.content.c_str());
+	ImGui::Text("%s", textComponent.content.c_str());
 }
 
 void UI::RenderSliderComponent(SliderComponent &sliderComponent)
@@ -186,4 +203,5 @@ ImGuiIO* UI::io = nullptr;
 
 std::vector<Menu> UI::menus;
 
+bool UI::showFPS = true;
 bool UI::enabled = false;

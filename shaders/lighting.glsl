@@ -456,7 +456,7 @@ struct ShadowResults
 ShadowResults GetCascadedShadowResults(vec4 shadowSpaces[CASCADE_COUNT], float depth)
 {
 	#ifndef SHADOWS_ENABLED
-	return (0.0);
+	return (ShadowResults(0.0, -1, 0.0, 1.0));
 	#endif
 
 	vec3 projectionCoordinates;
