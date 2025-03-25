@@ -51,6 +51,7 @@ class Shadow
 		static std::vector<float> shadowCascadeDistances;
 		static std::vector<int> shadowCascadeResolutions;
 		static std::vector<float> shadowCascadeDepths;
+		static float cascadeDistanceMult;
 
 		//static VkRenderPass shadowTrapezoidPass;
 		//static VkFramebuffer shadowLod0FrameBuffer;
@@ -84,6 +85,8 @@ class Shadow
 		static void DestroyShadowResources();
 		static void DestroyShadowPass();
 
+		static void Start();
+
 		//static glm::mat4 GetTrapezoidView(int lod, float dis);
 		//static glm::mat4 GetTrapezoidView(int lod, float dis);
 		static void SetCascadeViews();
@@ -93,6 +96,10 @@ class Shadow
 		//static glm::mat4 GetTrapezoidTransformation(int lod);
 		static void SetCascadeTransformations();
 
+		static glm::mat4 CreateShadowMatrix(int lod);
 		static glm::mat4 CreateBoundedProjection(int lod, float near, float far, float depthMult);
 		//static glm::vec2 ComputeQ(const Line &centerLine, const Line &topLine, float delta, int lod, float far);
+
+		static float GetCascadeDistance(int i);
+		static float GetCascadeNear(int i);
 };

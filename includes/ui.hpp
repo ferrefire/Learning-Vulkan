@@ -83,6 +83,8 @@ class UI
 
 		static std::vector<Menu> menus;
 
+		static bool enabled;
+
 		static void Create();
 		static void CreateContext();
 
@@ -92,6 +94,7 @@ class UI
 		static void Frame();
 		static void RecordGraphicsCommands(VkCommandBuffer commandBuffer);
 		static void MultiWindows();
+		static void TriggerUI(bool mode);
 		static void TriggerKeyboardInput(bool mode);
 		static void TriggerMouseInput(bool mode);
 

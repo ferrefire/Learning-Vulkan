@@ -288,6 +288,7 @@ void Manager::Start()
 	Grass::Start();
 	Data::Start();
 	Wind::Start();
+	Shadow::Start();
 
 	cinematic.Start();
 

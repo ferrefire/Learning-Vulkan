@@ -47,7 +47,10 @@ class Camera
 
 		float lastX = 0;
 		float lastY = 0;
+		float oldX = 0;
+		float oldY = 0;
 		float sensitivity = 0.1f;
+		float oldFOV = FOV;
 
 		uint32_t cameraWidth = 800;
 		uint32_t cameraHeight = 600;
@@ -78,4 +81,5 @@ class Camera
 		std::vector<glm::vec4> GetFrustumCorners(float nearDis, float farDis);
 		std::vector<glm::vec4> GetFrustumCorners(float nearDis, float farDis, glm::mat4 tempView);
 		glm::mat4 GetTempProjection(float nearDis, float farDis);
+		glm::mat4 GetBoundedProjection(float nearDis, float farDis);
 };

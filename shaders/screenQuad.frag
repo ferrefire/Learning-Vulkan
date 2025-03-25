@@ -11,7 +11,7 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
-	discard;
+	//discard;
     vec3 val = vec3(texture(textureSampler, inCoordinates).r);
     //vec3 val = vec3(texelFetch(textureSampler, ivec2((inCoordinates) * 1024.0), 0).r);
     //vec3 val = texture(textureSampler, inCoordinates).rgb;

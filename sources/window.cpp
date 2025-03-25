@@ -728,9 +728,22 @@ void Window::DestroyShadowResources()
 void Window::SetMouseVisibility(bool visible)
 {
 	mouseVisible = visible;
+
 	glfwSetInputMode(data, GLFW_CURSOR, mouseVisible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 
 	UI::TriggerMouseInput(visible);
+
+	UI::TriggerUI(visible);
+
+	if (visible)
+	{
+		Manager::camera.oldX = Manager::camera.lastX;
+		Manager::camera.oldY = Manager::camera.lastY;
+	}
+	else
+	{
+		glfwSetCursorPos(data, Manager::camera.oldX, Manager::camera.oldY);
+	}
 }
 
 void Window::SetMouseLocked(bool locked)

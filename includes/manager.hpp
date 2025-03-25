@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef SHADOW_CASCADE_COUNT
-#define SHADOW_CASCADE_COUNT 5
+#define SHADOW_CASCADE_COUNT 1
 #endif
 
 #ifndef SHADOW_RES_DIV

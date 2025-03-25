@@ -718,9 +718,9 @@ void Graphics::Create()
 		std::vector<DescriptorConfiguration> descriptorConfig(1);
 		descriptorConfig[0].type = IMAGE_SAMPLER;
 		descriptorConfig[0].stages = FRAGMENT_STAGE;
-		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_GENERAL;
-		descriptorConfig[0].imageInfo.imageView = Wind::windTexture.imageView;
-		descriptorConfig[0].imageInfo.sampler = Wind::windTexture.sampler;
+		descriptorConfig[0].imageInfo.imageLayout = LAYOUT_READ_ONLY;
+		descriptorConfig[0].imageInfo.imageView = Shadow::shadowCascadeTextures[0].imageView;
+		descriptorConfig[0].imageInfo.sampler = Shadow::shadowCascadeTextures[0].sampler;
 
 		Manager::screenQuadDescriptor.Create(descriptorConfig, Manager::screenQuad.pipeline->objectDescriptorSetLayout);
 	}

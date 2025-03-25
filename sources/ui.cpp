@@ -86,17 +86,20 @@ void UI::Frame()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	for (Menu &menu : menus)
+	if (enabled)
 	{
-		ImGui::Begin(menu.title.c_str());
-
-		for (Component &component : menu.components)
+		for (Menu &menu : menus)
 		{
-			if (component.type == TEXT_COMPONENT) RenderTextComponent(menu.textComponents[component.index]);
-			else if (component.type == SLIDER_COMPONENT) RenderSliderComponent(menu.sliderComponents[component.index]);
+			ImGui::Begin(menu.title.c_str());
+		
+			for (Component &component : menu.components)
+			{
+				if (component.type == TEXT_COMPONENT) RenderTextComponent(menu.textComponents[component.index]);
+				else if (component.type == SLIDER_COMPONENT) RenderSliderComponent(menu.sliderComponents[component.index]);
+			}
+		
+			ImGui::End();
 		}
-
-		ImGui::End();
 	}
 
 	//static float f = 0.0f;
@@ -137,6 +140,13 @@ void UI::MultiWindows()
     }
 }
 
+void UI::TriggerUI(bool mode)
+{
+	if (!io) return;
+
+	enabled = mode;
+}
+
 void UI::TriggerMouseInput(bool mode)
 {
 	if (!io) return;
@@ -175,3 +185,5 @@ void UI::RenderSliderComponent(SliderComponent &sliderComponent)
 ImGuiIO* UI::io = nullptr;
 
 std::vector<Menu> UI::menus;
+
+bool UI::enabled = false;

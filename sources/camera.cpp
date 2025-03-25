@@ -158,6 +158,12 @@ void Camera::PrintStatus()
 
 void Camera::UpdateMovement()
 {
+	if (FOV != oldFOV)
+	{
+		oldFOV = FOV;
+		UpdateProjection();
+	}
+
 	if (Input::GetKey(GLFW_KEY_M).pressed)
 	{
 		canMove = !canMove;
@@ -242,12 +248,48 @@ std::vector<glm::vec4> Camera::GetFrustumCorners(float nearDis, float farDis, gl
     return corners;
 }
 
-std::vector<glm::vec4> Camera::GetFrustumCorners(float nearDis, float farDis)
-{
-	return (GetFrustumCorners(nearDis, farDis, view));
-}
+//std::vector<glm::vec4> Camera::GetFrustumCorners(float nearDis, float farDis)
+//{
+//	return (GetFrustumCorners(nearDis, farDis, view));
+//}
 
 glm::mat4 Camera::GetTempProjection(float nearDis, float farDis)
 {
 	return (glm::perspective(glm::radians(FOV), (float)cameraWidth / (float)cameraHeight, nearDis, farDis));
+}
+
+glm::mat4 Camera::GetBoundedProjection(float nearDis, float farDis)
+{
+	float aspectRatio = (float)cameraWidth / (float)cameraHeight;
+	float top = nearDis * tan(glm::radians(FOV) / 2.0f);
+	float bottom = -top;
+	float right = top * aspectRatio;
+	float left = -right;
+
+	glm::mat4 boundedProjection = glm::ortho(left, right, bottom, top, nearDis, farDis);
+
+	return (boundedProjection);
+}
+
+std::vector<glm::vec4> Camera::GetFrustumCorners(float nearDis, float farDis)
+{
+	glm::mat4 tempProj = GetTempProjection(nearDis, farDis);
+    glm::mat4 invCamVP = glm::inverse(tempProj * view);
+    
+    std::vector<glm::vec4> frustumCorners;
+
+    for (int x = -1; x <= 1; x += 2)
+	{
+        for (int y = -1; y <= 1; y += 2)
+		{
+            for (int z = 0; z <= 1; z += 1)
+			{
+                glm::vec4 ndc(x, y, z, 1.0f);
+                glm::vec4 corner = invCamVP * ndc;
+                corner /= corner.w;
+                frustumCorners.push_back(corner);
+            }
+        }
+    }
+    return frustumCorners;
 }
