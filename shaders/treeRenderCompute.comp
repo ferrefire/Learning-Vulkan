@@ -262,10 +262,10 @@ void main()
 			lod = 3;
 		}
 	}
-	/*else
-	{
-		if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0) lod = 1;
-	}*/
+	//else
+	//{
+	//	if (AreaInView2(worldPosition + vec3(0, 60, 0), 60.0) == 0) lod = 1;
+	//}
 	if (Occluded(WorldToCull(worldPosition + vec3(0, 60, 0)), 0.005) == 1) return;
 
 	uint index = 0;
@@ -355,7 +355,7 @@ void main()
 		//}
 
 		float leafSturdiness = 0.0;
-		if (lod <= 2) leafSturdiness = leafPositions[leafIndex].w;
+		if (lod <= 1) leafSturdiness = leafPositions[leafIndex].w;
 
 		LeafData leafData;
 		leafData.posxz = packHalf2x16(leafWorldPosition.xz);

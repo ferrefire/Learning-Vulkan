@@ -125,6 +125,7 @@ void Grass::CreateComputePipelines()
 void Grass::CreateBuffers()
 {
 	dataBuffers.resize(Manager::settings.maxFramesInFlight);
+	//dataBuffers.resize(1);
 
 	BufferConfiguration dataConfiguration;
 	dataConfiguration.size = sizeof(GrassData) * grassTotalCount;
@@ -195,6 +196,7 @@ void Grass::CreateGraphicsDescriptor()
 		index++;
 	}
 
+	//graphicsDescriptor.perFrame = false;
 	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
 }
 
@@ -209,7 +211,6 @@ void Grass::CreateShadowDescriptor()
 	for (Buffer &buffer : dataBuffers)
 	{
 		descriptorConfig[0].buffersInfo[index].buffer = buffer.buffer;
-		//descriptorConfig[0].buffersInfo[index].range = sizeof(GrassData) * grassCount;
 		descriptorConfig[0].buffersInfo[index].range = sizeof(GrassData) * grassTotalCount;
 		descriptorConfig[0].buffersInfo[index].offset = 0;
 		index++;
@@ -227,6 +228,7 @@ void Grass::CreateShadowDescriptor()
 		index++;
 	}
 
+	//shadowDescriptor.perFrame = false;
 	shadowDescriptor.Create(descriptorConfig, shadowPipeline.objectDescriptorSetLayout);
 }
 
@@ -525,11 +527,11 @@ void Grass::ComputeClumping()
 }
 
 //uint32_t Grass::grassBase = (256 + 128) / GRASS_COUNT_DIV;
-uint32_t Grass::grassBase = (256) / GRASS_COUNT_DIV;
+uint32_t Grass::grassBase = (384);
 //uint32_t Grass::grassBase = 128;
 uint32_t Grass::grassCount = Grass::grassBase * Grass::grassBase;
 
-uint32_t Grass::grassLodBase = 2048 / GRASS_COUNT_DIV;
+uint32_t Grass::grassLodBase = 1536;
 //uint32_t Grass::grassLodBase = 512;
 uint32_t Grass::grassLodCount = Grass::grassLodBase * Grass::grassLodBase - Grass::grassCount;
 

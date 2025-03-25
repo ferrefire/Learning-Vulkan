@@ -478,7 +478,7 @@ ShadowResults GetCascadedShadowResults(vec4 shadowSpaces[CASCADE_COUNT], float d
 	{
 		float depthDistance = depth * variables.ranges.y;
 		if (depthDistance < 10.0) range = 2;
-		else if (depthDistance < 200.0) range = 1;
+		else if (depthDistance < 100.0) range = 1;
 		else range = 0;
 		//range = 0;
 	}
@@ -490,7 +490,7 @@ ShadowResults GetCascadedShadowResults(vec4 shadowSpaces[CASCADE_COUNT], float d
 
 	for (int i = 0; i < CASCADE_COUNT; i++)
 	{
-		if (shadowLod != -1 && abs(projectionCoordinates.x - 0.5) <= 0.49 && abs(projectionCoordinates.y - 0.5) <= 0.49 && abs(projectionCoordinates.z - 0.5) <= 0.49) break;
+		if (shadowLod != -1 && abs(projectionCoordinates.x - 0.5) <= 0.25 && abs(projectionCoordinates.y - 0.5) <= 0.25 && abs(projectionCoordinates.z - 0.5) <= 0.25) break;
 
 		projectionCoordinates = shadowSpaces[i].xyz / shadowSpaces[i].w;
 		projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;

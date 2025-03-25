@@ -166,10 +166,10 @@ void Camera::UpdateMovement()
 
 	if (Input::GetKey(GLFW_KEY_M).pressed)
 	{
-		canMove = !canMove;
-		canLook = !canLook;
+		window.SetMouseVisibility(!window.mouseVisible);
 
-		window.SetMouseVisibility(!canLook);
+		canMove = !window.mouseVisible;
+		canLook = !window.mouseVisible;
 	}
 
 	if (!canMove) return;

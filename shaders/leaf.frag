@@ -77,7 +77,7 @@ void main()
 
 	float diffuseEdgeBlend = 1.0;
 	//if (shadowResults.lod > 2 && shadowResults.edgeBlend <= 0.5 && shadowResults.edgeBlend >= 0.4) diffuseEdgeBlend = 1.0 - (shadowResults.edgeBlend - 0.4) * 10.0;
-	if ((shadowResults.lod == -1 || shadowResults.lod > 2) && shadowResults.reduction < 1.0) 
+	if ((shadowResults.lod == -1 || shadowResults.lod == CASCADE_COUNT - 1) && shadowResults.reduction < 1.0) 
 		diffuseEdgeBlend = shadowResults.reduction;
 
 	//float shadow = GetCascadedShadow(shadowPositions, depth);

@@ -100,7 +100,7 @@ void main()
 	//coord = inCoordinate;
     vec3 worldPosition = ObjectToWorld(objectPosition, mat4(1)) + position;
 
-	if (pc.treeLod <= 2)
+	if (pc.treeLod <= 1)
 	{
 		vec2 windUV = (worldPosition.xz + variables.terrainOffset.xz) * variables.windDistanceMult;
 		float wave = 1.0 - textureLod(windSampler, windUV, 0).r;

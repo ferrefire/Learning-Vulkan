@@ -71,7 +71,7 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 #include "functions.glsl"
 #include "heightmap.glsl"
 #include "culling.glsl"
-#include "noise.glsl"
+//#include "noise.glsl"
 
 float random(vec2 st)
 {
@@ -90,8 +90,8 @@ float random(vec2 st)
 int InsideWorld(vec3 pos)
 {
 	float dis = SquaredDistance(pos, variables.viewPosition);
-	if (dis > pow(grassVariables.grassTotalBase * grassVariables.spacing * 0.5, 2)) return (-1);
-	else if (dis > pow(grassVariables.grassBase * grassVariables.spacing * 0.5, 2)) return (1);
+	if (dis >= pow(grassVariables.grassTotalBase * grassVariables.spacing * 0.5, 2)) return (-1);
+	else if (dis >= pow(grassVariables.grassBase * grassVariables.spacing * 0.5, 2)) return (1);
 	else return (0);
 }
 
@@ -120,7 +120,7 @@ int InsideWorld(vec3 pos)
 
 void main()
 {
-	//if (gl_GlobalInvocationID.x >= grassVariables.grassTotalBase || gl_GlobalInvocationID.y >= grassVariables.grassTotalBase) return ;
+	if (gl_GlobalInvocationID.x >= grassVariables.grassTotalBase || gl_GlobalInvocationID.y >= grassVariables.grassTotalBase) return ;
 	//uint index = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y * grassCount;
 	if (gl_GlobalInvocationID.x == 0 && gl_GlobalInvocationID.y == 0)
 	{
@@ -190,7 +190,7 @@ void main()
     ran = random(vec2(ran * 200, ran * 100));
 	position.z += ran - 0.5;
 
-	vec3 clumping = textureLod(clumpingSampler, (position.xz + variables.terrainOffset.xz) * 0.1, 0).xyz;
+	vec3 clumping = textureLod(clumpingSampler, (position.xz) * 0.1, 0).xyz;
 	position.xz += clumping.xy;
 	position.y = GetTerrainHeight(position.xz);
 
