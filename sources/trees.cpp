@@ -285,7 +285,9 @@ void Trees::CreateComputeRenderPipeline()
 {
 	int i = 0;
 
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(6);
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(8);
+	descriptorLayoutConfig[i].type = STORAGE_BUFFER;
+	descriptorLayoutConfig[i++].stages = COMPUTE_STAGE;
 	descriptorLayoutConfig[i].type = STORAGE_BUFFER;
 	descriptorLayoutConfig[i++].stages = COMPUTE_STAGE;
 	descriptorLayoutConfig[i].type = STORAGE_BUFFER;
@@ -293,6 +295,8 @@ void Trees::CreateComputeRenderPipeline()
 	descriptorLayoutConfig[i].type = STORAGE_BUFFER;
 	descriptorLayoutConfig[i++].stages = COMPUTE_STAGE;
 	descriptorLayoutConfig[i].type = UNIFORM_BUFFER;
+	descriptorLayoutConfig[i++].stages = COMPUTE_STAGE;
+	descriptorLayoutConfig[i].type = STORAGE_BUFFER;
 	descriptorLayoutConfig[i++].stages = COMPUTE_STAGE;
 	descriptorLayoutConfig[i].type = STORAGE_BUFFER;
 	descriptorLayoutConfig[i++].stages = COMPUTE_STAGE;
@@ -342,6 +346,13 @@ void Trees::CreateBuffers()
 	renderConfiguration.mapped = false;
 
 	for (Buffer &buffer : renderBuffers)
+	{
+		buffer.Create(renderConfiguration);
+	}
+
+	shadowBuffers.resize(Manager::settings.maxFramesInFlight);
+
+	for (Buffer &buffer : shadowBuffers)
 	{
 		buffer.Create(renderConfiguration);
 	}
@@ -446,9 +457,9 @@ void Trees::CreateShadowDescriptor()
 
 	descriptorConfig[0].type = STORAGE_BUFFER;
 	descriptorConfig[0].stages = VERTEX_STAGE;
-	descriptorConfig[0].buffersInfo.resize(renderBuffers.size());
+	descriptorConfig[0].buffersInfo.resize(shadowBuffers.size());
 	int index = 0;
-	for (Buffer &buffer : renderBuffers)
+	for (Buffer &buffer : shadowBuffers)
 	{
 		descriptorConfig[0].buffersInfo[index].buffer = buffer.buffer;
 		descriptorConfig[0].buffersInfo[index].range = sizeof(TreeRenderData) * treeTotalRenderCount;
@@ -528,7 +539,7 @@ void Trees::CreateComputeRenderDescriptor()
 {
 	int i = 0;
 
-	std::vector<DescriptorConfiguration> descriptorConfig(6);
+	std::vector<DescriptorConfiguration> descriptorConfig(8);
 
 	descriptorConfig[i].type = STORAGE_BUFFER;
 	descriptorConfig[i].stages = COMPUTE_STAGE;
@@ -543,6 +554,19 @@ void Trees::CreateComputeRenderDescriptor()
 	descriptorConfig[i].buffersInfo.resize(renderBuffers.size());
 	int index = 0;
 	for (Buffer &buffer : renderBuffers)
+	{
+		descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
+		descriptorConfig[i].buffersInfo[index].range = sizeof(TreeRenderData) * treeTotalRenderCount;
+		descriptorConfig[i].buffersInfo[index].offset = 0;
+		index++;
+	}
+	i++;
+
+	descriptorConfig[i].type = STORAGE_BUFFER;
+	descriptorConfig[i].stages = COMPUTE_STAGE;
+	descriptorConfig[i].buffersInfo.resize(shadowBuffers.size());
+	index = 0;
+	for (Buffer &buffer : shadowBuffers)
 	{
 		descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
 		descriptorConfig[i].buffersInfo[index].range = sizeof(TreeRenderData) * treeTotalRenderCount;
@@ -579,9 +603,22 @@ void Trees::CreateComputeRenderDescriptor()
 
 	descriptorConfig[i].type = STORAGE_BUFFER;
 	descriptorConfig[i].stages = COMPUTE_STAGE;
-	descriptorConfig[i].buffersInfo.resize(Leaves::dataBuffers.size());
+	descriptorConfig[i].buffersInfo.resize(Leaves::renderBuffers.size());
 	index = 0;
-	for (Buffer &buffer : Leaves::dataBuffers)
+	for (Buffer &buffer : Leaves::renderBuffers)
+	{
+		descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
+		descriptorConfig[i].buffersInfo[index].range = sizeof(LeafData) * totalLeafCount;
+		descriptorConfig[i].buffersInfo[index].offset = 0;
+		index++;
+	}
+	i++;
+
+	descriptorConfig[i].type = STORAGE_BUFFER;
+	descriptorConfig[i].stages = COMPUTE_STAGE;
+	descriptorConfig[i].buffersInfo.resize(Leaves::shadowBuffers.size());
+	index = 0;
+	for (Buffer &buffer : Leaves::shadowBuffers)
 	{
 		descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
 		descriptorConfig[i].buffersInfo[index].range = sizeof(LeafData) * totalLeafCount;
@@ -650,6 +687,12 @@ void Trees::DestroyBuffers()
 		buffer.Destroy();
 	}
 	renderBuffers.clear();
+
+	for (Buffer &buffer : shadowBuffers)
+	{
+		buffer.Destroy();
+	}
+	shadowBuffers.clear();
 
 	for (Buffer &buffer : countBuffers)
 	{
@@ -821,23 +864,23 @@ void Trees::RenderTrees(VkCommandBuffer commandBuffer)
 
 	treeLod0Mesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod0Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod0Count, 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod0Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod0RenderCount, 0, 0, 0);
 
 	treeLod1Mesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod1Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod1Count, 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod1Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod1RenderCount, 0, 0, 0);
 
 	treeLod2Mesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod2), &lod2);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod2Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod2Count, 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod2Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod2RenderCount, 0, 0, 0);
 
 	treeLod3Mesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod3), &lod3);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod3Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod3Count, 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod3Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod3RenderCount, 0, 0, 0);
 
 	treeLod4Mesh.Bind(commandBuffer);
 	vkCmdPushConstants(commandBuffer, graphicsPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod4), &lod4);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod4Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod4Count, 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod4Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod4RenderCount, 0, 0, 0);
 
 	//if (Capture::capturing) return ;
 	//graphicsLodPipeline.BindGraphics(commandBuffer);
@@ -861,11 +904,11 @@ void Trees::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 
 		treeLod0Mesh.Bind(commandBuffer);
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod0Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod0Count, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod0Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod0ShadowCount, 0, 0, 0);
 
 		treeLod1Mesh.Bind(commandBuffer);
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod1Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod1Count, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod1Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod1ShadowCount, 0, 0, 0);
 
 		//treeLod2Mesh.Bind(commandBuffer);
 		//vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod2), &lod2);
@@ -877,11 +920,11 @@ void Trees::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 
 		treeLod0Mesh.Bind(commandBuffer);
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod0Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod0Count, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod0Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod0ShadowCount, 0, 0, 0);
 
 		treeLod1Mesh.Bind(commandBuffer);
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod1Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod1Count, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod1Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod1ShadowCount, 0, 0, 0);
 
 		//treeLod2Mesh.Bind(commandBuffer);
 		//vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod2), &lod2);
@@ -897,19 +940,19 @@ void Trees::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 
 		treeLod0Mesh.Bind(commandBuffer);
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod0), &lod0);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod0Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod0Count, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod0Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod0ShadowCount, 0, 0, 0);
 
 		treeLod1Mesh.Bind(commandBuffer);
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod1), &lod1);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod1Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod1Count, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod1Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod1ShadowCount, 0, 0, 0);
 
 		treeLod2Mesh.Bind(commandBuffer);
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod2), &lod2);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod2Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod2Count, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod2Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod2ShadowCount, 0, 0, 0);
 
 		treeLod3Mesh.Bind(commandBuffer);
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod3), &lod3);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod3Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod3Count, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod3Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod3ShadowCount, 0, 0, 0);
 	}
 	else if (cascade == 3)
 	{
@@ -925,11 +968,11 @@ void Trees::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 
 		treeLod2Mesh.Bind(commandBuffer);
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod2), &lod2);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod2Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod2Count, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod2Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod2ShadowCount, 0, 0, 0);
 
 		treeLod3Mesh.Bind(commandBuffer);
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(lod3), &lod3);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod3Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod3Count, 0, 0, 0);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(treeLod3Mesh.indices.size()), treeRenderCounts[Manager::currentFrame].lod3ShadowCount, 0, 0, 0);
 	}
 }
 
@@ -1314,21 +1357,21 @@ uint32_t Trees::treeCount = Trees::treeBase * Trees::treeBase;
 //uint32_t Trees::treeTotalRenderBase = Trees::treeLod3RenderBase;
 //uint32_t Trees::treeTotalRenderCount = Trees::treeTotalRenderBase * Trees::treeTotalRenderBase;
 
-uint32_t Trees::treeLod0RenderBase = 8 / TREE_COUNT_DIV;
+uint32_t Trees::treeLod0RenderBase = 8;
 uint32_t Trees::treeLod0RenderCount = Trees::treeLod0RenderBase * Trees::treeLod0RenderBase;
-uint32_t Trees::treeLod1RenderBase = 16 / TREE_COUNT_DIV;
+uint32_t Trees::treeLod1RenderBase = 16;
 //uint32_t Trees::treeLod1RenderBase = 8;
 uint32_t Trees::treeLod1RenderCount = Trees::treeLod1RenderBase * Trees::treeLod1RenderBase - Trees::treeLod0RenderCount;
-uint32_t Trees::treeLod2RenderBase = 32 / TREE_COUNT_DIV;
+uint32_t Trees::treeLod2RenderBase = 32;
 //uint32_t Trees::treeLod2RenderBase = 8;
 uint32_t Trees::treeLod2RenderCount = Trees::treeLod2RenderBase * Trees::treeLod2RenderBase - Trees::treeLod0RenderCount - Trees::treeLod1RenderCount;
-uint32_t Trees::treeLod3RenderBase = 96 / TREE_COUNT_DIV;
+uint32_t Trees::treeLod3RenderBase = 96;
 //uint32_t Trees::treeLod3RenderBase = 8;
 uint32_t Trees::treeLod3RenderCount = Trees::treeLod3RenderBase * Trees::treeLod3RenderBase - Trees::treeLod0RenderCount - Trees::treeLod1RenderCount - Trees::treeLod2RenderCount;
-uint32_t Trees::treeLod4RenderBase = (192 - 32) / TREE_COUNT_DIV;
+uint32_t Trees::treeLod4RenderBase = (192 - 32);
 //uint32_t Trees::treeLod4RenderBase = 8;
 uint32_t Trees::treeLod4RenderCount = Trees::treeLod4RenderBase * Trees::treeLod4RenderBase - Trees::treeLod0RenderCount - Trees::treeLod1RenderCount - Trees::treeLod2RenderCount - Trees::treeLod3RenderCount;
-uint32_t Trees::treeLod5RenderBase = (192 + 128) / TREE_COUNT_DIV;
+uint32_t Trees::treeLod5RenderBase = (192 + 128);
 uint32_t Trees::treeLod5RenderCount = Trees::treeLod5RenderBase * Trees::treeLod5RenderBase - Trees::treeLod0RenderCount - Trees::treeLod1RenderCount - Trees::treeLod2RenderCount - Trees::treeLod3RenderCount - Trees::treeLod4RenderCount;
 uint32_t Trees::treeTotalRenderBase = Trees::treeLod5RenderBase;
 uint32_t Trees::treeTotalRenderCount = Trees::treeTotalRenderBase * Trees::treeTotalRenderBase;
@@ -1368,6 +1411,7 @@ Descriptor Trees::computeRenderDescriptor{Manager::currentDevice};
 Buffer Trees::dataBuffer;
 Buffer Trees::leafPositionsBuffer;
 std::vector<Buffer> Trees::renderBuffers;
+std::vector<Buffer> Trees::shadowBuffers;
 std::vector<Buffer> Trees::countBuffers;
 std::vector<Buffer> Trees::variableBuffers;
 

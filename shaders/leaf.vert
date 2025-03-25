@@ -14,7 +14,6 @@ struct LeafData
 	uint colxnormx;
 	uint normyz;
 	uint sturdiness;
-	//uint rotz;
 };
 
 layout(std430, set = 1, binding = 0) readonly buffer DataBuffer

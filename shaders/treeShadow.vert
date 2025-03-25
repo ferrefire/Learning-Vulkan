@@ -7,8 +7,6 @@ struct TreeRenderData
 	uint posxz;
 	uint posyroty;
 	uint scaxcoly;
-	//vec3 position;
-	//vec3 rotscacol;
 };
 
 layout(std430, set = 1, binding = 0) readonly buffer RenderBuffer
@@ -36,12 +34,6 @@ layout(set = 1, binding = 1) uniform TreeVariables
 	uint treeTotalRenderCount;
 	float spacing;
 	float spacingMult;
-	//uint leafCountTotal;
-	//uint leafCount0;
-	//uint leafCount1;
-	//uint leafCount2;
-	//uint leafCount3;
-	//uint leafCount4;
 	vec4 leafCounts[6];
 } treeVariables;
 

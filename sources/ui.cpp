@@ -87,7 +87,7 @@ void UI::Frame()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	if (showFPS)
+	if (enabled || showFPS)
 	{
 		RenderFPS();
 	}
@@ -203,5 +203,5 @@ ImGuiIO* UI::io = nullptr;
 
 std::vector<Menu> UI::menus;
 
-bool UI::showFPS = true;
+bool UI::showFPS = false;
 bool UI::enabled = false;

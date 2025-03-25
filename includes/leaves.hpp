@@ -22,8 +22,6 @@ struct LeafData
 	uint32_t colxnormx;
 	uint32_t normyz;
 	uint32_t sturdiness;
-	//uint32_t rotz;
-	//alignas(16) glm::vec4 normal;
 };
 
 class Leaves
@@ -43,7 +41,8 @@ class Leaves
 		static Descriptor graphicsDescriptor;
 		static Descriptor shadowDescriptor;
 
-		static std::vector<Buffer> dataBuffers;
+		static std::vector<Buffer> renderBuffers;
+		static std::vector<Buffer> shadowBuffers;
 
 		static void Create();
 		static void CreateMeshes();

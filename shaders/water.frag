@@ -30,7 +30,7 @@ const vec2 scatterResolution = vec2(32, 32);
 
 const int maxBlend = 4;
 const float startDistance = 100.0;
-const float distanceIncrease = 10.0;
+const float distanceIncrease = 5.0;
 const float startScale = 0.075;
 const float scaleIncrease = 0.2;
 const float startSpeed = 0.01;
@@ -126,8 +126,13 @@ vec3 BlendNormal(vec2 uv, vec2 time, float viewDistance)
 				blendFactor /= currentBlend * 2;
 
 				result *= (1.0 - blendFactor);
-				vec3 resultBlend = SampleNormal(uv * (currentScale * scaleIncrease) + (time * (currentSpeed * speedIncrease)), (currentPower * powerIncrease));
-				result += resultBlend * (blendFactor);
+				vec3 resultBlend = vec3(0.0, 1.0, 0.0);
+				if (i + 1 < maxBlend) 
+				{
+					resultBlend = SampleNormal(uv * (currentScale * scaleIncrease) + (time * (currentSpeed * speedIncrease)), 
+						(currentPower * powerIncrease));
+				}
+				result += resultBlend * blendFactor;
 				
 				/*vec3 currentNormalBlend = SampleNormal(uv * (currentScale * scaleIncrease) + (time * (currentSpeed * speedIncrease)), 1.0);
 
@@ -157,16 +162,18 @@ vec3 BlendNormal(vec2 uv, vec2 time, float viewDistance)
 
 	//result.skyNormal = normalize(result.skyNormal);
 	//result.specularNormal = normalize(result.specularNormal);
-	result = normalize(result);
-	return (result);
-
-	//if (viewDistance > maxDistance)
+	
+	//currentBlend = currentDistance * blendDistance;
+	//if (viewDistance <= currentDistance + currentBlend)
 	//{
 	//	float blendFactor = viewDistance - (maxDistance);
 	//	blendFactor /= maxBlend;
 	//	result *= (1.0 - blendFactor);
 	//	result += defaultResult * blendFactor;
 	//}
+
+	result = normalize(result);
+	return (result);
 }
 
 void main()
@@ -210,14 +217,15 @@ void main()
 	float coastDistance = 1.0;
 
 	vec3 skyNormal = normal;
-	skyNormal.xz *= 16.0 * coastDistance;
+	skyNormal.xz *= 12.0 * coastDistance;
 	skyNormal = normalize(skyNormal);
 
 	vec3 specularNormal = normal;
 	specularNormal.xz *= 3.0;
 	specularNormal = normalize(specularNormal);
 
-	vec3 currentSkyColor = GetSkyColor(skyNormal) * sunColor.rgb * 0.25;
+	//vec3 currentSkyColor = GetSkyColor(skyNormal) * sunColor.rgb * 0.25;
+	vec3 currentSkyColor = GetSkyColor(skyNormal) * sunColor.rgb * 0.5;
 	vec4 aerialColor = GetAerialColor();
 
 	vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
@@ -225,6 +233,7 @@ void main()
 	vec3 originalColor = subpassLoad(inputColor).rgb;
 
 	vec3 diffuse = currentSkyColor * mix(0.5, 1.0, shadow);
+	//vec3 specular = SpecularLighting(specularNormal, viewDirection, 128.0 * 8.0);
 	vec3 specular = SpecularLighting(specularNormal, viewDirection, 128.0 * 8.0);
 
 	vec3 finalColor = mix(diffuse, originalColor, fogFactor) + (specular * shadow);

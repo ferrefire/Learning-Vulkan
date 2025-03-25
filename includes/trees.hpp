@@ -52,13 +52,19 @@ struct BranchConfiguration
 
 struct TreeCountData
 {
-	uint32_t lod0Count;
-	uint32_t lod1Count;
-	uint32_t lod2Count;
-	uint32_t lod3Count;
-	uint32_t lod4Count;
-	uint32_t lod5Count;
-	//uint32_t leafCount;
+	uint32_t lod0RenderCount;
+	uint32_t lod1RenderCount;
+	uint32_t lod2RenderCount;
+	uint32_t lod3RenderCount;
+	uint32_t lod4RenderCount;
+	uint32_t lod5RenderCount;
+
+	uint32_t lod0ShadowCount;
+	uint32_t lod1ShadowCount;
+	uint32_t lod2ShadowCount;
+	uint32_t lod3ShadowCount;
+	uint32_t lod4ShadowCount;
+	uint32_t lod5ShadowCount;
 };
 
 struct TreeData
@@ -74,8 +80,6 @@ struct TreeRenderData
 	uint32_t posxz;
 	uint32_t posyroty;
 	uint32_t scaxcoly;
-	//alignas(16) glm::vec3 position;
-	//alignas(16) glm::vec3 rotscacol;
 };
 
 struct TreeVariables
@@ -100,13 +104,6 @@ struct TreeVariables
 
 	alignas(4) float spacing;
 	alignas(4) float spacingMult;
-
-	//alignas(4) uint32_t leafCountTotal;
-	//alignas(4) uint32_t leafCount0;
-	//alignas(4) uint32_t leafCount1;
-	//alignas(4) uint32_t leafCount2;
-	//alignas(4) uint32_t leafCount3;
-	//alignas(4) uint32_t leafCount4;
 
 	alignas(16) glm::vec4 leafCounts[6];
 };
@@ -168,6 +165,7 @@ class Trees
 		static Buffer dataBuffer;
 		static Buffer leafPositionsBuffer;
 		static std::vector<Buffer> renderBuffers;
+		static std::vector<Buffer> shadowBuffers;
 		static std::vector<Buffer> countBuffers;
 		static std::vector<Buffer> variableBuffers;
 
