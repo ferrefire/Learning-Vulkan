@@ -478,7 +478,7 @@ ShadowResults GetCascadedShadowResults(vec4 shadowSpaces[CASCADE_COUNT], float d
 	{
 		float depthDistance = depth * variables.ranges.y;
 		if (depthDistance < 10.0) range = 2;
-		else if (depthDistance < 100.0) range = 1;
+		else if (depthDistance < 5000.0) range = 1;
 		else range = 0;
 		//range = 0;
 	}
