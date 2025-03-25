@@ -287,6 +287,7 @@ void Manager::Start()
 	}
 	Grass::Start();
 	Data::Start();
+	Wind::Start();
 
 	cinematic.Start();
 
@@ -416,8 +417,10 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.terrainLod1Offset = Terrain::terrainLod1Offset;
 	//shaderVariables.terrainShadowOffset = Terrain::terrainShadowOffset;
 
-	shaderVariables.windDistanceMult = 0.005;
-	shaderVariables.windStrength = 5.0;
+	shaderVariables.waterHeight = glm::vec2(Terrain::waterHeight, Terrain::waterBlendDistance);
+
+	shaderVariables.windDistanceMult = 1.0 / Wind::windDistance;
+	shaderVariables.windStrength = Wind::windStrength;
 
 	shaderVariables.time = Time::GetCurrentTime();
 

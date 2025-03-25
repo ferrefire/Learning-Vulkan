@@ -88,6 +88,8 @@ int main(int argc, char **argv)
 
 		Manager::currentGraphics.Frame();
 
+		UI::MultiWindows();
+
 		Manager::PostFrame();
 
 		glfwPollEvents();

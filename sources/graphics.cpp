@@ -33,11 +33,11 @@
 #define TIMEOUT 1000000000
 
 #ifndef GRASS_ENABLED
-#define GRASS_ENABLED false
+#define GRASS_ENABLED true
 #endif
 
 #ifndef TREES_ENABLED
-#define TREES_ENABLED false
+#define TREES_ENABLED true
 #endif
 
 #ifndef QUAD_TREES_ENABLED
@@ -45,7 +45,7 @@
 #endif
 
 #ifndef LEAVES_ENABLED
-#define LEAVES_ENABLED false
+#define LEAVES_ENABLED true
 #endif
 
 #ifndef SHADOWS_ENABLED
@@ -53,7 +53,7 @@
 #endif
 
 #ifndef WATER_ENABLED
-#define WATER_ENABLED false
+#define WATER_ENABLED true
 #endif
 
 #ifndef UI_ENABLED

@@ -223,6 +223,7 @@ void main()
 	float x = worldOffset.x * treeVariables.spacing + offset.x;
 	float z = worldOffset.y * treeVariables.spacing + offset.z;
 	float y = GetTerrainHeight(vec2(x, z)) - 1.0;
+	if (y + variables.terrainOffset.y < variables.waterHeight.x) return;
 	vec3 worldPosition = vec3(x, y, z);
 	float viewDistance = SquaredDistance(worldPosition + vec3(0, 30, 0), viewPosition);
 

@@ -1,5 +1,6 @@
 #include "ui.hpp"
 #include "manager.hpp"
+#include "terrain.hpp"
 
 #include <iostream>
 
@@ -24,15 +25,25 @@ void UI::CreateContext()
 	//ImGuiIO &io = ImGui::GetIO();
 	io = &ImGui::GetIO();
 	//(void)io;
-	io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-	io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
-	io->ConfigFlags |= ImGuiConfigFlags_DockingEnable;	  // Enable Docking
-	//io->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;	  // Enable Multi-Viewport / Platform Windows
+	//io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+	//io->ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
+	io->ConfigFlags |= ImGuiConfigFlags_NoMouse;
+	io->ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable Docking
+	io->ConfigFlags |= ImGuiConfigFlags_ViewportsEnable; // Enable Multi-Viewport / Platform Windows
+	io->ConfigDockingWithShift = true;
+	io->ConfigWindowsMoveFromTitleBarOnly = true;
 	// io->ConfigViewportsNoAutoMerge = true;
 	// io->ConfigViewportsNoTaskBarIcon = true;
 
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
+
+	ImGuiStyle& style = ImGui::GetStyle();
+    if (io->ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        style.WindowRounding = 0.0f;
+        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+    }
 
 	ImGui_ImplGlfw_InitForVulkan(Manager::currentWindow.data, true);
 	ImGui_ImplVulkan_InitInfo init_info = {};
@@ -65,6 +76,8 @@ void UI::DestroyContext()
 	ImGui_ImplVulkan_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+
+	io = nullptr;
 }
 
 void UI::Frame()
@@ -73,47 +86,41 @@ void UI::Frame()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	static float f = 0.0f;
-	static int counter = 0;
+	for (Menu &menu : menus)
+	{
+		ImGui::Begin(menu.title.c_str());
 
-	ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+		for (Component &component : menu.components)
+		{
+			if (component.type == TEXT_COMPONENT) RenderTextComponent(menu.textComponents[component.index]);
+			else if (component.type == SLIDER_COMPONENT) RenderSliderComponent(menu.sliderComponents[component.index]);
+		}
 
-	ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
-	ImGui::Text("This is some other text."); // Display some text (you can use a format strings too)
-	//ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
-	//ImGui::Checkbox("Another Window", &show_another_window);
+		ImGui::End();
+	}
 
-	ImGui::SliderFloat("float", &f, 0.0f, 1.0f);			 // Edit 1 float using a slider from 0.0f to 1.0f
-	//ImGui::ColorEdit3("clear color", (float *)&clear_color); // Edit 3 floats representing a color
+	//static float f = 0.0f;
+	//static int counter = 0;
 
-	if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
-		counter++;
-	ImGui::SameLine();
-	ImGui::Text("counter = %d", counter);
+	//ImGui::Begin("Hello, world!");
+	//ImGui::Text("This is some useful text.");
+	//ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+	//ImGui::SliderFloat("water height", &Terrain::waterHeight, 0.0f, 1000.0f);
+	//if (ImGui::Button("Button")) counter++;
+	//ImGui::SameLine();
+	//ImGui::Text("counter = %d", counter);
+	//ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io->Framerate, io->Framerate);
+	//ImGui::End();
 
-	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io->Framerate, io->Framerate);
-	ImGui::End();
+	//ImGui::Begin("Another window!");
+	//ImGui::Text("This is some useful text.");
+	//ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+	//if (ImGui::Button("Button")) counter++;
+	//ImGui::SameLine();
+	//ImGui::Text("counter = %d", counter);
+	//ImGui::End();
 
 	ImGui::Render();
-	//ImDrawData *main_draw_data = ImGui::GetDrawData();
-	//const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
-	//wd->ClearValue.color.float32[0] = clear_color.x * clear_color.w;
-	//wd->ClearValue.color.float32[1] = clear_color.y * clear_color.w;
-	//wd->ClearValue.color.float32[2] = clear_color.z * clear_color.w;
-	//wd->ClearValue.color.float32[3] = clear_color.w;
-	//if (!main_is_minimized)
-	//	FrameRender(wd, main_draw_data);
-
-	// Update and Render additional Platform Windows
-	//if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-	//{
-	//	ImGui::UpdatePlatformWindows();
-	//	ImGui::RenderPlatformWindowsDefault();
-	//}
-
-	//// Present Main Platform Window
-	//if (!main_is_minimized)
-	//	FramePresent(wd);
 }
 
 void UI::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
@@ -121,5 +128,50 @@ void UI::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 }
 
-ImGuiContext* UI::context = nullptr;
+void UI::MultiWindows()
+{
+	if (io->ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+    }
+}
+
+void UI::TriggerMouseInput(bool mode)
+{
+	if (!io) return;
+
+	if (!mode) io->ConfigFlags |= ImGuiConfigFlags_NoMouse;
+	else io->ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+}
+
+void UI::TriggerKeyboardInput(bool mode)
+{
+	if (!io) return;
+
+	if (mode) io->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+	else io->ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
+}
+
+Menu &UI::NewMenu(std::string title)
+{
+	Menu newMenu;
+	newMenu.title = title;
+
+	menus.push_back(newMenu);
+	return (menus[menus.size() - 1]);
+}
+
+void UI::RenderTextComponent(TextComponent &textComponent)
+{
+	ImGui::Text(textComponent.content.c_str());
+}
+
+void UI::RenderSliderComponent(SliderComponent &sliderComponent)
+{
+	ImGui::SliderFloat(sliderComponent.name.c_str(), &sliderComponent.value, sliderComponent.min, sliderComponent.max);
+}
+
 ImGuiIO* UI::io = nullptr;
+
+std::vector<Menu> UI::menus;

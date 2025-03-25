@@ -152,7 +152,7 @@ void main()
 			incomingLight += sunWithBloom(rayDirection, sunDirection);
 		}
 
-		finalColor = incomingLight * LIGHT_COLOR * 4.0;
+		finalColor = incomingLight * LIGHT_COLOR * 6.0;
 	}
 	else
 	{
@@ -166,7 +166,7 @@ void main()
 		//}
 		//else
 		{
-			//float aerialDensity = clamp((length(aerialColor)) * 4.0, 0.0, 1.0);
+			//float aerialDensity = clamp((length(aerialColor)) * 6.0, 0.0, 1.0);
 			//finalColor = mix(originalColor, aerialColor, clamp(linearDepth + (1.0 - aerialPerspective.a), 0.0, 1.0));
 			//float modDepth = pow(linearDepth, 0.5);
 			//if (linearDepth < 0.5) linearDepth = 0.5;

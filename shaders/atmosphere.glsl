@@ -8,6 +8,7 @@
 //maybe change to 10.0
 #ifndef RADIUS_OFFSET
 #define RADIUS_OFFSET 0.01
+//#define RADIUS_OFFSET 0.1
 //#define RADIUS_OFFSET 10.0
 #endif
 
@@ -55,6 +56,7 @@ const vec3 RS = vec3(0.005802, 0.013558, 0.033100);
 const vec3 MS = vec3(0.003996, 0.003996, 0.003996) * 1.0;
 const vec3 ME = vec3(0.004440, 0.004440, 0.004440) * 1.0;
 const float MP = 0.8;
+//const float MP = 0.6;
 const float PR = 6360.0;
 const float AR = 6460.0;
 const float AH = AR - PR;

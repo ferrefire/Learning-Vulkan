@@ -2,6 +2,7 @@
 
 #include "manager.hpp"
 #include "input.hpp"
+#include "ui.hpp"
 
 #include <stdexcept>
 #include <algorithm>
@@ -728,6 +729,8 @@ void Window::SetMouseVisibility(bool visible)
 {
 	mouseVisible = visible;
 	glfwSetInputMode(data, GLFW_CURSOR, mouseVisible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+
+	UI::TriggerMouseInput(visible);
 }
 
 void Window::SetMouseLocked(bool locked)

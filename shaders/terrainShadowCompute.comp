@@ -84,6 +84,7 @@ void main()
 	//vec3 lightPosition = variables.lightDirection * 12500.0;
 	//lightPosition.xz += worldPosition;
 	vec3 samplePosition = vec3(worldPosition.x, height * variables.terrainHeight, worldPosition.y);
+	if (samplePosition.y < variables.waterHeight.x) samplePosition.y = variables.waterHeight.x;
 	lightPosition += samplePosition;
 	vec3 rayPosition = lightPosition;
 	float rayHeight;

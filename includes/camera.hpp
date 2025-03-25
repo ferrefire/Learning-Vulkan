@@ -36,7 +36,8 @@ class Camera
 		//float far = 25000.0f;
 		float far = 50000.0f;
 		float farLod = 75000.0f;
-		float FOV = 45.0f;
+		//float FOV = 45.0f;
+		float FOV = 60.0f;
 		//float speed = 1.0f;
 		float speed = 25.0f;
 

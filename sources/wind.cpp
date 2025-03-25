@@ -1,5 +1,6 @@
 #include "wind.hpp"
 #include "manager.hpp"
+#include "ui.hpp"
 
 void Wind::Create()
 {
@@ -62,6 +63,14 @@ void Wind::DestroyDescriptors()
     computeDescriptor.Destroy();
 }
 
+void Wind::Start()
+{
+    Menu &menu = UI::NewMenu("wind");
+    menu.AddText("wind values");
+    menu.AddSlider("wind strength", windStrength, 0.0f, 25.0f);
+    menu.AddSlider("wind distance", windDistance, 0.0f, 1000.0f);
+}
+
 void Wind::RecordComputeCommands(VkCommandBuffer commandBuffer)
 {
     ComputeWind(commandBuffer);
@@ -79,6 +88,9 @@ void Wind::ComputeWind(VkCommandBuffer commandBuffer)
 }
 
 int Wind::resolution = 256;
+
+float Wind::windStrength = 5.0;
+float Wind::windDistance = 200.0;
 
 Texture Wind::windTexture;
 

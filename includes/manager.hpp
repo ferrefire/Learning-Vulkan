@@ -5,11 +5,11 @@
 #endif
 
 #ifndef SHADOW_RES_DIV
-#define SHADOW_RES_DIV 4
+#define SHADOW_RES_DIV 1
 #endif
 
 #ifndef GRASS_COUNT_DIV
-#define GRASS_COUNT_DIV 4
+#define GRASS_COUNT_DIV 1
 #endif
 
 #ifndef TREE_COUNT_DIV

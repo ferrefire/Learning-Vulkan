@@ -18,6 +18,9 @@ class Wind
     public:
         static int resolution;
 
+        static float windStrength;
+        static float windDistance;
+
         static Texture windTexture;
 
         static Pipeline computePipeline;
@@ -34,6 +37,7 @@ class Wind
         static void DestroyPipelines();
         static void DestroyDescriptors();
 
+        static void Start();
         static void RecordComputeCommands(VkCommandBuffer commandBuffer);
         static void ComputeWind(VkCommandBuffer commandBuffer);
 };
