@@ -524,10 +524,12 @@ void Grass::ComputeClumping()
 	Manager::currentDevice.EndComputeCommand(commandBuffer);
 }
 
-uint32_t Grass::grassBase = 256 + 128;
+uint32_t Grass::grassBase = (256 + 128) / GRASS_COUNT_DIV;
+//uint32_t Grass::grassBase = 128;
 uint32_t Grass::grassCount = Grass::grassBase * Grass::grassBase;
 
-uint32_t Grass::grassLodBase = 2048;
+uint32_t Grass::grassLodBase = 2048 / GRASS_COUNT_DIV;
+//uint32_t Grass::grassLodBase = 512;
 uint32_t Grass::grassLodCount = Grass::grassLodBase * Grass::grassLodBase - Grass::grassCount;
 
 uint32_t Grass::grassTotalBase = Grass::grassLodBase;

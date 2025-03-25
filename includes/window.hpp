@@ -43,6 +43,7 @@ class Window
 		bool framebufferResized = false;
 		bool isResizeable = true;
 		bool mouseVisible = false;
+		bool mouseLocked = true;
 		bool recreatingSwapchain = false;
 
 		void Create();
@@ -80,4 +81,5 @@ class Window
 		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 		void RecreateSwapChain();
 		void SetMouseVisibility(bool visible);
+		void SetMouseLocked(bool locked);
 };

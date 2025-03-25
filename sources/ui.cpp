@@ -32,12 +32,11 @@ void UI::CreateContext()
 	// io->ConfigViewportsNoTaskBarIcon = true;
 
 	// Setup Dear ImGui style
-	//ImGui::StyleColorsDark();
+	ImGui::StyleColorsDark();
 
-	// Setup Platform/Renderer backends
 	ImGui_ImplGlfw_InitForVulkan(Manager::currentWindow.data, true);
 	ImGui_ImplVulkan_InitInfo init_info = {};
-	init_info.ApiVersion = VK_API_VERSION_1_3;              // Pass in your value of VkApplicationInfo::apiVersion, otherwise will default to header version.
+	init_info.ApiVersion = VK_API_VERSION_1_3;
 	init_info.Instance = Manager::currentGraphics.instance;
 	init_info.PhysicalDevice = Manager::currentDevice.physicalDevice;
 	init_info.Device = Manager::currentDevice.logicalDevice;
@@ -46,24 +45,14 @@ void UI::CreateContext()
 	init_info.PipelineCache = nullptr;
 	init_info.DescriptorPool = Manager::currentDevice.descriptorPool;
 	init_info.RenderPass = Manager::currentWindow.renderPass;
-	init_info.Subpass = 0;
+	init_info.Subpass = 1;
 	init_info.MinImageCount = 2;
 	init_info.ImageCount = 2;
 	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init_info.Allocator = nullptr;
 	//init_info.CheckVkResultFn = check_vk_result;
 
-	if (!ImGui_ImplVulkan_Init(&init_info))
-	{
-		std::cout << "error: imgui vulkan initiation failed" << std::endl;
-	}
-
-	if (io->BackendRendererUserData == nullptr)
-	{
-		std::cout << "error: no backend renderer user data" << std::endl;
-	}
-
-	std::cout << "imgui initialized" << std::endl;
+	ImGui_ImplVulkan_Init(&init_info);
 }
 
 void UI::Destroy()
@@ -89,7 +78,8 @@ void UI::Frame()
 
 	ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
 
-	ImGui::Text("This is some useful text.");		   // Display some text (you can use a format strings too)
+	ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
+	ImGui::Text("This is some other text."); // Display some text (you can use a format strings too)
 	//ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
 	//ImGui::Checkbox("Another Window", &show_another_window);
 

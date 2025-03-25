@@ -68,7 +68,7 @@ void Input::Start()
 {
 	Manager::camera.UpdateProjection();
 
-	Manager::camera.canLook = false;
+	//Manager::camera.canLook = false;
 	
 	//Manager::camera.Move(glm::vec3(0.0, 1000.0, -1000.0));
 	//Manager::camera.Move(glm::vec3(-300.0, 500.65, -2000.0));
@@ -94,7 +94,7 @@ void Input::Start()
 	Manager::camera.Rotate(glm::vec3(-8.79993, 183.699, 0));
 
 	// Manager::camera.SetRotation(glm::vec3(1.4, -8.8, 0.0));
-	Manager::camera.canLook = true;
+	//Manager::camera.canLook = true;
 }
 
 void Input::Frame()

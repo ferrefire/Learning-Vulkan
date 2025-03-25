@@ -33,11 +33,11 @@
 #define TIMEOUT 1000000000
 
 #ifndef GRASS_ENABLED
-#define GRASS_ENABLED true
+#define GRASS_ENABLED false
 #endif
 
 #ifndef TREES_ENABLED
-#define TREES_ENABLED true
+#define TREES_ENABLED false
 #endif
 
 #ifndef QUAD_TREES_ENABLED
@@ -45,7 +45,7 @@
 #endif
 
 #ifndef LEAVES_ENABLED
-#define LEAVES_ENABLED true
+#define LEAVES_ENABLED false
 #endif
 
 #ifndef SHADOWS_ENABLED
@@ -53,7 +53,11 @@
 #endif
 
 #ifndef WATER_ENABLED
-#define WATER_ENABLED true
+#define WATER_ENABLED false
+#endif
+
+#ifndef UI_ENABLED
+#define UI_ENABLED true
 #endif
 
 Graphics::Graphics(Device &device, Window &window) : device{device}, window{window}
@@ -223,8 +227,6 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 
 	if (GRASS_ENABLED) Grass::RecordGraphicsCommands(commandBuffer);
 
-	UI::RecordGraphicsCommands(commandBuffer);
-
 	if (Manager::settings.screenQuad && Terrain::HeightMapsGenerated())
 	{
 		Manager::screenQuad.pipeline->BindGraphics(commandBuffer);
@@ -239,6 +241,8 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	Sky::RecordCommands(commandBuffer);
 
 	if (WATER_ENABLED) Water::RecordGraphicsCommands(commandBuffer);
+
+	if (UI_ENABLED) UI::RecordGraphicsCommands(commandBuffer);
 
 	vkCmdEndRenderPass(commandBuffer);
 }

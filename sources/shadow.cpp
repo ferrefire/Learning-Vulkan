@@ -1229,7 +1229,8 @@ std::vector<glm::mat4> Shadow::shadowCascadeProjections;
 std::vector<glm::mat4> Shadow::shadowCascadeTransformations;
 std::vector<float> Shadow::shadowCascadeDistances = {100, 250, 750, 2500, 4000};
 //std::vector<float> Shadow::shadowCascadeDistances = {50, 125, 375, 1250, 2000};
-std::vector<int> Shadow::shadowCascadeResolutions = {2048, 2048, 2048, 2048, 2048};
+std::vector<int> Shadow::shadowCascadeResolutions = {2048 / SHADOW_RES_DIV, 2048 / SHADOW_RES_DIV, 2048 / SHADOW_RES_DIV, 2048 / SHADOW_RES_DIV, 2048 / SHADOW_RES_DIV};
+//std::vector<int> Shadow::shadowCascadeResolutions = {512, 512, 512, 512, 512};
 std::vector<float> Shadow::shadowCascadeDepths = {8.0, 4.0, 2.0, 2.0, 1.0};
 
 //std::vector<float> Shadow::shadowCascadeDistances = {100, 250, 750, 3000, 7000};

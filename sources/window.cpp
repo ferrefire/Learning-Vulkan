@@ -729,3 +729,9 @@ void Window::SetMouseVisibility(bool visible)
 	mouseVisible = visible;
 	glfwSetInputMode(data, GLFW_CURSOR, mouseVisible ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 }
+
+void Window::SetMouseLocked(bool locked)
+{
+	mouseLocked = locked;
+	glfwSetInputMode(data, GLFW_CURSOR, mouseLocked ? GLFW_CURSOR_NORMAL : GLFW_CENTER_CURSOR);
+}
