@@ -68,6 +68,10 @@ run_command () {
 		fi
 		cd $path/build
 		cmake $dev .. $fresh
+		sed -i '49 s/.*/#include "ui.hpp"/' $path/build/_deps/imgui-src/imgui_widgets.cpp
+		sed -i '8440 s/.*/    bool hovered; bool pressed;/' $path/build/_deps/imgui-src/imgui_widgets.cpp
+		sed -i '8441 s/.*/    ButtonBehavior(frame_bb, id, \&hovered, \&pressed, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);/' $path/build/_deps/imgui-src/imgui_widgets.cpp
+		sed -i '8477 s/.*/            if (pressed) UI::DraggingGraphPoint((v_idx + values_offset) % values_count);/' $path/build/_deps/imgui-src/imgui_widgets.cpp
 
 	elif [[ $1 == "clean" ]] || [[ $1 == "cl" ]]; then
 		rm -rf $path/build

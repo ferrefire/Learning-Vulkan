@@ -6,6 +6,7 @@
 #include "texture.hpp"
 #include "descriptor.hpp"
 #include "buffer.hpp"
+#include "curve.hpp"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -88,9 +89,6 @@ class Terrain
 		static std::vector<Texture> grassTextures;
 		static std::vector<Texture> rockTextures;
 		static std::vector<Texture> dirtTextures;
-		//static Texture grassDiffuseTexture;
-		//static Texture rockDiffuseTexture;
-		//static Texture dirtDiffuseTexture;
 
 		static int heightMapResolution;
 		static int heightMapLod0Resolution;
@@ -142,6 +140,8 @@ class Terrain
 		static uint32_t currentBoundHeightMap;
 
 		static int heightMapArrayLayersGenerated;
+
+		static Curve lowLandsCurve;
 
 		static void Create();
         static void CreateTextures();

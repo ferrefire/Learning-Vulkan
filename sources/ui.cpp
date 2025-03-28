@@ -2,6 +2,8 @@
 #include "manager.hpp"
 #include "terrain.hpp"
 #include "graphics.hpp"
+#include "input.hpp"
+#include "time.hpp"
 
 #include <iostream>
 
@@ -81,6 +83,11 @@ void UI::DestroyContext()
 	io = nullptr;
 }
 
+void UI::Start()
+{
+	std::cout << TEST_REPLACE_DEFINE << std::endl;
+}
+
 void UI::Frame()
 {
 	ImGui_ImplVulkan_NewFrame();
@@ -94,40 +101,26 @@ void UI::Frame()
 
 	if (enabled)
 	{
+		ImGui::Begin("inspector");
+
 		for (Menu &menu : menus)
 		{
-			ImGui::Begin(menu.title.c_str());
-		
-			for (Component &component : menu.components)
+			if (ImGui::CollapsingHeader(menu.title.c_str()))
 			{
-				if (component.type == TEXT_COMPONENT) RenderTextComponent(menu.textComponents[component.index]);
-				else if (component.type == SLIDER_COMPONENT) RenderSliderComponent(menu.sliderComponents[component.index]);
+				RenderComponents(menu);
+
+				//for (Component &component : menu.components)
+				//{
+				//	if (component.type == TEXT_COMPONENT)
+				//		RenderTextComponent(menu.textComponents[component.index]);
+				//	else if (component.type == SLIDER_COMPONENT)
+				//		RenderSliderComponent(menu.sliderComponents[component.index]);
+				//}
 			}
-		
-			ImGui::End();
 		}
+
+		ImGui::End();
 	}
-
-	//static float f = 0.0f;
-	//static int counter = 0;
-
-	//ImGui::Begin("Hello, world!");
-	//ImGui::Text("This is some useful text.");
-	//ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
-	//ImGui::SliderFloat("water height", &Terrain::waterHeight, 0.0f, 1000.0f);
-	//if (ImGui::Button("Button")) counter++;
-	//ImGui::SameLine();
-	//ImGui::Text("counter = %d", counter);
-	//ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io->Framerate, io->Framerate);
-	//ImGui::End();
-
-	//ImGui::Begin("Another window!");
-	//ImGui::Text("This is some useful text.");
-	//ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
-	//if (ImGui::Button("Button")) counter++;
-	//ImGui::SameLine();
-	//ImGui::Text("counter = %d", counter);
-	//ImGui::End();
 
 	ImGui::Render();
 }
@@ -189,6 +182,40 @@ void UI::RenderFPS()
 	ImGui::End();
 }
 
+void UI::RenderComponents(Menu &menu, int start, int end)
+{
+	for (int i = start; i < end; i++)
+	{
+		Component &component = menu.components[i];
+
+		if (component.type == TEXT_COMPONENT)
+			RenderTextComponent(menu.textComponents[component.index]);
+		else if (component.type == SLIDER_COMPONENT)
+			RenderSliderComponent(menu.sliderComponents[component.index]);
+		else if (component.type == GRAPH_COMPONENT)
+			RenderGraphComponent(menu.graphComponents[component.index]);
+
+		if (component.type == NODE_COMPONENT)
+		{
+			int nodeStart = i + 1;
+			int nodeEnd = FindNodeEnd(menu, menu.nodeComponents[component.index].name, nodeStart);
+
+			if (ImGui::TreeNode(menu.nodeComponents[component.index].name.c_str()))
+			{
+				RenderComponents(menu, nodeStart, nodeEnd);
+				ImGui::TreePop();
+			}
+
+			i = nodeEnd;
+		}
+	}
+}
+
+void UI::RenderComponents(Menu &menu)
+{
+	RenderComponents(menu, 0, menu.components.size());
+}
+
 void UI::RenderTextComponent(TextComponent &textComponent)
 {
 	ImGui::Text("%s", textComponent.content.c_str());
@@ -196,12 +223,57 @@ void UI::RenderTextComponent(TextComponent &textComponent)
 
 void UI::RenderSliderComponent(SliderComponent &sliderComponent)
 {
+	ImGui::PushItemWidth(250.0f);
 	ImGui::SliderFloat(sliderComponent.name.c_str(), &sliderComponent.value, sliderComponent.min, sliderComponent.max);
+	ImGui::PopItemWidth();
+}
+
+void UI::RenderGraphComponent(GraphComponent &graphComponent)
+{
+	currentGraph = &graphComponent;
+
+	float values[graphComponent.resolution];
+	for (int i = 0; i < graphComponent.resolution; i++)
+		values[i] = (graphComponent.curve.Evaluate(float(i) / float(graphComponent.resolution - 1)));
+
+	ImGui::PlotLines(graphComponent.name.c_str(), values, graphComponent.resolution, 0, NULL, 0.0f, 1.0f, ImVec2(0, 200.0f));
+
+	currentGraph = nullptr;
+}
+
+int UI::FindNodeEnd(Menu &menu, std::string name, int start)
+{
+	for (int i = start; i < menu.components.size(); i++)
+	{
+		Component &component = menu.components[i];
+
+		if (component.type == NODE_COMPONENT && menu.nodeComponents[component.index].name.compare(name) == 0)
+			return (i);
+	}
+
+	return (menu.components.size());
+}
+
+void UI::DraggingGraphPoint(int index)
+{
+	//std::cout << "dragging " << index << std::endl;
+
+	if (currentGraph == nullptr) return;
+
+	float modification = 0.0f;
+	if (Input::GetKey(GLFW_MOUSE_BUTTON_LEFT, true).down)
+		modification = 0.5f * Time::deltaTime;
+	else if (Input::GetKey(GLFW_MOUSE_BUTTON_RIGHT, true).down)
+		modification = -0.5f * Time::deltaTime;
+	currentGraph->curve.SetPoint(index, currentGraph->curve.GetPoint(index) + modification);
+	//currentGraph->curve.SetPoint(index, currentGraph->curve.GetPoint(index) + io->MouseDelta.y * -0.01f);
+	//currentGraph->curve.SetPoint(index + 1, currentGraph->curve.GetPoint(index + 1) + io->MouseDelta.y * -0.01f);
 }
 
 ImGuiIO* UI::io = nullptr;
 
 std::vector<Menu> UI::menus;
+GraphComponent *UI::currentGraph = nullptr;
 
 bool UI::showFPS = false;
 bool UI::enabled = false;

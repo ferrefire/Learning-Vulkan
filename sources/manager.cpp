@@ -328,7 +328,7 @@ void Manager::Frame()
 		cinematic.AddKey(camera.Position(), camera.Angles());
 	}
 
-	if (Input::GetKey(GLFW_MOUSE_BUTTON_RIGHT, true).pressed) camera.PrintStatus();
+	//if (Input::GetKey(GLFW_MOUSE_BUTTON_RIGHT, true).pressed) camera.PrintStatus();
 
 	//Terrain::Frame();
 	//if (Manager::settings.trees)

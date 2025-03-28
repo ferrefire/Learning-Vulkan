@@ -78,6 +78,7 @@ int main(int argc, char **argv)
 	UI::Create();
 
 	Manager::Start();
+	UI::Start();
 
 	while (Manager::currentWindow.IsOpen())
 	{

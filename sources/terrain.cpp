@@ -545,11 +545,16 @@ void Terrain::Start()
 	}
 
 	//ComputeHeightMap(nullptr, 1);
-	//ComputeHeightMap(nullptr, 0);
+	//ComputeHeightMap(nullptr, 0); 
 
 	Menu &menu = UI::NewMenu("terrain");
-	menu.AddText("water values");
+	menu.AddNode("water", true);
 	menu.AddSlider("water height", waterHeight, 0.0f, 2000.0f);
+	menu.AddNode("water", false);
+	menu.AddNode("biomes", true);
+	menu.AddText("test text");
+	menu.AddGraph("low lands", 32, lowLandsCurve);
+	menu.AddNode("biomes", false);
 }
 
 void Terrain::Frame()
@@ -1128,6 +1133,8 @@ bool Terrain::updateTerrainShadows = true;
 uint32_t Terrain::currentBoundHeightMap = -1;
 
 int Terrain::heightMapArrayLayersGenerated = 0;
+
+Curve Terrain::lowLandsCurve = Curve(32, EXPONENT);
 
 //bool Terrain::terrainLod0OffsetReset = false;
 //bool Terrain::terrainLod1OffsetReset = false;
