@@ -70,6 +70,7 @@ void Trees::CreateMeshes()
 	//branchConfig.splitCount = 3;
 	branchConfig.leaves = false;
 	branchConfig.minSize = 0.15;
+	//branchConfig.resolution = 24;
 
 	GenerateTrunkMesh(treeLod0Mesh, branchConfig);
 	treeLod0Mesh.Create();
@@ -1117,6 +1118,7 @@ Shape BranchConfiguration::Generate()
 
 		// glm::mat4 rotationMatrix = Utilities::GetRotationMatrix(glm::vec3(xAngle, yAngle, 0));
 		int l = int(glm::clamp(float(resolution) / 4.0f, 1.0f, float(resolution)));
+		int leafRes = int(glm::clamp(float(resolution) / 4.0f, 1.0f, float(resolution)));
 
 		for (int x = 0; x <= resolution; x++)
 		{
@@ -1155,7 +1157,7 @@ Shape BranchConfiguration::Generate()
 
 		if (leaves && iteration > 1)
 		{
-			int leafIndex = y % l;
+			int leafIndex = y % leafRes;
 			if (leafIndex == 0 || y == resolution)
 			{
 				//int density = 1 + iteration / 2;

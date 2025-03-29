@@ -152,6 +152,7 @@ class Manager
 		static std::vector<int> cameraIntersectIndexes;
 
 		static glm::vec3 lightAngles;
+		static float lightSpeed;
 
 		static DescriptorInfo descriptorInfo;
 

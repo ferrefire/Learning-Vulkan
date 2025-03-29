@@ -257,13 +257,18 @@ void main()
 		if (abs(fadeDiff) < 0.2) scale *= clamp(abs(fadeDiff) * 5.0, 0.1, 1.0);
 	}
 
-	if (lod > 2)
+	if (lod > 3)
 	{
 		if (InView(worldPosition, 0) == 0) return;
 	}
+	else if (lod > 2)
+	{
+		if (InView(worldPosition + vec3(0, 30, 0), 0) == 0) return;
+	}
 	else if (lod == 2)
 	{
-		if (InView(worldPosition, 0) == 0)
+		//if (InView(worldPosition + vec3(0, 60, 0), 0) == 0)
+		if (AreaInView2(worldPosition + vec3(0, 30, 0), 30.0) == 0)
 		{
 			lod = -1;
 			shadowLod = 4;

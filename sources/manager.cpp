@@ -13,6 +13,7 @@
 #include "sky.hpp"
 #include "capture.hpp"
 #include "wind.hpp"
+#include "ui.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -290,6 +291,9 @@ void Manager::Start()
 	Wind::Start();
 	Shadow::Start();
 
+	Menu &menu = UI::NewMenu("light");
+	menu.AddSlider("sun speed", lightSpeed, 0.1f, 10.0f);
+
 	cinematic.Start();
 
 	std::cout << "total descriptor count: " << descriptorInfo.totalDescriptorCount << std::endl;
@@ -339,10 +343,10 @@ void Manager::Frame()
 	//Grass::Frame();
 
 	bool lightUpdated = true;
-	if (Input::GetKey(GLFW_KEY_RIGHT).down) lightAngles.y -= Time::deltaTime * 45.0f;
-	else if (Input::GetKey(GLFW_KEY_LEFT).down) lightAngles.y += Time::deltaTime * 45.0f;
-	else if (Input::GetKey(GLFW_KEY_DOWN).down) lightAngles.x -= Time::deltaTime * 45.0f;
-	else if (Input::GetKey(GLFW_KEY_UP).down) lightAngles.x += Time::deltaTime * 45.0f;
+	if (Input::GetKey(GLFW_KEY_RIGHT).down) lightAngles.y -= Time::deltaTime * 15.0f * lightSpeed;
+	else if (Input::GetKey(GLFW_KEY_LEFT).down) lightAngles.y += Time::deltaTime * 15.0f * lightSpeed;
+	else if (Input::GetKey(GLFW_KEY_DOWN).down) lightAngles.x -= Time::deltaTime * 15.0f * lightSpeed;
+	else if (Input::GetKey(GLFW_KEY_UP).down) lightAngles.x += Time::deltaTime * 15.0f * lightSpeed;
 	else lightUpdated = false;
 
 	if (lightUpdated)
@@ -613,5 +617,6 @@ std::vector<glm::vec3> Manager::cameraIntersects;
 std::vector<int> Manager::cameraIntersectIndexes;
 
 glm::vec3 Manager::lightAngles = glm::vec3(-35.0f, -135.0f, 0.0f);
+float Manager::lightSpeed = 1.0f;
 
 DescriptorInfo Manager::descriptorInfo;
