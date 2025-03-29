@@ -231,14 +231,14 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 
 	if (GRASS_ENABLED) Grass::RecordGraphicsCommands(commandBuffer);
 
-	//if (Manager::settings.screenQuad && Terrain::HeightMapsGenerated())
-	//{
-	//	Manager::screenQuad.pipeline->BindGraphics(commandBuffer);
-	//	Manager::globalDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
-	//	Manager::screenQuadDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
-	//	Manager::screenQuad.mesh->Bind(commandBuffer);
-	//	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Manager::screenQuad.mesh->indices.size()), 1, 0, 0, 0);
-	//}
+	if (Manager::settings.screenQuad && Terrain::HeightMapsGenerated())
+	{
+		Manager::screenQuad.pipeline->BindGraphics(commandBuffer);
+		Manager::globalDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+		Manager::screenQuadDescriptor.Bind(commandBuffer, Manager::screenQuad.pipeline->graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+		Manager::screenQuad.mesh->Bind(commandBuffer);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(Manager::screenQuad.mesh->indices.size()), 1, 0, 0, 0);
+	}
 
 	vkCmdNextSubpass(commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
 

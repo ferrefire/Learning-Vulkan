@@ -232,11 +232,11 @@ void UI::RenderGraphComponent(GraphComponent &graphComponent)
 {
 	currentGraph = &graphComponent;
 
-	float values[graphComponent.resolution];
+	std::vector<float> values(graphComponent.resolution);
 	for (int i = 0; i < graphComponent.resolution; i++)
 		values[i] = (graphComponent.curve.Evaluate(float(i) / float(graphComponent.resolution - 1)));
 
-	ImGui::PlotLines(graphComponent.name.c_str(), values, graphComponent.resolution, 0, NULL, 0.0f, 1.0f, ImVec2(0, 200.0f));
+	ImGui::PlotLines(graphComponent.name.c_str(), values.data(), graphComponent.resolution, 0, NULL, 0.0f, 1.0f, ImVec2(0, 200.0f));
 
 	currentGraph = nullptr;
 }
@@ -275,5 +275,5 @@ ImGuiIO* UI::io = nullptr;
 std::vector<Menu> UI::menus;
 GraphComponent *UI::currentGraph = nullptr;
 
-bool UI::showFPS = false;
+bool UI::showFPS = true;
 bool UI::enabled = false;

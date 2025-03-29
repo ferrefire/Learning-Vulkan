@@ -21,7 +21,7 @@ struct LeafData
 	uint32_t scalxrotx;
 	uint32_t colxnormx;
 	uint32_t normyz;
-	uint32_t sturdiness;
+	uint32_t sturxlody;
 };
 
 class Leaves

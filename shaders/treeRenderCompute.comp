@@ -41,7 +41,7 @@ struct LeafData
 	uint scalxrotx;
 	uint colxnormx;
 	uint normyz;
-	uint sturdiness;
+	uint sturxlody;
 	//uint rotz;
 };
 
@@ -429,7 +429,7 @@ void main()
 		leafData.scalxrotx = packHalf2x16(vec2(leafScale * scale, leafRotationX));
 		leafData.colxnormx = packHalf2x16(vec2(leafColor, leafLocalPosition.x));
 		leafData.normyz = packHalf2x16(vec2(leafLocalPosition.y, leafLocalPosition.z));
-		leafData.sturdiness = packHalf2x16(vec2(leafSturdiness));
+		leafData.sturxlody = packHalf2x16(vec2(leafSturdiness, leafLod));
 		//leafData.rotz = packHalf2x16(vec2(leafRotationZ, leafRotationZ));
 		
 		if (lod > -1) leavesRenderData[leafRenderIndex] = leafData;

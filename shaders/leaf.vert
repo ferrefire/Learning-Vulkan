@@ -13,7 +13,7 @@ struct LeafData
 	uint scalxrotx;
 	uint colxnormx;
 	uint normyz;
-	uint sturdiness;
+	uint sturxlody;
 };
 
 layout(std430, set = 1, binding = 0) readonly buffer DataBuffer
@@ -31,8 +31,8 @@ layout(location = 2) out vec3 globalNormal;
 layout(location = 3) out vec3 localNormal;
 layout(location = 4) out vec3 leafColor;
 layout(location = 5) out vec3 localCoordinates;
-//layout(location = 6) out float baseRotation;
-layout(location = 6) out vec4 shadowPositions[CASCADE_COUNT];
+layout(location = 6) out flat uint lod;
+layout(location = 7) out vec4 shadowPositions[CASCADE_COUNT];
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -88,7 +88,8 @@ void main()
 	vec3 normalPos = vec3(colxnormx.y, normyz.x, normyz.y);
 	//vec2 rotz = unpackHalf2x16(data[dataIndex].rotz);
 	//rotation.z = rotz.x * 360.0 - 180.0;
-	float sturdiness = unpackHalf2x16(data[dataIndex].sturdiness).x;
+	vec2 sturxlody = unpackHalf2x16(data[dataIndex].sturxlody);
+	float sturdiness = sturxlody.x;
 
 	//baseRotation = rotz.x;
 	position += variables.viewPosition;
@@ -136,6 +137,8 @@ void main()
 		globalNormal = normalize((normalPos + rotateResults.position) - treeCenter);
 		worldPosition = ObjectToWorld(rotateResults.position, mat4(1)) + position;
 	}*/
+
+	lod = uint(sturxlody.y);
 
 	for (int i = 0; i < CASCADE_COUNT; i++) shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
 

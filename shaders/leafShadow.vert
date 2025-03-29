@@ -9,8 +9,7 @@ struct LeafData
 	uint scalxrotx;
 	uint colxnormx;
 	uint normyz;
-	uint sturdiness;
-	//uint rotz;
+	uint sturxlody;
 };
 
 layout(std430, set = 1, binding = 0) readonly buffer DataBuffer
@@ -73,7 +72,7 @@ void main()
 	rotation.x = scalxrotx.y * 360.0 - 180.0;
 	//vec2 rotz = unpackHalf2x16(data[dataIndex].rotz);
 	//rotation.z = rotz.x * 360.0 - 180.0;
-	float sturdiness = unpackHalf2x16(data[dataIndex].sturdiness).x;
+	float sturdiness = unpackHalf2x16(data[dataIndex].sturxlody).x;
 
 	position += variables.viewPosition;
 

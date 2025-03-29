@@ -12,8 +12,8 @@ layout(location = 2) in vec3 globalNormal;
 layout(location = 3) in vec3 localNormal;
 layout(location = 4) in vec3 leafColor;
 layout(location = 5) in vec3 localCoordinates;
-//layout(location = 6) in float baseRotation;
-layout(location = 6) in vec4 shadowPositions[CASCADE_COUNT];
+layout(location = 6) in flat uint lod;
+layout(location = 7) in vec4 shadowPositions[CASCADE_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
@@ -69,7 +69,7 @@ void main()
 	ShadowResults shadowResults;
 	shadowResults.reduction = 1.0;
 	//if (baseRotation != 0.0 && terrainShadow < 1.0)
-	if (terrainShadow < 1.0)
+	if (lod < 5 && terrainShadow < 1.0)
 	{
 		shadowResults = GetCascadedShadowResults(shadowPositions, depth);
 		shadow = clamp(shadow + shadowResults.shadow, 0.0, 1.0);
@@ -79,6 +79,8 @@ void main()
 	//if (shadowResults.lod > 2 && shadowResults.edgeBlend <= 0.5 && shadowResults.edgeBlend >= 0.4) diffuseEdgeBlend = 1.0 - (shadowResults.edgeBlend - 0.4) * 10.0;
 	if ((shadowResults.lod == -1 || shadowResults.lod == CASCADE_COUNT - 1) && shadowResults.reduction < 1.0) 
 		diffuseEdgeBlend = shadowResults.reduction;
+	if (lod >= 5)
+		diffuseEdgeBlend = 0.0;
 
 	//float shadow = GetCascadedShadow(shadowPositions, depth);
 	//leafNormal = normalize(leafNormal);

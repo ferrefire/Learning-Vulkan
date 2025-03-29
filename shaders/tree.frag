@@ -17,7 +17,8 @@ layout(set = 1, binding = 2) uniform sampler2D treeSamplers[3];
 layout(location = 0) in vec2 inCoord;
 layout(location = 1) in vec3 inNormal;
 layout(location = 2) in vec3 worldPosition;
-layout(location = 3) in vec4 shadowPositions[CASCADE_COUNT];
+layout(location = 3) in flat uint lod;
+layout(location = 4) in vec4 shadowPositions[CASCADE_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
@@ -39,7 +40,7 @@ void main()
 	float depth = GetDepth(gl_FragCoord.z);
 	//if (variables.shadows == 1) shadow = clamp(1.0 - GetShadow(shadowPosition, 1, 0), 0.3, 1.0);
 	float shadow = GetTerrainShadow(worldPosition.xz);
-	if (shadow < 1.0)
+	if (lod < 5 && shadow < 1.0)
 		shadow = clamp(shadow + GetCascadedShadow(shadowPositions, depth), 0.0, 1.0);
 	//float shadow = GetCascadedShadow(shadowPositions, depth);
 

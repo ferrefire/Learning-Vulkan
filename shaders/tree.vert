@@ -55,7 +55,8 @@ layout(location = 2) in vec3 inNormal;
 layout(location = 0) out vec2 coord;
 layout(location = 1) out vec3 normal;
 layout(location = 2) out vec3 worldPosition;
-layout(location = 3) out vec4 shadowPositions[CASCADE_COUNT];
+layout(location = 3) out flat uint lod;
+layout(location = 4) out vec4 shadowPositions[CASCADE_COUNT];
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -115,6 +116,8 @@ void main()
 		float wave = 1.0 - textureLod(windSampler, windUV, 0).r;
 		worldPosition.xz += wave * inCoordinate.x * variables.windStrength;
 	}
+
+	lod = pc.treeLod;
 
 	//normal = inNormal;
     gl_Position = variables.viewMatrix * vec4(worldPosition, 1.0);

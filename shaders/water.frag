@@ -25,11 +25,12 @@ layout(location = 0) out vec4 outColor;
 #include "heightmap.glsl"
 
 const vec3 waterTint = DECODE_COLOR(vec3(5, 41, 35) / 255.0);
-const float waterDensity = 750.0;
+//const float waterDensity = 750.0;
+const float waterDensity = 2000.0;
 const vec2 scatterResolution = vec2(32, 32);
 
-const int maxBlend = 4;
-const float startDistance = 100.0;
+const int maxBlend = 1;
+const float startDistance = 10000.0;
 const float distanceIncrease = 5.0;
 const float startScale = 0.075;
 const float scaleIncrease = 0.2;
@@ -184,7 +185,8 @@ void main()
 	float bottomDepth = GetDepth(depth);
 	float surfaceDepth = GetDepth(gl_FragCoord.z);
 	float waterDepth = (bottomDepth - surfaceDepth);
-	float fogFactor = clamp(exp2(-waterDensity * waterDepth), 0.25, 1.0) - 0.25;
+	//float fogFactor = clamp(exp2(-waterDensity * waterDepth), 0.25, 1.0) - 0.25;
+	float fogFactor = clamp(exp2(-waterDensity * waterDepth), 0.0, 1.0);
 
 	float shadow = 1.0 - GetTerrainShadow(worldPosition.xz);
 

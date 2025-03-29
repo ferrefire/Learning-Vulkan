@@ -17,7 +17,7 @@ layout(location = 1) out vec4 shadowPositions[CASCADE_COUNT];
 
 void main()
 {
-	worldPosition = inPosition * 25000.0;
+	worldPosition = inPosition * 50000.0;
 	worldPosition.y = -variables.terrainOffset.y + variables.waterHeight.x - 25.0;
 
 	for (int i = 0; i < CASCADE_COUNT; i++) shadowPositions[i] = variables.shadowCascadeMatrix[i] * vec4(worldPosition, 1.0);
