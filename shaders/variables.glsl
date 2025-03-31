@@ -20,6 +20,7 @@ layout(set = 0, binding = 0) uniform Variables
 	mat4 viewMatrix;
 	mat4 viewLodMatrix;
 	mat4 shadowCascadeMatrix[CASCADE_COUNT];
+	vec4 shadowCascadeDistances[CASCADE_COUNT];
 	mat4 cullMatrix;
     float viewHeight;
     vec3 viewPosition;

@@ -262,6 +262,8 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 		pipelineConfig.rasterization.depthBiasEnable = VK_TRUE;
 		pipelineConfig.rasterization.depthBiasConstantFactor = 2.0f;
 		pipelineConfig.rasterization.depthBiasSlopeFactor = 1.0f;
+		//pipelineConfig.rasterization.depthBiasConstantFactor = 4.0f;
+		//pipelineConfig.rasterization.depthBiasSlopeFactor = 1.5f;
 	}
 
 	if (!pipelineConfig.shadow && !pipelineConfig.cull)

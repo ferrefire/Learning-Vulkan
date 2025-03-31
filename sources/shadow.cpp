@@ -1035,11 +1035,21 @@ glm::mat4 Shadow::CreateShadowMatrix(int lod)
 	// 1. Compute light view matrix
 	glm::vec3 side = glm::normalize(glm::cross(direction, glm::vec3(0.0f, 1.0f, 0.0f)));
 	glm::vec3 up = glm::normalize(glm::cross(side, direction));
-	glm::mat4 lightView = glm::lookAt(position, position + direction, up);
+	//glm::mat4 lightView = glm::lookAt(position, position + direction, up);
 
 	// 2. Get the world-space camera frustum corners
 	//std::vector<glm::vec4> frustumCorners = Manager::camera.GetFrustumCorners(near, near + far);
 	std::vector<glm::vec4> frustumCorners = Manager::camera.GetFrustumCorners(glm::clamp(near, 0.01f, near + far), near + far);
+
+	glm::vec3 average;
+
+	for (const auto& corner : frustumCorners) 
+	{
+		average = average + glm::vec3(corner);
+	}
+	average = average / float(frustumCorners.size());
+
+	glm::mat4 lightView = glm::lookAt(average - direction, average, glm::vec3(0.0f, 1.0f, 0.0f));
 
 	// 3. Transform frustum corners into light space and compute bounds
 	glm::vec3 minBounds( std::numeric_limits<float>::max());
@@ -1061,7 +1071,7 @@ glm::mat4 Shadow::CreateShadowMatrix(int lod)
 	//glm::mat4 lightOrtho = glm::ortho(minBounds.x, maxBounds.x, minBounds.y, maxBounds.y, -maxBounds.z, maxBounds.z);
 	//glm::mat4 lightOrtho = glm::ortho(minBounds.x, maxBounds.x, minBounds.y, maxBounds.y, -far * 2.0f, far * 2.0f);
 	//glm::mat4 lightOrtho = glm::ortho(-far * 0.5f, far * 0.5f, -far * 0.5f, far * 0.5f, -far * 2.0f, far * 2.0f);
-	lightOrtho[1][1] *= -1;
+	//lightOrtho[1][1] *= -1;
 
 	// 5. Compute the final shadow matrix
 	glm::mat4 shadowMatrix = lightOrtho * lightView;
@@ -1323,9 +1333,9 @@ std::vector<float> Shadow::shadowCascadeDistancesMults = {1.0, 1.0, 1.0, 1.0, 1.
 std::vector<int> Shadow::shadowCascadeResolutions = {3072, 2048, 2048, 2048, 2048};
 //std::vector<int> Shadow::shadowCascadeResolutions = {512, 512, 512, 512, 512};
 //std::vector<float> Shadow::shadowCascadeDepths = {8.0, 4.0, 2.0, 2.0, 1.0};
-std::vector<float> Shadow::shadowCascadeDepths = {8.0, 4.0, 2.0, 1.0, 1.0};
+std::vector<float> Shadow::shadowCascadeDepths = {8.0, 4.0, 2.0, 1.5, 1.0};
 float Shadow::cascadeDistanceMult = 1.0;
-float Shadow::cascadeMergeDistance = 0.2;
+float Shadow::cascadeMergeDistance = 0.35;
 
 //std::vector<float> Shadow::shadowCascadeDistances = {100, 250, 750, 3000, 7000};
 //std::vector<int> Shadow::shadowCascadeResolutions = {2048, 2048, 2048, 2048, 2048};
