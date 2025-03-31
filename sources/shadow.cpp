@@ -272,7 +272,7 @@ void Shadow::DestroyShadowPass()
 void Shadow::Start()
 {
 	Menu &menu = UI::NewMenu("shadow");
-	menu.AddText("shadow values");
+	menu.AddNode("shadow distance", true);
 	menu.AddSlider("shadow distance multiplier", cascadeDistanceMult, 0.1f, 4.0f);
 	for (int i = 0; i < cascadeCount; i++)
 	{
@@ -281,6 +281,10 @@ void Shadow::Start()
 		str.append(" shadow distance multiplier");
 		menu.AddSlider(str, shadowCascadeDistancesMults[i], 0.1f, 4.0f);
 	}
+	menu.AddNode("shadow distance", false);
+	menu.AddNode("shadow blending", true);
+	menu.AddSlider("shadow merge distance", Shadow::cascadeMergeDistance, 0.0f, 1.0f);
+	menu.AddNode("shadow blending", false);
 }
 
 /*glm::mat4 Shadow::GetTrapezoidView(int lod, float dis)
@@ -1319,8 +1323,9 @@ std::vector<float> Shadow::shadowCascadeDistancesMults = {1.0, 1.0, 1.0, 1.0, 1.
 std::vector<int> Shadow::shadowCascadeResolutions = {3072, 2048, 2048, 2048, 2048};
 //std::vector<int> Shadow::shadowCascadeResolutions = {512, 512, 512, 512, 512};
 //std::vector<float> Shadow::shadowCascadeDepths = {8.0, 4.0, 2.0, 2.0, 1.0};
-std::vector<float> Shadow::shadowCascadeDepths = {8.0, 4.0, 2.0, 2.0, 2.0};
+std::vector<float> Shadow::shadowCascadeDepths = {8.0, 4.0, 2.0, 1.0, 1.0};
 float Shadow::cascadeDistanceMult = 1.0;
+float Shadow::cascadeMergeDistance = 0.2;
 
 //std::vector<float> Shadow::shadowCascadeDistances = {100, 250, 750, 3000, 7000};
 //std::vector<int> Shadow::shadowCascadeResolutions = {2048, 2048, 2048, 2048, 2048};

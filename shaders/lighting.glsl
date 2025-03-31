@@ -453,6 +453,25 @@ struct ShadowResults
 	float reduction;
 };
 
+float GetCascadedShadowLod(int i, vec4 shadowSpace, float depth)
+{
+	float shadow = 0.0;
+	int range = 1;
+
+	float depthDistance = depth * variables.ranges.y;
+	if (depthDistance < 10.0) range = 2;
+
+	vec3 projectionCoordinates = shadowSpace.xyz / shadowSpace.w;
+	projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
+
+	if (ValidProjection(projectionCoordinates))
+	{
+		shadow = BlendCascadedShadow(projectionCoordinates, i, range);
+	}
+	
+	return (shadow);
+}
+
 ShadowResults GetCascadedShadowResults(vec4 shadowSpaces[CASCADE_COUNT], float depth)
 {
 	#ifndef SHADOWS_ENABLED
@@ -464,7 +483,44 @@ ShadowResults GetCascadedShadowResults(vec4 shadowSpaces[CASCADE_COUNT], float d
 	float shadow = 0.0;
 	float blendShadow = 0.0;
 	int lod = -1;
-	int range = 0;
+	int range = 1;
+
+	if (depth * variables.ranges.y < 10.0) range = 2;
+
+	/*for (int i = 0; i < CASCADE_COUNT; i++)
+	{
+		projectionCoordinates = shadowSpaces[i].xyz / shadowSpaces[i].w;
+		projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
+
+		if (ValidProjection(projectionCoordinates))
+		{
+			blendShadow = BlendCascadedShadow(projectionCoordinates, i, range);
+			if (blendShadow > shadow)
+			{
+				lod = i;
+				shadow = blendShadow;
+				break;
+			}
+		}
+	}
+
+	if (lod >= 0)
+	{
+		//shadow = GetCascadedShadowLod(lod, shadowSpaces[lod], depth);
+		if (lod + 1 < CASCADE_COUNT)
+		{
+			float edgeShadow = max(max(abs(projectionCoordinates.x - 0.5), abs(projectionCoordinates.y - 0.5)), abs(projectionCoordinates.z - 0.5)) - (0.5 - variables.shadowCascadeMergeStrength);
+			if (edgeShadow >= 0.0)
+			{
+				blendShadow = GetCascadedShadowLod(lod + 1, shadowSpaces[lod + 1], depth);
+				//if (blendShadow > shadow) shadow = blendShadow;
+				edgeShadow /= variables.shadowCascadeMergeStrength;
+				shadow *= 1.0 - edgeShadow;
+				shadow += blendShadow * edgeShadow;
+			}
+		}
+	}*/
+
 	//for (int i = CASCADE_COUNT - 1; i >= 0; i--)
 	//{
 	//	//if (lod != -1) break;
@@ -474,46 +530,40 @@ ShadowResults GetCascadedShadowResults(vec4 shadowSpaces[CASCADE_COUNT], float d
 	//}
 	//if (lod == -1) return (0.0);
 
-	//if (range < 0)
-	{
-		float depthDistance = depth * variables.ranges.y;
-		if (depthDistance < 10.0) range = 2;
-		else range = 1;
-		//else if (depthDistance < 5000.0) range = 1;
-		//else range = 0;
-		//range = 0;
-	}
+	////if (range < 0)
+	//{
+	//	float depthDistance = depth * variables.ranges.y;
+	//	if (depthDistance < 10.0) range = 2;
+	//	else range = 1;
+	//	//else if (depthDistance < 5000.0) range = 1;
+	//	//else range = 0;
+	//	//range = 0;
+	//}
 	
 	//range = 0;
 	//if (maxCascade < 0) maxCascade = CASCADE_COUNT;
 
-	int shadowLod = -1;
+	//int shadowLod = -1;
+	//float edgeShadow = 1.0;
+	//bool stopNext = false;
 
 	for (int i = 0; i < CASCADE_COUNT; i++)
 	{
-		//if (shadowLod != -1 && abs(projectionCoordinates.x - 0.5) <= 0.49 && abs(projectionCoordinates.y - 0.5) <= 0.49 && abs(projectionCoordinates.z - 0.5) <= 0.49) break;
-
 		projectionCoordinates = shadowSpaces[i].xyz / shadowSpaces[i].w;
 		projectionCoordinates.xy = projectionCoordinates.xy * 0.5 + 0.5;
-		//projectionCoordinates = projectionCoordinates * 0.5 + 0.5;
 
 		if (ValidProjection(projectionCoordinates))
 		{
 			blendShadow = BlendCascadedShadow(projectionCoordinates, i, range);
-			//lod = i;
-			//shadow = blendShadow;
-			//break;
 			if (blendShadow > shadow)
 			{
 				lod = i;
-				shadow = blendShadow;
+				shadow += blendShadow;
+				//break;
 			}
 
-			if (max(max(abs(projectionCoordinates.x - 0.5), abs(projectionCoordinates.y - 0.5)), abs(projectionCoordinates.z - 0.5)) < 0.49) break;
-			//if (shadow > 0.0 || shadowLod != -1) break;
-			//shadowLod = i;
+			if (max(max(abs(projectionCoordinates.x - 0.5), abs(projectionCoordinates.y - 0.5)), abs(projectionCoordinates.z - 0.5)) < (0.5 - variables.shadowCascadeMergeStrength)) break;
 		}
-		//else if (shadowLod != -1) break;
 	}
 
 	//float edgeBlend = 0.0;

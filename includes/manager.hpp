@@ -92,9 +92,10 @@ struct ShaderVariables
 	alignas(4) uint32_t shadows;
 	alignas(4) uint32_t shadowBounding;
 	alignas(4) uint32_t shadowCascades;
+	alignas(4) float shadowCascadeMergeStrength;
 	alignas(16) glm::vec4 terrainShadowOffsets[3];
 	alignas(16) glm::vec4 terrainShadowDistances[3];
-	alignas(4) uint32_t capturing = 0;
+	//alignas(4) uint32_t capturing = 0;
 };
 
 struct DescriptorInfo

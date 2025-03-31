@@ -46,6 +46,7 @@ layout(set = 0, binding = 0) uniform Variables
 	uint shadows;
 	uint shadowBounding;
 	uint shadowCascades;
+	float shadowCascadeMergeStrength;
 	vec4 terrainShadowOffsets[TERRAIN_CASCADE_COUNT];
 	vec4 terrainShadowDistances[TERRAIN_CASCADE_COUNT];
 	//float terrainShadowDistance1;

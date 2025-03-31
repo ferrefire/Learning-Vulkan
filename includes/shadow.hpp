@@ -53,6 +53,7 @@ class Shadow
 		static std::vector<int> shadowCascadeResolutions;
 		static std::vector<float> shadowCascadeDepths;
 		static float cascadeDistanceMult;
+		static float cascadeMergeDistance;
 
 		//static VkRenderPass shadowTrapezoidPass;
 		//static VkFramebuffer shadowLod0FrameBuffer;

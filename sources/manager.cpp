@@ -332,7 +332,7 @@ void Manager::Frame()
 		cinematic.AddKey(camera.Position(), camera.Angles());
 	}
 
-	//if (Input::GetKey(GLFW_MOUSE_BUTTON_RIGHT, true).pressed) camera.PrintStatus();
+	if (Input::GetKey(GLFW_MOUSE_BUTTON_RIGHT, true).pressed && !UI::enabled) camera.PrintStatus();
 
 	//Terrain::Frame();
 	//if (Manager::settings.trees)
@@ -439,6 +439,7 @@ void Manager::UpdateShaderVariables()
 		shaderVariables.terrainShadowOffsets[i] = glm::vec4(Terrain::terrainShadowOffsets[i].x, Terrain::terrainShadowOffsets[i].y, 0, 0);
 		shaderVariables.terrainShadowDistances[i] = glm::vec4(Terrain::shadowComputeVariables[i].distance);
 	}
+	shaderVariables.shadowCascadeMergeStrength = Shadow::cascadeMergeDistance * 0.5f;
 	//shaderVariables.terrainShadowDistance0 = Terrain::shadowComputeVariables[0].distance;
 	//shaderVariables.terrainShadowDistance1 = Terrain::shadowComputeVariables[1].distance;
 
@@ -617,6 +618,6 @@ std::vector<glm::vec3> Manager::cameraIntersects;
 std::vector<int> Manager::cameraIntersectIndexes;
 
 glm::vec3 Manager::lightAngles = glm::vec3(-35.0f, -135.0f, 0.0f);
-float Manager::lightSpeed = 1.0f;
+float Manager::lightSpeed = 4.0f;
 
 DescriptorInfo Manager::descriptorInfo;

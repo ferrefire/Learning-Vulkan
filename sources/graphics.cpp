@@ -16,6 +16,7 @@
 #include "water.hpp"
 #include "wind.hpp"
 #include "ui.hpp"
+#include "buildings.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -62,6 +63,10 @@
 
 #ifndef UI_ENABLED
 #define UI_ENABLED true
+#endif
+
+#ifndef BUILDINGS_ENABLED
+#define BUILDINGS_ENABLED true
 #endif
 
 Graphics::Graphics(Device &device, Window &window) : device{device}, window{window}
@@ -224,6 +229,8 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
 	Terrain::RecordGraphicsCommands(commandBuffer);
+
+	if (BUILDINGS_ENABLED) Buildings::RecordGraphicsCommands(commandBuffer);
 
 	if (TREES_ENABLED) Trees::RecordGraphicsCommands(commandBuffer);
 
@@ -699,6 +706,7 @@ void Graphics::Create()
 	Leaves::Create();
 	Water::Create();
 	Data::Create();
+	Buildings::Create();
 
 	if (Manager::settings.screenQuad)
 	{
@@ -775,6 +783,7 @@ void Graphics::Destroy()
 	Sky::Destroy();
 	Water::Destroy();
 	Wind::Destroy();
+	Buildings::Destroy();
 	//Capture::Destroy();
 	Manager::screenQuadDescriptor.Destroy();
 	Manager::Clean();
