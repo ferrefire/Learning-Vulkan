@@ -18,7 +18,7 @@ void Buildings::Create()
 
 void Buildings::CreateMeshes()
 {
-    mesh.coordinate = false;
+    mesh.coordinate = true;
     mesh.normal = true;
     mesh.shape.SetShape(CUBE);
     mesh.RecalculateVertices();
@@ -36,16 +36,39 @@ void Buildings::CreateTextures()
 	beamTextures[0].CreateTexture("beam_diff.jpg", beamSamplerConfig);
 	beamTextures[1].CreateTexture("beam_norm.jpg", beamSamplerConfig);
 	beamTextures[2].CreateTexture("beam_ao.jpg", beamSamplerConfig);
+
+	SamplerConfiguration plasteredSamplerConfig;
+	plasteredSamplerConfig.repeatMode = REPEAT;
+
+	plasteredTextures.resize(3);
+	plasteredTextures[0].CreateTexture("plastered_diff.jpg", plasteredSamplerConfig);
+	plasteredTextures[1].CreateTexture("plastered_norm.jpg", plasteredSamplerConfig);
+	plasteredTextures[2].CreateTexture("plastered_ao.jpg", plasteredSamplerConfig);
+
+	SamplerConfiguration reedSamplerConfig;
+	reedSamplerConfig.repeatMode = REPEAT;
+
+	reedTextures.resize(3);
+	reedTextures[0].CreateTexture("reed_diff.jpg", reedSamplerConfig);
+	reedTextures[1].CreateTexture("reed_norm.jpg", reedSamplerConfig);
+	reedTextures[2].CreateTexture("reed_ao.jpg", reedSamplerConfig);
 }
 
 void Buildings::CreatePipelines()
 {
-    std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(1);
-	descriptorLayoutConfig[0].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[0].stages = FRAGMENT_STAGE;
-	descriptorLayoutConfig[0].count = beamTextures.size();
+    std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(3);
+	int i = 0;
+	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[i++].count = beamTextures.size();
+	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[i++].count = plasteredTextures.size();
+	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[i++].count = reedTextures.size();
 
-    PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
+	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
 
     VertexInfo vertexInfo = mesh.MeshVertexInfo();
 
@@ -54,20 +77,46 @@ void Buildings::CreatePipelines()
 
 void Buildings::CreateDescriptors()
 {
-    std::vector<DescriptorConfiguration> descriptorConfig(1);
+    std::vector<DescriptorConfiguration> descriptorConfig(3);
 
-	descriptorConfig[0].type = IMAGE_SAMPLER;
-	descriptorConfig[0].stages = FRAGMENT_STAGE;
-	descriptorConfig[0].count = beamTextures.size();
-	descriptorConfig[0].imageInfos.resize(beamTextures.size());
+	int index = 0;
+	descriptorConfig[index].type = IMAGE_SAMPLER;
+	descriptorConfig[index].stages = FRAGMENT_STAGE;
+	descriptorConfig[index].count = beamTextures.size();
+	descriptorConfig[index].imageInfos.resize(beamTextures.size());
 	for (int i = 0; i < beamTextures.size(); i++)
 	{
-		descriptorConfig[0].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[0].imageInfos[i].imageView = beamTextures[i].imageView;
-		descriptorConfig[0].imageInfos[i].sampler = beamTextures[i].sampler;
+		descriptorConfig[index].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		descriptorConfig[index].imageInfos[i].imageView = beamTextures[i].imageView;
+		descriptorConfig[index].imageInfos[i].sampler = beamTextures[i].sampler;
 	}
+	index++;
 
-    graphicsDescriptor.perFrame = false;
+	descriptorConfig[index].type = IMAGE_SAMPLER;
+	descriptorConfig[index].stages = FRAGMENT_STAGE;
+	descriptorConfig[index].count = plasteredTextures.size();
+	descriptorConfig[index].imageInfos.resize(plasteredTextures.size());
+	for (int i = 0; i < plasteredTextures.size(); i++)
+	{
+		descriptorConfig[index].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		descriptorConfig[index].imageInfos[i].imageView = plasteredTextures[i].imageView;
+		descriptorConfig[index].imageInfos[i].sampler = plasteredTextures[i].sampler;
+	}
+	index++;
+
+	descriptorConfig[index].type = IMAGE_SAMPLER;
+	descriptorConfig[index].stages = FRAGMENT_STAGE;
+	descriptorConfig[index].count = reedTextures.size();
+	descriptorConfig[index].imageInfos.resize(reedTextures.size());
+	for (int i = 0; i < reedTextures.size(); i++)
+	{
+		descriptorConfig[index].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		descriptorConfig[index].imageInfos[i].imageView = reedTextures[i].imageView;
+		descriptorConfig[index].imageInfos[i].sampler = reedTextures[i].sampler;
+	}
+	index++;
+
+	graphicsDescriptor.perFrame = false;
     graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
 }
 
@@ -90,6 +139,12 @@ void Buildings::DestroyTextures()
 {
     for (Texture &texture : beamTextures) texture.Destroy();
     beamTextures.clear();
+
+	for (Texture &texture : plasteredTextures) texture.Destroy();
+    plasteredTextures.clear();
+
+	for (Texture &texture : reedTextures) texture.Destroy();
+    reedTextures.clear();
 }
 
 void Buildings::DestroyPipelines()
@@ -116,6 +171,21 @@ void Buildings::Start()
 	menu.AddSlider("level", generationConfig.levelFactor, 1, 10);
 	menu.AddSlider("scaffolding", generationConfig.scaffoldingReduction, 1, 10);
 	menu.AddNode("factors", false);
+	menu.AddNode("part properties", true);
+	std::vector<void *> parts = {&floorConfig, &flatWallConfig, &flatRoofConfig, &slopedRoofConfig};
+	for (void *part : parts)
+	{
+		PartConfig *p = (PartConfig *)part;
+		menu.AddNode(p->name.c_str(), true);
+		std::string s = "scale##" + p->name;
+		menu.AddDrag(s.c_str(), p->scale);
+		std::string r = "rotation##" + p->name;
+		menu.AddDrag(r.c_str(), p->rotation);
+		std::string o = "offset##" + p->name;
+		menu.AddDrag(o.c_str(), p->offset);
+		menu.AddNode(p->name.c_str(), false);
+	}
+	menu.AddNode("part properties", false);
 	menu.AddInput("seed", generationConfig.seed);
 	menu.AddCheck("random", generationConfig.random);
 	menu.AddButton("generate", GenerateBuilding);
@@ -177,6 +247,7 @@ void Buildings::GenerateCells()
 	}
 
 	SetWalls();
+	SetRoof();
 }
 
 void Buildings::ExpandLevel(int level)
@@ -281,20 +352,142 @@ void Buildings::SetWalls()
 	}
 }
 
+void Buildings::SetRoof()
+{
+	for (int i = 0; i < building.cells.size(); i++)
+	{
+		for (int x = 0; x < building.cells[i].size(); x++)
+		{
+			for (int y = 0; y < building.cells[i][x].size(); y++)
+			{
+				RoofTypePass(i, x, y);
+			}
+		}
+	}
+
+	for (int i = 0; i < building.cells.size(); i++)
+	{
+		for (int x = 0; x < building.cells[i].size(); x++)
+		{
+			for (int y = 0; y < building.cells[i][x].size(); y++)
+			{
+				RoofDirectionPass(i, x, y);
+			}
+		}
+	}
+}
+
+void Buildings::RoofTypePass(int i, int x, int y)
+{
+	if (IsRoof(i, x, y))
+	{
+		bool N_Empty = CellEmpty(i, x, y + 1);
+		bool S_Empty = CellEmpty(i, x, y - 1);
+		bool E_Empty = CellEmpty(i, x + 1, y);
+		bool W_Empty = CellEmpty(i, x - 1, y);
+		bool N_UpEmpty = CellEmpty(i + 1, x, y + 1);
+		bool S_UpEmpty = CellEmpty(i + 1, x, y - 1);
+		bool E_UpEmpty = CellEmpty(i + 1, x + 1, y);
+		bool W_UpEmpty = CellEmpty(i + 1, x - 1, y);
+		int emptyAmount = ((N_Empty && N_UpEmpty) ? 1 : 0) + ((S_Empty && S_UpEmpty) ? 1 : 0) +
+			((E_Empty && E_UpEmpty) ? 1 : 0) + ((W_Empty && W_UpEmpty) ? 1 : 0);
+		bool N_Cone = !N_Empty && building.cells[i][x][y + 1].roof.type == RoofType::cone;
+		bool S_Cone = !S_Empty && building.cells[i][x][y - 1].roof.type == RoofType::cone;
+		bool E_Cone = !E_Empty && building.cells[i][x + 1][y].roof.type == RoofType::cone;
+		bool W_Cone = !W_Empty && building.cells[i][x - 1][y].roof.type == RoofType::cone;
+		int coneAmount = (N_Cone ? 1 : 0) + (S_Cone ? 1 : 0) + (E_Cone ? 1 : 0) + (W_Cone ? 1 : 0);
+		int EW_Empty = ((E_Empty || E_Cone) ? 1 : 0) + ((W_Empty || W_Cone) ? 1 : 0);
+
+		if (building.cells[i][x][y].roof.type == RoofType::cone || emptyAmount >= 3)
+			building.cells[i][x][y].roof.type = RoofType::cone;
+		else if (emptyAmount + coneAmount >= 1 && EW_Empty != 0)
+			building.cells[i][x][y].roof.type = RoofType::slope;
+		else 
+			building.cells[i][x][y].roof.type = RoofType::flatUp;
+	}
+}
+
+void Buildings::RoofDirectionPass(int i, int x, int y)
+{
+	if (!building.cells[i][x][y].roof.Empty())
+	{
+		bool N_Empty = CellEmpty(i, x, y + 1);
+		bool S_Empty = CellEmpty(i, x, y - 1);
+		bool E_Empty = CellEmpty(i, x + 1, y);
+		bool W_Empty = CellEmpty(i, x - 1, y);
+		bool N_UpEmpty = CellEmpty(i + 1, x, y + 1);
+		bool S_UpEmpty = CellEmpty(i + 1, x, y - 1);
+		bool E_UpEmpty = CellEmpty(i + 1, x + 1, y);
+		bool W_UpEmpty = CellEmpty(i + 1, x - 1, y);
+		bool N_Cone = !N_Empty && building.cells[i][x][y + 1].roof.type == RoofType::cone;
+		bool S_Cone = !S_Empty && building.cells[i][x][y - 1].roof.type == RoofType::cone;
+		bool E_Cone = !E_Empty && building.cells[i][x + 1][y].roof.type == RoofType::cone;
+		bool W_Cone = !W_Empty && building.cells[i][x - 1][y].roof.type == RoofType::cone;
+
+		building.cells[i][x][y].roof.direction = GetRoofDirection(building.cells[i][x][y].roof.type, N_Empty, S_Empty, E_Empty,
+			W_Empty, N_Cone, S_Cone, E_Cone, W_Cone, E_UpEmpty, W_UpEmpty);
+	}
+}
+
+D Buildings::GetRoofDirection(RoofType type, bool N_Empty, bool S_Empty, bool E_Empty, bool W_Empty, bool N_Cone,
+	bool S_Cone, bool E_Cone, bool W_Cone, bool E_UpEmpty, bool W_UpEmpty)
+{
+	int NS = (N_Empty ? 0 : 1) + (S_Empty ? 0 : 1);
+	int EW = (E_Empty ? 0 : 1) + (W_Empty ? 0 : 1);
+
+	if (type == RoofType::cone)
+	{
+		if (NS == EW)
+		{
+			if (!N_Cone && !N_Empty) return (N);
+			else if (!E_Cone && !E_Empty) return (E);
+			else if (!S_Cone && !S_Empty) return (N);
+			else if (!W_Cone && !W_Empty) return (E);
+			else if (N_Cone) return (N);
+			else if (E_Cone) return (E);
+			else if (S_Cone) return (N);
+			else if (W_Cone) return (E);
+		}
+		else return NS > EW ? N : E;
+	}
+	else if (type == RoofType::slope)
+	{
+		EW = ((E_Empty || E_Cone) ? 1 : 0) + ((W_Empty || W_Cone) ? 1 : 0);
+		if (E_Cone) return (W);
+		else if (W_Cone) return (E);
+		else if (!E_Empty) return (E);
+		else if (!W_Empty) return (W);
+		else
+		{
+			if (E_Empty && E_UpEmpty) return (W);
+			else return (E);
+		}
+	}
+
+	return (N);
+}
+
+bool Buildings::IsRoof(int i, int x, int y)
+{
+	return (CellValid(i, x, y) && !building.cells[i][x][y].Empty() && (!CellValid(i + 1, x, y) || 
+		building.cells[i + 1][x][y].Empty()));
+}
+
 void Buildings::GenerateMesh()
 {
 	if (building.mesh.created)
 		building.mesh.DestroyAtRuntime();
 
-	building.mesh.coordinate = false;
+	building.mesh.coordinate = true;
 	building.mesh.normal = true;
-	building.mesh.shape.coordinate = false;
+	building.mesh.shape.coordinate = true;
 	building.mesh.shape.normal = true;
 
 	for (int i = 0; i < building.cells.size(); i++)
 	{
 		GenerateFloors(i);
 		GenerateWalls(i);
+		GenerateRoofs(i);
 	}
 
 	building.mesh.RecalculateVertices();
@@ -309,20 +502,20 @@ void Buildings::GenerateFloors(int level)
 		{
 			if (!building.cells[level][x][y].floor.Empty())
 			{
-				Shape floor = GenerateFloor(building.cells[level][x][y].floor.type);
-				floor.Move(glm::vec3(x, level, y) * 5.0f);
-				building.mesh.shape.Join(floor);
+				GenerateFloor(glm::vec3(x, level, y) * generationConfig.scale, building.cells [level][x][y].floor.type);
 			}
 		}
 	}
 }
 
-Shape Buildings::GenerateFloor(FloorType type)
+void Buildings::GenerateFloor(glm::vec3 offset, FloorType type)
 {
 	Shape floor = Shape(CUBE);
-	floor.Scale(glm::vec3(5.0f, 0.5f, 5.0f));
-	
-	return (floor);
+	floor.Scale(floorConfig.scale * generationConfig.scale);
+	floor.SetCoordinates(glm::vec2(0));
+	floor.Move(offset);
+
+	building.mesh.shape.Join(floor);
 }
 
 void Buildings::GenerateWalls(int level)
@@ -333,42 +526,89 @@ void Buildings::GenerateWalls(int level)
 		{
 			if (building.cells[level][x][y].walls.N_Type != WallType::empty)
 			{
-				Shape wall = GenerateWall(building.cells[level][x][y].walls.N_Type, N);
-				wall.Move(glm::vec3(x, level, y) * 5.0f);
-				building.mesh.shape.Join(wall);
+				GenerateWall(glm::vec3(x, level, y) * generationConfig.scale, building.cells[level][x][y].walls.N_Type, N);
 			}
 			if (building.cells[level][x][y].walls.S_Type != WallType::empty)
 			{
-				Shape wall = GenerateWall(building.cells[level][x][y].walls.S_Type, S);
-				wall.Move(glm::vec3(x, level, y) * 5.0f);
-				building.mesh.shape.Join(wall);
+				GenerateWall(glm::vec3(x, level, y) * generationConfig.scale, building.cells[level][x][y].walls.S_Type, S);
 			}
 			if (building.cells[level][x][y].walls.E_Type != WallType::empty)
 			{
-				Shape wall = GenerateWall(building.cells[level][x][y].walls.E_Type, E);
-				wall.Move(glm::vec3(x, level, y) * 5.0f);
-				building.mesh.shape.Join(wall);
+				GenerateWall(glm::vec3(x, level, y) * generationConfig.scale, building.cells[level][x][y].walls.E_Type, E);
 			}
 			if (building.cells[level][x][y].walls.W_Type != WallType::empty)
 			{
-				Shape wall = GenerateWall(building.cells[level][x][y].walls.W_Type, W);
-				wall.Move(glm::vec3(x, level, y) * 5.0f);
-				building.mesh.shape.Join(wall);
+				GenerateWall(glm::vec3(x, level, y) * generationConfig.scale, building.cells[level][x][y].walls.W_Type, W);
 			}
 		}
 	}
 }
 
-Shape Buildings::GenerateWall(WallType type, D direction)
+void Buildings::GenerateWall(glm::vec3 offset, WallType type, D direction)
 {
 	Shape wall = Shape(CUBE);
-	wall.Scale(glm::vec3(5.0f, 5.0f, 0.5f));
-	wall.Move(glm::vec3(0.0f, 2.5f, 2.5f));
+	wall.Scale(flatWallConfig.scale * generationConfig.scale);
+	wall.Move(flatWallConfig.offset * generationConfig.scale);
+
 	if (direction == S) wall.Rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 	else if (direction == E) wall.Rotate(90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 	else if (direction == W) wall.Rotate(-90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+	wall.SetCoordinates(glm::vec2(1));
+	wall.Move(offset);
 
-	return (wall);
+	building.mesh.shape.Join(wall);
+}
+
+void Buildings::GenerateRoofs(int level)
+{
+	for (int x = 0; x < building.cells[level].size(); x++)
+	{
+		for (int y = 0; y < building.cells[level][x].size(); y++)
+		{
+			if (!building.cells[level][x][y].roof.Empty())
+			{
+				GenerateRoof(glm::vec3(x, level + 1, y) * generationConfig.scale, building.cells[level][x][y].roof.type,
+					building.cells[level][x][y].roof.direction);
+			}
+		}
+	}
+}
+
+void Buildings::GenerateRoof(glm::vec3 offset, RoofType type, D direction)
+{
+	Shape roof;
+
+	if (type == RoofType::flatUp)
+	{
+		roof = Shape(CUBE);
+		roof.SetCoordinates(glm::vec2(2));
+		roof.Scale(flatRoofConfig.scale * generationConfig.scale);
+		roof.Move(flatRoofConfig.offset * generationConfig.scale);
+	}
+	else if (type == RoofType::slope)
+	{
+		roof = Shape(CUBE);
+		roof.SetCoordinates(glm::vec2(2));
+		roof.Scale(slopedRoofConfig.scale * generationConfig.scale);
+		roof.Rotate(slopedRoofConfig.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		roof.Move(slopedRoofConfig.offset * generationConfig.scale);
+	}
+	else if (type == RoofType::cone)
+	{
+		roof = Shape(CUBE);
+		roof.SetCoordinates(glm::vec2(2));
+		roof.Scale(glm::vec3(5.0f, 0.5f, 5.0f));
+		//roof.Rotate(45.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+		//roof.Move(glm::vec3(0.0f, 0.3125f * 5.0f, 0.0f));
+	}
+
+	if (direction == S) roof.Rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+	else if (direction == E) roof.Rotate(-90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+	else if (direction == W) roof.Rotate(90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	roof.Move(offset);
+
+	building.mesh.shape.Join(roof);
 }
 
 bool Buildings::CellValid(int i, int x, int y)
@@ -390,6 +630,8 @@ bool Buildings::FloorEmpty(int i, int x, int y)
 Mesh Buildings::mesh;
 
 std::vector<Texture> Buildings::beamTextures;
+std::vector<Texture> Buildings::plasteredTextures;
+std::vector<Texture> Buildings::reedTextures;
 
 Pipeline Buildings::graphicsPipeline{Manager::currentDevice, Manager::camera};
 
@@ -400,3 +642,8 @@ GenerationConfig Buildings::generationConfig;
 Building Buildings::building;
 
 Random Buildings::random;
+
+PartConfig Buildings::floorConfig{"floor", glm::vec3(1.0f, 0.1f, 1.0f)};
+PartConfig Buildings::flatWallConfig{"flat wall", glm::vec3(1.0f, 1.0f, 0.1f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
+PartConfig Buildings::flatRoofConfig{"flat roof", glm::vec3(1.0f, 0.1f, 1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.625f, 0.0f)};
+PartConfig Buildings::slopedRoofConfig{"sloped roof", glm::vec3(1.0f, 0.1f, 1.25f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(0.0f, 0.3f, 0.0f)};

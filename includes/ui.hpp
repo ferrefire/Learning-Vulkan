@@ -26,8 +26,15 @@
 #define INT_INPUT_COMPONENT 7
 #define GRAPH_COMPONENT 8
 #define CHECK_COMPONENT 9
+#define FLOAT3_DRAG_COMPONENT 10
 
 #define TEST_REPLACE_DEFINE "another replaceeeeeed"
+
+struct Float3DragComponent
+{
+	std::string name = "drag";
+	glm::vec3 &value;
+};
 
 struct CheckComponent
 {
@@ -121,6 +128,7 @@ struct Menu
 	std::vector<IntInputComponent> intInputComponents;
 	std::vector<GraphComponent> graphComponents;
 	std::vector<CheckComponent> checkComponents;
+	std::vector<Float3DragComponent> float3DragComponents;
 
 	void AddNode(std::string name, bool begin)
 	{
@@ -234,6 +242,17 @@ struct Menu
 		newComponent.index = checkComponents.size() - 1;
 		components.push_back(newComponent);
 	}
+
+	void AddDrag(std::string name, glm::vec3 &value)
+	{
+		Float3DragComponent newFloat3DragComponent{name, value};
+		float3DragComponents.push_back(newFloat3DragComponent);
+
+		Component newComponent;
+		newComponent.type = FLOAT3_DRAG_COMPONENT;
+		newComponent.index = float3DragComponents.size() - 1;
+		components.push_back(newComponent);
+	}
 };
 
 class UI
@@ -275,6 +294,7 @@ class UI
 		static void RenderInputComponent(IntInputComponent &inputComponent);
 		static void RenderGraphComponent(GraphComponent &graphComponent);
 		static void RenderCheckComponent(CheckComponent &checkComponent);
+		static void RenderDragComponent(Float3DragComponent &dragComponent);
 
 		static int FindNodeEnd(Menu &menu, std::string name, int start);
 		static void DraggingGraphPoint(int index);

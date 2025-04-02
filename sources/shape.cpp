@@ -669,7 +669,7 @@ void Shape::Move(glm::vec3 movement)
 	}
 }
 
-void Shape::Rotate(float degrees, glm::vec3 axis)
+void Shape::Rotate(float degrees, glm::vec3 axis, bool rotateNormal)
 {
     glm::mat4 rotation = glm::mat4(1.0f);
     rotation = glm::rotate(rotation, glm::radians(degrees), axis);
@@ -679,9 +679,12 @@ void Shape::Rotate(float degrees, glm::vec3 axis)
 		pos = rotation * glm::vec4(pos, 1.0f);
 	}
 
-	for (glm::vec3 &norm : normals)
+	if (rotateNormal)
 	{
-		norm = rotation * glm::vec4(norm, 0.0f);
+		for (glm::vec3 &norm : normals)
+		{
+			norm = rotation * glm::vec4(norm, 0.0f);
+		}
 	}
 }
 
@@ -726,6 +729,14 @@ void Shape::RecalculateCoordinates()
 void Shape::RecalculateNormal(unsigned int index)
 {
 	normals[index] = glm::normalize(glm::vec3(positions[index].x, 0, positions[index].z));
+}
+
+void Shape::SetCoordinates(glm::vec2 uv)
+{
+	for (int i = 0; i < coordinates.size(); i++)
+	{
+		coordinates[i] = uv;
+	}
 }
 
 glm::vec3 Shape::BottomMergePointsCenter()

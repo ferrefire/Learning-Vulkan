@@ -82,6 +82,15 @@ struct GenerationConfig
     int levelFactor = 3;
 	int scaffoldingReduction = 1;
 	bool random = false;
+	float scale = 5.0f;
+};
+
+struct PartConfig
+{
+	std::string name = "part";
+	glm::vec3 scale = glm::vec3(1);
+	glm::vec3 rotation = glm::vec3(0);
+	glm::vec3 offset = glm::vec3(0);
 };
 
 class Buildings
@@ -91,9 +100,11 @@ class Buildings
     public:
         static Mesh mesh;
 
-        static std::vector<Texture> beamTextures;
+		static std::vector<Texture> beamTextures;
+		static std::vector<Texture> plasteredTextures;
+		static std::vector<Texture> reedTextures;
 
-        static Pipeline graphicsPipeline;
+		static Pipeline graphicsPipeline;
 
         static Descriptor graphicsDescriptor;
 
@@ -103,7 +114,12 @@ class Buildings
 
 		static Random random;
 
-        static void Create();
+		static PartConfig floorConfig;
+		static PartConfig flatWallConfig;
+		static PartConfig flatRoofConfig;
+		static PartConfig slopedRoofConfig;
+
+		static void Create();
         static void CreateMeshes();
         static void CreateTextures();
         static void CreatePipelines();
@@ -127,11 +143,19 @@ class Buildings
 		static void ExpandCell(int i, int x, int y, int factor);
         static bool ExpansionValid(int i, int x, int y, int factor, int increase);
 		static void SetWalls();
+		static void SetRoof();
+		static void RoofTypePass(int i, int x, int y);
+		static void RoofDirectionPass(int i, int x, int y);
+		static D GetRoofDirection(RoofType type, bool N_Empty, bool S_Empty, bool E_Empty, bool W_Empty, bool N_Cone,
+			bool S_Cone, bool E_Cone, bool W_Cone, bool E_UpEmpty, bool W_UpEmpty);
+		static bool IsRoof(int i, int x, int y);
 		static void GenerateMesh();
 		static void GenerateFloors(int level);
-		static Shape GenerateFloor(FloorType type);
+		static void GenerateFloor(glm::vec3 offset, FloorType type);
 		static void GenerateWalls(int level);
-		static Shape GenerateWall(WallType type, D direction);
+		static void GenerateWall(glm::vec3 offset, WallType type, D direction);
+		static void GenerateRoofs(int level);
+		static void GenerateRoof(glm::vec3 offset, RoofType type, D direction);
 		static bool CellValid(int i, int x, int y);
 		static bool CellEmpty(int i, int x, int y);
 		static bool FloorEmpty(int i, int x, int y);

@@ -206,6 +206,8 @@ void UI::RenderComponents(Menu &menu, int start, int end)
 			RenderGraphComponent(menu.graphComponents[component.index]);
 		else if (component.type == CHECK_COMPONENT)
 			RenderCheckComponent(menu.checkComponents[component.index]);
+		else if (component.type == FLOAT3_DRAG_COMPONENT)
+			RenderDragComponent(menu.float3DragComponents[component.index]);
 
 		if (component.type == NODE_COMPONENT)
 		{
@@ -294,6 +296,11 @@ void UI::RenderGraphComponent(GraphComponent &graphComponent)
 void UI::RenderCheckComponent(CheckComponent &checkComponent)
 {
 	ImGui::Checkbox(checkComponent.name.c_str(), &checkComponent.value);
+}
+
+void UI::RenderDragComponent(Float3DragComponent &dragComponent)
+{
+	ImGui::DragFloat3(dragComponent.name.c_str(), &dragComponent.value[0], 0.01f);
 }
 
 int UI::FindNodeEnd(Menu &menu, std::string name, int start)

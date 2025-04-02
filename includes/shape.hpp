@@ -60,12 +60,14 @@ class Shape
         void Merge(Shape &joinShape, int mainBlendRange, int joinBlendRange);
 
         void Move(glm::vec3 movement);
-        void Rotate(float degrees, glm::vec3 axis);
-        void Scale(glm::vec3 scale, bool scaleUV = false);
+		void Rotate(float degrees, glm::vec3 axis, bool rotateNormal = true);
+		void Scale(glm::vec3 scale, bool scaleUV = false);
 
         void RecalculateNormals(bool x = true, bool y = false, bool z = true);
         void RecalculateNormal(unsigned int index);
         void RecalculateCoordinates();
+
+		void SetCoordinates(glm::vec2 uv);
 
         int ClosestMergeIndex(glm::vec3 position, bool closest, bool top);
         glm::vec3 BottomMergePointsCenter();
