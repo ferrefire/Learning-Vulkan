@@ -19,8 +19,8 @@ layout(set = 0, binding = 0) uniform Variables
 	mat4 projection;
 	mat4 viewMatrix;
 	mat4 viewLodMatrix;
-	mat4 shadowCascadeMatrix[CASCADE_COUNT];
-	vec4 shadowCascadeDistances[CASCADE_COUNT];
+	//mat4 shadowCascadeMatrix[CASCADE_COUNT];
+	//vec4 shadowCascadeDistances[CASCADE_COUNT];
 	mat4 cullMatrix;
     float viewHeight;
     vec3 viewPosition;
@@ -48,6 +48,7 @@ layout(set = 0, binding = 0) uniform Variables
 	uint shadowBounding;
 	uint shadowCascades;
 	float shadowCascadeMergeStrength;
+	mat4 shadowCascadeMatrix[CASCADE_COUNT];
 	vec4 terrainShadowOffsets[TERRAIN_CASCADE_COUNT];
 	vec4 terrainShadowDistances[TERRAIN_CASCADE_COUNT];
 	//float terrainShadowDistance1;

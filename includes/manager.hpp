@@ -65,8 +65,8 @@ struct ShaderVariables
 	alignas(16) glm::mat4 projection = glm::mat4(1);
 	alignas(16) glm::mat4 viewMatrix = glm::mat4(1);
 	alignas(16) glm::mat4 viewLodMatrix = glm::mat4(1);
-	alignas(16) glm::mat4 shadowCascadeMatrix[SHADOW_CASCADE_COUNT];
-	alignas(16) glm::vec4 shadowCascadeDistances[SHADOW_CASCADE_COUNT];
+	//alignas(16) glm::mat4 shadowCascadeMatrix[SHADOW_CASCADE_COUNT];
+	//alignas(16) glm::vec4 shadowCascadeDistances[SHADOW_CASCADE_COUNT];
 	alignas(16) glm::mat4 cullMatrix = glm::mat4(1);
 	alignas(4) float viewHeight = 0;
 	alignas(16) glm::vec3 viewPosition = glm::vec3(0);
@@ -94,6 +94,7 @@ struct ShaderVariables
 	alignas(4) uint32_t shadowBounding;
 	alignas(4) uint32_t shadowCascades;
 	alignas(4) float shadowCascadeMergeStrength;
+	alignas(16) glm::mat4 shadowCascadeMatrix[SHADOW_CASCADE_COUNT];
 	alignas(16) glm::vec4 terrainShadowOffsets[3];
 	alignas(16) glm::vec4 terrainShadowDistances[3];
 	//alignas(4) uint32_t capturing = 0;

@@ -94,7 +94,7 @@ void Trees::CreateMeshes()
 	//treeVariables.leafCount3 = int(floor(float(treeVariables.leafCountTotal) / 16.0f));
 	//treeVariables.leafCount4 = int(floor(float(treeVariables.leafCountTotal) / 32.0f));
 
-	float decreaseFactor = 1.0;
+	float decreaseFactor = 2.0;
 
 	treeVariables.leafCounts[0].x = leafPositions.size();
 	treeVariables.leafCounts[0].y = 0;

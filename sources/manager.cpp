@@ -14,6 +14,7 @@
 #include "capture.hpp"
 #include "wind.hpp"
 #include "ui.hpp"
+#include "buildings.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -290,6 +291,7 @@ void Manager::Start()
 	Data::Start();
 	Wind::Start();
 	Shadow::Start();
+	Buildings::Start();
 
 	Menu &menu = UI::NewMenu("light");
 	menu.AddSlider("sun speed", lightSpeed, 0.1f, 10.0f);
@@ -311,6 +313,7 @@ void Manager::PreFrame()
 	Leaves::Frame();
 	Grass::Frame();
 	Sky::Frame();
+	Shadow::Frame();
 }
 
 void Manager::Frame()
@@ -397,15 +400,16 @@ void Manager::UpdateShaderVariables()
 	shaderVariables.viewMatrix = shaderVariables.projection * shaderVariables.view;
 	shaderVariables.viewLodMatrix = camera.ProjectionLod() * shaderVariables.view;
 
-	Shadow::SetCascadeProjections();
-	Shadow::SetCascadeViews();
-	Shadow::SetCascadeTransformations();
+	//Shadow::SetCascadeProjections();
+	//Shadow::SetCascadeViews();
+	//Shadow::SetCascadeTransformations();
 	for (int i = 0; i < Shadow::cascadeCount; i++)
 	{
 		//shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeTransformations[i] * Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
 		//shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
 		shaderVariables.shadowCascadeMatrix[i] = Shadow::CreateShadowMatrix(i);
-		shaderVariables.shadowCascadeDistances[i] = glm::vec4(Shadow::GetCascadeNear(i) + Shadow::GetCascadeDistance(i));
+		//shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeMatrices[i];
+		//shaderVariables.shadowCascadeDistances[i] = glm::vec4(Shadow::GetCascadeNear(i) + Shadow::GetCascadeDistance(i));
 	}
 
 	shaderVariables.cullMatrix = Culling::cullProjection * shaderVariables.view;

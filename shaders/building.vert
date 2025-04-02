@@ -16,7 +16,7 @@ void main()
 
     vec3 objectPosition = inPosition;
 
-    worldPosition = inPosition + vec3(0.0, 2500.0, 0.0);
+    worldPosition = objectPosition + vec3(0.0, 2500.0, 0.0);
 
     worldPosition -= variables.terrainOffset;
 

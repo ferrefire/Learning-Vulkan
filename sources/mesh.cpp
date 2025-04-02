@@ -38,6 +38,7 @@ void Mesh::Create()
 {
 	CreateVertexBuffer();
 	CreateIndexBuffer();
+	this->created = true;
 }
 
 void Mesh::CreateVertexBuffer()
@@ -70,6 +71,7 @@ void Mesh::Destroy()
 {
 	DestroyVertexBuffer();
 	DestroyIndexBuffer();
+	this->created = false;
 }
 
 void Mesh::DestroyAtRuntime()

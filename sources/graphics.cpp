@@ -178,6 +178,7 @@ void Graphics::RecordGraphicsCommands(uint32_t imageIndex)
 
 	if (Terrain::HeightMapsGenerated() && SHADOWS_ENABLED) submitInfo.waitSemaphoreCount = 2;
 	else submitInfo.waitSemaphoreCount = 1;
+	//submitInfo.waitSemaphoreCount = 2;
 
 	//submitInfo.waitSemaphoreCount = 2;
 	//submitInfo.waitSemaphoreCount = 1;

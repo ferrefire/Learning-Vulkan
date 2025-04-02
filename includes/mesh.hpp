@@ -46,6 +46,7 @@ class Mesh
 
 		std::string name;
 
+		bool created = false;
 		bool position = true;
 		bool coordinate = false;
 		bool normal = false;

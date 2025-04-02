@@ -23,6 +23,24 @@ void Descriptor::Create(std::vector<DescriptorConfiguration> configs, VkDescript
 {
 	descriptorConfigs = std::vector<DescriptorConfiguration>(configs);
 
+	uint32_t count = perFrame ? static_cast<uint32_t>(Manager::settings.maxFramesInFlight) : 1;
+
+	int index = 0;
+	for (DescriptorConfiguration &config : descriptorConfigs)
+	{
+		Manager::descriptorInfo.totalDescriptorCount += count * config.count;
+		if (config.type == UNIFORM_BUFFER)
+			Manager::descriptorInfo.uniformBufferCount += count * config.count;
+		if (config.type == STORAGE_BUFFER)
+			Manager::descriptorInfo.storageBufferCount += count * config.count;
+		if (config.type == IMAGE_SAMPLER)
+			Manager::descriptorInfo.imageSamplerCount += count * config.count;
+		if (config.type == IMAGE_STORAGE)
+			Manager::descriptorInfo.imageStorageCount += count * config.count;
+		if (config.type == INPUT_ATTACHMENT)
+			Manager::descriptorInfo.inputAttatchmentCount += count * config.count;
+	}
+
 	//CreateDescriptorSetLayout(configuration);
 	//CreateDescriptorPool();
 	CreateDescriptorSets(descriptorSetLayout);

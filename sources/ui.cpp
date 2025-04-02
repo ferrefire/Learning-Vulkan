@@ -190,10 +190,22 @@ void UI::RenderComponents(Menu &menu, int start, int end)
 
 		if (component.type == TEXT_COMPONENT)
 			RenderTextComponent(menu.textComponents[component.index]);
-		else if (component.type == SLIDER_COMPONENT)
-			RenderSliderComponent(menu.sliderComponents[component.index]);
+		else if (component.type == FLOAT_SLIDER_COMPONENT)
+			RenderSliderComponent(menu.floatSliderComponents[component.index]);
+		else if (component.type == INT_SLIDER_COMPONENT)
+			RenderSliderComponent(menu.intSliderComponents[component.index]);
+		else if (component.type == FLOAT_RANGE_COMPONENT)
+			RenderRangeComponent(menu.floatRangeComponents[component.index]);
+		else if (component.type == INT_RANGE_COMPONENT)
+			RenderRangeComponent(menu.intRangeComponents[component.index]);
+		else if (component.type == BUTTON_COMPONENT)
+			RenderButtonComponent(menu.buttonComponents[component.index]);
+		else if (component.type == INT_INPUT_COMPONENT)
+			RenderInputComponent(menu.intInputComponents[component.index]);
 		else if (component.type == GRAPH_COMPONENT)
 			RenderGraphComponent(menu.graphComponents[component.index]);
+		else if (component.type == CHECK_COMPONENT)
+			RenderCheckComponent(menu.checkComponents[component.index]);
 
 		if (component.type == NODE_COMPONENT)
 		{
@@ -221,10 +233,48 @@ void UI::RenderTextComponent(TextComponent &textComponent)
 	ImGui::Text("%s", textComponent.content.c_str());
 }
 
-void UI::RenderSliderComponent(SliderComponent &sliderComponent)
+void UI::RenderSliderComponent(FloatSliderComponent &sliderComponent)
 {
 	ImGui::PushItemWidth(250.0f);
 	ImGui::SliderFloat(sliderComponent.name.c_str(), &sliderComponent.value, sliderComponent.min, sliderComponent.max);
+	ImGui::PopItemWidth();
+}
+
+void UI::RenderSliderComponent(IntSliderComponent &sliderComponent)
+{
+	ImGui::PushItemWidth(250.0f);
+	ImGui::SliderInt(sliderComponent.name.c_str(), &sliderComponent.value, sliderComponent.min, sliderComponent.max);
+	ImGui::PopItemWidth();
+}
+
+void UI::RenderRangeComponent(FloatRangeComponent &rangeComponent)
+{
+	ImGui::PushItemWidth(500.0f);
+	ImGui::DragFloatRange2(rangeComponent.name.c_str(), &rangeComponent.value1, &rangeComponent.value2, 1, rangeComponent.min, 
+		rangeComponent.max);
+	ImGui::PopItemWidth();
+}
+
+void UI::RenderRangeComponent(IntRangeComponent &rangeComponent)
+{
+	ImGui::PushItemWidth(500.0f);
+	ImGui::DragIntRange2(rangeComponent.name.c_str(), &rangeComponent.value1, &rangeComponent.value2, 1, rangeComponent.min,
+		rangeComponent.max);
+	ImGui::PopItemWidth();
+}
+
+void UI::RenderButtonComponent(ButtonComponent &buttonComponent)
+{
+	if (ImGui::Button(buttonComponent.name.c_str()))
+	{
+		buttonComponent.func();
+	}
+}
+
+void UI::RenderInputComponent(IntInputComponent &inputComponent)
+{
+	ImGui::PushItemWidth(125.0f);
+	ImGui::InputInt(inputComponent.name.c_str(), &inputComponent.value);
 	ImGui::PopItemWidth();
 }
 
@@ -239,6 +289,11 @@ void UI::RenderGraphComponent(GraphComponent &graphComponent)
 	ImGui::PlotLines(graphComponent.name.c_str(), values.data(), graphComponent.resolution, 0, NULL, 0.0f, 1.0f, ImVec2(0, 200.0f));
 
 	currentGraph = nullptr;
+}
+
+void UI::RenderCheckComponent(CheckComponent &checkComponent)
+{
+	ImGui::Checkbox(checkComponent.name.c_str(), &checkComponent.value);
 }
 
 int UI::FindNodeEnd(Menu &menu, std::string name, int start)
