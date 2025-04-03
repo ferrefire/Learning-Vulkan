@@ -172,7 +172,7 @@ void Buildings::Start()
 	menu.AddSlider("scaffolding", generationConfig.scaffoldingReduction, 1, 10);
 	menu.AddNode("factors", false);
 	menu.AddNode("part properties", true);
-	std::vector<void *> parts = {&floorConfig, &flatWallConfig, &flatRoofConfig, &slopedRoofConfig};
+	std::vector<void *> parts = {&floorConfig, &flatWallConfig, &flatRoofConfig, &slopedRoofConfig, &coneRoofConfig, &beamConfig, &collumnConfig};
 	for (void *part : parts)
 	{
 		PartConfig *p = (PartConfig *)part;
@@ -247,6 +247,7 @@ void Buildings::GenerateCells()
 	}
 
 	SetWalls();
+	SetBeams();
 	SetRoof();
 }
 
@@ -268,10 +269,10 @@ void Buildings::FillLevel(int level)
 		{
 			if (CellEmpty(level, x, y))
 			{
-				bool N_Empty = CellEmpty(level, x, y + 1);
-				bool S_Empty = CellEmpty(level, x, y - 1);
-				bool E_Empty = CellEmpty(level, x + 1, y);
-				bool W_Empty = CellEmpty(level, x - 1, y);
+				bool N_Empty = CellEmpty(level, x, y + 1, false);
+				bool S_Empty = CellEmpty(level, x, y - 1, false);
+				bool E_Empty = CellEmpty(level, x + 1, y, false);
+				bool W_Empty = CellEmpty(level, x - 1, y, false);
 
 				if (!N_Empty && !S_Empty && !E_Empty && !W_Empty)
 				{
@@ -286,16 +287,16 @@ void Buildings::ExpandCell(int i, int x, int y, int factor)
 {
     building.cells[i][x][y].floor.type = FloorType::flat;
 
-	int currentFactor = factor - ((CellEmpty(i - 1, x + 1, y) && i != 0) ? generationConfig.scaffoldingReduction : 0);
+	int currentFactor = factor - ((CellEmpty(i - 1, x + 1, y) && i != 0) ? generationConfig.scaffoldingReduction - 1 : 0);
 	if (ExpansionValid(i, x + 1, y, currentFactor, 1)) ExpandCell(i, x + 1, y, currentFactor);
 
-	currentFactor = factor - ((CellEmpty(i - 1, x - 1, y) && i != 0) ? generationConfig.scaffoldingReduction : 0);
+	currentFactor = factor - ((CellEmpty(i - 1, x - 1, y) && i != 0) ? generationConfig.scaffoldingReduction - 1 : 0);
 	if (ExpansionValid(i, x - 1, y, currentFactor, 1)) ExpandCell(i, x - 1, y, currentFactor);
 
-	currentFactor = factor - ((CellEmpty(i - 1, x, y + 1) && i != 0) ? generationConfig.scaffoldingReduction : 0);
+	currentFactor = factor - ((CellEmpty(i - 1, x, y + 1) && i != 0) ? generationConfig.scaffoldingReduction - 1 : 0);
 	if (ExpansionValid(i, x, y + 1, currentFactor, -1)) ExpandCell(i, x, y + 1, currentFactor);
 
-	currentFactor = factor - ((CellEmpty(i - 1, x, y - 1) && i != 0) ? generationConfig.scaffoldingReduction : 0);
+	currentFactor = factor - ((CellEmpty(i - 1, x, y - 1) && i != 0) ? generationConfig.scaffoldingReduction - 1 : 0);
 	if (ExpansionValid(i, x, y - 1, currentFactor, -1)) ExpandCell(i, x, y - 1, currentFactor);
 }
 
@@ -352,8 +353,141 @@ void Buildings::SetWalls()
 	}
 }
 
+void Buildings::SetBeams()
+{
+	for (int i = building.cells.size() - 1; i >= 0; i--)
+	{
+		for (int x = 0; x < building.cells[i].size(); x++)
+		{
+			for (int y = 0; y < building.cells[i][x].size(); y++)
+			{
+				if (building.cells[i][x][y].walls.Empty() && !CellEmpty(i + 1, x, y))
+				{
+					bool N_Empty = CellEmpty(i, x, y + 1);
+                    bool S_Empty = CellEmpty(i, x, y - 1);
+                    bool E_Empty = CellEmpty(i, x + 1, y);
+                    bool W_Empty = CellEmpty(i, x - 1, y);
+                    bool NE_Empty = CellEmpty(i, x + 1, y + 1);
+                    bool NW_Empty = CellEmpty(i, x - 1, y + 1);
+                    bool SE_Empty = CellEmpty(i, x + 1, y - 1);
+                    bool SW_Empty = CellEmpty(i, x - 1, y - 1);
+
+					bool N_Beam = BeamPass(i, x, y, N, N_Empty, S_Empty, E_Empty, W_Empty, NE_Empty, NW_Empty, SE_Empty, SW_Empty);
+					bool S_Beam = BeamPass(i, x, y, S, N_Empty, S_Empty, E_Empty, W_Empty, NE_Empty, NW_Empty, SE_Empty, SW_Empty);
+					bool E_Beam = BeamPass(i, x, y, E, N_Empty, S_Empty, E_Empty, W_Empty, NE_Empty, NW_Empty, SE_Empty, SW_Empty);
+					bool W_Beam = BeamPass(i, x, y, W, N_Empty, S_Empty, E_Empty, W_Empty, NE_Empty, NW_Empty, SE_Empty, SW_Empty);
+
+					building.cells[i][x][y].walls.N_Type = N_Beam ? WallType::beams : WallType::empty;
+                    building.cells[i][x][y].walls.S_Type = S_Beam ? WallType::beams : WallType::empty;
+                    building.cells[i][x][y].walls.E_Type = E_Beam ? WallType::beams : WallType::empty;
+                    building.cells[i][x][y].walls.W_Type = W_Beam ? WallType::beams : WallType::empty;
+				}
+			}
+		}
+	}
+}
+
+bool Buildings::BeamPass(int i, int x, int y, D direction, bool N_Empty, bool S_Empty, bool E_Empty, bool W_Empty, bool NE_Empty, bool NW_Empty, bool SE_Empty, bool SW_Empty)
+{
+	if (direction == N)
+	{
+		bool N = N_Empty || building.cells[i][x][y + 1].walls.E_Type == WallType::empty;
+        bool E = E_Empty || building.cells[i][x + 1][y].walls.W_Type == WallType::empty;
+        bool NE = NE_Empty || building.cells[i][x + 1][y + 1].walls.S_Type == WallType::empty;
+        return (N && E && NE);
+	}
+	else if (direction == S)
+	{
+		bool S = S_Empty || building.cells[i][x][y - 1].walls.W_Type == WallType::empty;
+        bool W = W_Empty || building.cells[i][x - 1][y].walls.E_Type == WallType::empty;
+        bool SW = SW_Empty || building.cells[i][x - 1][y - 1].walls.N_Type == WallType::empty;
+        return (S && W && SW);
+	}
+	else if (direction == E)
+	{
+		bool S = S_Empty || building.cells[i][x][y - 1].walls.N_Type == WallType::empty;
+        bool E = E_Empty || building.cells[i][x + 1][y].walls.S_Type == WallType::empty;
+        bool SE = SE_Empty || building.cells[i][x + 1][y - 1].walls.W_Type == WallType::empty;
+        return (S && E && SE);
+	}
+	else if (direction == W)
+	{
+		bool N = N_Empty || building.cells[i][x][y + 1].walls.S_Type == WallType::empty;
+        bool W = W_Empty || building.cells[i][x - 1][y].walls.N_Type == WallType::empty;
+        bool NW = NW_Empty || building.cells[i][x - 1][y + 1].walls.E_Type == WallType::empty;
+        return (N && W && NW);
+	}
+	return (false);
+}
+
 void Buildings::SetRoof()
 {
+	for (int i = 0; i < building.cells.size(); i++)
+	{
+		for (int x = 0; x < building.cells[i].size(); x++)
+		{
+			for (int y = 0; y < building.cells[i][x].size(); y++)
+			{
+				RoofTypePass(i, x, y);
+			}
+		}
+	}
+
+	for (int i = 0; i < building.cells.size(); i++)
+	{
+		for (int x = 0; x < building.cells[i].size(); x++)
+		{
+			for (int y = 0; y < building.cells[i][x].size(); y++)
+			{
+				RoofConePass(i, x, y);
+			}
+		}
+	}
+
+	for (int i = 0; i < building.cells.size(); i++)
+	{
+		for (int x = 0; x < building.cells[i].size(); x++)
+		{
+			for (int y = 0; y < building.cells[i][x].size(); y++)
+			{
+				RoofTypePass(i, x, y);
+			}
+		}
+	}
+
+	for (int i = 0; i < building.cells.size(); i++)
+	{
+		for (int x = 0; x < building.cells[i].size(); x++)
+		{
+			for (int y = 0; y < building.cells[i][x].size(); y++)
+			{
+				RoofConePass(i, x, y);
+			}
+		}
+	}
+
+	for (int i = 0; i < building.cells.size(); i++)
+	{
+		for (int x = 0; x < building.cells[i].size(); x++)
+		{
+			for (int y = 0; y < building.cells[i][x].size(); y++)
+			{
+				RoofConePass(i, x, y);
+			}
+		}
+	}
+
+	for (int i = 0; i < building.cells.size(); i++)
+	{
+		for (int x = 0; x < building.cells[i].size(); x++)
+		{
+			for (int y = 0; y < building.cells[i][x].size(); y++)
+			{
+				RoofConePass(i, x, y);
+			}
+		}
+	}
+
 	for (int i = 0; i < building.cells.size(); i++)
 	{
 		for (int x = 0; x < building.cells[i].size(); x++)
@@ -407,7 +541,7 @@ void Buildings::RoofTypePass(int i, int x, int y)
 	}
 }
 
-void Buildings::RoofDirectionPass(int i, int x, int y)
+void Buildings::RoofConePass(int i, int x, int y)
 {
 	if (!building.cells[i][x][y].roof.Empty())
 	{
@@ -415,10 +549,38 @@ void Buildings::RoofDirectionPass(int i, int x, int y)
 		bool S_Empty = CellEmpty(i, x, y - 1);
 		bool E_Empty = CellEmpty(i, x + 1, y);
 		bool W_Empty = CellEmpty(i, x - 1, y);
-		bool N_UpEmpty = CellEmpty(i + 1, x, y + 1);
-		bool S_UpEmpty = CellEmpty(i + 1, x, y - 1);
-		bool E_UpEmpty = CellEmpty(i + 1, x + 1, y);
-		bool W_UpEmpty = CellEmpty(i + 1, x - 1, y);
+		int emptyAmount = (N_Empty ? 1 : 0) + (S_Empty ? 1 : 0) + (E_Empty ? 1 : 0) + (W_Empty ? 1 : 0);
+		bool N_Cone = !N_Empty && building.cells[i][x][y + 1].roof.type == RoofType::cone;
+		bool S_Cone = !S_Empty && building.cells[i][x][y - 1].roof.type == RoofType::cone;
+		bool E_Cone = !E_Empty && building.cells[i][x + 1][y].roof.type == RoofType::cone;
+		bool W_Cone = !W_Empty && building.cells[i][x - 1][y].roof.type == RoofType::cone;
+		int coneAmount = (N_Cone ? 1 : 0) + (S_Cone ? 1 : 0) + (E_Cone ? 1 : 0) + (W_Cone ? 1 : 0);
+		bool N_Wall = !N_Empty && !CellEmpty(i + 1, x, y + 1);
+		bool S_Wall = !N_Empty && !CellEmpty(i + 1, x, y - 1);
+		bool E_Wall = !N_Empty && !CellEmpty(i + 1, x + 1, y);
+		bool W_Wall = !N_Empty && !CellEmpty(i + 1, x - 1, y);
+		int wallAmount = (N_Wall ? 1 : 0) + (S_Wall ? 1 : 0) + (E_Wall ? 1 : 0) + (W_Wall ? 1 : 0);
+
+		if (building.cells[i][x][y].roof.type != RoofType::cone && ((emptyAmount == 2 && coneAmount == 2) ||
+            (emptyAmount == 1 && coneAmount == 3) || (emptyAmount == 2 && coneAmount == 1) || 
+            (emptyAmount == 1 && ((N_Cone && S_Cone) || (E_Cone && W_Cone))) ||
+            (emptyAmount == 1 && coneAmount == 2 && wallAmount == 1))) 
+            building.cells[i][x][y].roof.type = RoofType::cone;
+	}
+}
+
+void Buildings::RoofDirectionPass(int i, int x, int y)
+{
+	if (!building.cells[i][x][y].roof.Empty())
+	{
+		bool N_Empty = CellEmpty(i, x, y + 1, false);
+		bool S_Empty = CellEmpty(i, x, y - 1, false);
+		bool E_Empty = CellEmpty(i, x + 1, y, false);
+		bool W_Empty = CellEmpty(i, x - 1, y, false);
+		bool N_UpEmpty = CellEmpty(i + 1, x, y + 1, false);
+		bool S_UpEmpty = CellEmpty(i + 1, x, y - 1, false);
+		bool E_UpEmpty = CellEmpty(i + 1, x + 1, y, false);
+		bool W_UpEmpty = CellEmpty(i + 1, x - 1, y, false);
 		bool N_Cone = !N_Empty && building.cells[i][x][y + 1].roof.type == RoofType::cone;
 		bool S_Cone = !S_Empty && building.cells[i][x][y - 1].roof.type == RoofType::cone;
 		bool E_Cone = !E_Empty && building.cells[i][x + 1][y].roof.type == RoofType::cone;
@@ -469,8 +631,8 @@ D Buildings::GetRoofDirection(RoofType type, bool N_Empty, bool S_Empty, bool E_
 
 bool Buildings::IsRoof(int i, int x, int y)
 {
-	return (CellValid(i, x, y) && !building.cells[i][x][y].Empty() && (!CellValid(i + 1, x, y) || 
-		building.cells[i + 1][x][y].Empty()));
+	return (CellValid(i, x, y) && !building.cells[i][x][y].Empty(false) && (!CellValid(i + 1, x, y) || 
+		building.cells[i + 1][x][y].Empty(false)));
 }
 
 void Buildings::GenerateMesh()
@@ -524,21 +686,26 @@ void Buildings::GenerateWalls(int level)
 	{
 		for (int y = 0; y < building.cells[level][x].size(); y++)
 		{
-			if (building.cells[level][x][y].walls.N_Type != WallType::empty)
+			if (building.cells[level][x][y].walls.N_Type != WallType::empty && building.cells[level][x][y].walls.N_Type != WallType::beams)
 			{
 				GenerateWall(glm::vec3(x, level, y) * generationConfig.scale, building.cells[level][x][y].walls.N_Type, N);
 			}
-			if (building.cells[level][x][y].walls.S_Type != WallType::empty)
+			if (building.cells[level][x][y].walls.S_Type != WallType::empty && building.cells[level][x][y].walls.S_Type != WallType::beams)
 			{
 				GenerateWall(glm::vec3(x, level, y) * generationConfig.scale, building.cells[level][x][y].walls.S_Type, S);
 			}
-			if (building.cells[level][x][y].walls.E_Type != WallType::empty)
+			if (building.cells[level][x][y].walls.E_Type != WallType::empty && building.cells[level][x][y].walls.E_Type != WallType::beams)
 			{
 				GenerateWall(glm::vec3(x, level, y) * generationConfig.scale, building.cells[level][x][y].walls.E_Type, E);
 			}
-			if (building.cells[level][x][y].walls.W_Type != WallType::empty)
+			if (building.cells[level][x][y].walls.W_Type != WallType::empty && building.cells[level][x][y].walls.W_Type != WallType::beams)
 			{
 				GenerateWall(glm::vec3(x, level, y) * generationConfig.scale, building.cells[level][x][y].walls.W_Type, W);
+			}
+
+			if (building.cells[level][x][y].walls.Beams())
+			{
+				GenerateBeams(level, x, y);
 			}
 		}
 	}
@@ -557,6 +724,100 @@ void Buildings::GenerateWall(glm::vec3 offset, WallType type, D direction)
 	wall.Move(offset);
 
 	building.mesh.shape.Join(wall);
+}
+
+void Buildings::GenerateBeams(int i, int x, int y)
+{
+	Shape beams;
+	beams.normal = true;
+	beams.coordinate = true;
+
+	Walls walls = building.cells[i][x][y].walls;
+
+	bool N_Empty_B = CellEmpty(i, x, y + 1, false);
+    bool N_Empty = CellEmpty(i, x, y + 1);
+    bool S_Empty = CellEmpty(i, x, y - 1);
+    bool E_Empty_B = CellEmpty(i, x + 1, y, false);
+    bool E_Empty = CellEmpty(i, x + 1, y);
+    bool W_Empty = CellEmpty(i, x - 1, y);
+
+	if (i != 0)
+    {
+        if (N_Empty_B)
+		{
+			Shape beam = Shape(CUBE);
+			beam.SetCoordinates(glm::vec2(0));
+			beam.Scale(beamConfig.scale * generationConfig.scale);
+			beam.Move(beamConfig.offset * generationConfig.scale);
+			beams.Join(beam);
+		}
+		if (E_Empty_B)
+		{
+			Shape beam = Shape(CUBE);
+			beam.SetCoordinates(glm::vec2(0));
+			beam.Scale(beamConfig.scale * generationConfig.scale);
+			beam.Move(beamConfig.offset * generationConfig.scale);
+			beam.Rotate(90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+			beams.Join(beam);
+		}
+		if (S_Empty)
+		{
+			Shape beam = Shape(CUBE);
+			beam.SetCoordinates(glm::vec2(0));
+			beam.Scale(beamConfig.scale * generationConfig.scale);
+			beam.Move(beamConfig.offset * generationConfig.scale);
+			beam.Rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+			beams.Join(beam);
+		}
+		if (W_Empty)
+		{
+			Shape beam = Shape(CUBE);
+			beam.SetCoordinates(glm::vec2(0));
+			beam.Scale(beamConfig.scale * generationConfig.scale);
+			beam.Move(beamConfig.offset * generationConfig.scale);
+			beam.Rotate(270.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+			beams.Join(beam);
+		}
+    }
+
+	if (walls.N_Type == WallType::beams)
+	{
+		Shape beam = Shape(CUBE);
+		beam.SetCoordinates(glm::vec2(0));
+		beam.Scale(collumnConfig.scale * generationConfig.scale);
+		beam.Move(collumnConfig.offset * generationConfig.scale);
+		beams.Join(beam);
+	}
+	if (walls.E_Type == WallType::beams)
+	{
+		Shape beam = Shape(CUBE);
+		beam.SetCoordinates(glm::vec2(0));
+		beam.Scale(collumnConfig.scale * generationConfig.scale);
+		beam.Move(collumnConfig.offset * generationConfig.scale);
+		beam.Rotate(90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+		beams.Join(beam);
+	}
+	if (walls.S_Type == WallType::beams)
+	{
+		Shape beam = Shape(CUBE);
+		beam.SetCoordinates(glm::vec2(0));
+		beam.Scale(collumnConfig.scale * generationConfig.scale);
+		beam.Move(collumnConfig.offset * generationConfig.scale);
+		beam.Rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+		beams.Join(beam);
+	}
+	if (walls.W_Type == WallType::beams)
+	{
+		Shape beam = Shape(CUBE);
+		beam.SetCoordinates(glm::vec2(0));
+		beam.Scale(collumnConfig.scale * generationConfig.scale);
+		beam.Move(collumnConfig.offset * generationConfig.scale);
+		beam.Rotate(270.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+		beams.Join(beam);
+	}
+
+	beams.Move(glm::vec3(x, i, y) * generationConfig.scale);
+	building.mesh.shape.Join(beams);
 }
 
 void Buildings::GenerateRoofs(int level)
@@ -595,11 +856,23 @@ void Buildings::GenerateRoof(glm::vec3 offset, RoofType type, D direction)
 	}
 	else if (type == RoofType::cone)
 	{
-		roof = Shape(CUBE);
+		Shape leftRoof = Shape(CUBE);
+		leftRoof.SetCoordinates(glm::vec2(2));
+		leftRoof.Scale(coneRoofConfig.scale * generationConfig.scale);
+		leftRoof.Rotate(coneRoofConfig.rotation.x, glm::vec3(0.0f, 0.0f, 1.0f));
+		leftRoof.Move(coneRoofConfig.offset * generationConfig.scale);
+
+		Shape rightRoof = Shape(CUBE);
+		rightRoof.SetCoordinates(glm::vec2(2));
+		rightRoof.Scale(coneRoofConfig.scale * generationConfig.scale);
+		rightRoof.Rotate(-coneRoofConfig.rotation.x, glm::vec3(0.0f, 0.0f, 1.0f));
+		rightRoof.Move(coneRoofConfig.offset * glm::vec3(-1.0f, 1.0f, 1.0f) * generationConfig.scale);
+
+		roof.normal = true;
+		roof.coordinate = true;
+		roof.Join(leftRoof);
+		roof.Join(rightRoof);
 		roof.SetCoordinates(glm::vec2(2));
-		roof.Scale(glm::vec3(5.0f, 0.5f, 5.0f));
-		//roof.Rotate(45.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-		//roof.Move(glm::vec3(0.0f, 0.3125f * 5.0f, 0.0f));
 	}
 
 	if (direction == S) roof.Rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -617,9 +890,9 @@ bool Buildings::CellValid(int i, int x, int y)
 		y >= 0 && y < generationConfig.maxSize.z);
 }
 
-bool Buildings::CellEmpty(int i, int x, int y)
+bool Buildings::CellEmpty(int i, int x, int y, bool countBeams)
 {
-	return (!CellValid(i, x, y) || building.cells[i][x][y].Empty());
+	return (!CellValid(i, x, y) || building.cells[i][x][y].Empty(countBeams));
 }
 
 bool Buildings::FloorEmpty(int i, int x, int y)
@@ -647,3 +920,6 @@ PartConfig Buildings::floorConfig{"floor", glm::vec3(1.0f, 0.1f, 1.0f)};
 PartConfig Buildings::flatWallConfig{"flat wall", glm::vec3(1.0f, 1.0f, 0.1f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
 PartConfig Buildings::flatRoofConfig{"flat roof", glm::vec3(1.0f, 0.1f, 1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.625f, 0.0f)};
 PartConfig Buildings::slopedRoofConfig{"sloped roof", glm::vec3(1.0f, 0.1f, 1.25f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(0.0f, 0.3f, 0.0f)};
+PartConfig Buildings::coneRoofConfig{"cone roof", glm::vec3(0.635f, 0.1f, 1.0f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(-0.26f, 0.135f, 0.0f)};
+PartConfig Buildings::beamConfig{"beam", glm::vec3(1.25f, 0.15f, 0.15f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.6f)};
+PartConfig Buildings::collumnConfig{"collumn", glm::vec3(0.15f, 1.0f, 0.15f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.6f, 0.5f, 0.6f)};

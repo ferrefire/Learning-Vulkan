@@ -300,7 +300,7 @@ void UI::RenderCheckComponent(CheckComponent &checkComponent)
 
 void UI::RenderDragComponent(Float3DragComponent &dragComponent)
 {
-	ImGui::DragFloat3(dragComponent.name.c_str(), &dragComponent.value[0], 0.01f);
+	ImGui::DragFloat3(dragComponent.name.c_str(), &dragComponent.value[0], 0.005f);
 }
 
 int UI::FindNodeEnd(Menu &menu, std::string name, int start)
