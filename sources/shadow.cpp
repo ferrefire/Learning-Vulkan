@@ -360,7 +360,7 @@ glm::mat4 Shadow::GetCascadeView(int lod)
 
 	glm::vec3 direction = Manager::shaderVariables.lightDirection;
 	glm::vec3 focus = Manager::camera.Position() + Manager::camera.Front() * (GetCascadeNear(lod) + GetCascadeDistance(lod) * 0.5f);
-	focus = glm::floor(focus);
+	focus = glm::floor(focus * 0.1f) * 10.0f;
 
 	glm::vec3 front = glm::normalize(-direction);
 	// glm::vec3 front = Manager::camera.Front();
@@ -1404,7 +1404,7 @@ std::vector<float> Shadow::shadowCascadeDistances = {75, 175, 750, 1250, 2500};
 std::vector<float> Shadow::shadowCascadeDistancesMults = {1.0, 1.0, 1.25, 1.0, 2.0};
 //std::vector<float> Shadow::shadowCascadeDistancesMults = {1.0, 1.0, 1.0, 1.0, 1.0};
 //std::vector<float> Shadow::shadowCascadeDistances = {50, 125, 375, 1250, 2000};
-std::vector<int> Shadow::shadowCascadeResolutions = {3072, 2048, 2048, 2048, 2048};
+std::vector<int> Shadow::shadowCascadeResolutions = {4096, 2048, 2048, 2048, 2048};
 //std::vector<int> Shadow::shadowCascadeResolutions = {512, 512, 512, 512, 512};
 //std::vector<float> Shadow::shadowCascadeDepths = {8.0, 4.0, 2.0, 1.5, 1.0};
 std::vector<float> Shadow::shadowCascadeDepths = {4.0, 4.0, 4.0, 4.0, 4.0};

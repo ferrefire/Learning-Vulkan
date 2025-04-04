@@ -44,6 +44,7 @@ void main()
 	}
 	else if (type == 1)
 	{
+		uv *= 0.5;
 		texColor = SampleTriplanarColor(plasteredSamplers[0], uv, weights);
 		texNormal = SampleTriplanarNormal(plasteredSamplers[1], uv, weights, normal, 1.0);
 		texAmbient = SampleTriplanarColor(plasteredSamplers[2], uv, weights);

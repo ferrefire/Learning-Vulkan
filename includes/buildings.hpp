@@ -19,6 +19,7 @@ enum D {N, S, E, W};
 enum class FloorType {empty, flat, stairs, beams};
 enum class WallType {empty, flat, window, door, balcony, beams};
 enum class RoofType {empty, flat, flatUp, slope, cone};
+enum class PartType {floor, flatWall, flatRoof, slopedRoof, coneRoof, beam, collumn};
 
 struct Floor
 {
@@ -61,7 +62,17 @@ struct Roof
     RoofType type = RoofType::empty;
     D direction;
 
-    bool Empty()
+	bool N_Extend = false;
+	bool S_Extend = false;
+	bool E_Extend = false;
+	bool W_Extend = false;
+
+	bool N_Merge = false;
+	bool S_Merge = false;
+	bool E_Merge = false;
+	bool W_Merge = false;
+
+	bool Empty()
     {
         return (type == RoofType::empty);
     }
@@ -170,9 +181,13 @@ class Buildings
 		static void RoofTypePass(int i, int x, int y);
 		static void RoofConePass(int i, int x, int y);
 		static void RoofDirectionPass(int i, int x, int y);
+		static void RoofMergePass(int i, int x, int y);
+		static void RoofExtendPass(int i, int x, int y);
 		static D GetRoofDirection(RoofType type, bool N_Empty, bool S_Empty, bool E_Empty, bool W_Empty, bool N_Cone,
 			bool S_Cone, bool E_Cone, bool W_Cone, bool E_UpEmpty, bool W_UpEmpty);
+		static bool MergePass(int i, int x, int y, D direction, bool N_Empty, bool S_Empty, bool E_Empty, bool W_Empty, bool N_Cone, bool S_Cone, bool E_Cone, bool W_Cone);
 		static bool IsRoof(int i, int x, int y);
+		static Shape GeneratePart(PartType type);
 		static void GenerateMesh();
 		static void GenerateFloors(int level);
 		static void GenerateFloor(glm::vec3 offset, FloorType type);
@@ -180,7 +195,7 @@ class Buildings
 		static void GenerateWall(glm::vec3 offset, WallType type, D direction);
 		static void GenerateBeams(int i, int x, int y);
 		static void GenerateRoofs(int level);
-		static void GenerateRoof(glm::vec3 offset, RoofType type, D direction);
+		static void GenerateRoof(int i, int x, int y, RoofType type, D direction);
 		static bool CellValid(int i, int x, int y);
 		static bool CellEmpty(int i, int x, int y, bool countBeams = true);
 		static bool FloorEmpty(int i, int x, int y);

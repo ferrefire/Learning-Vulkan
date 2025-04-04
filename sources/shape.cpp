@@ -688,6 +688,11 @@ void Shape::Rotate(float degrees, glm::vec3 axis, bool rotateNormal)
 	}
 }
 
+void Shape::Rotate90(int times, bool rotateNormal)
+{
+	this->Rotate(90.0f * times, glm::vec3(0.0f, 1.0f, 0.0f), rotateNormal);
+}
+
 void Shape::Scale(glm::vec3 scale, bool scaleUV)
 {
 	glm::mat4 scaleMatrix = glm::mat4(1.0f);

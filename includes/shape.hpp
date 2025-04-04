@@ -61,6 +61,7 @@ class Shape
 
         void Move(glm::vec3 movement);
 		void Rotate(float degrees, glm::vec3 axis, bool rotateNormal = true);
+		void Rotate90(int times = 1, bool rotateNormal = true);
 		void Scale(glm::vec3 scale, bool scaleUV = false);
 
         void RecalculateNormals(bool x = true, bool y = false, bool z = true);
