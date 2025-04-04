@@ -358,8 +358,9 @@ glm::mat4 Shadow::GetCascadeView(int lod)
 {
 	glm::mat4 shadowCascadeView;
 
-	/*glm::vec3 direction = Manager::shaderVariables.lightDirection;
+	glm::vec3 direction = Manager::shaderVariables.lightDirection;
 	glm::vec3 focus = Manager::camera.Position() + Manager::camera.Front() * (GetCascadeNear(lod) + GetCascadeDistance(lod) * 0.5f);
+	focus = glm::floor(focus);
 
 	glm::vec3 front = glm::normalize(-direction);
 	// glm::vec3 front = Manager::camera.Front();
@@ -369,12 +370,12 @@ glm::mat4 Shadow::GetCascadeView(int lod)
 	// glm::vec3 position = focus + direction * shadowCascadeDistances[i] * 0.5f * shadowCascadeDepths[i];
 	glm::vec3 position = focus;
 
-	shadowCascadeView = glm::lookAt(position, position + front, up);*/
+	shadowCascadeView = glm::lookAt(position, position + front, up);
 
-	float near = GetCascadeNear(lod);
+	/*float near = GetCascadeNear(lod);
 	float far = GetCascadeDistance(lod);
 
-	glm::vec3 direction = glm::normalize(-Manager::shaderVariables.lightDirection);
+	glm::vec3 direction = glm::normalize(Manager::shaderVariables.lightDirection);
 	//std::vector<glm::vec4> frustumCorners = Manager::camera.GetFrustumCorners(glm::clamp(near, 0.1f, near + far), near + far);
 	std::vector<glm::vec4> frustumCorners = Manager::camera.GetFrustumCorners(near, near + far);
 
@@ -386,7 +387,10 @@ glm::mat4 Shadow::GetCascadeView(int lod)
 	}
 	average = average / float(frustumCorners.size());
 
-	shadowCascadeView = glm::lookAt(average - direction, average, glm::vec3(0.0f, 1.0f, 0.0f));
+	//glm::vec3 side = glm::normalize(glm::cross(direction, glm::vec3(0.0f, 1.0f, 0.0f)));
+	//glm::vec3 up = glm::normalize(glm::cross(side, direction));
+	//shadowCascadeView = glm::lookAt(average + direction, average, up);
+	shadowCascadeView = glm::lookAt(average + direction, average, glm::vec3(0.0f, 1.0f, 0.0f));*/
 
 	shadowCascadeViews[lod] = shadowCascadeView;
 
@@ -978,11 +982,13 @@ void Shadow::SetCascadeProjections()
 
 glm::mat4 Shadow::GetCascadeProjection(int lod)
 {
-	//glm::mat4 shadowCascadeProjection = glm::ortho(-GetCascadeDistance(lod) * 0.5f, GetCascadeDistance(lod) * 0.5f,
-	//	-GetCascadeDistance(lod) * 0.5f, GetCascadeDistance(lod) * 0.5f, -GetCascadeDistance(lod) * shadowCascadeDepths[lod], GetCascadeDistance(lod) * shadowCascadeDepths[lod]);
-	//shadowCascadeProjection[1][1] *= -1;
+	float mult = shadowCascadeDistancesMults[lod];
 
-	float near = GetCascadeNear(lod);
+	glm::mat4 shadowCascadeProjection = glm::ortho(-GetCascadeDistance(lod) * mult, GetCascadeDistance(lod) * mult,
+		-GetCascadeDistance(lod) * mult, GetCascadeDistance(lod) * mult, -GetCascadeDistance(lod) * shadowCascadeDepths[lod], GetCascadeDistance(lod) * shadowCascadeDepths[lod]);
+	shadowCascadeProjection[1][1] *= -1;
+
+	/*float near = GetCascadeNear(lod);
 	float far = GetCascadeDistance(lod);
 
 	std::vector<glm::vec4> frustumCorners = Manager::camera.GetFrustumCorners(near, near + far);
@@ -998,7 +1004,7 @@ glm::mat4 Shadow::GetCascadeProjection(int lod)
 	}
 
 	glm::mat4 shadowCascadeProjection = glm::ortho(minBounds.x, maxBounds.x, minBounds.y, maxBounds.y,
-		minBounds.z * shadowCascadeDepths[lod], maxBounds.z * shadowCascadeDepths[lod]);
+		minBounds.z * shadowCascadeDepths[lod], maxBounds.z * shadowCascadeDepths[lod]);*/
 
 	shadowCascadeProjections[lod] = shadowCascadeProjection;
 
@@ -1088,7 +1094,8 @@ float Shadow::GetCascadeDistance(int i)
 {
 	if (i < 0 || i >= cascadeCount) return (0.0f);
 
-	return (shadowCascadeDistances[i] * cascadeDistanceMult * shadowCascadeDistancesMults[i]);
+	//return (shadowCascadeDistances[i] * cascadeDistanceMult * shadowCascadeDistancesMults[i]);
+	return (shadowCascadeDistances[i]);
 }
 
 float Shadow::GetCascadeNear(int i)
@@ -1394,12 +1401,13 @@ std::vector<glm::mat4> Shadow::shadowCascadeMatrices;
 //std::vector<glm::mat4> Shadow::shadowCascadeTransformations;
 //std::vector<float> Shadow::shadowCascadeDistances = {100, 250, 750, 2500, 4000};
 std::vector<float> Shadow::shadowCascadeDistances = {75, 175, 750, 1250, 2500};
-std::vector<float> Shadow::shadowCascadeDistancesMults = {1.0, 1.0, 1.0, 1.0, 1.0};
+std::vector<float> Shadow::shadowCascadeDistancesMults = {1.0, 1.0, 1.25, 1.0, 2.0};
+//std::vector<float> Shadow::shadowCascadeDistancesMults = {1.0, 1.0, 1.0, 1.0, 1.0};
 //std::vector<float> Shadow::shadowCascadeDistances = {50, 125, 375, 1250, 2000};
 std::vector<int> Shadow::shadowCascadeResolutions = {3072, 2048, 2048, 2048, 2048};
 //std::vector<int> Shadow::shadowCascadeResolutions = {512, 512, 512, 512, 512};
-//std::vector<float> Shadow::shadowCascadeDepths = {8.0, 4.0, 2.0, 2.0, 1.0};
-std::vector<float> Shadow::shadowCascadeDepths = {8.0, 4.0, 2.0, 1.5, 1.0};
+//std::vector<float> Shadow::shadowCascadeDepths = {8.0, 4.0, 2.0, 1.5, 1.0};
+std::vector<float> Shadow::shadowCascadeDepths = {4.0, 4.0, 4.0, 4.0, 4.0};
 float Shadow::cascadeDistanceMult = 1.0;
 float Shadow::cascadeMergeDistance = 0.35;
 

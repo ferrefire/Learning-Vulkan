@@ -19,10 +19,7 @@ layout(set = 0, binding = 0) uniform Variables
 	mat4 projection;
 	mat4 viewMatrix;
 	mat4 viewLodMatrix;
-	//mat4 shadowCascadeMatrix[CASCADE_COUNT];
-	//vec4 shadowCascadeDistances[CASCADE_COUNT];
 	mat4 cullMatrix;
-    float viewHeight;
     vec3 viewPosition;
     vec3 viewDirection;
     vec3 viewRight;
@@ -32,14 +29,18 @@ layout(set = 0, binding = 0) uniform Variables
 	vec3 lightDirection;
 	vec3 rotatedLightDirection;
 	vec3 terrainOffset;
+	mat4 shadowCascadeMatrix[CASCADE_COUNT];
+	vec4 terrainShadowOffsets[TERRAIN_CASCADE_COUNT];
+	vec4 terrainShadowDistances[TERRAIN_CASCADE_COUNT];
 	vec2 terrainLod0Offset;
 	vec2 terrainLod1Offset;
+	vec2 waterHeight;
+	float viewHeight;
 	float terrainTotalSize;
 	float terrainTotalSizeMult;
 	int terrainChunksLength;
 	float terrainChunksLengthMult;
 	float terrainHeight;
-	vec2 waterHeight;
 	float windDistanceMult;
 	float windStrength;
 	float time;
@@ -48,10 +49,6 @@ layout(set = 0, binding = 0) uniform Variables
 	uint shadowBounding;
 	uint shadowCascades;
 	float shadowCascadeMergeStrength;
-	mat4 shadowCascadeMatrix[CASCADE_COUNT];
-	vec4 terrainShadowOffsets[TERRAIN_CASCADE_COUNT];
-	vec4 terrainShadowDistances[TERRAIN_CASCADE_COUNT];
-	//float terrainShadowDistance1;
 } variables;
 
 #endif

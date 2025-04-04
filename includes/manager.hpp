@@ -65,10 +65,7 @@ struct ShaderVariables
 	alignas(16) glm::mat4 projection = glm::mat4(1);
 	alignas(16) glm::mat4 viewMatrix = glm::mat4(1);
 	alignas(16) glm::mat4 viewLodMatrix = glm::mat4(1);
-	//alignas(16) glm::mat4 shadowCascadeMatrix[SHADOW_CASCADE_COUNT];
-	//alignas(16) glm::vec4 shadowCascadeDistances[SHADOW_CASCADE_COUNT];
 	alignas(16) glm::mat4 cullMatrix = glm::mat4(1);
-	alignas(4) float viewHeight = 0;
 	alignas(16) glm::vec3 viewPosition = glm::vec3(0);
 	alignas(16) glm::vec3 viewDirection = glm::vec3(0);
 	alignas(16) glm::vec3 viewRight = glm::vec3(0);
@@ -78,14 +75,18 @@ struct ShaderVariables
 	alignas(16) glm::vec3 lightDirection;
 	alignas(16) glm::vec3 rotatedLightDirection;
 	alignas(16) glm::vec3 terrainOffset;
+	alignas(16) glm::mat4 shadowCascadeMatrix[SHADOW_CASCADE_COUNT];
+	alignas(16) glm::vec4 terrainShadowOffsets[3];
+	alignas(16) glm::vec4 terrainShadowDistances[3];
 	alignas(8) glm::vec2 terrainLod0Offset;
 	alignas(8) glm::vec2 terrainLod1Offset;
+	alignas(8) glm::vec2 waterHeight;
+	alignas(4) float viewHeight = 0;
 	alignas(4) float terrainTotalSize;
 	alignas(4) float terrainTotalSizeMult;
 	alignas(4) int terrainChunksLength;
 	alignas(4) float terrainChunksLengthMult;
 	alignas(4) float terrainHeight;
-	alignas(8) glm::vec2 waterHeight;
 	alignas(4) float windDistanceMult;
 	alignas(4) float windStrength;
 	alignas(4) float time;
@@ -94,10 +95,6 @@ struct ShaderVariables
 	alignas(4) uint32_t shadowBounding;
 	alignas(4) uint32_t shadowCascades;
 	alignas(4) float shadowCascadeMergeStrength;
-	alignas(16) glm::mat4 shadowCascadeMatrix[SHADOW_CASCADE_COUNT];
-	alignas(16) glm::vec4 terrainShadowOffsets[3];
-	alignas(16) glm::vec4 terrainShadowDistances[3];
-	//alignas(4) uint32_t capturing = 0;
 };
 
 struct DescriptorInfo

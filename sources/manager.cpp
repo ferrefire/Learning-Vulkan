@@ -407,7 +407,9 @@ void Manager::UpdateShaderVariables()
 	{
 		//shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeTransformations[i] * Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
 		//shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
-		shaderVariables.shadowCascadeMatrix[i] = Shadow::CreateShadowMatrix(i);
+		//shaderVariables.shadowCascadeMatrix[i] = Shadow::CreateShadowMatrix(i);
+		Shadow::CreateShadowMatrix(i);
+		shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeProjections[i] * Shadow::shadowCascadeViews[i];
 		//shaderVariables.shadowCascadeMatrix[i] = Shadow::shadowCascadeMatrices[i];
 		//shaderVariables.shadowCascadeDistances[i] = glm::vec4(Shadow::GetCascadeNear(i) + Shadow::GetCascadeDistance(i));
 	}

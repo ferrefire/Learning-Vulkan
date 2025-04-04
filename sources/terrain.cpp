@@ -1116,6 +1116,7 @@ int Terrain::heightMapCount = Terrain::heightMapLength * Terrain::heightMapLengt
 float Terrain::terrainTotalSize = Terrain::heightMapLength * Terrain::terrainChunkSize;
 float Terrain::terrainHeight = 5000;
 float Terrain::waterHeight = 750.0f;
+//float Terrain::waterHeight = 350.0f;
 float Terrain::waterBlendDistance = 25.0f;
 
 glm::vec3 Terrain::terrainOffset = glm::vec3(0.0, 2500.0, 0.0);

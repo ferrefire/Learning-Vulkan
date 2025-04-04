@@ -260,10 +260,12 @@ void Pipeline::CreateGraphicsPipeline(std::string shader, std::vector<Descriptor
 	{
 		//if (!pipelineConfig.foliage) pipelineConfig.rasterization.cullMode = VK_CULL_MODE_FRONT_BIT;
 		pipelineConfig.rasterization.depthBiasEnable = VK_TRUE;
-		pipelineConfig.rasterization.depthBiasConstantFactor = 2.0f;
-		pipelineConfig.rasterization.depthBiasSlopeFactor = 1.0f;
+		//pipelineConfig.rasterization.depthBiasConstantFactor = 2.0f;
+		//pipelineConfig.rasterization.depthBiasSlopeFactor = 1.0f;
 		//pipelineConfig.rasterization.depthBiasConstantFactor = 4.0f;
 		//pipelineConfig.rasterization.depthBiasSlopeFactor = 1.5f;
+		pipelineConfig.rasterization.depthBiasConstantFactor = 4.0f;
+		pipelineConfig.rasterization.depthBiasSlopeFactor = 3.0f;
 	}
 
 	if (!pipelineConfig.shadow && !pipelineConfig.cull)
