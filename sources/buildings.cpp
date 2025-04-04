@@ -714,13 +714,26 @@ void Buildings::GenerateWalls(int level)
 void Buildings::GenerateWall(glm::vec3 offset, WallType type, D direction)
 {
 	Shape wall = Shape(CUBE);
+	wall.SetCoordinates(glm::vec2(1));
 	wall.Scale(flatWallConfig.scale * generationConfig.scale);
 	wall.Move(flatWallConfig.offset * generationConfig.scale);
+
+	Shape beam = Shape(CUBE);
+	beam.SetCoordinates(glm::vec2(0));
+	beam.Scale(beamConfig.scale * generationConfig.scale);
+	beam.Move(beamConfig.offset * generationConfig.scale);
+
+	Shape collumn = Shape(CUBE);
+	collumn.SetCoordinates(glm::vec2(0));
+	collumn.Scale(collumnConfig.scale * generationConfig.scale);
+	collumn.Move(collumnConfig.offset * generationConfig.scale);
+
+	wall.Join(beam);
+	wall.Join(collumn);
 
 	if (direction == S) wall.Rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 	else if (direction == E) wall.Rotate(90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 	else if (direction == W) wall.Rotate(-90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-	wall.SetCoordinates(glm::vec2(1));
 	wall.Move(offset);
 
 	building.mesh.shape.Join(wall);
@@ -921,5 +934,5 @@ PartConfig Buildings::flatWallConfig{"flat wall", glm::vec3(1.0f, 1.0f, 0.1f), g
 PartConfig Buildings::flatRoofConfig{"flat roof", glm::vec3(1.0f, 0.1f, 1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.625f, 0.0f)};
 PartConfig Buildings::slopedRoofConfig{"sloped roof", glm::vec3(1.0f, 0.1f, 1.25f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(0.0f, 0.3f, 0.0f)};
 PartConfig Buildings::coneRoofConfig{"cone roof", glm::vec3(0.635f, 0.1f, 1.0f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(-0.26f, 0.135f, 0.0f)};
-PartConfig Buildings::beamConfig{"beam", glm::vec3(1.25f, 0.15f, 0.15f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.6f)};
-PartConfig Buildings::collumnConfig{"collumn", glm::vec3(0.15f, 1.0f, 0.15f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.6f, 0.5f, 0.6f)};
+PartConfig Buildings::beamConfig{"beam", glm::vec3(1.1f, 0.1f, 0.1f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.575f)};
+PartConfig Buildings::collumnConfig{"collumn", glm::vec3(0.1f, 1.1f, 0.1f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.575f, 0.5f, 0.575f)};
