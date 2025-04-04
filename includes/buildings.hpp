@@ -118,8 +118,10 @@ class Buildings
 		static std::vector<Texture> reedTextures;
 
 		static Pipeline graphicsPipeline;
+		static Pipeline shadowPipeline;
 
         static Descriptor graphicsDescriptor;
+        static Descriptor shadowDescriptor;
 
         static GenerationConfig generationConfig;
 
@@ -151,6 +153,9 @@ class Buildings
 
         static void RecordGraphicsCommands(VkCommandBuffer commandBuffer);
         static void RenderBuildings(VkCommandBuffer commandBuffer);
+
+        static void RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade);
+        static void RenderShadows(VkCommandBuffer commandBuffer, int cascade);
 
         static void GenerateBuilding();
 		static void GenerateCells();

@@ -56,23 +56,28 @@ void Buildings::CreateTextures()
 
 void Buildings::CreatePipelines()
 {
-    std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(3);
+    std::vector<DescriptorLayoutConfiguration> graphicsDescriptorLayoutConfig(3);
 	int i = 0;
-	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
-	descriptorLayoutConfig[i++].count = beamTextures.size();
-	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
-	descriptorLayoutConfig[i++].count = plasteredTextures.size();
-	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
-	descriptorLayoutConfig[i++].count = reedTextures.size();
-
-	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
-
+	graphicsDescriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	graphicsDescriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
+	graphicsDescriptorLayoutConfig[i++].count = beamTextures.size();
+	graphicsDescriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	graphicsDescriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
+	graphicsDescriptorLayoutConfig[i++].count = plasteredTextures.size();
+	graphicsDescriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	graphicsDescriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
+	graphicsDescriptorLayoutConfig[i++].count = reedTextures.size();
+	PipelineConfiguration graphicsPipelineConfiguration = Pipeline::DefaultConfiguration();
     VertexInfo vertexInfo = mesh.MeshVertexInfo();
+    graphicsPipeline.CreateGraphicsPipeline("building", graphicsDescriptorLayoutConfig, graphicsPipelineConfiguration, vertexInfo);
 
-    graphicsPipeline.CreateGraphicsPipeline("building", descriptorLayoutConfig, pipelineConfiguration, vertexInfo);
+	std::vector<DescriptorLayoutConfiguration> shadowDescriptorLayoutConfig(0);
+	PipelineConfiguration shadowPipelineConfiguration = Pipeline::DefaultConfiguration();
+	shadowPipelineConfiguration.shadow = true;
+	shadowPipelineConfiguration.pushConstantCount = 1;
+	shadowPipelineConfiguration.pushConstantStage = VERTEX_STAGE;
+	shadowPipelineConfiguration.pushConstantSize = sizeof(uint32_t);
+    shadowPipeline.CreateGraphicsPipeline("buildingShadow", shadowDescriptorLayoutConfig, shadowPipelineConfiguration, vertexInfo);
 }
 
 void Buildings::CreateDescriptors()
@@ -150,11 +155,13 @@ void Buildings::DestroyTextures()
 void Buildings::DestroyPipelines()
 {
     graphicsPipeline.Destroy();
+	shadowPipeline.Destroy();
 }
 
 void Buildings::DestroyDescriptors()
 {
     graphicsDescriptor.Destroy();
+	shadowDescriptor.Destroy();
 }
 
 void Buildings::Start()
@@ -202,9 +209,30 @@ void Buildings::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 	RenderBuildings(commandBuffer);
 }
 
+void Buildings::RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade)
+{
+	if (cascade > 1) return;
+
+	shadowPipeline.BindGraphics(commandBuffer);
+
+	Manager::globalDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
+	//shadowDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+
+	RenderShadows(commandBuffer, cascade);
+}
+
 void Buildings::RenderBuildings(VkCommandBuffer commandBuffer)
 {
     building.mesh.Bind(commandBuffer);
+	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(building.mesh.indices.size()), 1, 0, 0, 0);
+}
+
+void Buildings::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
+{
+	uint32_t cascadeIndex = cascade;
+
+    building.mesh.Bind(commandBuffer);
+	vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(cascadeIndex), &cascadeIndex);
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(building.mesh.indices.size()), 1, 0, 0, 0);
 }
 
@@ -920,8 +948,10 @@ std::vector<Texture> Buildings::plasteredTextures;
 std::vector<Texture> Buildings::reedTextures;
 
 Pipeline Buildings::graphicsPipeline{Manager::currentDevice, Manager::camera};
+Pipeline Buildings::shadowPipeline{Manager::currentDevice, Manager::camera};
 
 Descriptor Buildings::graphicsDescriptor{Manager::currentDevice};
+Descriptor Buildings::shadowDescriptor{Manager::currentDevice};
 
 GenerationConfig Buildings::generationConfig;
 

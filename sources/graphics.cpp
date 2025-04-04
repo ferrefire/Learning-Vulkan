@@ -407,6 +407,8 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer)
 		scissor.extent.height = Shadow::shadowCascadeResolutions[i];
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
+		if (BUILDINGS_ENABLED) Buildings::RecordShadowCommands(commandBuffer, i);
+
 		if (LEAVES_ENABLED) Leaves::RecordShadowCommands(commandBuffer, i);
 
 		if (TREES_ENABLED) Trees::RecordShadowCommands(commandBuffer, i);
