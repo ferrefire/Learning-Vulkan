@@ -986,7 +986,7 @@ glm::mat4 Shadow::GetCascadeProjection(int lod)
 
 	glm::mat4 shadowCascadeProjection = glm::ortho(-GetCascadeDistance(lod) * mult, GetCascadeDistance(lod) * mult,
 		-GetCascadeDistance(lod) * mult, GetCascadeDistance(lod) * mult, -GetCascadeDistance(lod) * shadowCascadeDepths[lod], GetCascadeDistance(lod) * shadowCascadeDepths[lod]);
-	//shadowCascadeProjection[1][1] *= -1;
+	shadowCascadeProjection[1][1] *= -1;
 
 	/*float near = GetCascadeNear(lod);
 	float far = GetCascadeDistance(lod);

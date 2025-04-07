@@ -28,7 +28,7 @@ class Shape
     public:
         Shape();
         Shape(int type);
-        Shape(int type, bool coordinate, bool normal);
+        Shape(int type, bool coordinate, bool normal, bool color);
         Shape(int type, int resolution);
         ~Shape();
 
@@ -48,12 +48,14 @@ class Shape
 
 		bool coordinate = false;
 		bool normal = false;
+		bool color = false;
 
-        void SetShape(int type, int resolution = 1);
+		void SetShape(int type, int resolution = 1);
 
         void AddPosition(glm::vec3 pos);
 		void AddCoordinate(glm::vec2 uv);
 		void AddNormal(glm::vec3 norm);
+		void AddColor(glm::vec3 col);
 		void AddIndice(indexType index);
 
         void Join(Shape &joinShape);
@@ -69,8 +71,14 @@ class Shape
         void RecalculateCoordinates();
 
 		void SetCoordinates(glm::vec2 uv);
+		void SetXCoordinates(float uv);
+		void SetYCoordinates(float uv);
+		void ScaleCoordinates(glm::vec2 scale);
+		void SwapCoordinates();
 
-        int ClosestMergeIndex(glm::vec3 position, bool closest, bool top);
+		void SetColors(glm::vec3 value);
+
+		int ClosestMergeIndex(glm::vec3 position, bool closest, bool top);
         glm::vec3 BottomMergePointsCenter();
 		glm::vec3 TopMergePointsCenter();
         int GetPositionIndex(int x, int y);

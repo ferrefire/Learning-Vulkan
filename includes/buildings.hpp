@@ -122,8 +122,6 @@ class Buildings
     private:
 
     public:
-        static Mesh mesh;
-
 		static std::vector<Texture> beamTextures;
 		static std::vector<Texture> plasteredTextures;
 		static std::vector<Texture> reedTextures;
@@ -187,7 +185,7 @@ class Buildings
 			bool S_Cone, bool E_Cone, bool W_Cone, bool E_UpEmpty, bool W_UpEmpty);
 		static bool MergePass(int i, int x, int y, D direction, bool N_Empty, bool S_Empty, bool E_Empty, bool W_Empty, bool N_Cone, bool S_Cone, bool E_Cone, bool W_Cone);
 		static bool IsRoof(int i, int x, int y);
-		static Shape GeneratePart(PartType type);
+		static Shape GeneratePart(PartType type, D direction = N);
 		static void GenerateMesh();
 		static void GenerateFloors(int level);
 		static void GenerateFloor(glm::vec3 offset, FloorType type);

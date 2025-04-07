@@ -62,6 +62,13 @@ vec3 Rotate(vec3 vec, float angle, vec3 axis)
 	return (GetRotationMatrix(angle, axis) * vec4(vec, 0.0)).xyz;
 }
 
+vec3 RotateRodriques(vec3 v, vec3 k, float theta) 
+{
+    float cosTheta = cos(theta);
+    float sinTheta = sin(theta);
+    return (v * cosTheta + cross(k, v) * sinTheta + k * dot(k, v) * (1.0 - cosTheta));
+}
+
 //vec3 ObjectToTerrain(vec3 objectSpace, mat4 model)
 //{
 //	vec3 worldSpace = ObjectToWorld(objectSpace, model);

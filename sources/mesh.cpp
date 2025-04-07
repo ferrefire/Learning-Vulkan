@@ -107,6 +107,7 @@ void Mesh::RecalculateVertices()
 		if (i < shape.positions.size()) vertices[i].position = shape.positions[i];
 		if (i < shape.coordinates.size()) vertices[i].coordinate = shape.coordinates[i];
 		if (i < shape.normals.size()) vertices[i].normal = shape.normals[i];
+		if (i < shape.colors.size()) vertices[i].color = shape.colors[i];
 	}
 
 	VertexInfo info = MeshVertexInfo(); //Check if can be removed
@@ -130,6 +131,12 @@ void Mesh::RecalculateVertices()
 			verticesData.push_back(vertex.normal.x);
 			verticesData.push_back(vertex.normal.y);
 			verticesData.push_back(vertex.normal.z);
+		}
+		if (color)
+		{
+			verticesData.push_back(vertex.color.x);
+			verticesData.push_back(vertex.color.y);
+			verticesData.push_back(vertex.color.z);
 		}
 	}
 
@@ -206,9 +213,9 @@ VertexInfo Mesh::GetVertexInfo(bool position, bool coordinate, bool normal, bool
 	{
 		vertexInfo.attributeDescriptions[index].binding = 0;
 		vertexInfo.attributeDescriptions[index].location = index;
-		vertexInfo.attributeDescriptions[index].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+		vertexInfo.attributeDescriptions[index].format = VK_FORMAT_R32G32B32_SFLOAT;
 		vertexInfo.attributeDescriptions[index].offset = vertexInfo.bindingDescription.stride;
-		vertexInfo.bindingDescription.stride += sizeof(glm::vec4);
+		vertexInfo.bindingDescription.stride += sizeof(glm::vec3);
 		index++;
 	}
 

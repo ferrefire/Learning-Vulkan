@@ -18,12 +18,6 @@ void Buildings::Create()
 
 void Buildings::CreateMeshes()
 {
-    mesh.coordinate = true;
-    mesh.normal = true;
-    mesh.shape.SetShape(CUBE);
-    mesh.RecalculateVertices();
-    mesh.Create();
-
 	GenerateBuilding();
 }
 
@@ -46,7 +40,7 @@ void Buildings::CreateTextures()
 	plasteredTextures[2].CreateTexture("plastered_ao.jpg", plasteredSamplerConfig);
 
 	SamplerConfiguration reedSamplerConfig;
-	reedSamplerConfig.repeatMode = REPEAT;
+	reedSamplerConfig.repeatMode = MIRRORED_REPEAT;
 
 	reedTextures.resize(3);
 	reedTextures[0].CreateTexture("reed_diff.jpg", reedSamplerConfig);
@@ -68,7 +62,7 @@ void Buildings::CreatePipelines()
 	graphicsDescriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
 	graphicsDescriptorLayoutConfig[i++].count = reedTextures.size();
 	PipelineConfiguration graphicsPipelineConfiguration = Pipeline::DefaultConfiguration();
-    VertexInfo vertexInfo = mesh.MeshVertexInfo();
+    VertexInfo vertexInfo = building.mesh.MeshVertexInfo();
     graphicsPipeline.CreateGraphicsPipeline("building", graphicsDescriptorLayoutConfig, graphicsPipelineConfiguration, vertexInfo);
 
 	std::vector<DescriptorLayoutConfiguration> shadowDescriptorLayoutConfig(0);
@@ -135,8 +129,6 @@ void Buildings::Destroy()
 
 void Buildings::DestroyMeshes()
 {
-    mesh.Destroy();
-
 	building.mesh.Destroy();
 }
 
@@ -800,24 +792,25 @@ bool Buildings::IsRoof(int i, int x, int y)
 		building.cells[i + 1][x][y].Empty(false)));
 }
 
-Shape Buildings::GeneratePart(PartType type)
+Shape Buildings::GeneratePart(PartType type, D direction)
 {
 	Shape part;
 	part.coordinate = true;
 	part.normal = true;
+	part.color = true;
 
 	if (type == PartType::floor)
 	{
-		Shape floor = Shape(CUBE);
+		Shape floor = Shape(CUBE, true, true, true);
+		floor.SetColors(glm::vec3(0));
 		floor.Scale(floorConfig.scale * generationConfig.scale);
-		floor.SetCoordinates(glm::vec2(0));
 
 		part.Join(floor);
 	}
 	else if (type == PartType::flatWall)
 	{
-		Shape wall = Shape(CUBE);
-		wall.SetCoordinates(glm::vec2(1));
+		Shape wall = Shape(CUBE, true, true, true);
+		wall.SetColors(glm::vec3(1, 0, 0));
 		wall.Scale(flatWallConfig.scale * generationConfig.scale);
 		wall.Move(flatWallConfig.offset * generationConfig.scale);
 
@@ -825,8 +818,9 @@ Shape Buildings::GeneratePart(PartType type)
 	}
 	else if (type == PartType::flatRoof)
 	{
-		Shape roof = Shape(CUBE);
-		roof.SetCoordinates(glm::vec2(2));
+		Shape roof = Shape(CUBE, true, true, true);
+		roof.SetColors(glm::vec3(2, 0, 0));
+		roof.SwapCoordinates();
 		roof.Scale(flatRoofConfig.scale * generationConfig.scale);
 		roof.Move(flatRoofConfig.offset * generationConfig.scale);
 
@@ -834,8 +828,8 @@ Shape Buildings::GeneratePart(PartType type)
 	}
 	else if (type == PartType::slopedRoof)
 	{
-		Shape roof = Shape(CUBE);
-		roof.SetCoordinates(glm::vec2(2));
+		Shape roof = Shape(CUBE, true, true, true);
+		roof.SetColors(glm::vec3(2, 0, 0));
 		roof.Scale(slopedRoofConfig.scale * generationConfig.scale);
 		roof.Rotate(slopedRoofConfig.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
 		roof.Move(slopedRoofConfig.offset * generationConfig.scale);
@@ -844,14 +838,16 @@ Shape Buildings::GeneratePart(PartType type)
 	}
 	else if (type == PartType::coneRoof)
 	{
-		Shape leftRoof = Shape(CUBE);
-		leftRoof.SetCoordinates(glm::vec2(2));
+		Shape leftRoof = Shape(CUBE, true, true, true);
+		leftRoof.SwapCoordinates();
+		leftRoof.SetColors(glm::vec3(2, 0, 0));
 		leftRoof.Scale(coneRoofConfig.scale * generationConfig.scale);
 		leftRoof.Rotate(coneRoofConfig.rotation.x, glm::vec3(0.0f, 0.0f, 1.0f));
 		leftRoof.Move(coneRoofConfig.offset * generationConfig.scale);
 
-		Shape rightRoof = Shape(CUBE);
-		rightRoof.SetCoordinates(glm::vec2(2));
+		Shape rightRoof = Shape(CUBE, true, true, true);
+		rightRoof.SwapCoordinates();
+		rightRoof.SetColors(glm::vec3(2, 0, 0));
 		rightRoof.Scale(coneRoofConfig.scale * generationConfig.scale);
 		rightRoof.Rotate(-coneRoofConfig.rotation.x, glm::vec3(0.0f, 0.0f, 1.0f));
 		rightRoof.Move(coneRoofConfig.offset * glm::vec3(-1.0f, 1.0f, 1.0f) * generationConfig.scale);
@@ -861,18 +857,24 @@ Shape Buildings::GeneratePart(PartType type)
 	}
 	else if (type == PartType::beam)
 	{
-		Shape beam = Shape(CUBE);
-		beam.SetCoordinates(glm::vec2(0));
+		Shape beam = Shape(CUBE, true, true, true);
+		//beam.SetColors(glm::vec3(3, 0, 0, (direction == E || direction == W) ? 1 : 0));
+		beam.SetColors(glm::vec3(3, 0, 0));
 		beam.Scale(beamConfig.scale * generationConfig.scale);
+		beam.Rotate(90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+		beam.ScaleCoordinates(glm::vec2(0.14f, 1.0f));
+		//beam.ScaleCoordinates(glm::vec2(1.0f, 0.14f));
+		//beam.SwapCoordinates();
 		beam.Move(beamConfig.offset * generationConfig.scale);
 
 		part.Join(beam);
 	}
 	else if (type == PartType::collumn)
 	{
-		Shape collumn = Shape(CUBE);
-		collumn.SetCoordinates(glm::vec2(0));
+		Shape collumn = Shape(CUBE, true, true, true);
+		collumn.SetColors(glm::vec3(0, 0, 0));
 		collumn.Scale(collumnConfig.scale * generationConfig.scale);
+		collumn.ScaleCoordinates(glm::vec2(0.14f, 1.0f));
 		collumn.Move(collumnConfig.offset * generationConfig.scale);
 
 		part.Join(collumn);
@@ -888,8 +890,10 @@ void Buildings::GenerateMesh()
 
 	building.mesh.coordinate = true;
 	building.mesh.normal = true;
+	building.mesh.color = true;
 	building.mesh.shape.coordinate = true;
 	building.mesh.shape.normal = true;
+	building.mesh.shape.color = true;
 
 	for (int i = 0; i < building.cells.size(); i++)
 	{
@@ -958,7 +962,7 @@ void Buildings::GenerateWalls(int level)
 void Buildings::GenerateWall(glm::vec3 offset, WallType type, D direction)
 {
 	Shape wall = GeneratePart(PartType::flatWall);
-	Shape beam = GeneratePart(PartType::beam);
+	Shape beam = GeneratePart(PartType::beam, direction);
 	Shape collumn = GeneratePart(PartType::collumn);
 
 	wall.Join(beam);
@@ -978,6 +982,7 @@ void Buildings::GenerateBeams(int i, int x, int y)
 	Shape beams;
 	beams.normal = true;
 	beams.coordinate = true;
+	beams.color = true;
 
 	Walls walls = building.cells[i][x][y].walls;
 
@@ -1067,12 +1072,13 @@ void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 	Shape roof;
 	roof.coordinate = true;
 	roof.normal = true;
+	roof.color = true;
 
 	if (type == RoofType::flatUp)
 	{
 		roof = GeneratePart(PartType::flatRoof);
 
-		Shape sideBeam = GeneratePart(PartType::beam);
+		Shape sideBeam = GeneratePart(PartType::beam, E);
 		sideBeam.Rotate90(-1);
 		sideBeam.Move(flatRoofConfig.offset * generationConfig.scale);
 		roof.Join(sideBeam);
@@ -1080,7 +1086,7 @@ void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 		if (!CellValid(i, x + 1, y) || building.cells[i][x + 1][y].roof.type != RoofType::flatUp ||
         	building.cells[i][x + 1][y].roof.type != RoofType::slope)
 		{
-			sideBeam = GeneratePart(PartType::beam);
+			sideBeam = GeneratePart(PartType::beam, E);
 			sideBeam.Rotate90();
 			sideBeam.Move(flatRoofConfig.offset * generationConfig.scale);
 			roof.Join(sideBeam);
@@ -1148,8 +1154,6 @@ bool Buildings::FloorEmpty(int i, int x, int y)
 	return (!CellValid(i, x, y) || building.cells[i][x][y].floor.Empty());
 }
 
-Mesh Buildings::mesh;
-
 std::vector<Texture> Buildings::beamTextures;
 std::vector<Texture> Buildings::plasteredTextures;
 std::vector<Texture> Buildings::reedTextures;
@@ -1171,5 +1175,6 @@ PartConfig Buildings::flatWallConfig{"flat wall", glm::vec3(1.0f, 1.0f, 0.05f), 
 PartConfig Buildings::flatRoofConfig{"flat roof", glm::vec3(1.0f, 0.1f, 1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.625f, 0.0f)};
 PartConfig Buildings::slopedRoofConfig{"sloped roof", glm::vec3(1.0f, 0.1f, 1.25f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(0.0f, 0.3f, 0.0f)};
 PartConfig Buildings::coneRoofConfig{"cone roof", glm::vec3(0.635f, 0.1f, 1.0f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(-0.26f, 0.135f, 0.0f)};
-PartConfig Buildings::beamConfig{"beam", glm::vec3(1.1f, 0.15f, 0.15f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.5f)};
+//PartConfig Buildings::beamConfig{"beam", glm::vec3(1.1f, 0.15f, 0.15f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.5f)};
+PartConfig Buildings::beamConfig{"beam", glm::vec3(0.15f, 1.1f, 0.15f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.5f)};
 PartConfig Buildings::collumnConfig{"collumn", glm::vec3(0.15f, 1.1f, 0.15f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.5f, 0.5f, 0.5f)};

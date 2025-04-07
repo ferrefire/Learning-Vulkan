@@ -12,10 +12,11 @@ Shape::Shape(int type)
     SetShape(type);
 }
 
-Shape::Shape(int type, bool coordinate, bool normal)
+Shape::Shape(int type, bool coordinate, bool normal, bool color)
 {
 	this->coordinate = coordinate;
 	this->normal = normal;
+	this->color = color;
     SetShape(type);
 }
 
@@ -62,6 +63,14 @@ void Shape::SetShape(int type, int resolution)
 			AddNormal(glm::vec3(0.0f, 0.0f, 1.0f));
 			AddNormal(glm::vec3(0.0f, 0.0f, 1.0f));
 			AddNormal(glm::vec3(0.0f, 0.0f, 1.0f));
+		}
+
+		if (color)
+		{
+			AddColor(glm::vec3(0.0f, 0.0f, 0.0f));
+			AddColor(glm::vec3(0.0f, 0.0f, 0.0f));
+			AddColor(glm::vec3(0.0f, 0.0f, 0.0f));
+			AddColor(glm::vec3(0.0f, 0.0f, 0.0f));
 		}
 	}
 	else if (type == LEAF)
@@ -271,29 +280,26 @@ void Shape::SetShape(int type, int resolution)
 	}
 	else if (type == CUBE)
     {
-		coordinate = true;
-		normal = true;
-
-        Shape front = Shape(QUAD, true, true);
+        Shape front = Shape(QUAD, coordinate, normal, color);
         front.Move(glm::vec3(0.0f, 0.0f, 0.5f));
 
-        Shape back = Shape(QUAD, true, true);
+        Shape back = Shape(QUAD, coordinate, normal, color);
         back.Rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
         back.Move(glm::vec3(0.0f, 0.0f, -0.5f));
 
-        Shape right = Shape(QUAD, true, true);
+        Shape right = Shape(QUAD, coordinate, normal, color);
         right.Rotate(-90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
         right.Move(glm::vec3(-0.5f, 0.0f, 0.0f));
 
-        Shape left = Shape(QUAD, true, true);
+        Shape left = Shape(QUAD, coordinate, normal, color);
         left.Rotate(90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
         left.Move(glm::vec3(0.5f, 0.0f, 0.0f));
 
-        Shape top = Shape(QUAD, true, true);
+        Shape top = Shape(QUAD, coordinate, normal, color);
         top.Rotate(90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
         top.Move(glm::vec3(0.0f, -0.5f, 0.0f));
 
-        Shape bottom = Shape(QUAD, true, true);
+        Shape bottom = Shape(QUAD, coordinate, normal, color);
         bottom.Rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
         bottom.Move(glm::vec3(0.0f, 0.5f, 0.0f));
 
@@ -457,12 +463,12 @@ void Shape::SetShape(int type, int resolution)
 	else if (type == CROSS)
 	{
 		std::vector<Shape> shapes(resolution);
-		shapes[0] = Shape(QUAD, true, true);
+		shapes[0] = Shape(QUAD, true, true, false);
 
 		float angleStep = 180.0f / float(resolution);
 		for (int i = 1; i < resolution; i++)
 		{
-			shapes[i] = Shape(QUAD, true, true);
+			shapes[i] = Shape(QUAD, true, true, false);
 			shapes[i].Rotate(-(angleStep * float(i)), glm::vec3(0.0f, 1.0f, 0.0f));
 		}
 
@@ -496,6 +502,13 @@ void Shape::AddNormal(glm::vec3 norm)
 	if (!normal) return;
 
 	normals.push_back(norm);
+}
+
+void Shape::AddColor(glm::vec3 col)
+{
+	if (!color) return;
+
+	colors.push_back(col);
 }
 
 void Shape::AddIndice(indexType index)
@@ -532,6 +545,14 @@ void Shape::Join(Shape &joinShape)
     	{
     	    normals.push_back(normal);
     	}
+	}
+
+	if (color)
+	{
+		for (glm::vec3 color : joinShape.colors)
+		{
+			colors.push_back(color);
+		}
 	}
 }
 
@@ -683,7 +704,7 @@ void Shape::Rotate(float degrees, glm::vec3 axis, bool rotateNormal)
 	{
 		for (glm::vec3 &norm : normals)
 		{
-			norm = rotation * glm::vec4(norm, 0.0f);
+			norm = glm::normalize(rotation * glm::vec4(norm, 0.0f));
 		}
 	}
 }
@@ -741,6 +762,46 @@ void Shape::SetCoordinates(glm::vec2 uv)
 	for (int i = 0; i < coordinates.size(); i++)
 	{
 		coordinates[i] = uv;
+	}
+}
+
+void Shape::SetXCoordinates(float uv)
+{
+	for (int i = 0; i < coordinates.size(); i++)
+	{
+		coordinates[i].x = uv;
+	}
+}
+
+void Shape::SetYCoordinates(float uv)
+{
+	for (int i = 0; i < coordinates.size(); i++)
+	{
+		coordinates[i].y = uv;
+	}
+}
+
+void Shape::ScaleCoordinates(glm::vec2 scale)
+{
+	for (int i = 0; i < coordinates.size(); i++)
+	{
+		coordinates[i] *= scale;
+	}
+}
+
+void Shape::SwapCoordinates()
+{
+	for (int i = 0; i < coordinates.size(); i++)
+	{
+		coordinates[i] = glm::vec2(coordinates[i].y, coordinates[i].x);
+	}
+}
+
+void Shape::SetColors(glm::vec3 value)
+{
+	for (int i = 0; i < colors.size(); i++)
+	{
+		colors[i] = value;
 	}
 }
 

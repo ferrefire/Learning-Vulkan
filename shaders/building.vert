@@ -9,11 +9,13 @@
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inCoordinate;
 layout(location = 2) in vec3 inNormal;
+layout(location = 3) in vec3 inColor;
 
 layout(location = 0) out vec3 worldPosition;
-layout(location = 1) out vec3 outNormal;
-layout(location = 2) out flat int type;
-layout(location = 3) out vec4 shadowPositions[CASCADE_COUNT];
+layout(location = 1) out vec2 outCoordinate;
+layout(location = 2) out vec3 outNormal;
+layout(location = 3) out flat ivec2 type;
+layout(location = 4) out vec4 shadowPositions[CASCADE_COUNT];
 
 #include "variables.glsl"
 
@@ -21,7 +23,9 @@ void main()
 {
     outNormal = inNormal;
 
-	type = int(inCoordinate.x);
+	outCoordinate = inCoordinate;
+
+	type = ivec2(int(inColor.x), int(inColor.y));
 
     vec3 objectPosition = inPosition;
 
