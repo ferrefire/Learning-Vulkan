@@ -15,11 +15,11 @@
 
 #include <vector>
 
-enum D {N, S, E, W};
+enum D {N = 0, S = 2, E = 1, W = 3};
 enum class FloorType {empty, flat, stairs, beams};
 enum class WallType {empty, flat, window, door, balcony, beams};
 enum class RoofType {empty, flat, flatUp, slope, cone};
-enum class PartType {floor, flatWall, flatRoof, slopedRoof, coneRoof, beam, collumn};
+enum class PartType {floor, flatWall, slopedWall, flatRoof, slopedRoof, coneRoof, coneRoofExtension, beam, slopedBeam, slightSlopedBeam, collumn};
 
 struct Floor
 {
@@ -76,6 +76,46 @@ struct Roof
     {
         return (type == RoofType::empty);
     }
+
+	bool Extend()
+	{
+		return (N_Extend || S_Extend || E_Extend || W_Extend);
+	}
+
+	bool Extend(D direction)
+	{
+		if (direction == N) return (N_Extend);
+		else if (direction == S) return (S_Extend);
+		else if (direction == E) return (E_Extend);
+		else if (direction == W) return (W_Extend);
+		else return (false);
+	}
+
+	bool LocalExtend(D direction)
+	{
+		return (Extend((D)((this->direction + direction) % 4)));
+	}
+
+	bool Merge(D direction)
+	{
+		if (direction == N) return (N_Merge);
+		else if (direction == S) return (S_Merge);
+		else if (direction == E) return (E_Merge);
+		else if (direction == W) return (W_Merge);
+		else return (false);
+	}
+
+	bool LocalMerge(D direction)
+	{
+		return (Merge((D)((this->direction + direction) % 4)));
+	}
+
+	int MergeCount(D direction)
+	{
+		if (direction == N) return ((N_Merge ? 1 : 0) + (S_Merge ? 1 : 0));
+		else if (direction == E) return ((E_Merge ? 1 : 0) + (W_Merge ? 1 : 0));
+		return (0);
+	}
 };
 
 struct BuildingCell
@@ -104,7 +144,7 @@ struct GenerationConfig
     glm::ivec3 maxSize = glm::ivec3(3, 3, 3);
     int expansionFactor = 5;
     int levelFactor = 3;
-	int scaffoldingReduction = 1;
+	int scaffoldingReduction = 2;
 	bool random = false;
 	float scale = 5.0f;
 };
@@ -140,10 +180,14 @@ class Buildings
 
 		static PartConfig floorConfig;
 		static PartConfig flatWallConfig;
+		static PartConfig slopedWallConfig;
 		static PartConfig flatRoofConfig;
 		static PartConfig slopedRoofConfig;
 		static PartConfig coneRoofConfig;
+		static PartConfig coneRoofExtensionConfig;
 		static PartConfig beamConfig;
+		static PartConfig slopedBeamConfig;
+		static PartConfig slightSlopedBeamConfig;
 		static PartConfig collumnConfig;
 
 		static void Create();
@@ -185,7 +229,7 @@ class Buildings
 			bool S_Cone, bool E_Cone, bool W_Cone, bool E_UpEmpty, bool W_UpEmpty);
 		static bool MergePass(int i, int x, int y, D direction, bool N_Empty, bool S_Empty, bool E_Empty, bool W_Empty, bool N_Cone, bool S_Cone, bool E_Cone, bool W_Cone);
 		static bool IsRoof(int i, int x, int y);
-		static Shape GeneratePart(PartType type, D direction = N);
+		static Shape GeneratePart(PartType type, int rotate = 0);
 		static void GenerateMesh();
 		static void GenerateFloors(int level);
 		static void GenerateFloor(glm::vec3 offset, FloorType type);

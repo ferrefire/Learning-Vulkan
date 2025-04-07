@@ -13,6 +13,8 @@
 #define CYLINDER 5
 #define LEAF 6
 #define CROSS 7
+#define TRIANGLE 8
+#define PRISM 9
 
 #define INDEX_TYPE VK_INDEX_TYPE_UINT16
 //#define INDEX_TYPE VK_INDEX_TYPE_UINT32

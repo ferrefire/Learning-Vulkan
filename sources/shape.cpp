@@ -482,6 +482,85 @@ void Shape::SetShape(int type, int resolution)
 		//Join(sidewards);
 		//Join(forwards);
 	}
+	else if (type == TRIANGLE)
+	{
+		AddPosition(glm::vec3(-0.5f, -0.5f, 0.0f));
+		AddPosition(glm::vec3(0.5f, 0.5f, 0.0f));
+		//AddPosition(glm::vec3(-0.5f, 0.5f, 0.0f));
+		AddPosition(glm::vec3(0.5f, -0.5f, 0.0f));
+
+		AddIndice(0);
+		AddIndice(2);
+		AddIndice(1);
+
+		//AddIndice(0);
+		//AddIndice(1);
+		//AddIndice(2);
+
+		//AddIndice(3);
+		//AddIndice(1);
+		//AddIndice(0);
+
+		if (coordinate)
+		{
+			AddCoordinate(glm::vec2(0.0f, 0.0f));
+			AddCoordinate(glm::vec2(1.0f, 1.0f));
+			//AddCoordinate(glm::vec2(0.0f, 1.0f));
+			AddCoordinate(glm::vec2(1.0f, 0.0f));
+		}
+
+		if (normal)
+		{
+			AddNormal(glm::vec3(0.0f, 0.0f, 1.0f));
+			AddNormal(glm::vec3(0.0f, 0.0f, 1.0f));
+			//AddNormal(glm::vec3(0.0f, 0.0f, 1.0f));
+			AddNormal(glm::vec3(0.0f, 0.0f, 1.0f));
+		}
+
+		if (color)
+		{
+			AddColor(glm::vec3(0.0f, 0.0f, 0.0f));
+			AddColor(glm::vec3(0.0f, 0.0f, 0.0f));
+			//AddColor(glm::vec3(0.0f, 0.0f, 0.0f));
+			AddColor(glm::vec3(0.0f, 0.0f, 0.0f));
+		}
+	}
+	
+	else if (type == PRISM)
+	{
+		Shape front = Shape(TRIANGLE, coordinate, normal, color);
+		front.Move(glm::vec3(0.0f, 0.0f, 0.5f));
+
+		Shape back = Shape(TRIANGLE, coordinate, normal, color);
+		back.Rotate(-90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+		back.Rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+		back.Move(glm::vec3(0.0f, 0.0f, -0.5f));
+
+		Shape right = Shape(QUAD, coordinate, normal, color);
+		right.Scale(glm::vec3(1.0f, sqrt(2.0f), 1.0f));
+		right.Rotate(-90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+		right.Rotate(-45.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+		//right.Move(glm::vec3(-0.25f, 0.25f, 0.0f));
+
+		Shape left = Shape(QUAD, coordinate, normal, color);
+		left.Rotate(90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+		left.Move(glm::vec3(0.5f, 0.0f, 0.0f));
+
+		Shape top = Shape(QUAD, coordinate, normal, color);
+		top.Rotate(90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+		top.Move(glm::vec3(0.0f, -0.5f, 0.0f));
+
+		//Shape bottom = Shape(QUAD, coordinate, normal, color);
+		//bottom.Rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+		//bottom.Move(glm::vec3(0.0f, 0.5f, 0.0f));
+
+		Join(front);
+		Join(back);
+		Join(right);
+		Join(left);
+		Join(top);
+		//Join(bottom);
+	}
 	
 }
 
@@ -711,6 +790,8 @@ void Shape::Rotate(float degrees, glm::vec3 axis, bool rotateNormal)
 
 void Shape::Rotate90(int times, bool rotateNormal)
 {
+	if (times == 0) return;
+
 	this->Rotate(90.0f * times, glm::vec3(0.0f, 1.0f, 0.0f), rotateNormal);
 }
 
