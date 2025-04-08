@@ -878,6 +878,18 @@ void Shape::SwapCoordinates()
 	}
 }
 
+void Shape::InverseCoordinates(bool inverseX, bool inverseY)
+{
+	for (int i = 0; i < coordinates.size(); i++)
+	{
+		float newX = coordinates[i].x;
+		float newY = coordinates[i].y;
+		if (inverseX) newX = 1.0 - newX;
+		if (inverseY) newY = 1.0 - newY;
+		coordinates[i] = glm::vec2(newX, newY);
+	}
+}
+
 void Shape::SetColors(glm::vec3 value)
 {
 	for (int i = 0; i < colors.size(); i++)

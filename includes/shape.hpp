@@ -77,6 +77,7 @@ class Shape
 		void SetYCoordinates(float uv);
 		void ScaleCoordinates(glm::vec2 scale);
 		void SwapCoordinates();
+		void InverseCoordinates(bool inverseX = true, bool inverseY = true);
 
 		void SetColors(glm::vec3 value);
 

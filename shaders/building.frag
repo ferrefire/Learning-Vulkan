@@ -95,9 +95,10 @@ void main()
 		texAmbient = SampleTriplanarColor(beamSamplers[2], uv, weights);
 	}*/
 
-	float shadow = GetTerrainShadow(worldPosition.xz);
-	if (shadow < 1.0)
-		shadow = clamp(shadow + GetCascadedShadow(shadowPositions, depth), 0.0, 1.0);
+	//float shadow = GetTerrainShadow(worldPosition.xz);
+	//if (shadow < 1.0)
+	//	shadow = clamp(shadow + GetCascadedShadow(shadowPositions, depth), 0.0, 1.0);
+	float shadow = GetCascadedShadow(shadowPositions, depth);
 
     vec3 diffuse = DiffuseLighting(texNormal, shadow);
 

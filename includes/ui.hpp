@@ -34,6 +34,7 @@ struct Float3DragComponent
 {
 	std::string name = "drag";
 	glm::vec3 &value;
+	float speed = 0.1f;
 };
 
 struct CheckComponent
@@ -243,9 +244,9 @@ struct Menu
 		components.push_back(newComponent);
 	}
 
-	void AddDrag(std::string name, glm::vec3 &value)
+	void AddDrag(std::string name, glm::vec3 &value, float speed)
 	{
-		Float3DragComponent newFloat3DragComponent{name, value};
+		Float3DragComponent newFloat3DragComponent{name, value, speed};
 		float3DragComponents.push_back(newFloat3DragComponent);
 
 		Component newComponent;

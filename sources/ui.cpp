@@ -300,7 +300,8 @@ void UI::RenderCheckComponent(CheckComponent &checkComponent)
 
 void UI::RenderDragComponent(Float3DragComponent &dragComponent)
 {
-	ImGui::DragFloat3(dragComponent.name.c_str(), &dragComponent.value[0], 0.005f);
+	ImGui::DragFloat3(dragComponent.name.c_str(), &dragComponent.value[0], dragComponent.speed, 
+		-FLT_MAX, FLT_MAX, "%.3f", ImGuiSliderFlags_WrapAround);
 }
 
 int UI::FindNodeEnd(Menu &menu, std::string name, int start)
