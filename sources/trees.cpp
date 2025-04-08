@@ -132,6 +132,8 @@ void Trees::CreateMeshes()
 
 	totalLeafCount = (treeLod5RenderCount * treeVariables.leafCounts[5].x) + treeVariables.leafCounts[5].y;
 
+	std::cout << "tree leaf count: " << leafPositions.size() << std::endl;
+
 	std::cout << "total leaf count: " << totalLeafCount << std::endl;
 	std::cout << "lod 0 leaf count: " << treeVariables.leafCounts[0].x << std::endl;
 	std::cout << "lod 1 leaf count: " << treeVariables.leafCounts[1].x << std::endl;
