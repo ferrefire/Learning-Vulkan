@@ -26,6 +26,8 @@ layout(location = 0) out vec4 outColor;
 
 void main()
 {
+	//if (type.x == 2) discard;
+
     vec3 normal = normalize(inNormal);
 
     vec3 weights = GetWeights(normal, 1);
@@ -67,7 +69,7 @@ void main()
 		worldUV.y += 0.065;
 
 		texColor = SampleTriplanarColor(beamSamplers[0], worldUV, weights, rotate);
-		texNormal = SampleTriplanarNormal(beamSamplers[1], worldUV, weights, normal, 1.0, rotate);
+		texNormal = SampleTriplanarNormal(beamSamplers[1], worldUV, weights, normal, 0.5, rotate);
 		texAmbient = SampleTriplanarColor(beamSamplers[2], worldUV, weights, rotate);
 	}
 	/*else if (type.x == 3)

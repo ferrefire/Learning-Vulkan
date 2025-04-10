@@ -19,7 +19,7 @@ enum D {N = 0, S = 2, E = 1, W = 3};
 enum class FloorType {empty, flat, stairs, beams};
 enum class WallType {empty, flat, window, door, balcony, beams};
 enum class RoofType {empty, flat, flatUp, slope, cone};
-enum class PartType {floor, flatWall, slopedWall, flatRoof, slopedRoof, coneRoof, coneRoofExtension, beam, slopedBeam, slightSlopedBeam, collumn};
+enum class PartType {floor, flatWall, windowedWall, slopedWall, flatRoof, slopedRoof, coneRoof, coneRoofExtension, beam, slopedBeam, slightSlopedBeam, collumn};
 
 struct Floor
 {
@@ -37,6 +37,11 @@ struct Walls
     WallType S_Type = WallType::empty;
     WallType E_Type = WallType::empty;
     WallType W_Type = WallType::empty;
+
+	int N_Variant = 0;
+    int S_Variant = 0;
+    int E_Variant = 0;
+    int W_Variant = 0;
 
     bool Empty(bool countBeams = true)
     {
@@ -140,10 +145,11 @@ struct Building
 struct GenerationConfig
 {
     int seed = 1;
-    glm::ivec3 minSize = glm::ivec3(2, 1, 2);
+    glm::ivec3 minSize = glm::ivec3(2, 2, 2);
     glm::ivec3 maxSize = glm::ivec3(3, 3, 3);
-    int expansionFactor = 5;
+    int expansionFactor = 3;
     int levelFactor = 3;
+	int decoratedFactor = 0;
 	int scaffoldingReduction = 2;
 	bool random = false;
 	float scale = 5.0f;
@@ -180,6 +186,7 @@ class Buildings
 
 		static PartConfig floorConfig;
 		static PartConfig flatWallConfig;
+		static PartConfig windowedWallConfig;
 		static PartConfig slopedWallConfig;
 		static PartConfig flatRoofConfig;
 		static PartConfig slopedRoofConfig;
@@ -230,11 +237,12 @@ class Buildings
 		static bool MergePass(int i, int x, int y, D direction, bool N_Empty, bool S_Empty, bool E_Empty, bool W_Empty, bool N_Cone, bool S_Cone, bool E_Cone, bool W_Cone);
 		static bool IsRoof(int i, int x, int y);
 		static Shape GeneratePart(PartType type, int rotate = 0);
+		static Shape GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, glm::vec3 rotation);
 		static void GenerateMesh();
 		static void GenerateFloors(int level);
 		static void GenerateFloor(glm::vec3 offset, FloorType type);
 		static void GenerateWalls(int level);
-		static void GenerateWall(glm::vec3 offset, WallType type, D direction);
+		static void GenerateWall(glm::vec3 offset, WallType type, D direction, int variant);
 		static void GenerateBeams(int i, int x, int y);
 		static void GenerateRoofs(int level);
 		static void GenerateRoof(int i, int x, int y, RoofType type, D direction);

@@ -771,6 +771,8 @@ void Shape::Move(glm::vec3 movement)
 
 void Shape::Rotate(float degrees, glm::vec3 axis, bool rotateNormal)
 {
+	if (degrees == 0.0f) return;
+
     glm::mat4 rotation = glm::mat4(1.0f);
     rotation = glm::rotate(rotation, glm::radians(degrees), axis);
 
