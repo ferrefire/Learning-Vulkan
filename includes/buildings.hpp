@@ -178,7 +178,7 @@ struct GenerationConfig
 	int scaffoldingReduction = 2;
 	int balconyFactor = 5;
 	bool random = false;
-	float scale = 5.0f;
+	float scale = 7.5f;
 };
 
 struct PartConfig
@@ -288,4 +288,5 @@ class Buildings
 		static bool CellValid(int i, int x, int y);
 		static bool CellEmpty(int i, int x, int y, bool countBeams = true);
 		static bool FloorEmpty(int i, int x, int y);
+		static void UpdateBuilding(int i);
 };

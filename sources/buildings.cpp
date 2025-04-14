@@ -4,6 +4,7 @@
 #include "utilities.hpp"
 #include "ui.hpp"
 #include "time.hpp"
+#include "data.hpp"
 
 #include <iostream>
 #include <cstdlib>
@@ -29,12 +30,12 @@ void Buildings::CreateMeshes()
 	//generationConfig.maxSize = glm::ivec3(6);
 
 	//generationConfig.seed = 657970;
-	generationConfig.minSize = glm::ivec3(2);
+	/*generationConfig.minSize = glm::ivec3(2);
 	generationConfig.maxSize = glm::ivec3(2, 3, 2);
 	generationConfig.random = true;
 
 	int index = 0;
-	int range = 0;
+	int range = 1;
 
 	for (int x = -range; x <= range; x++)
 	{
@@ -43,10 +44,12 @@ void Buildings::CreateMeshes()
 			building = &buildings[index];
 			GenerateBuilding();
 			building->position += glm::vec3(15.0f * x, 0.0f, 15.0f * y);
+			//building->position += glm::vec3(3250.0f, 0.0f, 4000.0f);
 			building->Update();
+			Data::RequestData(buildings[index].position, &buildings[index].position[1], UpdateBuilding, index);
 			index++;
 		}
-	}
+	}*/
 
 	//building = &buildings[0];
 	//GenerateBuilding();
@@ -174,8 +177,9 @@ void Buildings::CreatePipelines()
 	graphicsDescriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
 	graphicsDescriptorLayoutConfig[i++].count = brickTextures.size();
 	PipelineConfiguration graphicsPipelineConfiguration = Pipeline::DefaultConfiguration();
-    VertexInfo vertexInfo = building->mesh.MeshVertexInfo();
-    graphicsPipeline.CreateGraphicsPipeline("building", graphicsDescriptorLayoutConfig, graphicsPipelineConfiguration, vertexInfo);
+	//VertexInfo vertexInfo = building->mesh.MeshVertexInfo();
+	VertexInfo vertexInfo = Mesh::GetVertexInfo(true, true, true, true);
+	graphicsPipeline.CreateGraphicsPipeline("building", graphicsDescriptorLayoutConfig, graphicsPipelineConfiguration, vertexInfo);
 
 	std::vector<DescriptorLayoutConfiguration> shadowDescriptorLayoutConfig(1);
 	i = 0;
@@ -191,7 +195,7 @@ void Buildings::CreatePipelines()
 
 void Buildings::CreateBuffers()
 {
-	buildingBuffers.resize(100);
+	buildingBuffers.resize(250);
 
 	BufferConfiguration bufferConfiguration;
 	bufferConfiguration.size = sizeof(BuildingBuffer) * buildingBuffers.size();
@@ -367,6 +371,30 @@ void Buildings::Start()
 	menu.AddCheck("random", generationConfig.random);
 	menu.AddButton("generate", GenerateBuilding);
 	menu.AddNode("generation config", false);
+
+	generationConfig.minSize = glm::ivec3(2);
+	generationConfig.maxSize = glm::ivec3(3, 3, 3);
+	generationConfig.random = true;
+
+	int index = 0;
+	int range = 16;
+
+	for (int x = -range; x <= range; x++)
+	{
+		for (int y = -range; y <= range; y++)
+		{
+			if (random.Next(0, range) < glm::max(abs(x), abs(y)) * 2) continue;
+
+			building = &buildings[index];
+			GenerateBuilding();
+			//building->position += glm::vec3(3.0f * generationConfig.scale * x, 0.0f, 3.0f * generationConfig.scale * y);
+			building->position += glm::vec3(5.0f * generationConfig.scale * x, 0.0f, 5.0f * generationConfig.scale * y);
+			building->position += glm::vec3(3250.0f, 0.0f * generationConfig.scale, 4000.0f);
+			building->Update();
+			Data::RequestData(buildings[index].position, &buildings[index].position.y, UpdateBuilding, index);
+			index++;
+		}
+	}
 }
 
 void Buildings::Frame()
@@ -386,7 +414,7 @@ void Buildings::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 
 void Buildings::RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade)
 {
-	if (cascade > 1) return;
+	if (cascade > 2) return;
 
 	shadowPipeline.BindGraphics(commandBuffer);
 
@@ -400,6 +428,7 @@ void Buildings::RenderBuildings(VkCommandBuffer commandBuffer)
 {
 	for (int i = 0; i < renderBuildings.size(); i++)
 	{
+		//buildings[i].Update();
 		buildingBuffers[i].translation = renderBuildings[i]->translation;
 		buildingBuffers[i].orientation = renderBuildings[i]->orientation;
 		memcpy(uniformBuffer.mappedBuffer + (i * sizeof(BuildingBuffer)), &buildingBuffers[i], sizeof(BuildingBuffer));
@@ -442,7 +471,8 @@ void Buildings::GenerateBuilding()
 {
 	GenerateCells();
 	GenerateMesh();
-	building->rotation = glm::vec3(0.0f, 90.0f * random.Next(0, 4), 0.0f);
+	//building->rotation = glm::vec3(0.0f, 90.0f * random.Next(0, 4), 0.0f);
+	building->rotation = glm::vec3(0.0f, random.Next(0, 360), 0.0f);
 	building->Update();
 	building->active = true;
 
@@ -1592,7 +1622,7 @@ void Buildings::GenerateMesh()
 
 	float xOffset = float(generationConfig.maxSize.x - 1) * 0.5;
 	float zOffset = float(generationConfig.maxSize.z - 1) * 0.5;
-	building->mesh.shape.Move(glm::vec3(-5.0f * xOffset, 0.0f, -5.0f * zOffset));
+	building->mesh.shape.Move(glm::vec3(-generationConfig.scale * xOffset, 0.0f, -generationConfig.scale * zOffset));
 	building->mesh.RecalculateVertices();
 	building->mesh.Create();
 }
@@ -2192,6 +2222,13 @@ bool Buildings::FloorEmpty(int i, int x, int y)
 	return (!CellValid(i, x, y) || building->cells[i][x][y].floor.Empty());
 }
 
+void Buildings::UpdateBuilding(int i)
+{
+	buildings[i].Update();
+
+	//std::cout << "building " << i << " height " << buildings[i].position.y << std::endl;
+}
+
 std::vector<Texture> Buildings::beamTextures;
 std::vector<Texture> Buildings::plasteredTextures;
 std::vector<Texture> Buildings::reedTextures;
@@ -2208,14 +2245,14 @@ Descriptor Buildings::shadowDescriptor{Manager::currentDevice};
 
 GenerationConfig Buildings::generationConfig;
 
-std::vector<Building> Buildings::buildings = std::vector<Building>(100);
+std::vector<Building> Buildings::buildings = std::vector<Building>(250);
 Building *Buildings::building = nullptr;
 std::vector<Building *> Buildings::renderBuildings = std::vector<Building *>(0);
 
 Random Buildings::random;
 
 PartConfig Buildings::floorConfig{"floor", glm::vec3(1.0f, 0.05f, 1.0f)};
-PartConfig Buildings::foundationConfig{"foundation", glm::vec3(2.0f, 1.0f, 2.0f), glm::vec3(0.0f), glm::vec3(0.0f, -0.55f, 0.0f)};
+PartConfig Buildings::foundationConfig{"foundation", glm::vec3(1.75f, 1.0f, 1.75f), glm::vec3(0.0f), glm::vec3(0.0f, -0.50f, 0.0f)};
 PartConfig Buildings::flatWallConfig{"flat wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
 PartConfig Buildings::windowedWallConfig{"windowed wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
 PartConfig Buildings::dooredWallConfig{"doored wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};

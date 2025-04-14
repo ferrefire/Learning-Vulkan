@@ -14,7 +14,7 @@ struct BuildingData
 
 layout(set = 1, binding = 0) uniform BuildingBuffers
 {
-	BuildingData buildingData[100];
+	BuildingData buildingData[250];
 } buildingBuffers;
 
 layout(location = 0) in vec3 inPosition;
@@ -48,7 +48,7 @@ void main()
 
     objectPosition = inPosition;
 
-    worldPosition = (buildingBuffers.buildingData[index].translation * buildingBuffers.buildingData[index].orientation * vec4(objectPosition, 1.0)).xyz + vec3(0.0, 2500.0, 0.0);
+    worldPosition = (buildingBuffers.buildingData[index].translation * buildingBuffers.buildingData[index].orientation * vec4(objectPosition, 1.0)).xyz;
 
     worldPosition -= variables.terrainOffset;
 

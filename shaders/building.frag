@@ -37,7 +37,7 @@ void main()
 
     vec3 weights = GetWeights(oNormal, 1);
 
-	vec3 worldUV = objectPosition * 0.2;
+	vec3 worldUV = objectPosition * 0.125;
 	vec2 uv = inCoordinate;
 
 	float depth = GetDepth(gl_FragCoord.z);
@@ -108,15 +108,15 @@ void main()
 		texAmbient = SampleTriplanarColor(beamSamplers[2], uv, weights);
 	}*/
 
-	//float shadow = GetTerrainShadow(worldPosition.xz);
-	//if (shadow < 1.0)
-	//	shadow = clamp(shadow + GetCascadedShadow(shadowPositions, depth), 0.0, 1.0);
+	float shadow = GetTerrainShadow(worldPosition.xz);
+	if (shadow < 1.0)
+		shadow = clamp(shadow + GetCascadedShadow(shadowPositions, depth), 0.0, 1.0);
 
 	texNormal = (orientation * vec4(texNormal, 0.0)).xyz;
 
-	float shadow = GetCascadedShadow(shadowPositions, depth);
+	//float shadow = GetCascadedShadow(shadowPositions, depth);
 
-    vec3 diffuse = DiffuseLighting(texNormal, shadow);
+    vec3 diffuse = DiffuseLighting(texNormal, shadow, 0.0375);
 
     vec3 finalLighting = texColor * texAmbient * diffuse;
 

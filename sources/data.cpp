@@ -18,47 +18,34 @@ void Data::Create()
 void Data::CreatePipelines()
 {
 	int i = 0;
-    std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(1);
+    std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(2);
 	descriptorLayoutConfig[i].type = STORAGE_BUFFER;
 	descriptorLayoutConfig[i++].stages = COMPUTE_STAGE;
-	//descriptorLayoutConfig[i].type = STORAGE_BUFFER;
-	//descriptorLayoutConfig[i++].stages = COMPUTE_STAGE;
+	descriptorLayoutConfig[i].type = STORAGE_BUFFER;
+	descriptorLayoutConfig[i++].stages = COMPUTE_STAGE;
 
 	computePipeline.CreateComputePipeline("dataCompute", descriptorLayoutConfig);
 }
 
 void Data::CreateBuffers()
 {
-    //computeBuffers.resize(Manager::settings.maxFramesInFlight);
+    BufferConfiguration generalBufferConfiguration;
+	generalBufferConfiguration.size = sizeof(GeneralData);
+	generalBufferConfiguration.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+	generalBufferConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	generalBufferConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	generalBufferConfiguration.mapped = true;
 
-    BufferConfiguration bufferConfiguration;
-	bufferConfiguration.size = sizeof(GeneralData);
-	bufferConfiguration.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-	bufferConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-	bufferConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	bufferConfiguration.mapped = true;
+	generalBuffer.Create(generalBufferConfiguration);
 
-	generalBuffer.Create(bufferConfiguration);
+	BufferConfiguration heightBufferConfiguration;
+	heightBufferConfiguration.size = sizeof(HeightData) * 100;
+	heightBufferConfiguration.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+	heightBufferConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	heightBufferConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	heightBufferConfiguration.mapped = true;
 
-	//for (Buffer &buffer : computeBuffers)
-	//{
-	//	buffer.Create(bufferConfiguration);
-	//}
-
-	//intersectBuffers.resize(Manager::settings.maxFramesInFlight);
-
-	//BufferConfiguration intersectConfiguration;
-	//intersectConfiguration.size = sizeof(IntersectData) * intersectCount;
-	//intersectConfiguration.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-	//intersectConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-	//intersectConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	//intersectConfiguration.mapped = true;
-	//intersectBuffer.Create(intersectConfiguration);
-
-	//for (Buffer &buffer : intersectBuffers)
-	//{
-	//	buffer.Create(intersectConfiguration);
-	//}
+	heightBuffer.Create(heightBufferConfiguration);
 }
 
 void Data::CreateDescriptors()
@@ -66,20 +53,7 @@ void Data::CreateDescriptors()
 	int i = 0;
 	int index = 0;
 
-    std::vector<DescriptorConfiguration> descriptorConfig(1);
-
-	//descriptorConfig[i].type = STORAGE_BUFFER;
-	//descriptorConfig[i].stages = COMPUTE_STAGE;
-	//descriptorConfig[i].buffersInfo.resize(computeBuffers.size());
-	//index = 0;
-	//for (Buffer &buffer : computeBuffers)
-	//{
-	//	descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
-	//	descriptorConfig[i].buffersInfo[index].range = sizeof(GeneralData);
-	//	descriptorConfig[i].buffersInfo[index].offset = 0;
-	//	index++;
-	//}
-	//i++;
+    std::vector<DescriptorConfiguration> descriptorConfig(2);
 
 	descriptorConfig[i].type = STORAGE_BUFFER;
 	descriptorConfig[i].stages = COMPUTE_STAGE;
@@ -88,21 +62,12 @@ void Data::CreateDescriptors()
 	descriptorConfig[i].buffersInfo[0].range = sizeof(GeneralData);
 	descriptorConfig[i++].buffersInfo[0].offset = 0;
 
-	//descriptorConfig[i].type = STORAGE_BUFFER;
-	//descriptorConfig[i].stages = COMPUTE_STAGE;
-	//descriptorConfig[i].buffersInfo.resize(1);
-	//descriptorConfig[i].buffersInfo[0].buffer = intersectBuffer.buffer;
-	//descriptorConfig[i].buffersInfo[0].range = sizeof(IntersectData) * intersectCount;
-	//descriptorConfig[i].buffersInfo[0].offset = 0;
-	//index = 0;
-	//for (Buffer &buffer : intersectBuffers)
-	//{
-	//	descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
-	//	descriptorConfig[i].buffersInfo[index].range = sizeof(IntersectData) * intersectCount;
-	//	descriptorConfig[i].buffersInfo[index].offset = 0;
-	//	index++;
-	//}
-	//i++;
+	descriptorConfig[i].type = STORAGE_BUFFER;
+	descriptorConfig[i].stages = COMPUTE_STAGE;
+	descriptorConfig[i].buffersInfo.resize(1);
+	descriptorConfig[i].buffersInfo[0].buffer = heightBuffer.buffer;
+	descriptorConfig[i].buffersInfo[0].range = sizeof(HeightData) * 100;
+	descriptorConfig[i++].buffersInfo[0].offset = 0;
 
 	computeDescriptor.perFrame = false;
 	computeDescriptor.Create(descriptorConfig, computePipeline.objectDescriptorSetLayout);
@@ -111,8 +76,8 @@ void Data::CreateDescriptors()
 void Data::Destroy()
 {
     DestroyPipelines();
-    DestroyDescriptors();
-    DestroyBuffers();
+	DestroyBuffers();
+	DestroyDescriptors();
 }
 
 void Data::DestroyPipelines()
@@ -127,13 +92,8 @@ void Data::DestroyDescriptors()
 
 void Data::DestroyBuffers()
 {
-    //for (Buffer &buffer : computeBuffers) buffer.Destroy();
-	//computeBuffers.clear();
 	generalBuffer.Destroy();
-
-	//for (Buffer &buffer : intersectBuffers) buffer.Destroy();
-	//intersectBuffers.clear();
-	//intersectBuffer.Destroy();
+	heightBuffer.Destroy();
 }
 
 void Data::Start()
@@ -143,6 +103,12 @@ void Data::Start()
 
 void Data::RecordComputeCommands(VkCommandBuffer commandBuffer)
 {
+	for (int i = 0; i < requestCount; i++)
+	{
+		heightData[i].position = glm::vec4(requestData[i].position, 0.0f);
+	}
+	memcpy(heightBuffer.mappedBuffer, heightData.data(), sizeof(HeightData) * requestCount);
+
 	ComputeGeneralData(commandBuffer);
 }
 
@@ -151,11 +117,13 @@ void Data::ComputeGeneralData(VkCommandBuffer commandBuffer)
 	bool oneTimeBuffer = commandBuffer == nullptr;
 	if (oneTimeBuffer) commandBuffer = Manager::currentDevice.BeginComputeCommand();
 
+	int dispatchCount = requestCount + 1;
+
 	computePipeline.BindCompute(commandBuffer);
 	Manager::globalDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 0);
 	computeDescriptor.Bind(commandBuffer, computePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
 
-	vkCmdDispatch(commandBuffer, 1, 1, 1);
+	vkCmdDispatch(commandBuffer, dispatchCount, 1, 1);
 
 	if (oneTimeBuffer)
 	{
@@ -168,6 +136,26 @@ void Data::ComputeGeneralData(VkCommandBuffer commandBuffer)
 void Data::SetData()
 {
 	generalData[Manager::currentFrame].viewHeight = (*(GeneralData *)generalBuffer.mappedBuffer).viewHeight;
+
+	for (int i = 0; i < requestCount; i++)
+	{
+		*requestData[i].source += (*((HeightData *)(heightBuffer.mappedBuffer + sizeof(HeightData) * i))).position.w;
+		//*requestData[i].source = (*(HeightData *)(heightBuffer.mappedBuffer + (i))).position.w;
+		requestData[i].func(requestData[i].index);
+	}
+
+	requestCount = 0;
+}
+
+void Data::RequestData(glm::vec3 position, float *source, void (*func)(int), int index)
+{
+	//DataRequest newRequest{position, source, func, index};
+	requestData[requestCount].position = position;
+	requestData[requestCount].source = source;
+	requestData[requestCount].func = func;
+	requestData[requestCount].index = index;
+
+	requestCount++;
 }
 
 /*void Data::SetData()
@@ -223,12 +211,14 @@ GeneralData Data::GetGeneralData()
 //}
 
 Pipeline Data::computePipeline{Manager::currentDevice, Manager::camera};
-Descriptor Data::computeDescriptor{Manager::currentDevice};
-//std::vector<Buffer> Data::computeBuffers;
-//std::vector<Buffer> Data::intersectBuffers;
-//Buffer Data::intersectBuffer;
-std::vector<GeneralData> Data::generalData;
+
 Buffer Data::generalBuffer;
-//std::vector<IntersectData> Data::intersectData;
-//int Data::intersectCount = 10;
-//int Data::activeIntersectCount = 0;
+Buffer Data::heightBuffer;
+
+Descriptor Data::computeDescriptor{Manager::currentDevice};
+
+std::vector<GeneralData> Data::generalData;
+std::vector<HeightData> Data::heightData = std::vector<HeightData>(100);
+std::vector<DataRequest> Data::requestData = std::vector<DataRequest>(100);
+
+int Data::requestCount = 0;
