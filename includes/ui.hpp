@@ -27,8 +27,15 @@
 #define GRAPH_COMPONENT 8
 #define CHECK_COMPONENT 9
 #define FLOAT3_DRAG_COMPONENT 10
+#define COLOR_COMPONENT 11
 
 #define TEST_REPLACE_DEFINE "another replaceeeeeed"
+
+struct ColorComponent
+{
+	std::string name = "color";
+	glm::vec4 &value;
+};
 
 struct Float3DragComponent
 {
@@ -130,6 +137,7 @@ struct Menu
 	std::vector<GraphComponent> graphComponents;
 	std::vector<CheckComponent> checkComponents;
 	std::vector<Float3DragComponent> float3DragComponents;
+	std::vector<ColorComponent> colorComponents;
 
 	void AddNode(std::string name, bool begin)
 	{
@@ -254,6 +262,17 @@ struct Menu
 		newComponent.index = float3DragComponents.size() - 1;
 		components.push_back(newComponent);
 	}
+
+	void AddColor(std::string name, glm::vec4 &value)
+	{
+		ColorComponent newColorComponent{name, value};
+		colorComponents.push_back(newColorComponent);
+
+		Component newComponent;
+		newComponent.type = COLOR_COMPONENT;
+		newComponent.index = colorComponents.size() - 1;
+		components.push_back(newComponent);
+	}
 };
 
 class UI
@@ -296,6 +315,7 @@ class UI
 		static void RenderGraphComponent(GraphComponent &graphComponent);
 		static void RenderCheckComponent(CheckComponent &checkComponent);
 		static void RenderDragComponent(Float3DragComponent &dragComponent);
+		static void RenderColorComponent(ColorComponent &colorComponent);
 
 		static int FindNodeEnd(Menu &menu, std::string name, int start);
 		static void DraggingGraphPoint(int index);

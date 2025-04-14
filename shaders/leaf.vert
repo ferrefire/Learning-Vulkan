@@ -21,6 +21,11 @@ layout(std430, set = 1, binding = 0) readonly buffer DataBuffer
 	LeafData data[];
 };
 
+layout(set = 1, binding = 1) uniform LeafVariables
+{
+	vec4 leafTint;
+} leafVariables;
+
 layout(set = 0, binding = 8) uniform sampler2D windSampler;
 
 layout(location = 0) in vec3 inPosition;

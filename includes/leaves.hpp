@@ -24,6 +24,12 @@ struct LeafData
 	uint32_t sturxlody;
 };
 
+struct LeafVariables
+{
+	//glm::vec4 leafTint = glm::vec4(93.0f, 99.0f, 44.0f, 255.0f) / 255.0f;
+	glm::vec4 leafTint = glm::vec4(21.0f, 24.0f, 2.0f, 255.0f) / 255.0f;
+};
+
 class Leaves
 {
 	private:
@@ -43,6 +49,9 @@ class Leaves
 
 		static std::vector<Buffer> renderBuffers;
 		static std::vector<Buffer> shadowBuffers;
+		static Buffer variablesBuffer;
+
+		static LeafVariables leafVariables;
 
 		static void Create();
 		static void CreateMeshes();

@@ -7,6 +7,7 @@
 #include "terrain.hpp"
 #include "leaves.hpp"
 #include "capture.hpp"
+#include "ui.hpp"
 
 #include <iostream>
 
@@ -757,6 +758,11 @@ void Trees::Start()
 	}
 
 	//ComputeTreeSetup();
+
+	Menu &menu = UI::NewMenu("trees");
+	menu.AddNode("leaves", true);
+	menu.AddColor("leaf color", Leaves::leafVariables.leafTint);
+	menu.AddNode("leaves", false);
 }
 
 void Trees::Frame()

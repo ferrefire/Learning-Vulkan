@@ -208,6 +208,8 @@ void UI::RenderComponents(Menu &menu, int start, int end)
 			RenderCheckComponent(menu.checkComponents[component.index]);
 		else if (component.type == FLOAT3_DRAG_COMPONENT)
 			RenderDragComponent(menu.float3DragComponents[component.index]);
+		else if (component.type == COLOR_COMPONENT)
+			RenderColorComponent(menu.colorComponents[component.index]);
 
 		if (component.type == NODE_COMPONENT)
 		{
@@ -302,6 +304,11 @@ void UI::RenderDragComponent(Float3DragComponent &dragComponent)
 {
 	ImGui::DragFloat3(dragComponent.name.c_str(), &dragComponent.value[0], dragComponent.speed, 
 		-FLT_MAX, FLT_MAX, "%.3f", ImGuiSliderFlags_WrapAround);
+}
+
+void UI::RenderColorComponent(ColorComponent &colorComponent)
+{
+	ImGui::ColorEdit3(colorComponent.name.c_str(), &colorComponent.value[0]);
 }
 
 int UI::FindNodeEnd(Menu &menu, std::string name, int start)

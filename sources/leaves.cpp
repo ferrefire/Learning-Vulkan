@@ -35,9 +35,13 @@ void Leaves::CreateMeshes()
 
 void Leaves::CreateGraphicsPipeline()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(1);
-	descriptorLayoutConfig[0].type = STORAGE_BUFFER;
-	descriptorLayoutConfig[0].stages = VERTEX_STAGE;
+	int i = 0;
+
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(2);
+	descriptorLayoutConfig[i].type = STORAGE_BUFFER;
+	descriptorLayoutConfig[i++].stages = VERTEX_STAGE;
+	descriptorLayoutConfig[i].type = UNIFORM_BUFFER;
+	descriptorLayoutConfig[i++].stages = VERTEX_STAGE | FRAGMENT_STAGE;
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
 	pipelineConfiguration.foliage = true;
@@ -94,23 +98,41 @@ void Leaves::CreateBuffers()
 	{
 		buffer.Create(renderConfiguration);
 	}
+
+	BufferConfiguration variablesConfiguration;
+	variablesConfiguration.size = sizeof(LeafVariables);
+	variablesConfiguration.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	variablesConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	variablesConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	variablesConfiguration.mapped = true;
+
+	variablesBuffer.Create(variablesConfiguration);
 }
 
 void Leaves::CreateGraphicsDescriptor()
 {
-	std::vector<DescriptorConfiguration> descriptorConfig(1);
+	std::vector<DescriptorConfiguration> descriptorConfig(2);
 
-	descriptorConfig[0].type = STORAGE_BUFFER;
-	descriptorConfig[0].stages = VERTEX_STAGE;
-	descriptorConfig[0].buffersInfo.resize(renderBuffers.size());
+	int i = 0;
+
+	descriptorConfig[i].type = STORAGE_BUFFER;
+	descriptorConfig[i].stages = VERTEX_STAGE;
+	descriptorConfig[i].buffersInfo.resize(renderBuffers.size());
 	int index = 0;
 	for (Buffer &buffer : renderBuffers)
 	{
-		descriptorConfig[0].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[0].buffersInfo[index].range = sizeof(LeafData) * Trees::totalLeafCount;
-		descriptorConfig[0].buffersInfo[index].offset = 0;
+		descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
+		descriptorConfig[i].buffersInfo[index].range = sizeof(LeafData) * Trees::totalLeafCount;
+		descriptorConfig[i].buffersInfo[index].offset = 0;
 		index++;
 	}
+	i++;
+
+	descriptorConfig[i].type = UNIFORM_BUFFER;
+	descriptorConfig[i].stages = VERTEX_STAGE | FRAGMENT_STAGE;
+	descriptorConfig[i].buffersInfo.resize(1);
+	descriptorConfig[i].buffersInfo[0].buffer = variablesBuffer.buffer;
+	descriptorConfig[i++].buffersInfo[0].range = sizeof(LeafVariables);
 
 	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
 }
@@ -169,16 +191,18 @@ void Leaves::DestroyBuffers()
 
 	for (Buffer &buffer : shadowBuffers) buffer.Destroy();
 	shadowBuffers.clear();
+
+	variablesBuffer.Destroy();
 }
 
 void Leaves::Start()
 {
-
+	//memcpy(variablesBuffer.mappedBuffer, &leafVariables, sizeof(LeafVariables));
 }
 
 void Leaves::Frame()
 {
-
+	memcpy(variablesBuffer.mappedBuffer, &leafVariables, sizeof(LeafVariables));
 }
 
 void Leaves::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
@@ -353,3 +377,6 @@ Descriptor Leaves::shadowDescriptor{Manager::currentDevice};
 
 std::vector<Buffer> Leaves::renderBuffers;
 std::vector<Buffer> Leaves::shadowBuffers;
+Buffer Leaves::variablesBuffer;
+
+LeafVariables Leaves::leafVariables;

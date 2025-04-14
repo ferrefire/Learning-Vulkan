@@ -1115,7 +1115,8 @@ int Terrain::heightMapCount = Terrain::heightMapLength * Terrain::heightMapLengt
 
 float Terrain::terrainTotalSize = Terrain::heightMapLength * Terrain::terrainChunkSize;
 float Terrain::terrainHeight = 5000;
-float Terrain::waterHeight = 750.0f;
+//float Terrain::waterHeight = 750.0f;
+float Terrain::waterHeight = 400.0f;
 //float Terrain::waterHeight = 350.0f;
 float Terrain::waterBlendDistance = 25.0f;
 

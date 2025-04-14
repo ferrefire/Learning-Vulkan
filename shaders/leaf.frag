@@ -6,6 +6,11 @@
 #define CASCADE_COUNT 3
 #endif
 
+layout(set = 1, binding = 1) uniform LeafVariables
+{
+	vec4 leafTint;
+} leafVariables;
+
 layout(location = 0) in vec3 worldPosition;
 layout(location = 1) in vec3 localPosition;
 layout(location = 2) in vec3 globalNormal;
@@ -24,7 +29,7 @@ layout(location = 0) out vec4 outColor;
 #include "functions.glsl"
 
 //const vec3 leafTint = vec3(0.0916, 0.1, 0.0125);
-const vec3 leafTint = DECODE_COLOR(vec3(93, 99, 44) / 255.0);
+//const vec3 leafTint = DECODE_COLOR(vec3(93, 99, 44) / 255.0); //original
 //const vec3 leafTint = DECODE_COLOR(vec3(84, 89, 40) / 255.0);
 //const vec3 leafTint = pow(vec3(0.0916, 0.1, 0.0125), vec3(1.0 / 2.2));
 const vec3 translucencyTint = vec3(235, 196, 5) / 255.0;
@@ -90,7 +95,7 @@ void main()
 	vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow, 0.025 + 0.075 * diffuseEdgeBlend, 0.025);
 	//vec3 leafDiffuse = DiffuseLightingRealistic(leafNormal, worldPosition, shadow, 0.1, 0.1);
 	//vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow);
-	vec3 endColor = leafDiffuse * leafTint * leafColor.y;
+	vec3 endColor = leafDiffuse * leafVariables.leafTint.rgb * leafColor.y;
 	if (shadow >= 1.0) endColor *= leafColor.x;
 
 	//float translucency = 1.0;
@@ -116,7 +121,7 @@ void main()
 			translucency *= 1.0 - ((dis - 250.0) / 250.0);
 		}
 
-		endColor += (sunColor.rgb) * leafTint * translucency * 16.0;
+		endColor += (sunColor.rgb) * leafVariables.leafTint.rgb * translucency * 16.0;
 	}
 
 	//endColor = GroundFog(endColor, depth, worldPosition.y);
