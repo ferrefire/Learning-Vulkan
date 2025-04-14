@@ -6,6 +6,7 @@
 
 #include <vector>
 
+#define NO_SHAPE 0
 #define QUAD 1
 #define CUBE 2
 #define PLANE 3
@@ -53,6 +54,7 @@ class Shape
 		bool color = false;
 
 		void SetShape(int type, int resolution = 1);
+		void SetCube(bool front, bool back, bool left, bool right, bool top, bool bottom);
 
         void AddPosition(glm::vec3 pos);
 		void AddCoordinate(glm::vec2 uv);

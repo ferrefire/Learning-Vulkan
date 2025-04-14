@@ -564,6 +564,56 @@ void Shape::SetShape(int type, int resolution)
 	
 }
 
+void Shape::SetCube(bool front, bool back, bool left, bool right, bool top, bool bottom)
+{
+	if (front)
+	{
+		Shape frontSide = Shape(QUAD, coordinate, normal, color);
+    	frontSide.Move(glm::vec3(0.0f, 0.0f, 0.5f));
+		Join(frontSide);
+	}
+
+    if (back)
+	{
+		Shape backSide = Shape(QUAD, coordinate, normal, color);
+    	backSide.Rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+    	backSide.Move(glm::vec3(0.0f, 0.0f, -0.5f));
+		Join(backSide);
+	}
+
+    if (right)
+	{
+		Shape rightSide = Shape(QUAD, coordinate, normal, color);
+    	rightSide.Rotate(-90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+    	rightSide.Move(glm::vec3(-0.5f, 0.0f, 0.0f));
+		Join(rightSide);
+	}
+
+    if (left)
+	{
+		Shape leftSide = Shape(QUAD, coordinate, normal, color);
+    	leftSide.Rotate(90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+   		leftSide.Move(glm::vec3(0.5f, 0.0f, 0.0f));
+		Join(leftSide);
+	}
+
+    if (top)
+	{
+		Shape topSide = Shape(QUAD, coordinate, normal, color);
+    	topSide.Rotate(90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+    	topSide.Move(glm::vec3(0.0f, -0.5f, 0.0f));
+		Join(topSide);
+	}
+
+    if (bottom)
+	{
+		Shape bottomSide = Shape(QUAD, coordinate, normal, color);
+    	bottomSide.Rotate(-90.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+    	bottomSide.Move(glm::vec3(0.0f, 0.5f, 0.0f));
+    	Join(bottomSide);
+	}
+}
+
 void Shape::AddPosition(glm::vec3 pos)
 {
 	positions.push_back(pos);

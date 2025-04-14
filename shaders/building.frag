@@ -9,6 +9,7 @@
 layout(set = 1, binding = 0) uniform sampler2D beamSamplers[3];
 layout(set = 1, binding = 1) uniform sampler2D plasteredSamplers[3];
 layout(set = 1, binding = 2) uniform sampler2D reedSamplers[3];
+layout(set = 1, binding = 3) uniform sampler2D brickSamplers[3];
 
 layout(location = 0) in vec3 worldPosition;
 layout(location = 1) in vec2 inCoordinate;
@@ -63,6 +64,12 @@ void main()
 		texAmbient = SampleTriplanarColorFlat(reedSamplers[2], uv, weights);
 	}
 	else if (type.x == 3)
+	{
+		texColor = SampleTriplanarColor(brickSamplers[0], worldUV, weights);
+		texNormal = SampleTriplanarNormal(brickSamplers[1], worldUV, weights, normal, 1.0);
+		texAmbient = SampleTriplanarColor(brickSamplers[2], worldUV, weights);
+	}
+	else if (type.x == 4)
 	{
 		bool rotate = weights.y < weights.x || weights.y < weights.z;
 

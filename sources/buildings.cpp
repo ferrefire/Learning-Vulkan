@@ -20,6 +20,10 @@ void Buildings::CreateMeshes()
 {
 	//generationConfig.seed = 1472;
 	//generationConfig.seed = 15049;
+	//generationConfig.seed = 1347;
+	//generationConfig.seed = 17301;
+	generationConfig.seed = 1845;
+	//generationConfig.scaffoldingReduction = 1;
 	//generationConfig.minSize = glm::ivec3(3);
 	//generationConfig.maxSize = glm::ivec3(6);
 	GenerateBuilding();
@@ -38,6 +42,8 @@ void Buildings::CreateTextures()
 {
     SamplerConfiguration beamSamplerConfig;
 	beamSamplerConfig.repeatMode = REPEAT;
+	beamSamplerConfig.anisotrophic = VK_TRUE;
+	beamSamplerConfig.anisotrophicSampleCount = 4;
 
     beamTextures.resize(3);
 	beamTextures[0].CreateTexture("beam_diff.jpg", beamSamplerConfig);
@@ -46,6 +52,8 @@ void Buildings::CreateTextures()
 
 	SamplerConfiguration plasteredSamplerConfig;
 	plasteredSamplerConfig.repeatMode = REPEAT;
+	plasteredSamplerConfig.anisotrophic = VK_TRUE;
+	plasteredSamplerConfig.anisotrophicSampleCount = 4;
 
 	plasteredTextures.resize(3);
 	plasteredTextures[0].CreateTexture("plastered_diff.jpg", plasteredSamplerConfig);
@@ -54,16 +62,28 @@ void Buildings::CreateTextures()
 
 	SamplerConfiguration reedSamplerConfig;
 	reedSamplerConfig.repeatMode = REPEAT;
+	reedSamplerConfig.anisotrophic = VK_TRUE;
+	reedSamplerConfig.anisotrophicSampleCount = 4;
 
 	reedTextures.resize(3);
 	reedTextures[0].CreateTexture("reed_diff.jpg", reedSamplerConfig);
 	reedTextures[1].CreateTexture("reed_norm.jpg", reedSamplerConfig);
 	reedTextures[2].CreateTexture("reed_ao.jpg", reedSamplerConfig);
+
+	SamplerConfiguration brickSamplerConfig;
+	brickSamplerConfig.repeatMode = REPEAT;
+	brickSamplerConfig.anisotrophic = VK_TRUE;
+	brickSamplerConfig.anisotrophicSampleCount = 4;
+
+	brickTextures.resize(3);
+	brickTextures[0].CreateTexture("brick_diff.jpg", brickSamplerConfig);
+	brickTextures[1].CreateTexture("brick_norm.jpg", brickSamplerConfig);
+	brickTextures[2].CreateTexture("brick_ao.jpg", brickSamplerConfig);
 }
 
 void Buildings::CreatePipelines()
 {
-    std::vector<DescriptorLayoutConfiguration> graphicsDescriptorLayoutConfig(3);
+    std::vector<DescriptorLayoutConfiguration> graphicsDescriptorLayoutConfig(4);
 	int i = 0;
 	graphicsDescriptorLayoutConfig[i].type = IMAGE_SAMPLER;
 	graphicsDescriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
@@ -74,6 +94,9 @@ void Buildings::CreatePipelines()
 	graphicsDescriptorLayoutConfig[i].type = IMAGE_SAMPLER;
 	graphicsDescriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
 	graphicsDescriptorLayoutConfig[i++].count = reedTextures.size();
+	graphicsDescriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	graphicsDescriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
+	graphicsDescriptorLayoutConfig[i++].count = brickTextures.size();
 	PipelineConfiguration graphicsPipelineConfiguration = Pipeline::DefaultConfiguration();
     VertexInfo vertexInfo = building.mesh.MeshVertexInfo();
     graphicsPipeline.CreateGraphicsPipeline("building", graphicsDescriptorLayoutConfig, graphicsPipelineConfiguration, vertexInfo);
@@ -89,7 +112,7 @@ void Buildings::CreatePipelines()
 
 void Buildings::CreateDescriptors()
 {
-    std::vector<DescriptorConfiguration> descriptorConfig(3);
+    std::vector<DescriptorConfiguration> descriptorConfig(4);
 
 	int index = 0;
 	descriptorConfig[index].type = IMAGE_SAMPLER;
@@ -128,6 +151,18 @@ void Buildings::CreateDescriptors()
 	}
 	index++;
 
+	descriptorConfig[index].type = IMAGE_SAMPLER;
+	descriptorConfig[index].stages = FRAGMENT_STAGE;
+	descriptorConfig[index].count = brickTextures.size();
+	descriptorConfig[index].imageInfos.resize(brickTextures.size());
+	for (int i = 0; i < brickTextures.size(); i++)
+	{
+		descriptorConfig[index].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		descriptorConfig[index].imageInfos[i].imageView = brickTextures[i].imageView;
+		descriptorConfig[index].imageInfos[i].sampler = brickTextures[i].sampler;
+	}
+	index++;
+
 	graphicsDescriptor.perFrame = false;
     graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
 }
@@ -155,6 +190,9 @@ void Buildings::DestroyTextures()
 
 	for (Texture &texture : reedTextures) texture.Destroy();
     reedTextures.clear();
+
+	for (Texture &texture : brickTextures) texture.Destroy();
+    brickTextures.clear();
 }
 
 void Buildings::DestroyPipelines()
@@ -185,7 +223,7 @@ void Buildings::Start()
 	menu.AddSlider("scaffolding", generationConfig.scaffoldingReduction, 1, 10);
 	menu.AddNode("factors", false);
 	menu.AddNode("part properties", true);
-	std::vector<void *> parts = {&floorConfig, &flatWallConfig, &windowedWallConfig, &slopedWallConfig, &flatRoofConfig, &slopedRoofConfig, &coneRoofConfig, 
+	std::vector<void *> parts = {&floorConfig, &foundationConfig, &flatWallConfig, &windowedWallConfig, &slopedWallConfig, &flatRoofConfig, &slopedRoofConfig, &coneRoofConfig, 
 		&coneRoofExtensionConfig, &beamConfig, &slopedBeamConfig, &slightSlopedBeamConfig, &collumnConfig};
 	for (void *part : parts)
 	{
@@ -247,12 +285,16 @@ void Buildings::GenerateBuilding()
 {
 	GenerateCells();
 	GenerateMesh();
+
+	//std::cout << std::endl;
+	//std::cout << "vertex count: " << building.mesh.vertices.size() << std::endl;
+	//std::cout << "indice count: " << building.mesh.indices.size() << std::endl;
 }
 
 void Buildings::GenerateCells()
 {
 	building.cells.clear();
-	building.size = glm::ivec3(1, 0, 1);
+	building.size = glm::ivec3(0, 0, 0);
 	if (generationConfig.random) generationConfig.seed = int(uint32_t(Time::GetCurrentTime() * 100) % RAND_MAX);
 	random.SetSeed(generationConfig.seed);
 
@@ -274,9 +316,9 @@ void Buildings::GenerateCells()
 	{
 		if (i < generationConfig.minSize.y || random.Next(0, 9) < generationConfig.levelFactor)
 		{
-			building.size.y++;
 			ExpandLevel(i);
 			FillLevel(i);
+			building.size = glm::ivec3(0, building.size.y + 1, 0);
 		}
 		else break;
 	}
@@ -366,6 +408,14 @@ void Buildings::SetWalls()
 					bool S_DownEmpty = FloorEmpty(i - 1, x, y - 1);
 					bool E_DownEmpty = FloorEmpty(i - 1, x + 1, y);
 					bool W_DownEmpty = FloorEmpty(i - 1, x - 1, y);
+					bool NE_DownEmpty = FloorEmpty(i - 1, x + 1, y + 1) || !IsRoof(i - 1, x + 1, y + 1);
+                    bool NW_DownEmpty = FloorEmpty(i - 1, x - 1, y + 1) || !IsRoof(i - 1, x - 1, y + 1);
+                    bool SE_DownEmpty = FloorEmpty(i - 1, x + 1, y - 1) || !IsRoof(i - 1, x + 1, y - 1);
+                    bool SW_DownEmpty = FloorEmpty(i - 1, x - 1, y - 1) || !IsRoof(i - 1, x - 1, y - 1);
+					bool S_Balcony = i != 0 && SE_DownEmpty && SW_DownEmpty;
+                    bool N_Balcony = i != 0 && NE_DownEmpty && NW_DownEmpty;
+                    bool E_Balcony = i != 0 && NE_DownEmpty && SE_DownEmpty;
+                    bool W_Balcony = i != 0 && NW_DownEmpty && SW_DownEmpty;
 
 					if (N_Empty)
 					{
@@ -373,7 +423,14 @@ void Buildings::SetWalls()
 						building.cells[i][x][y].walls.N_Variant = random.Next(0, 21 - generationConfig.decoratedFactor);
 						if (N_DownEmpty && (x + i + generationConfig.seed) % 2 == 0)
 						{
-							building.cells[i][x][y].walls.N_Type = WallType::window;
+							if (N_Balcony && random.Next(0, 9) < generationConfig.balconyFactor)
+							{
+								building.cells[i][x][y].walls.N_Type = WallType::balcony;
+							}
+							else
+							{
+								building.cells[i][x][y].walls.N_Type = WallType::window;
+							}
 						}
 					}
 
@@ -383,7 +440,14 @@ void Buildings::SetWalls()
 						building.cells[i][x][y].walls.S_Variant = random.Next(0, 21 - generationConfig.decoratedFactor);
 						if (S_DownEmpty && (x + 1 + i + generationConfig.seed) % 2 == 0)
 						{
-							building.cells[i][x][y].walls.S_Type = WallType::window;
+							if (S_Balcony && random.Next(0, 9) < generationConfig.balconyFactor)
+							{
+								building.cells[i][x][y].walls.S_Type = WallType::balcony;
+							}
+							else
+							{
+								building.cells[i][x][y].walls.S_Type = WallType::window;
+							}
 						}
 					}
 
@@ -393,7 +457,14 @@ void Buildings::SetWalls()
 						building.cells[i][x][y].walls.E_Variant = random.Next(0, 21 - generationConfig.decoratedFactor);
 						if (E_DownEmpty && (y + i + generationConfig.seed) % 2 == 0)
 						{
-							building.cells[i][x][y].walls.E_Type = WallType::window;
+							if (E_Balcony && random.Next(0, 9) < generationConfig.balconyFactor)
+							{
+								building.cells[i][x][y].walls.E_Type = WallType::balcony;
+							}
+							else
+							{
+								building.cells[i][x][y].walls.E_Type = WallType::window;
+							}
 						}
 					}
 
@@ -403,7 +474,14 @@ void Buildings::SetWalls()
 						building.cells[i][x][y].walls.W_Variant = random.Next(0, 21 - generationConfig.decoratedFactor);
 						if (W_DownEmpty && (y + 1 + i + generationConfig.seed) % 2 == 0)
 						{
-							building.cells[i][x][y].walls.W_Type = WallType::window;
+							if (W_Balcony && random.Next(0, 9) < generationConfig.balconyFactor)
+							{
+								building.cells[i][x][y].walls.W_Type = WallType::balcony;
+							}
+							else
+							{
+								building.cells[i][x][y].walls.W_Type = WallType::window;
+							}
 						}
 					}
 				}
@@ -770,7 +848,12 @@ D Buildings::GetRoofDirection(RoofType type, bool N_Empty, bool S_Empty, bool E_
 			else if (S_Cone) return (N);
 			else if (W_Cone) return (E);
 		}
-		else return NS > EW ? N : E;
+		else
+		{
+			//NS = (N_Empty ? 0 : (N_Cone ? 1 : 3)) + (S_Empty ? 0 : (S_Cone ? 1 : 3));
+			//EW = (E_Empty ? 0 : (E_Cone ? 1 : 3)) + (W_Empty ? 0 : (W_Cone ? 1 : 3));
+			return NS > EW ? N : E;
+		}
 	}
 	else if (type == RoofType::slope)
 	{
@@ -840,7 +923,9 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 
 	if (type == PartType::floor)
 	{
-		Shape floor = Shape(CUBE, true, true, true);
+		//Shape floor = Shape(CUBE, true, true, true);
+		Shape floor = Shape(NO_SHAPE, true, true, true);
+		floor.SetCube(false, false, false, false, true, true);
 		floor.SetColors(glm::vec3(0));
 		floor.Scale(floorConfig.scale * generationConfig.scale);
 		floor.Scale(scale);
@@ -851,9 +936,25 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 
 		part.Join(floor);
 	}
+	else if (type == PartType::foundation)
+	{
+		Shape floor = Shape(CUBE, true, true, true);
+		floor.SetColors(glm::vec3(3, 0, 0));
+		floor.Scale(foundationConfig.scale * generationConfig.scale);
+		floor.Scale(scale);
+		floor.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		floor.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		floor.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		floor.Move(foundationConfig.offset * generationConfig.scale);
+		floor.Move(offset * generationConfig.scale);
+
+		part.Join(floor);
+	}
 	else if (type == PartType::flatWall)
 	{
-		Shape wall = Shape(CUBE, true, true, true);
+		//Shape wall = Shape(CUBE, true, true, true);
+		Shape wall = Shape(NO_SHAPE, true, true, true);
+		wall.SetCube(true, true, false, false, false, false);
 		wall.SetColors(glm::vec3(1, 0, 0));
 		wall.Scale(flatWallConfig.scale * generationConfig.scale);
 		wall.Scale(scale);
@@ -863,6 +964,94 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 		wall.Move(flatWallConfig.offset * generationConfig.scale);
 		wall.Move(offset * generationConfig.scale);
 
+		part.Join(wall);
+	}
+	else if (type == PartType::windowedWall)
+	{
+		Shape wall = Shape(NO_SHAPE, true, true, true);
+		wall.SetCube(true, true, false, false, false, false);
+		wall.SetColors(glm::vec3(1, 0, 0));
+		wall.Scale(windowedWallConfig.scale * glm::vec3(1.0f, 0.25f, 1.0f) * generationConfig.scale);
+		wall.Scale(scale);
+		wall.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		wall.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		wall.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		wall.Move((windowedWallConfig.offset + glm::vec3(0.0f, -0.375f, 0.0f)) * generationConfig.scale);
+		wall.Move(offset * generationConfig.scale);
+		part.Join(wall);
+
+		wall = Shape(NO_SHAPE, true, true, true);
+		wall.SetCube(true, true, false, false, false, false);
+		wall.SetColors(glm::vec3(1, 0, 0));
+		wall.Scale(windowedWallConfig.scale * glm::vec3(1.0f, 0.25f, 1.0f) * generationConfig.scale);
+		wall.Scale(scale);
+		wall.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		wall.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		wall.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		wall.Move((windowedWallConfig.offset + glm::vec3(0.0f, 0.375f, 0.0f)) * generationConfig.scale);
+		wall.Move(offset * generationConfig.scale);
+		part.Join(wall);
+
+		wall = Shape(NO_SHAPE, true, true, true);
+		wall.SetCube(true, true, false, false, false, false);
+		wall.SetColors(glm::vec3(1, 0, 0));
+		wall.Scale(windowedWallConfig.scale * glm::vec3(0.25f, 0.5f, 1.0f) * generationConfig.scale);
+		wall.Scale(scale);
+		wall.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		wall.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		wall.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		wall.Move((windowedWallConfig.offset + glm::vec3(0.375f, 0.0f, 0.0f)) * generationConfig.scale);
+		wall.Move(offset * generationConfig.scale);
+		part.Join(wall);
+
+		wall = Shape(NO_SHAPE, true, true, true);
+		wall.SetCube(true, true, false, false, false, false);
+		wall.SetColors(glm::vec3(1, 0, 0));
+		wall.Scale(windowedWallConfig.scale * glm::vec3(0.25f, 0.5f, 1.0f) * generationConfig.scale);
+		wall.Scale(scale);
+		wall.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		wall.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		wall.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		wall.Move((windowedWallConfig.offset + glm::vec3(-0.375f, 0.0f, 0.0f)) * generationConfig.scale);
+		wall.Move(offset * generationConfig.scale);
+		part.Join(wall);
+	}
+	else if (type == PartType::dooredWall)
+	{
+		Shape wall = Shape(NO_SHAPE, true, true, true);
+		wall.SetCube(true, true, false, false, false, false);
+		wall.SetColors(glm::vec3(1, 0, 0));
+		wall.Scale(dooredWallConfig.scale * glm::vec3(0.5f, 0.25f, 1.0f) * generationConfig.scale);
+		wall.Scale(scale);
+		wall.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		wall.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		wall.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		wall.Move((dooredWallConfig.offset + glm::vec3(0.0f, 0.375f, 0.0f)) * generationConfig.scale);
+		wall.Move(offset * generationConfig.scale);
+		part.Join(wall);
+
+		wall = Shape(NO_SHAPE, true, true, true);
+		wall.SetCube(true, true, false, false, false, false);
+		wall.SetColors(glm::vec3(1, 0, 0));
+		wall.Scale(dooredWallConfig.scale * glm::vec3(0.25f, 1.0f, 1.0f) * generationConfig.scale);
+		wall.Scale(scale);
+		wall.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		wall.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		wall.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		wall.Move((dooredWallConfig.offset + glm::vec3(0.375f, 0.0f, 0.0f)) * generationConfig.scale);
+		wall.Move(offset * generationConfig.scale);
+		part.Join(wall);
+
+		wall = Shape(NO_SHAPE, true, true, true);
+		wall.SetCube(true, true, false, false, false, false);
+		wall.SetColors(glm::vec3(1, 0, 0));
+		wall.Scale(dooredWallConfig.scale * glm::vec3(0.25f, 1.0f, 1.0f) * generationConfig.scale);
+		wall.Scale(scale);
+		wall.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		wall.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		wall.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		wall.Move((dooredWallConfig.offset + glm::vec3(-0.375f, 0.0f, 0.0f)) * generationConfig.scale);
+		wall.Move(offset * generationConfig.scale);
 		part.Join(wall);
 	}
 	else if (type == PartType::slopedWall)
@@ -909,23 +1098,33 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 
 		part.Join(roof);
 	}
-	/*else if (type == PartType::coneRoof)
+	else if (type == PartType::coneRoof)
 	{
 		Shape leftRoof = Shape(CUBE, true, true, true);
 		leftRoof.InverseCoordinates(false, true);
 		leftRoof.SwapCoordinates();
 		leftRoof.SetColors(glm::vec3(2, 0, 0));
 		leftRoof.Scale(coneRoofConfig.scale * generationConfig.scale);
+		leftRoof.Scale(scale);
 		leftRoof.Rotate(coneRoofConfig.rotation.x, glm::vec3(0.0f, 0.0f, 1.0f));
+		leftRoof.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		leftRoof.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		leftRoof.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
 		leftRoof.Move(coneRoofConfig.offset * generationConfig.scale);
+		leftRoof.Move(offset * generationConfig.scale);
 
 		Shape rightRoof = Shape(CUBE, true, true, true);
 		rightRoof.InverseCoordinates(true, true);
 		rightRoof.SwapCoordinates();
 		rightRoof.SetColors(glm::vec3(2, 0, 0));
 		rightRoof.Scale(coneRoofConfig.scale * generationConfig.scale);
+		rightRoof.Scale(scale);
 		rightRoof.Rotate(-coneRoofConfig.rotation.x, glm::vec3(0.0f, 0.0f, 1.0f));
+		rightRoof.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		rightRoof.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		rightRoof.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
 		rightRoof.Move(coneRoofConfig.offset * glm::vec3(-1.0f, 1.0f, 1.0f) * generationConfig.scale);
+		rightRoof.Move(offset * generationConfig.scale);
 
 		part.Join(leftRoof);
 		part.Join(rightRoof);
@@ -938,26 +1137,36 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 		leftRoof.ScaleCoordinates(glm::vec2(0.5f, 1.0f));
 		leftRoof.SetColors(glm::vec3(2, 0, 0));
 		leftRoof.Scale(coneRoofExtensionConfig.scale * generationConfig.scale);
+		leftRoof.Scale(scale);
 		leftRoof.Rotate90();
 		leftRoof.Rotate(-coneRoofExtensionConfig.rotation.x, glm::vec3(0.0f, 0.0f, 1.0f));
+		leftRoof.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		leftRoof.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		leftRoof.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
 		leftRoof.Move(coneRoofExtensionConfig.offset * glm::vec3(-1.0f, 1.0f, 1.0f) * generationConfig.scale);
+		leftRoof.Move(offset * generationConfig.scale);
 
 		Shape rightRoof = Shape(PRISM, true, true, true);
 		rightRoof.InverseCoordinates(true, true);
 		rightRoof.ScaleCoordinates(glm::vec2(0.5f, 1.0f));
 		rightRoof.SetColors(glm::vec3(2, 0, 0));
 		rightRoof.Scale(coneRoofExtensionConfig.scale * generationConfig.scale);
+		rightRoof.Scale(scale);
 		rightRoof.Rotate90();
 		rightRoof.Rotate(coneRoofExtensionConfig.rotation.x, glm::vec3(0.0f, 0.0f, 1.0f));
+		rightRoof.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		rightRoof.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		rightRoof.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
 		rightRoof.Move(coneRoofExtensionConfig.offset * generationConfig.scale);
+		rightRoof.Move(offset * generationConfig.scale);
 
 		part.Join(leftRoof);
 		part.Join(rightRoof);
-	}*/
+	}
 	else if (type == PartType::beam)
 	{
 		Shape beam = Shape(CUBE, true, true, true);
-		beam.SetColors(glm::vec3(3, 0, 0));
+		beam.SetColors(glm::vec3(4, 0, 0));
 		beam.Scale(beamConfig.scale * generationConfig.scale);
 		beam.Scale(scale);
 		beam.Rotate(90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -973,7 +1182,7 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 	else if (type == PartType::slopedBeam)
 	{
 		Shape beam = Shape(CUBE, true, true, true);
-		beam.SetColors(glm::vec3(3, 0, 0));
+		beam.SetColors(glm::vec3(4, 0, 0));
 		beam.Scale(slopedBeamConfig.scale * generationConfig.scale);
 		beam.Scale(scale);
 		beam.Rotate(slopedBeamConfig.rotation.x, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -986,21 +1195,27 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 
 		part.Join(beam);
 	}
-	/*else if (type == PartType::slightSlopedBeam)
+	else if (type == PartType::slightSlopedBeam)
 	{
 		Shape beam = Shape(CUBE, true, true, true);
-		beam.SetColors(glm::vec3(3, 0, 0));
+		beam.SetColors(glm::vec3(4, 0, 0));
 		beam.Scale(slightSlopedBeamConfig.scale * generationConfig.scale);
+		beam.Scale(scale);
 		beam.Rotate(slightSlopedBeamConfig.rotation.x, glm::vec3(0.0f, 0.0f, 1.0f));
-		beam.Rotate90(rotate);
-		beam.ScaleCoordinates(glm::vec2(0.14f, 1.0f));
+		beam.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		beam.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		beam.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
 		beam.Move(slightSlopedBeamConfig.offset * generationConfig.scale);
+		beam.Move(offset * generationConfig.scale);
+		beam.ScaleCoordinates(glm::vec2(0.14f, 1.0f));
 
 		part.Join(beam);
-	}*/
+	}
 	else if (type == PartType::collumn)
 	{
-		Shape collumn = Shape(CUBE, true, true, true);
+		//Shape collumn = Shape(CUBE, true, true, true);
+		Shape collumn = Shape(NO_SHAPE, true, true, true);
+		collumn.SetCube(true, true, true, true, false, false);
 		collumn.SetColors(glm::vec3(0, 0, 0));
 		collumn.Scale(collumnConfig.scale * generationConfig.scale);
 		collumn.Scale(scale);
@@ -1019,16 +1234,29 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 
 Shape Buildings::GeneratePart(PartType type, int rotate)
 {
-	Shape part;
+	return (GeneratePart(type, glm::vec3(1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 90.0f * rotate, 0.0f)));
+
+	/*Shape part;
 	part.coordinate = true;
 	part.normal = true;
 	part.color = true;
 
 	if (type == PartType::floor)
 	{
-		Shape floor = Shape(CUBE, true, true, true);
-		floor.SetColors(glm::vec3(0));
+		//Shape floor = Shape(CUBE, true, true, true);
+		Shape floor = Shape(NO_SHAPE, true, true, true);
+		floor.SetCube(false, false, false, false, true, true);
+		floor.SetColors(glm::vec3(0, 0, 0));
 		floor.Scale(floorConfig.scale * generationConfig.scale);
+
+		part.Join(floor);
+	}
+	else if (type == PartType::foundation)
+	{
+		Shape floor = Shape(CUBE, true, true, true);
+		floor.SetColors(glm::vec3(3, 0, 0));
+		floor.Scale(foundationConfig.scale * generationConfig.scale);
+		floor.Move(foundationConfig.offset * generationConfig.scale);
 
 		part.Join(floor);
 	}
@@ -1137,7 +1365,7 @@ Shape Buildings::GeneratePart(PartType type, int rotate)
 	else if (type == PartType::beam)
 	{
 		Shape beam = Shape(CUBE, true, true, true);
-		beam.SetColors(glm::vec3(3, 0, 0));
+		beam.SetColors(glm::vec3(4, 0, 0));
 		beam.Scale(beamConfig.scale * generationConfig.scale);
 		beam.Rotate(90.0f, glm::vec3(0.0f, 0.0f, 1.0f));
 		beam.ScaleCoordinates(glm::vec2(0.14f, 1.0f));
@@ -1148,7 +1376,7 @@ Shape Buildings::GeneratePart(PartType type, int rotate)
 	else if (type == PartType::slopedBeam)
 	{
 		Shape beam = Shape(CUBE, true, true, true);
-		beam.SetColors(glm::vec3(3, 0, 0));
+		beam.SetColors(glm::vec3(4, 0, 0));
 		beam.Scale(slopedBeamConfig.scale * generationConfig.scale);
 		beam.Rotate(slopedBeamConfig.rotation.x, glm::vec3(0.0f, 0.0f, 1.0f));
 		beam.Rotate90(rotate);
@@ -1160,7 +1388,7 @@ Shape Buildings::GeneratePart(PartType type, int rotate)
 	else if (type == PartType::slightSlopedBeam)
 	{
 		Shape beam = Shape(CUBE, true, true, true);
-		beam.SetColors(glm::vec3(3, 0, 0));
+		beam.SetColors(glm::vec3(4, 0, 0));
 		beam.Scale(slightSlopedBeamConfig.scale * generationConfig.scale);
 		beam.Rotate(slightSlopedBeamConfig.rotation.x, glm::vec3(0.0f, 0.0f, 1.0f));
 		beam.Rotate90(rotate);
@@ -1180,7 +1408,7 @@ Shape Buildings::GeneratePart(PartType type, int rotate)
 		part.Join(collumn);
 	}
 	
-	return (part);
+	return (part);*/
 }
 
 void Buildings::GenerateMesh()
@@ -1212,19 +1440,34 @@ void Buildings::GenerateFloors(int level)
 	{
 		for (int y = 0; y < building.cells[level][x].size(); y++)
 		{
-			if (!building.cells[level][x][y].floor.Empty())
+			if (!building.cells[level][x][y].Empty())
 			{
-				GenerateFloor(glm::vec3(x, level, y) * generationConfig.scale, building.cells [level][x][y].floor.type);
+				GenerateFloor(level, x , y, building.cells [level][x][y].floor.type);
 			}
 		}
 	}
 }
 
-void Buildings::GenerateFloor(glm::vec3 offset, FloorType type)
+void Buildings::GenerateFloor(int i, int x, int y, FloorType type)
 {
-	Shape floor = GeneratePart(PartType::floor);
+	Shape floor;
+	floor.normal = true;
+	floor.coordinate = true;
+	floor.color = true;
 
-	floor.Move(offset);
+	if (type == FloorType::flat)
+	{
+		Shape flatFloor = GeneratePart(PartType::floor);
+		floor.Join(flatFloor);
+	}
+
+	if (i == 0 && !building.cells[i][x][y].walls.Empty())
+	{
+		Shape foundation = GeneratePart(PartType::foundation);
+		floor.Join(foundation);
+	}
+
+	floor.Move(glm::vec3(x, i, y) * generationConfig.scale);
 	building.mesh.shape.Join(floor);
 }
 
@@ -1263,7 +1506,7 @@ void Buildings::GenerateWalls(int level)
 
 void Buildings::GenerateWall(glm::vec3 offset, WallType type, D direction, int variant)
 {
-	Shape wall = GeneratePart(type == WallType::flat ? PartType::flatWall : PartType::windowedWall);
+	Shape wall = GeneratePart(type == WallType::flat ? PartType::flatWall : (type == WallType::window ? PartType::windowedWall : PartType::dooredWall));
 
 	Shape beamLow = GeneratePart(PartType::beam);
 	wall.Join(beamLow);
@@ -1320,16 +1563,64 @@ void Buildings::GenerateWall(glm::vec3 offset, WallType type, D direction, int v
 		}
 	}
 
-	if (type == WallType::window)
+	if (type == WallType::window || type == WallType::balcony)
 	{
-		Shape frame = GeneratePart(PartType::beam, glm::vec3(0.7f, 0.5f, 0.7f), glm::vec3(0.0f, 0.275f, 0.0f), glm::vec3(0.0f));
-		wall.Join(frame);
-		frame = GeneratePart(PartType::beam, glm::vec3(0.7f, 0.5f, 0.7f), glm::vec3(0.0f, 0.725f, 0.0f), glm::vec3(0.0f));
+		Shape frame = GeneratePart(PartType::beam, glm::vec3(0.7f, 0.5f, 0.7f), glm::vec3(0.0f, 0.725f, 0.0f), glm::vec3(0.0f));
 		wall.Join(frame);
 		frame = GeneratePart(PartType::collumn, glm::vec3(0.75f, 1.0f, 0.75f), glm::vec3(-0.75f, 0.0f, 0.0f), glm::vec3(0.0f));
 		wall.Join(frame);
 		frame = GeneratePart(PartType::collumn, glm::vec3(0.75f, 1.0f, 0.75f), glm::vec3(-0.25f, 0.0f, 0.0f), glm::vec3(0.0f));
 		wall.Join(frame);
+
+		if (type == WallType::window)
+		{
+			frame = GeneratePart(PartType::beam, glm::vec3(0.7f, 0.5f, 0.7f), glm::vec3(0.0f, 0.275f, 0.0f), glm::vec3(0.0f));
+			wall.Join(frame);
+		}
+	}
+
+	if (type == WallType::balcony)
+	{
+		Shape balcony = GeneratePart(PartType::floor, glm::vec3(1.0f, 1.0f, 0.5f), glm::vec3(0.0f, 0.0f, 0.75f), glm::vec3(0.0f));
+
+		Shape beam = GeneratePart(PartType::beam, glm::vec3(0.75f, 1.0f, 0.75f), glm::vec3(0.0f, 0.0f, 0.5f), glm::vec3(0.0f));
+		balcony.Join(beam);
+		beam = GeneratePart(PartType::beam, glm::vec3(0.75f, 0.5f, 0.75f), glm::vec3(0.5f, 0.0f, 0.25f), glm::vec3(0.0f, 90.0f, 0.0f));
+		balcony.Join(beam);
+		beam = GeneratePart(PartType::beam, glm::vec3(0.75f, 0.5f, 0.75f), glm::vec3(-0.5f, 0.0f, 0.25f), glm::vec3(0.0f, -90.0f, 0.0f));
+		balcony.Join(beam);
+		beam = GeneratePart(PartType::beam, glm::vec3(0.75f, 1.0f, 0.75f), glm::vec3(0.0f, 0.25f, 0.5f), glm::vec3(0.0f));
+		balcony.Join(beam);
+		beam = GeneratePart(PartType::beam, glm::vec3(0.75f, 0.5f, 0.75f), glm::vec3(0.5f, 0.25f, 0.25f), glm::vec3(0.0f, 90.0f, 0.0f));
+		balcony.Join(beam);
+		beam = GeneratePart(PartType::beam, glm::vec3(0.75f, 0.5f, 0.75f), glm::vec3(-0.5f, 0.25f, 0.25f), glm::vec3(0.0f, -90.0f, 0.0f));
+		balcony.Join(beam);
+
+		collumn = GeneratePart(PartType::collumn, glm::vec3(0.5f, 0.25f, 0.5f), glm::vec3(0.0f, -0.375f, 0.25f), glm::vec3(0.0f));
+		balcony.Join(collumn);
+		collumn = GeneratePart(PartType::collumn, glm::vec3(0.5f, 0.25f, 0.5f), glm::vec3(-1.0f, -0.375f, 0.25f), glm::vec3(0.0f));
+		balcony.Join(collumn);
+		collumn = GeneratePart(PartType::collumn, glm::vec3(0.5f, 0.25f, 0.5f), glm::vec3(0.0f, -0.375f, 0.5f), glm::vec3(0.0f));
+		balcony.Join(collumn);
+		collumn = GeneratePart(PartType::collumn, glm::vec3(0.5f, 0.25f, 0.5f), glm::vec3(-1.0f, -0.375f, 0.5f), glm::vec3(0.0f));
+		balcony.Join(collumn);
+		collumn = GeneratePart(PartType::collumn, glm::vec3(0.5f, 0.25f, 0.5f), glm::vec3(-0.25f, -0.375f, 0.5f), glm::vec3(0.0f));
+		balcony.Join(collumn);
+		collumn = GeneratePart(PartType::collumn, glm::vec3(0.5f, 0.25f, 0.5f), glm::vec3(-0.75f, -0.375f, 0.5f), glm::vec3(0.0f));
+		balcony.Join(collumn);
+		collumn = GeneratePart(PartType::collumn, glm::vec3(0.5f, 0.25f, 0.5f), glm::vec3(-0.5f, -0.375f, 0.5f), glm::vec3(0.0f));
+		balcony.Join(collumn);
+
+		Shape slopeBeam = GeneratePart(PartType::beam, glm::vec3(0.75f, 0.55f, 0.75f), glm::vec3(0.375f, -0.15f, 0.0f), glm::vec3(0.0f, 0.0f, -30.0f));
+		slopeBeam.Rotate90(1);
+		slopeBeam.Move(glm::vec3(0.0f, 0.0f, 1.125f) * generationConfig.scale);
+		balcony.Join(slopeBeam);
+		slopeBeam = GeneratePart(PartType::beam, glm::vec3(0.75f, 0.55f, 0.75f), glm::vec3(0.375f, -0.15f, 0.0f), glm::vec3(0.0f, 0.0f, -30.0f));
+		slopeBeam.Rotate90(1);
+		slopeBeam.Move(glm::vec3(-1.0f, 0.0f, 1.125f) * generationConfig.scale);
+		balcony.Join(slopeBeam);
+
+		wall.Join(balcony);
 	}
 
 	if (direction == S) wall.Rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -1356,6 +1647,28 @@ void Buildings::GenerateBeams(int i, int x, int y)
     bool E_Empty_B = CellEmpty(i, x + 1, y, false);
     bool E_Empty = CellEmpty(i, x + 1, y);
     bool W_Empty = CellEmpty(i, x - 1, y);
+
+	bool empties[] = {N_Empty, E_Empty, S_Empty, W_Empty};
+	WallType types[] = {walls.N_Type, walls.E_Type, walls.S_Type, walls.W_Type};
+
+	for (int d = 0; d < 4; d++)
+	{
+		if (types[d] == WallType::beams)
+		{
+			Shape collumn = GeneratePart(PartType::collumn);
+			if (empties[d] && empties[(d + 1) % 4])
+			{
+				
+				Shape slopeBeam = GeneratePart(PartType::beam, glm::vec3(0.75f, 0.375f, 0.75f), glm::vec3(0.375f, 0.85f, 0.0f), glm::vec3(0.0f, 0.0f, -45.0f));
+				collumn.Join(slopeBeam);
+				slopeBeam = GeneratePart(PartType::beam, glm::vec3(0.75f, 0.375f, 0.75f), glm::vec3(-0.375f, 0.85f, 0.0f), glm::vec3(0.0f, 0.0f, 45.0f));
+				slopeBeam.Rotate90(1);
+				collumn.Join(slopeBeam);
+			}
+			collumn.Rotate90(d);
+			beams.Join(collumn);
+		}
+	}
 
 	if (i != 0)
     {
@@ -1388,10 +1701,16 @@ void Buildings::GenerateBeams(int i, int x, int y)
 		}
     }
 
-	if (walls.N_Type == WallType::beams)
+	/*if (walls.N_Type == WallType::beams)
 	{
 		Shape collumn = GeneratePart(PartType::collumn);
 		beams.Join(collumn);
+
+		//if (N_Empty && E_Empty)
+		//{
+		//	Shape slopeBeam = GeneratePart(PartType::beam, glm::vec3(0.75f, 0.375f, 0.75f), glm::vec3(-0.375f, 0.85f, 0.0f), glm::vec3(0.0f, 0.0f, 45.0f));
+		//	beams.Join(slopeBeam);
+		//}
 	}
 	if (walls.E_Type == WallType::beams)
 	{
@@ -1410,7 +1729,7 @@ void Buildings::GenerateBeams(int i, int x, int y)
 		Shape collumn = GeneratePart(PartType::collumn);
 		collumn.Rotate(270.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 		beams.Join(collumn);
-	}
+	}*/
 
 	beams.Move(glm::vec3(x, i, y) * generationConfig.scale);
 	building.mesh.shape.Join(beams);
@@ -1616,12 +1935,17 @@ void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 			extendOffset -= 0.2f;
 		}
 		Shape sideBeam = GeneratePart(PartType::beam, glm::vec3(1.0f, extendScale, 1.0f), glm::vec3(0.0f, 0.35f, -beamConfig.offset.z + extendOffset), glm::vec3(0.0f, -90.0f, 0.0f));
-		//sideBeam.Scale(glm::vec3(extendScale, 1.0f, 1.0f));
-		//sideBeam.Move(glm::vec3(extendOffset, 0.0f, 0.0f) * generationConfig.scale);
-		//sideBeam.Move(glm::vec3(0.0f, 0.0f, beamConfig.offset.z) * -generationConfig.scale);
-		//sideBeam.Rotate90(-1);
-		//sideBeam.Move(glm::vec3(0.0f, 0.35f, 0.0f) * generationConfig.scale);
 		roof.Join(sideBeam);
+
+		Shape midBeamLeft = GeneratePart(PartType::slightSlopedBeam, glm::vec3(0.75f, 1.35f, 0.75f), glm::vec3(-0.1f, -0.05f, -0.5f), glm::vec3(0.0f));
+		midBeamLeft.Move(glm::vec3(-0.25f, 0.125f, 0.0f) * generationConfig.scale);
+		//midBeamLeft.Rotate90(d);
+		roof.Join(midBeamLeft);
+
+		Shape midBeamRight = GeneratePart(PartType::slightSlopedBeam, glm::vec3(0.75f, 1.35f, 0.75f), glm::vec3(0.1f, -0.05f, -0.5f), glm::vec3(0.0f, 180.0f, 0.0f));
+		midBeamRight.Move(glm::vec3(0.25f, 0.125f, 0.0f) * generationConfig.scale);
+		//midBeamRight.Rotate90(d);
+		roof.Join(midBeamRight);
 
 		for (int d = 0; d <= 2; d += 2)
 		{
@@ -1647,15 +1971,15 @@ void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 				beamRight.Rotate90(d);
 				roof.Join(beamRight);
 
-				/*beamLeft = GeneratePart(PartType::slightSlopedBeam, glm::vec3(0.75f, 1.3f, 0.75f), glm::vec3(0.0f, 0.0f, 0.75f), glm::vec3(0.0f));
+				beamLeft = GeneratePart(PartType::slightSlopedBeam, glm::vec3(0.75f, 1.35f, 0.75f), glm::vec3(-0.1f, -0.05f, 0.075f), glm::vec3(0.0f));
 				beamLeft.Move(glm::vec3(-0.25f, 0.125f, 0.0f) * generationConfig.scale);
 				beamLeft.Rotate90(d);
 				roof.Join(beamLeft);
 
-				beamRight = GeneratePart(PartType::slightSlopedBeam, 2);
+				beamRight = GeneratePart(PartType::slightSlopedBeam, glm::vec3(0.75f, 1.35f, 0.75f), glm::vec3(0.1f, -0.05f, 0.075f), glm::vec3(0.0f, 180.0f, 0.0f));
 				beamRight.Move(glm::vec3(0.25f, 0.125f, 0.0f) * generationConfig.scale);
 				beamRight.Rotate90(d);
-				roof.Join(beamRight);*/
+				roof.Join(beamRight);
 
 				roof.Join(wallLeft);
 				roof.Join(wallRight);
@@ -1708,6 +2032,7 @@ bool Buildings::FloorEmpty(int i, int x, int y)
 std::vector<Texture> Buildings::beamTextures;
 std::vector<Texture> Buildings::plasteredTextures;
 std::vector<Texture> Buildings::reedTextures;
+std::vector<Texture> Buildings::brickTextures;
 
 Pipeline Buildings::graphicsPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Buildings::shadowPipeline{Manager::currentDevice, Manager::camera};
@@ -1722,8 +2047,10 @@ Building Buildings::building;
 Random Buildings::random;
 
 PartConfig Buildings::floorConfig{"floor", glm::vec3(1.0f, 0.05f, 1.0f)};
+PartConfig Buildings::foundationConfig{"foundation", glm::vec3(1.75f, 1.0f, 1.75f), glm::vec3(0.0f), glm::vec3(0.0f, -0.55f, 0.0f)};
 PartConfig Buildings::flatWallConfig{"flat wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
 PartConfig Buildings::windowedWallConfig{"windowed wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
+PartConfig Buildings::dooredWallConfig{"doored wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
 PartConfig Buildings::slopedWallConfig{"sloped wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
 PartConfig Buildings::flatRoofConfig{"flat roof", glm::vec3(1.0f, 0.05f, 1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.675f, 0.0f)};
 //PartConfig Buildings::slopedRoofConfig{"sloped roof", glm::vec3(1.0f, 0.05f, 1.5f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(0.0f, 0.3f, 0.1f)};

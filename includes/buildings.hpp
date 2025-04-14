@@ -19,7 +19,7 @@ enum D {N = 0, S = 2, E = 1, W = 3};
 enum class FloorType {empty, flat, stairs, beams};
 enum class WallType {empty, flat, window, door, balcony, beams};
 enum class RoofType {empty, flat, flatUp, slope, cone};
-enum class PartType {floor, flatWall, windowedWall, slopedWall, flatRoof, slopedRoof, coneRoof, coneRoofExtension, beam, slopedBeam, slightSlopedBeam, collumn};
+enum class PartType {floor, foundation, flatWall, windowedWall, dooredWall, slopedWall, flatRoof, slopedRoof, coneRoof, coneRoofExtension, beam, slopedBeam, slightSlopedBeam, collumn};
 
 struct Floor
 {
@@ -151,6 +151,7 @@ struct GenerationConfig
     int levelFactor = 3;
 	int decoratedFactor = 0;
 	int scaffoldingReduction = 2;
+	int balconyFactor = 5;
 	bool random = false;
 	float scale = 5.0f;
 };
@@ -171,6 +172,7 @@ class Buildings
 		static std::vector<Texture> beamTextures;
 		static std::vector<Texture> plasteredTextures;
 		static std::vector<Texture> reedTextures;
+		static std::vector<Texture> brickTextures;
 
 		static Pipeline graphicsPipeline;
 		static Pipeline shadowPipeline;
@@ -185,8 +187,10 @@ class Buildings
 		static Random random;
 
 		static PartConfig floorConfig;
+		static PartConfig foundationConfig;
 		static PartConfig flatWallConfig;
 		static PartConfig windowedWallConfig;
+		static PartConfig dooredWallConfig;
 		static PartConfig slopedWallConfig;
 		static PartConfig flatRoofConfig;
 		static PartConfig slopedRoofConfig;
@@ -240,7 +244,7 @@ class Buildings
 		static Shape GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, glm::vec3 rotation);
 		static void GenerateMesh();
 		static void GenerateFloors(int level);
-		static void GenerateFloor(glm::vec3 offset, FloorType type);
+		static void GenerateFloor(int i, int x, int y, FloorType type);
 		static void GenerateWalls(int level);
 		static void GenerateWall(glm::vec3 offset, WallType type, D direction, int variant);
 		static void GenerateBeams(int i, int x, int y);
