@@ -2,6 +2,17 @@
 
 #extension GL_ARB_shading_language_include : require
 
+struct BuildingData
+{
+	mat4 translation;
+	mat4 orientation;
+};
+
+layout(set = 1, binding = 0) uniform BuildingBuffers
+{
+	BuildingData buildingData[2];
+} buildingBuffers;
+
 layout(push_constant, std430) uniform PushConstants
 {
 	uint shadowCascade;
@@ -15,9 +26,11 @@ layout(location = 2) in vec3 inNormal;
 
 void main()
 {
+	int index = gl_InstanceIndex;
+
     vec3 objectPosition = inPosition;
 
-    vec3 worldPosition = objectPosition + vec3(0.0, 2500.0, 0.0);
+    vec3 worldPosition = (buildingBuffers.buildingData[index].translation * buildingBuffers.buildingData[index].orientation * vec4(objectPosition, 1.0)).xyz + vec3(0.0, 2500.0, 0.0);
 
     worldPosition -= variables.terrainOffset;
 

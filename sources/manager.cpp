@@ -309,6 +309,7 @@ void Manager::Start()
 void Manager::PreFrame()
 {
 	Terrain::Frame();
+	Buildings::Frame();
 	Trees::Frame();
 	Leaves::Frame();
 	Grass::Frame();

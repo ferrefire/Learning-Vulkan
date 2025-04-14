@@ -135,11 +135,36 @@ struct BuildingCell
     }
 };
 
+struct BuildingBuffer
+{
+	glm::mat4 translation = glm::mat4(1.0f);
+	glm::mat4 orientation = glm::mat4(1.0f);
+};
+
 struct Building
 {
+	bool active = false;
+
 	Mesh mesh;
-    std::vector<std::vector<std::vector<BuildingCell>>> cells;
+
+	glm::vec3 position = glm::vec3(0.0f);
+	glm::vec3 rotation = glm::vec3(0.0f);
+	glm::mat4 translation = glm::mat4(1.0f);
+	glm::mat4 orientation = glm::mat4(1.0f);
+
+	std::vector<std::vector<std::vector<BuildingCell>>> cells;
     glm::ivec3 size = glm::ivec3(0);
+
+	void Update()
+	{
+		translation = glm::mat4(1.0f);
+		translation = glm::translate(translation, position);
+
+		orientation = glm::mat4(1.0f);
+		orientation = glm::rotate(orientation, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		orientation = glm::rotate(orientation, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		orientation = glm::rotate(orientation, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+	}
 };
 
 struct GenerationConfig
@@ -177,12 +202,17 @@ class Buildings
 		static Pipeline graphicsPipeline;
 		static Pipeline shadowPipeline;
 
-        static Descriptor graphicsDescriptor;
+		static std::vector<BuildingBuffer> buildingBuffers;
+		static Buffer uniformBuffer;
+
+		static Descriptor graphicsDescriptor;
         static Descriptor shadowDescriptor;
 
         static GenerationConfig generationConfig;
 
-		static Building building;
+		static std::vector<Building> buildings;
+		static Building *building;
+		static std::vector<Building *> renderBuildings;
 
 		static Random random;
 
@@ -204,22 +234,27 @@ class Buildings
 		static void Create();
         static void CreateMeshes();
         static void CreateTextures();
-        static void CreatePipelines();
-        static void CreateDescriptors();
+		static void CreatePipelines();
+		static void CreateBuffers();
+		static void CreateDescriptors();
 
         static void Destroy();
         static void DestroyMeshes();
         static void DestroyTextures();
-        static void DestroyPipelines();
-        static void DestroyDescriptors();
+		static void DestroyPipelines();
+		static void DestroyBuffers();
+		static void DestroyDescriptors();
 
 		static void Start();
+		static void Frame();
 
-        static void RecordGraphicsCommands(VkCommandBuffer commandBuffer);
+		static void RecordGraphicsCommands(VkCommandBuffer commandBuffer);
         static void RenderBuildings(VkCommandBuffer commandBuffer);
 
         static void RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade);
         static void RenderShadows(VkCommandBuffer commandBuffer, int cascade);
+
+		static void SetRenderBuildings();
 
         static void GenerateBuilding();
 		static void GenerateCells();

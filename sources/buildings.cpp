@@ -13,6 +13,7 @@ void Buildings::Create()
     CreateMeshes();
     CreateTextures();
     CreatePipelines();
+	CreateBuffers();
     CreateDescriptors();
 }
 
@@ -22,12 +23,85 @@ void Buildings::CreateMeshes()
 	//generationConfig.seed = 15049;
 	//generationConfig.seed = 1347;
 	//generationConfig.seed = 17301;
-	generationConfig.seed = 1845;
+	//generationConfig.seed = 1845;
 	//generationConfig.scaffoldingReduction = 1;
 	//generationConfig.minSize = glm::ivec3(3);
 	//generationConfig.maxSize = glm::ivec3(6);
+
+	//generationConfig.seed = 657970;
+	generationConfig.minSize = glm::ivec3(2);
+	generationConfig.maxSize = glm::ivec3(2, 3, 2);
+	generationConfig.random = true;
+
+	int index = 0;
+	int range = 0;
+
+	for (int x = -range; x <= range; x++)
+	{
+		for (int y = -range; y <= range; y++)
+		{
+			building = &buildings[index];
+			GenerateBuilding();
+			building->position += glm::vec3(15.0f * x, 0.0f, 15.0f * y);
+			building->Update();
+			index++;
+		}
+	}
+
+	//building = &buildings[0];
+	//GenerateBuilding();
+	//building->rotation += glm::vec3(45.0f, 0.0f, 0.0f);
+	//building->Update();
+
+	/*building = &buildings[1];
 	GenerateBuilding();
-	//building.mesh.coordinate = true;
+	building->position += glm::vec3(15.0f, 0.0f, 0.0f);
+	building->rotation = glm::vec3(0.0f, 90.0f * random.Next(0, 4), 0.0f);
+	building->Update();
+
+	building = &buildings[2];
+	GenerateBuilding();
+	building->position += glm::vec3(-15.0f, 0.0f, 0.0f);
+	building->rotation = glm::vec3(0.0f, 90.0f * random.Next(0, 4), 0.0f);
+	building->Update();
+
+	building = &buildings[3];
+	GenerateBuilding();
+	building->position += glm::vec3(0.0f, 0.0f, 15.0f);
+	building->rotation = glm::vec3(0.0f, 90.0f * random.Next(0, 4), 0.0f);
+	building->Update();
+
+	building = &buildings[4];
+	GenerateBuilding();
+	building->position += glm::vec3(15.0f, 0.0f, 15.0f);
+	building->rotation = glm::vec3(0.0f, 90.0f * random.Next(0, 4), 0.0f);
+	building->Update();
+
+	building = &buildings[5];
+	GenerateBuilding();
+	building->position += glm::vec3(-15.0f, 0.0f, 15.0f);
+	building->rotation = glm::vec3(0.0f, 90.0f * random.Next(0, 4), 0.0f);
+	building->Update();
+
+	building = &buildings[6];
+	GenerateBuilding();
+	building->position += glm::vec3(0.0f, 0.0f, -15.0f);
+	building->rotation = glm::vec3(0.0f, 90.0f * random.Next(0, 4), 0.0f);
+	building->Update();
+
+	building = &buildings[7];
+	GenerateBuilding();
+	building->position += glm::vec3(15.0f, 0.0f, -15.0f);
+	building->rotation = glm::vec3(0.0f, 90.0f * random.Next(0, 4), 0.0f);
+	building->Update();
+
+	building = &buildings[8];
+	GenerateBuilding();
+	building->position += glm::vec3(-15.0f, 0.0f, -15.0f);
+	building->rotation = glm::vec3(0.0f, 90.0f * random.Next(0, 4), 0.0f);
+	building->Update();*/
+
+	//building->mesh.coordinate = true;
 	//building.mesh.normal = true;
 	//building.mesh.color = true;
 	//building.mesh.shape.coordinate = true;
@@ -83,8 +157,10 @@ void Buildings::CreateTextures()
 
 void Buildings::CreatePipelines()
 {
-    std::vector<DescriptorLayoutConfiguration> graphicsDescriptorLayoutConfig(4);
+    std::vector<DescriptorLayoutConfiguration> graphicsDescriptorLayoutConfig(5);
 	int i = 0;
+	graphicsDescriptorLayoutConfig[i].type = UNIFORM_BUFFER;
+	graphicsDescriptorLayoutConfig[i++].stages = VERTEX_STAGE;
 	graphicsDescriptorLayoutConfig[i].type = IMAGE_SAMPLER;
 	graphicsDescriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
 	graphicsDescriptorLayoutConfig[i++].count = beamTextures.size();
@@ -98,10 +174,13 @@ void Buildings::CreatePipelines()
 	graphicsDescriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
 	graphicsDescriptorLayoutConfig[i++].count = brickTextures.size();
 	PipelineConfiguration graphicsPipelineConfiguration = Pipeline::DefaultConfiguration();
-    VertexInfo vertexInfo = building.mesh.MeshVertexInfo();
+    VertexInfo vertexInfo = building->mesh.MeshVertexInfo();
     graphicsPipeline.CreateGraphicsPipeline("building", graphicsDescriptorLayoutConfig, graphicsPipelineConfiguration, vertexInfo);
 
-	std::vector<DescriptorLayoutConfiguration> shadowDescriptorLayoutConfig(0);
+	std::vector<DescriptorLayoutConfiguration> shadowDescriptorLayoutConfig(1);
+	i = 0;
+	shadowDescriptorLayoutConfig[i].type = UNIFORM_BUFFER;
+	shadowDescriptorLayoutConfig[i++].stages = VERTEX_STAGE;
 	PipelineConfiguration shadowPipelineConfiguration = Pipeline::DefaultConfiguration();
 	shadowPipelineConfiguration.shadow = true;
 	shadowPipelineConfiguration.pushConstantCount = 1;
@@ -110,74 +189,115 @@ void Buildings::CreatePipelines()
     shadowPipeline.CreateGraphicsPipeline("buildingShadow", shadowDescriptorLayoutConfig, shadowPipelineConfiguration, vertexInfo);
 }
 
+void Buildings::CreateBuffers()
+{
+	buildingBuffers.resize(100);
+
+	BufferConfiguration bufferConfiguration;
+	bufferConfiguration.size = sizeof(BuildingBuffer) * buildingBuffers.size();
+	bufferConfiguration.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	bufferConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	bufferConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	bufferConfiguration.mapped = true;
+
+	uniformBuffer.Create(bufferConfiguration);
+}
+
 void Buildings::CreateDescriptors()
 {
-    std::vector<DescriptorConfiguration> descriptorConfig(4);
+    std::vector<DescriptorConfiguration> graphicsDescriptorConfig(5);
 
 	int index = 0;
-	descriptorConfig[index].type = IMAGE_SAMPLER;
-	descriptorConfig[index].stages = FRAGMENT_STAGE;
-	descriptorConfig[index].count = beamTextures.size();
-	descriptorConfig[index].imageInfos.resize(beamTextures.size());
+
+	graphicsDescriptorConfig[index].type = UNIFORM_BUFFER;
+	graphicsDescriptorConfig[index].stages = VERTEX_STAGE;
+	graphicsDescriptorConfig[index].buffersInfo.resize(1);
+	graphicsDescriptorConfig[index].buffersInfo[0].buffer = uniformBuffer.buffer;
+	graphicsDescriptorConfig[index++].buffersInfo[0].range = sizeof(BuildingBuffer) * buildingBuffers.size();
+
+	graphicsDescriptorConfig[index].type = IMAGE_SAMPLER;
+	graphicsDescriptorConfig[index].stages = FRAGMENT_STAGE;
+	graphicsDescriptorConfig[index].count = beamTextures.size();
+	graphicsDescriptorConfig[index].imageInfos.resize(beamTextures.size());
 	for (int i = 0; i < beamTextures.size(); i++)
 	{
-		descriptorConfig[index].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[index].imageInfos[i].imageView = beamTextures[i].imageView;
-		descriptorConfig[index].imageInfos[i].sampler = beamTextures[i].sampler;
+		graphicsDescriptorConfig[index].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		graphicsDescriptorConfig[index].imageInfos[i].imageView = beamTextures[i].imageView;
+		graphicsDescriptorConfig[index].imageInfos[i].sampler = beamTextures[i].sampler;
 	}
 	index++;
 
-	descriptorConfig[index].type = IMAGE_SAMPLER;
-	descriptorConfig[index].stages = FRAGMENT_STAGE;
-	descriptorConfig[index].count = plasteredTextures.size();
-	descriptorConfig[index].imageInfos.resize(plasteredTextures.size());
+	graphicsDescriptorConfig[index].type = IMAGE_SAMPLER;
+	graphicsDescriptorConfig[index].stages = FRAGMENT_STAGE;
+	graphicsDescriptorConfig[index].count = plasteredTextures.size();
+	graphicsDescriptorConfig[index].imageInfos.resize(plasteredTextures.size());
 	for (int i = 0; i < plasteredTextures.size(); i++)
 	{
-		descriptorConfig[index].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[index].imageInfos[i].imageView = plasteredTextures[i].imageView;
-		descriptorConfig[index].imageInfos[i].sampler = plasteredTextures[i].sampler;
+		graphicsDescriptorConfig[index].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		graphicsDescriptorConfig[index].imageInfos[i].imageView = plasteredTextures[i].imageView;
+		graphicsDescriptorConfig[index].imageInfos[i].sampler = plasteredTextures[i].sampler;
 	}
 	index++;
 
-	descriptorConfig[index].type = IMAGE_SAMPLER;
-	descriptorConfig[index].stages = FRAGMENT_STAGE;
-	descriptorConfig[index].count = reedTextures.size();
-	descriptorConfig[index].imageInfos.resize(reedTextures.size());
+	graphicsDescriptorConfig[index].type = IMAGE_SAMPLER;
+	graphicsDescriptorConfig[index].stages = FRAGMENT_STAGE;
+	graphicsDescriptorConfig[index].count = reedTextures.size();
+	graphicsDescriptorConfig[index].imageInfos.resize(reedTextures.size());
 	for (int i = 0; i < reedTextures.size(); i++)
 	{
-		descriptorConfig[index].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[index].imageInfos[i].imageView = reedTextures[i].imageView;
-		descriptorConfig[index].imageInfos[i].sampler = reedTextures[i].sampler;
+		graphicsDescriptorConfig[index].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		graphicsDescriptorConfig[index].imageInfos[i].imageView = reedTextures[i].imageView;
+		graphicsDescriptorConfig[index].imageInfos[i].sampler = reedTextures[i].sampler;
 	}
 	index++;
 
-	descriptorConfig[index].type = IMAGE_SAMPLER;
-	descriptorConfig[index].stages = FRAGMENT_STAGE;
-	descriptorConfig[index].count = brickTextures.size();
-	descriptorConfig[index].imageInfos.resize(brickTextures.size());
+	graphicsDescriptorConfig[index].type = IMAGE_SAMPLER;
+	graphicsDescriptorConfig[index].stages = FRAGMENT_STAGE;
+	graphicsDescriptorConfig[index].count = brickTextures.size();
+	graphicsDescriptorConfig[index].imageInfos.resize(brickTextures.size());
 	for (int i = 0; i < brickTextures.size(); i++)
 	{
-		descriptorConfig[index].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[index].imageInfos[i].imageView = brickTextures[i].imageView;
-		descriptorConfig[index].imageInfos[i].sampler = brickTextures[i].sampler;
+		graphicsDescriptorConfig[index].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		graphicsDescriptorConfig[index].imageInfos[i].imageView = brickTextures[i].imageView;
+		graphicsDescriptorConfig[index].imageInfos[i].sampler = brickTextures[i].sampler;
 	}
 	index++;
 
 	graphicsDescriptor.perFrame = false;
-    graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
+    graphicsDescriptor.Create(graphicsDescriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
+
+	std::vector<DescriptorConfiguration> shadowDescriptorConfig(1);
+
+	index = 0;
+
+	shadowDescriptorConfig[index].type = UNIFORM_BUFFER;
+	shadowDescriptorConfig[index].stages = VERTEX_STAGE;
+	shadowDescriptorConfig[index].buffersInfo.resize(1);
+	shadowDescriptorConfig[index].buffersInfo[0].buffer = uniformBuffer.buffer;
+	shadowDescriptorConfig[index++].buffersInfo[0].range = sizeof(BuildingBuffer) * buildingBuffers.size();
+
+	shadowDescriptor.perFrame = false;
+	shadowDescriptor.Create(shadowDescriptorConfig, shadowPipeline.objectDescriptorSetLayout);
 }
 
 void Buildings::Destroy()
 {
     DestroyMeshes();
     DestroyTextures();
-    DestroyPipelines();
-    DestroyDescriptors();
+	DestroyPipelines();
+	DestroyBuffers();
+	DestroyDescriptors();
 }
 
 void Buildings::DestroyMeshes()
 {
-	building.mesh.Destroy();
+	for (int i = 0; i < buildings.size(); i++)
+	{
+		if (buildings[i].active)
+		{
+			buildings[i].mesh.Destroy();
+		}
+	}
 }
 
 void Buildings::DestroyTextures()
@@ -199,6 +319,11 @@ void Buildings::DestroyPipelines()
 {
     graphicsPipeline.Destroy();
 	shadowPipeline.Destroy();
+}
+
+void Buildings::DestroyBuffers()
+{
+	uniformBuffer.Destroy();
 }
 
 void Buildings::DestroyDescriptors()
@@ -244,6 +369,11 @@ void Buildings::Start()
 	menu.AddNode("generation config", false);
 }
 
+void Buildings::Frame()
+{
+	SetRenderBuildings();
+}
+
 void Buildings::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
 {
     graphicsPipeline.BindGraphics(commandBuffer);
@@ -261,50 +391,80 @@ void Buildings::RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade)
 	shadowPipeline.BindGraphics(commandBuffer);
 
 	Manager::globalDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 0);
-	//shadowDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
+	shadowDescriptor.Bind(commandBuffer, shadowPipeline.graphicsPipelineLayout, GRAPHICS_BIND_POINT, 1);
 
 	RenderShadows(commandBuffer, cascade);
 }
 
 void Buildings::RenderBuildings(VkCommandBuffer commandBuffer)
 {
-    building.mesh.Bind(commandBuffer);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(building.mesh.indices.size()), 1, 0, 0, 0);
+	for (int i = 0; i < renderBuildings.size(); i++)
+	{
+		buildingBuffers[i].translation = renderBuildings[i]->translation;
+		buildingBuffers[i].orientation = renderBuildings[i]->orientation;
+		memcpy(uniformBuffer.mappedBuffer + (i * sizeof(BuildingBuffer)), &buildingBuffers[i], sizeof(BuildingBuffer));
+
+		renderBuildings[i]->mesh.Bind(commandBuffer);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(renderBuildings[i]->mesh.indices.size()), 1, 0, 0, i);
+	}
 }
 
 void Buildings::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 {
 	uint32_t cascadeIndex = cascade;
 
-    building.mesh.Bind(commandBuffer);
-	vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(cascadeIndex), &cascadeIndex);
-	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(building.mesh.indices.size()), 1, 0, 0, 0);
+	for (int i = 0; i < renderBuildings.size(); i++)
+	{
+		//buildingBuffers[i].translation = renderBuildings[i]->translation;
+		//buildingBuffers[i].orientation = renderBuildings[i]->orientation;
+		//memcpy(uniformBuffer.mappedBuffer, &buildingBuffers[i], sizeof(BuildingBuffer));
+
+		renderBuildings[i]->mesh.Bind(commandBuffer);
+		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(cascadeIndex), &cascadeIndex);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(renderBuildings[i]->mesh.indices.size()), 1, 0, 0, i);
+	}
+}
+
+void Buildings::SetRenderBuildings()
+{
+	renderBuildings.clear();
+
+	for (int i = 0; i < buildings.size(); i++)
+	{
+		if (buildings[i].active)
+		{
+			renderBuildings.push_back(&buildings[i]);
+		}
+	}
 }
 
 void Buildings::GenerateBuilding()
 {
 	GenerateCells();
 	GenerateMesh();
+	building->rotation = glm::vec3(0.0f, 90.0f * random.Next(0, 4), 0.0f);
+	building->Update();
+	building->active = true;
 
 	//std::cout << std::endl;
-	//std::cout << "vertex count: " << building.mesh.vertices.size() << std::endl;
-	//std::cout << "indice count: " << building.mesh.indices.size() << std::endl;
+	//std::cout << "vertex count: " << building->mesh.vertices.size() << std::endl;
+	//std::cout << "indice count: " << building->mesh.indices.size() << std::endl;
 }
 
 void Buildings::GenerateCells()
 {
-	building.cells.clear();
-	building.size = glm::ivec3(0, 0, 0);
-	if (generationConfig.random) generationConfig.seed = int(uint32_t(Time::GetCurrentTime() * 100) % RAND_MAX);
+	building->cells.clear();
+	building->size = glm::ivec3(0, 0, 0);
+	if (generationConfig.random) generationConfig.seed = int(uint32_t(Time::GetCurrentTime() * 10000) % RAND_MAX);
 	random.SetSeed(generationConfig.seed);
 
-	building.cells.resize(generationConfig.maxSize.y);
+	building->cells.resize(generationConfig.maxSize.y);
     for (int i = 0; i < generationConfig.maxSize.y; i++)
     {
-        building.cells[i].resize(generationConfig.maxSize.x);
+        building->cells[i].resize(generationConfig.maxSize.x);
         for (int x = 0; x < generationConfig.maxSize.x; x++)
         {
-            building.cells[i][x].resize(generationConfig.maxSize.z);
+            building->cells[i][x].resize(generationConfig.maxSize.z);
             for (int y = 0; y < generationConfig.maxSize.z; y++)
             {
                 
@@ -318,7 +478,7 @@ void Buildings::GenerateCells()
 		{
 			ExpandLevel(i);
 			FillLevel(i);
-			building.size = glm::ivec3(0, building.size.y + 1, 0);
+			building->size = glm::ivec3(0, building->size.y + 1, 0);
 		}
 		else break;
 	}
@@ -340,9 +500,9 @@ void Buildings::ExpandLevel(int level)
 
 void Buildings::FillLevel(int level)
 {
-	for (int x = 0; x < building.cells[level].size(); x++)
+	for (int x = 0; x < building->cells[level].size(); x++)
 	{
-		for (int y = 0; y < building.cells[level][x].size(); y++)
+		for (int y = 0; y < building->cells[level][x].size(); y++)
 		{
 			if (CellEmpty(level, x, y))
 			{
@@ -353,7 +513,7 @@ void Buildings::FillLevel(int level)
 
 				if (!N_Empty && !S_Empty && !E_Empty && !W_Empty)
 				{
-					building.cells[level][x][y].floor.type = FloorType::flat;
+					building->cells[level][x][y].floor.type = FloorType::flat;
 				}
 			}
 		}
@@ -362,7 +522,7 @@ void Buildings::FillLevel(int level)
 
 void Buildings::ExpandCell(int i, int x, int y, int factor)
 {
-    building.cells[i][x][y].floor.type = FloorType::flat;
+    building->cells[i][x][y].floor.type = FloorType::flat;
 
 	int currentFactor = factor - ((CellEmpty(i - 1, x + 1, y) && i != 0) ? generationConfig.scaffoldingReduction - 1 : 0);
 	if (ExpansionValid(i, x + 1, y, currentFactor, 1)) ExpandCell(i, x + 1, y, currentFactor);
@@ -379,26 +539,26 @@ void Buildings::ExpandCell(int i, int x, int y, int factor)
 
 bool Buildings::ExpansionValid(int i, int x, int y, int factor, int increase)
 {
-    if ((increase == 1 && building.size.x < generationConfig.minSize.x - i) || (increase == -1 && building.size.z < generationConfig.minSize.z - i))
+    if ((increase == 1 && building->size.x < generationConfig.minSize.x - i) || (increase == -1 && building->size.z < generationConfig.minSize.z - i))
         factor = 10;
     
-    bool valid = CellValid(i, x, y) && building.cells[i][x][y].Empty() && random.Next(0, 9) < factor;
+    bool valid = CellValid(i, x, y) && building->cells[i][x][y].Empty() && random.Next(0, 9) < factor;
 
-    if (valid && increase == 1) building.size.x++;
-    else if (valid && increase == -1) building.size.z++;
+    if (valid && increase == 1) building->size.x++;
+    else if (valid && increase == -1) building->size.z++;
 
     return (valid);
 }
 
 void Buildings::SetWalls()
 {
-	for (int i = 0; i < building.cells.size(); i++)
+	for (int i = 0; i < building->cells.size(); i++)
 	{
-		for (int x = 0; x < building.cells[i].size(); x++)
+		for (int x = 0; x < building->cells[i].size(); x++)
 		{
-			for (int y = 0; y < building.cells[i][x].size(); y++)
+			for (int y = 0; y < building->cells[i][x].size(); y++)
 			{
-				if (!building.cells[i][x][y].floor.Empty())
+				if (!building->cells[i][x][y].floor.Empty())
 				{
 					bool N_Empty = FloorEmpty(i, x, y + 1);
 					bool S_Empty = FloorEmpty(i, x, y - 1);
@@ -419,68 +579,68 @@ void Buildings::SetWalls()
 
 					if (N_Empty)
 					{
-						building.cells[i][x][y].walls.N_Type = WallType::flat;
-						building.cells[i][x][y].walls.N_Variant = random.Next(0, 21 - generationConfig.decoratedFactor);
+						building->cells[i][x][y].walls.N_Type = WallType::flat;
+						building->cells[i][x][y].walls.N_Variant = random.Next(0, 21 - generationConfig.decoratedFactor);
 						if (N_DownEmpty && (x + i + generationConfig.seed) % 2 == 0)
 						{
 							if (N_Balcony && random.Next(0, 9) < generationConfig.balconyFactor)
 							{
-								building.cells[i][x][y].walls.N_Type = WallType::balcony;
+								building->cells[i][x][y].walls.N_Type = WallType::balcony;
 							}
 							else
 							{
-								building.cells[i][x][y].walls.N_Type = WallType::window;
+								building->cells[i][x][y].walls.N_Type = WallType::window;
 							}
 						}
 					}
 
 					if (S_Empty)
 					{
-						building.cells[i][x][y].walls.S_Type = WallType::flat;
-						building.cells[i][x][y].walls.S_Variant = random.Next(0, 21 - generationConfig.decoratedFactor);
+						building->cells[i][x][y].walls.S_Type = WallType::flat;
+						building->cells[i][x][y].walls.S_Variant = random.Next(0, 21 - generationConfig.decoratedFactor);
 						if (S_DownEmpty && (x + 1 + i + generationConfig.seed) % 2 == 0)
 						{
 							if (S_Balcony && random.Next(0, 9) < generationConfig.balconyFactor)
 							{
-								building.cells[i][x][y].walls.S_Type = WallType::balcony;
+								building->cells[i][x][y].walls.S_Type = WallType::balcony;
 							}
 							else
 							{
-								building.cells[i][x][y].walls.S_Type = WallType::window;
+								building->cells[i][x][y].walls.S_Type = WallType::window;
 							}
 						}
 					}
 
 					if (E_Empty)
 					{
-						building.cells[i][x][y].walls.E_Type = WallType::flat;
-						building.cells[i][x][y].walls.E_Variant = random.Next(0, 21 - generationConfig.decoratedFactor);
+						building->cells[i][x][y].walls.E_Type = WallType::flat;
+						building->cells[i][x][y].walls.E_Variant = random.Next(0, 21 - generationConfig.decoratedFactor);
 						if (E_DownEmpty && (y + i + generationConfig.seed) % 2 == 0)
 						{
 							if (E_Balcony && random.Next(0, 9) < generationConfig.balconyFactor)
 							{
-								building.cells[i][x][y].walls.E_Type = WallType::balcony;
+								building->cells[i][x][y].walls.E_Type = WallType::balcony;
 							}
 							else
 							{
-								building.cells[i][x][y].walls.E_Type = WallType::window;
+								building->cells[i][x][y].walls.E_Type = WallType::window;
 							}
 						}
 					}
 
 					if (W_Empty)
 					{
-						building.cells[i][x][y].walls.W_Type = WallType::flat;
-						building.cells[i][x][y].walls.W_Variant = random.Next(0, 21 - generationConfig.decoratedFactor);
+						building->cells[i][x][y].walls.W_Type = WallType::flat;
+						building->cells[i][x][y].walls.W_Variant = random.Next(0, 21 - generationConfig.decoratedFactor);
 						if (W_DownEmpty && (y + 1 + i + generationConfig.seed) % 2 == 0)
 						{
 							if (W_Balcony && random.Next(0, 9) < generationConfig.balconyFactor)
 							{
-								building.cells[i][x][y].walls.W_Type = WallType::balcony;
+								building->cells[i][x][y].walls.W_Type = WallType::balcony;
 							}
 							else
 							{
-								building.cells[i][x][y].walls.W_Type = WallType::window;
+								building->cells[i][x][y].walls.W_Type = WallType::window;
 							}
 						}
 					}
@@ -492,13 +652,13 @@ void Buildings::SetWalls()
 
 void Buildings::SetBeams()
 {
-	for (int i = building.cells.size() - 1; i >= 0; i--)
+	for (int i = building->cells.size() - 1; i >= 0; i--)
 	{
-		for (int x = 0; x < building.cells[i].size(); x++)
+		for (int x = 0; x < building->cells[i].size(); x++)
 		{
-			for (int y = 0; y < building.cells[i][x].size(); y++)
+			for (int y = 0; y < building->cells[i][x].size(); y++)
 			{
-				if (building.cells[i][x][y].walls.Empty() && !CellEmpty(i + 1, x, y))
+				if (building->cells[i][x][y].walls.Empty() && !CellEmpty(i + 1, x, y))
 				{
 					bool N_Empty = CellEmpty(i, x, y + 1);
                     bool S_Empty = CellEmpty(i, x, y - 1);
@@ -514,10 +674,10 @@ void Buildings::SetBeams()
 					bool E_Beam = BeamPass(i, x, y, E, N_Empty, S_Empty, E_Empty, W_Empty, NE_Empty, NW_Empty, SE_Empty, SW_Empty);
 					bool W_Beam = BeamPass(i, x, y, W, N_Empty, S_Empty, E_Empty, W_Empty, NE_Empty, NW_Empty, SE_Empty, SW_Empty);
 
-					building.cells[i][x][y].walls.N_Type = N_Beam ? WallType::beams : WallType::empty;
-                    building.cells[i][x][y].walls.S_Type = S_Beam ? WallType::beams : WallType::empty;
-                    building.cells[i][x][y].walls.E_Type = E_Beam ? WallType::beams : WallType::empty;
-                    building.cells[i][x][y].walls.W_Type = W_Beam ? WallType::beams : WallType::empty;
+					building->cells[i][x][y].walls.N_Type = N_Beam ? WallType::beams : WallType::empty;
+                    building->cells[i][x][y].walls.S_Type = S_Beam ? WallType::beams : WallType::empty;
+                    building->cells[i][x][y].walls.E_Type = E_Beam ? WallType::beams : WallType::empty;
+                    building->cells[i][x][y].walls.W_Type = W_Beam ? WallType::beams : WallType::empty;
 				}
 			}
 		}
@@ -528,30 +688,30 @@ bool Buildings::BeamPass(int i, int x, int y, D direction, bool N_Empty, bool S_
 {
 	if (direction == N)
 	{
-		bool N = N_Empty || building.cells[i][x][y + 1].walls.E_Type == WallType::empty;
-        bool E = E_Empty || building.cells[i][x + 1][y].walls.W_Type == WallType::empty;
-        bool NE = NE_Empty || building.cells[i][x + 1][y + 1].walls.S_Type == WallType::empty;
+		bool N = N_Empty || building->cells[i][x][y + 1].walls.E_Type == WallType::empty;
+        bool E = E_Empty || building->cells[i][x + 1][y].walls.W_Type == WallType::empty;
+        bool NE = NE_Empty || building->cells[i][x + 1][y + 1].walls.S_Type == WallType::empty;
         return (N && E && NE);
 	}
 	else if (direction == S)
 	{
-		bool S = S_Empty || building.cells[i][x][y - 1].walls.W_Type == WallType::empty;
-        bool W = W_Empty || building.cells[i][x - 1][y].walls.E_Type == WallType::empty;
-        bool SW = SW_Empty || building.cells[i][x - 1][y - 1].walls.N_Type == WallType::empty;
+		bool S = S_Empty || building->cells[i][x][y - 1].walls.W_Type == WallType::empty;
+        bool W = W_Empty || building->cells[i][x - 1][y].walls.E_Type == WallType::empty;
+        bool SW = SW_Empty || building->cells[i][x - 1][y - 1].walls.N_Type == WallType::empty;
         return (S && W && SW);
 	}
 	else if (direction == E)
 	{
-		bool S = S_Empty || building.cells[i][x][y - 1].walls.N_Type == WallType::empty;
-        bool E = E_Empty || building.cells[i][x + 1][y].walls.S_Type == WallType::empty;
-        bool SE = SE_Empty || building.cells[i][x + 1][y - 1].walls.W_Type == WallType::empty;
+		bool S = S_Empty || building->cells[i][x][y - 1].walls.N_Type == WallType::empty;
+        bool E = E_Empty || building->cells[i][x + 1][y].walls.S_Type == WallType::empty;
+        bool SE = SE_Empty || building->cells[i][x + 1][y - 1].walls.W_Type == WallType::empty;
         return (S && E && SE);
 	}
 	else if (direction == W)
 	{
-		bool N = N_Empty || building.cells[i][x][y + 1].walls.S_Type == WallType::empty;
-        bool W = W_Empty || building.cells[i][x - 1][y].walls.N_Type == WallType::empty;
-        bool NW = NW_Empty || building.cells[i][x - 1][y + 1].walls.E_Type == WallType::empty;
+		bool N = N_Empty || building->cells[i][x][y + 1].walls.S_Type == WallType::empty;
+        bool W = W_Empty || building->cells[i][x - 1][y].walls.N_Type == WallType::empty;
+        bool NW = NW_Empty || building->cells[i][x - 1][y + 1].walls.E_Type == WallType::empty;
         return (N && W && NW);
 	}
 	return (false);
@@ -559,110 +719,110 @@ bool Buildings::BeamPass(int i, int x, int y, D direction, bool N_Empty, bool S_
 
 void Buildings::SetRoof()
 {
-	for (int i = 0; i < building.cells.size(); i++)
+	for (int i = 0; i < building->cells.size(); i++)
 	{
-		for (int x = 0; x < building.cells[i].size(); x++)
+		for (int x = 0; x < building->cells[i].size(); x++)
 		{
-			for (int y = 0; y < building.cells[i][x].size(); y++)
+			for (int y = 0; y < building->cells[i][x].size(); y++)
 			{
 				RoofTypePass(i, x, y);
 			}
 		}
 	}
 
-	for (int i = 0; i < building.cells.size(); i++)
+	for (int i = 0; i < building->cells.size(); i++)
 	{
-		for (int x = 0; x < building.cells[i].size(); x++)
+		for (int x = 0; x < building->cells[i].size(); x++)
 		{
-			for (int y = 0; y < building.cells[i][x].size(); y++)
+			for (int y = 0; y < building->cells[i][x].size(); y++)
 			{
 				RoofConePass(i, x, y);
 			}
 		}
 	}
 
-	for (int i = 0; i < building.cells.size(); i++)
+	for (int i = 0; i < building->cells.size(); i++)
 	{
-		for (int x = 0; x < building.cells[i].size(); x++)
+		for (int x = 0; x < building->cells[i].size(); x++)
 		{
-			for (int y = 0; y < building.cells[i][x].size(); y++)
+			for (int y = 0; y < building->cells[i][x].size(); y++)
 			{
 				RoofTypePass(i, x, y);
 			}
 		}
 	}
 
-	for (int i = 0; i < building.cells.size(); i++)
+	for (int i = 0; i < building->cells.size(); i++)
 	{
-		for (int x = 0; x < building.cells[i].size(); x++)
+		for (int x = 0; x < building->cells[i].size(); x++)
 		{
-			for (int y = 0; y < building.cells[i][x].size(); y++)
+			for (int y = 0; y < building->cells[i][x].size(); y++)
 			{
 				RoofConePass(i, x, y);
 			}
 		}
 	}
 
-	for (int i = 0; i < building.cells.size(); i++)
+	for (int i = 0; i < building->cells.size(); i++)
 	{
-		for (int x = 0; x < building.cells[i].size(); x++)
+		for (int x = 0; x < building->cells[i].size(); x++)
 		{
-			for (int y = 0; y < building.cells[i][x].size(); y++)
+			for (int y = 0; y < building->cells[i][x].size(); y++)
 			{
 				RoofConePass(i, x, y);
 			}
 		}
 	}
 
-	for (int i = 0; i < building.cells.size(); i++)
+	for (int i = 0; i < building->cells.size(); i++)
 	{
-		for (int x = 0; x < building.cells[i].size(); x++)
+		for (int x = 0; x < building->cells[i].size(); x++)
 		{
-			for (int y = 0; y < building.cells[i][x].size(); y++)
+			for (int y = 0; y < building->cells[i][x].size(); y++)
 			{
 				RoofConePass(i, x, y);
 			}
 		}
 	}
 
-	for (int i = 0; i < building.cells.size(); i++)
+	for (int i = 0; i < building->cells.size(); i++)
 	{
-		for (int x = 0; x < building.cells[i].size(); x++)
+		for (int x = 0; x < building->cells[i].size(); x++)
 		{
-			for (int y = 0; y < building.cells[i][x].size(); y++)
+			for (int y = 0; y < building->cells[i][x].size(); y++)
 			{
 				RoofTypePass(i, x, y);
 			}
 		}
 	}
 
-	for (int i = 0; i < building.cells.size(); i++)
+	for (int i = 0; i < building->cells.size(); i++)
 	{
-		for (int x = 0; x < building.cells[i].size(); x++)
+		for (int x = 0; x < building->cells[i].size(); x++)
 		{
-			for (int y = 0; y < building.cells[i][x].size(); y++)
+			for (int y = 0; y < building->cells[i][x].size(); y++)
 			{
 				RoofDirectionPass(i, x, y);
 			}
 		}
 	}
 
-	for (int i = 0; i < building.cells.size(); i++)
+	for (int i = 0; i < building->cells.size(); i++)
 	{
-		for (int x = 0; x < building.cells[i].size(); x++)
+		for (int x = 0; x < building->cells[i].size(); x++)
 		{
-			for (int y = 0; y < building.cells[i][x].size(); y++)
+			for (int y = 0; y < building->cells[i][x].size(); y++)
 			{
 				RoofMergePass(i, x, y);
 			}
 		}
 	}
 
-	for (int i = 0; i < building.cells.size(); i++)
+	for (int i = 0; i < building->cells.size(); i++)
 	{
-		for (int x = 0; x < building.cells[i].size(); x++)
+		for (int x = 0; x < building->cells[i].size(); x++)
 		{
-			for (int y = 0; y < building.cells[i][x].size(); y++)
+			for (int y = 0; y < building->cells[i][x].size(); y++)
 			{
 				RoofExtendPass(i, x, y);
 			}
@@ -684,35 +844,35 @@ void Buildings::RoofTypePass(int i, int x, int y)
 		bool W_UpEmpty = CellEmpty(i + 1, x - 1, y);
 		int emptyAmount = ((N_Empty && N_UpEmpty) ? 1 : 0) + ((S_Empty && S_UpEmpty) ? 1 : 0) +
 			((E_Empty && E_UpEmpty) ? 1 : 0) + ((W_Empty && W_UpEmpty) ? 1 : 0);
-		bool N_Cone = !N_Empty && building.cells[i][x][y + 1].roof.type == RoofType::cone;
-		bool S_Cone = !S_Empty && building.cells[i][x][y - 1].roof.type == RoofType::cone;
-		bool E_Cone = !E_Empty && building.cells[i][x + 1][y].roof.type == RoofType::cone;
-		bool W_Cone = !W_Empty && building.cells[i][x - 1][y].roof.type == RoofType::cone;
+		bool N_Cone = !N_Empty && building->cells[i][x][y + 1].roof.type == RoofType::cone;
+		bool S_Cone = !S_Empty && building->cells[i][x][y - 1].roof.type == RoofType::cone;
+		bool E_Cone = !E_Empty && building->cells[i][x + 1][y].roof.type == RoofType::cone;
+		bool W_Cone = !W_Empty && building->cells[i][x - 1][y].roof.type == RoofType::cone;
 		int coneAmount = (N_Cone ? 1 : 0) + (S_Cone ? 1 : 0) + (E_Cone ? 1 : 0) + (W_Cone ? 1 : 0);
 		int EW_Empty = ((E_Empty || E_Cone) ? 1 : 0) + ((W_Empty || W_Cone) ? 1 : 0);
 
-		if (building.cells[i][x][y].roof.type == RoofType::cone || emptyAmount >= 3)
-			building.cells[i][x][y].roof.type = RoofType::cone;
+		if (building->cells[i][x][y].roof.type == RoofType::cone || emptyAmount >= 3)
+			building->cells[i][x][y].roof.type = RoofType::cone;
 		else if (emptyAmount + coneAmount >= 1 && EW_Empty != 0)
-			building.cells[i][x][y].roof.type = RoofType::slope;
+			building->cells[i][x][y].roof.type = RoofType::slope;
 		else 
-			building.cells[i][x][y].roof.type = RoofType::flatUp;
+			building->cells[i][x][y].roof.type = RoofType::flatUp;
 	}
 }
 
 void Buildings::RoofConePass(int i, int x, int y)
 {
-	if (!building.cells[i][x][y].roof.Empty())
+	if (!building->cells[i][x][y].roof.Empty())
 	{
 		bool N_Empty = CellEmpty(i, x, y + 1);
 		bool S_Empty = CellEmpty(i, x, y - 1);
 		bool E_Empty = CellEmpty(i, x + 1, y);
 		bool W_Empty = CellEmpty(i, x - 1, y);
 		int emptyAmount = (N_Empty ? 1 : 0) + (S_Empty ? 1 : 0) + (E_Empty ? 1 : 0) + (W_Empty ? 1 : 0);
-		bool N_Cone = !N_Empty && building.cells[i][x][y + 1].roof.type == RoofType::cone;
-		bool S_Cone = !S_Empty && building.cells[i][x][y - 1].roof.type == RoofType::cone;
-		bool E_Cone = !E_Empty && building.cells[i][x + 1][y].roof.type == RoofType::cone;
-		bool W_Cone = !W_Empty && building.cells[i][x - 1][y].roof.type == RoofType::cone;
+		bool N_Cone = !N_Empty && building->cells[i][x][y + 1].roof.type == RoofType::cone;
+		bool S_Cone = !S_Empty && building->cells[i][x][y - 1].roof.type == RoofType::cone;
+		bool E_Cone = !E_Empty && building->cells[i][x + 1][y].roof.type == RoofType::cone;
+		bool W_Cone = !W_Empty && building->cells[i][x - 1][y].roof.type == RoofType::cone;
 		int coneAmount = (N_Cone ? 1 : 0) + (S_Cone ? 1 : 0) + (E_Cone ? 1 : 0) + (W_Cone ? 1 : 0);
 		bool N_Wall = !N_Empty && !CellEmpty(i + 1, x, y + 1);
 		bool S_Wall = !N_Empty && !CellEmpty(i + 1, x, y - 1);
@@ -720,17 +880,17 @@ void Buildings::RoofConePass(int i, int x, int y)
 		bool W_Wall = !N_Empty && !CellEmpty(i + 1, x - 1, y);
 		int wallAmount = (N_Wall ? 1 : 0) + (S_Wall ? 1 : 0) + (E_Wall ? 1 : 0) + (W_Wall ? 1 : 0);
 
-		if (building.cells[i][x][y].roof.type != RoofType::cone && ((emptyAmount == 2 && coneAmount == 2) ||
+		if (building->cells[i][x][y].roof.type != RoofType::cone && ((emptyAmount == 2 && coneAmount == 2) ||
             (emptyAmount == 1 && coneAmount == 3) || (emptyAmount == 2 && coneAmount == 1) || 
             (emptyAmount == 1 && ((N_Cone && S_Cone) || (E_Cone && W_Cone))) ||
             (emptyAmount == 1 && coneAmount == 2 && wallAmount == 1))) 
-            building.cells[i][x][y].roof.type = RoofType::cone;
+            building->cells[i][x][y].roof.type = RoofType::cone;
 	}
 }
 
 void Buildings::RoofDirectionPass(int i, int x, int y)
 {
-	if (!building.cells[i][x][y].roof.Empty())
+	if (!building->cells[i][x][y].roof.Empty())
 	{
 		bool N_Empty = CellEmpty(i, x, y + 1, false);
 		bool S_Empty = CellEmpty(i, x, y - 1, false);
@@ -740,40 +900,40 @@ void Buildings::RoofDirectionPass(int i, int x, int y)
 		bool S_UpEmpty = CellEmpty(i + 1, x, y - 1, false);
 		bool E_UpEmpty = CellEmpty(i + 1, x + 1, y, false);
 		bool W_UpEmpty = CellEmpty(i + 1, x - 1, y, false);
-		bool N_Cone = !N_Empty && building.cells[i][x][y + 1].roof.type == RoofType::cone;
-		bool S_Cone = !S_Empty && building.cells[i][x][y - 1].roof.type == RoofType::cone;
-		bool E_Cone = !E_Empty && building.cells[i][x + 1][y].roof.type == RoofType::cone;
-		bool W_Cone = !W_Empty && building.cells[i][x - 1][y].roof.type == RoofType::cone;
+		bool N_Cone = !N_Empty && building->cells[i][x][y + 1].roof.type == RoofType::cone;
+		bool S_Cone = !S_Empty && building->cells[i][x][y - 1].roof.type == RoofType::cone;
+		bool E_Cone = !E_Empty && building->cells[i][x + 1][y].roof.type == RoofType::cone;
+		bool W_Cone = !W_Empty && building->cells[i][x - 1][y].roof.type == RoofType::cone;
 
-		building.cells[i][x][y].roof.direction = GetRoofDirection(building.cells[i][x][y].roof.type, N_Empty, S_Empty, E_Empty,
+		building->cells[i][x][y].roof.direction = GetRoofDirection(building->cells[i][x][y].roof.type, N_Empty, S_Empty, E_Empty,
 			W_Empty, N_Cone, S_Cone, E_Cone, W_Cone, E_UpEmpty, W_UpEmpty);
 	}
 }
 
 void Buildings::RoofMergePass(int i, int x, int y)
 {
-	if (!building.cells[i][x][y].roof.Empty())
+	if (!building->cells[i][x][y].roof.Empty())
 	{
 		bool N_Empty = CellEmpty(i, x, y + 1);
 		bool S_Empty = CellEmpty(i, x, y - 1);
 		bool E_Empty = CellEmpty(i, x + 1, y);
 		bool W_Empty = CellEmpty(i, x - 1, y);
-		bool N_Cone = !N_Empty && building.cells[i][x][y + 1].roof.type == RoofType::cone;
-		bool S_Cone = !S_Empty && building.cells[i][x][y - 1].roof.type == RoofType::cone;
-		bool E_Cone = !E_Empty && building.cells[i][x + 1][y].roof.type == RoofType::cone;
-		bool W_Cone = !W_Empty && building.cells[i][x - 1][y].roof.type == RoofType::cone;
+		bool N_Cone = !N_Empty && building->cells[i][x][y + 1].roof.type == RoofType::cone;
+		bool S_Cone = !S_Empty && building->cells[i][x][y - 1].roof.type == RoofType::cone;
+		bool E_Cone = !E_Empty && building->cells[i][x + 1][y].roof.type == RoofType::cone;
+		bool W_Cone = !W_Empty && building->cells[i][x - 1][y].roof.type == RoofType::cone;
 
-		if (building.cells[i][x][y].roof.type == RoofType::cone)
+		if (building->cells[i][x][y].roof.type == RoofType::cone)
 		{
-			if (building.cells[i][x][y].roof.direction == N)
+			if (building->cells[i][x][y].roof.direction == N)
 			{
-				building.cells[i][x][y].roof.N_Merge = MergePass(i, x, y, N, N_Empty, S_Empty, E_Empty, W_Empty, N_Cone, S_Cone, E_Cone, W_Cone);
-				building.cells[i][x][y].roof.S_Merge = MergePass(i, x, y, S, N_Empty, S_Empty, E_Empty, W_Empty, N_Cone, S_Cone, E_Cone, W_Cone);
+				building->cells[i][x][y].roof.N_Merge = MergePass(i, x, y, N, N_Empty, S_Empty, E_Empty, W_Empty, N_Cone, S_Cone, E_Cone, W_Cone);
+				building->cells[i][x][y].roof.S_Merge = MergePass(i, x, y, S, N_Empty, S_Empty, E_Empty, W_Empty, N_Cone, S_Cone, E_Cone, W_Cone);
 			}
-			else if (building.cells[i][x][y].roof.direction == E)
+			else if (building->cells[i][x][y].roof.direction == E)
 			{
-				building.cells[i][x][y].roof.E_Merge = MergePass(i, x, y, E, N_Empty, S_Empty, E_Empty, W_Empty, N_Cone, S_Cone, E_Cone, W_Cone);
-				building.cells[i][x][y].roof.W_Merge = MergePass(i, x, y, W, N_Empty, S_Empty, E_Empty, W_Empty, N_Cone, S_Cone, E_Cone, W_Cone);
+				building->cells[i][x][y].roof.E_Merge = MergePass(i, x, y, E, N_Empty, S_Empty, E_Empty, W_Empty, N_Cone, S_Cone, E_Cone, W_Cone);
+				building->cells[i][x][y].roof.W_Merge = MergePass(i, x, y, W, N_Empty, S_Empty, E_Empty, W_Empty, N_Cone, S_Cone, E_Cone, W_Cone);
 			}
 		}
 	}
@@ -781,7 +941,7 @@ void Buildings::RoofMergePass(int i, int x, int y)
 
 void Buildings::RoofExtendPass(int i, int x, int y)
 {
-	if (!building.cells[i][x][y].roof.Empty())
+	if (!building->cells[i][x][y].roof.Empty())
 	{
 		bool N_Empty = CellEmpty(i, x, y + 1, false);
 		bool S_Empty = CellEmpty(i, x, y - 1, false);
@@ -791,40 +951,40 @@ void Buildings::RoofExtendPass(int i, int x, int y)
 		bool S_UpEmpty = CellEmpty(i + 1, x, y - 1, false);
 		bool E_UpEmpty = CellEmpty(i + 1, x + 1, y, false);
 		bool W_UpEmpty = CellEmpty(i + 1, x - 1, y, false);
-		bool N_Cone = !N_Empty && building.cells[i][x][y + 1].roof.type == RoofType::cone;
-		bool S_Cone = !S_Empty && building.cells[i][x][y - 1].roof.type == RoofType::cone;
-		bool E_Cone = !E_Empty && building.cells[i][x + 1][y].roof.type == RoofType::cone;
-		bool W_Cone = !W_Empty && building.cells[i][x - 1][y].roof.type == RoofType::cone;
-		bool NE_UpObstruction = !CellEmpty(i + 1, x + 1, y + 1) && (building.cells[i + 1][x + 1][y + 1].walls.W_Type == WallType::window || building.cells[i + 1][x + 1][y + 1].walls.W_Type == WallType::balcony);
-		bool NW_UpObstruction = !CellEmpty(i + 1, x - 1, y + 1) && (building.cells[i + 1][x - 1][y + 1].walls.W_Type == WallType::window || building.cells[i + 1][x - 1][y + 1].walls.W_Type == WallType::balcony);
-		bool SW_UpObstruction = !CellEmpty(i + 1, x - 1, y - 1) && (building.cells[i + 1][x - 1][y - 1].walls.W_Type == WallType::window || building.cells[i + 1][x - 1][y - 1].walls.W_Type == WallType::balcony);
-		bool SE_UpObstruction = !CellEmpty(i + 1, x + 1, y - 1) && (building.cells[i + 1][x + 1][y - 1].walls.W_Type == WallType::window || building.cells[i + 1][x + 1][y - 1].walls.W_Type == WallType::balcony);
+		bool N_Cone = !N_Empty && building->cells[i][x][y + 1].roof.type == RoofType::cone;
+		bool S_Cone = !S_Empty && building->cells[i][x][y - 1].roof.type == RoofType::cone;
+		bool E_Cone = !E_Empty && building->cells[i][x + 1][y].roof.type == RoofType::cone;
+		bool W_Cone = !W_Empty && building->cells[i][x - 1][y].roof.type == RoofType::cone;
+		bool NE_UpObstruction = !CellEmpty(i + 1, x + 1, y + 1) && (building->cells[i + 1][x + 1][y + 1].walls.W_Type == WallType::window || building->cells[i + 1][x + 1][y + 1].walls.W_Type == WallType::balcony);
+		bool NW_UpObstruction = !CellEmpty(i + 1, x - 1, y + 1) && (building->cells[i + 1][x - 1][y + 1].walls.W_Type == WallType::window || building->cells[i + 1][x - 1][y + 1].walls.W_Type == WallType::balcony);
+		bool SW_UpObstruction = !CellEmpty(i + 1, x - 1, y - 1) && (building->cells[i + 1][x - 1][y - 1].walls.W_Type == WallType::window || building->cells[i + 1][x - 1][y - 1].walls.W_Type == WallType::balcony);
+		bool SE_UpObstruction = !CellEmpty(i + 1, x + 1, y - 1) && (building->cells[i + 1][x + 1][y - 1].walls.W_Type == WallType::window || building->cells[i + 1][x + 1][y - 1].walls.W_Type == WallType::balcony);
 
-		if (building.cells[i][x][y].roof.type == RoofType::cone)
+		if (building->cells[i][x][y].roof.type == RoofType::cone)
 		{
-			building.cells[i][x][y].roof.N_Extend = N_Empty;
-			building.cells[i][x][y].roof.S_Extend = S_Empty;
-			building.cells[i][x][y].roof.E_Extend = E_Empty;
-			building.cells[i][x][y].roof.W_Extend = W_Empty;
+			building->cells[i][x][y].roof.N_Extend = N_Empty;
+			building->cells[i][x][y].roof.S_Extend = S_Empty;
+			building->cells[i][x][y].roof.E_Extend = E_Empty;
+			building->cells[i][x][y].roof.W_Extend = W_Empty;
 		}
 		else
 		{
-			building.cells[i][x][y].roof.N_Extend = (N_Empty && N_UpEmpty) || N_Cone;
-			building.cells[i][x][y].roof.S_Extend = (S_Empty && S_UpEmpty) || S_Cone;
-			building.cells[i][x][y].roof.E_Extend = (E_Empty && E_UpEmpty) || E_Cone;
-			building.cells[i][x][y].roof.W_Extend = (W_Empty && W_UpEmpty) || W_Cone;
+			building->cells[i][x][y].roof.N_Extend = (N_Empty && N_UpEmpty) || N_Cone;
+			building->cells[i][x][y].roof.S_Extend = (S_Empty && S_UpEmpty) || S_Cone;
+			building->cells[i][x][y].roof.E_Extend = (E_Empty && E_UpEmpty) || E_Cone;
+			building->cells[i][x][y].roof.W_Extend = (W_Empty && W_UpEmpty) || W_Cone;
 		}
 
-		if (building.cells[i][x][y].roof.type == RoofType::flatUp)
+		if (building->cells[i][x][y].roof.type == RoofType::flatUp)
 		{
-			building.cells[i][x][y].roof.N_Extend = building.cells[i][x][y].roof.N_Extend || (N_Empty && N_UpEmpty) ||
-				(building.cells[i][x][y + 1].roof.type == RoofType::slope && building.cells[i][x][y + 1].roof.direction != S);
-			building.cells[i][x][y].roof.S_Extend = building.cells[i][x][y].roof.S_Extend || (S_Empty && S_UpEmpty) ||
-				(building.cells[i][x][y - 1].roof.type == RoofType::slope && building.cells[i][x][y - 1].roof.direction != N);
-			building.cells[i][x][y].roof.E_Extend = building.cells[i][x][y].roof.E_Extend || (E_Empty && E_UpEmpty) ||
-				(building.cells[i][x + 1][y].roof.type == RoofType::slope && building.cells[i][x + 1][y].roof.direction != W);
-			building.cells[i][x][y].roof.W_Extend = building.cells[i][x][y].roof.W_Extend || (W_Empty && W_UpEmpty) ||
-				(building.cells[i][x - 1][y].roof.type == RoofType::slope && building.cells[i][x - 1][y].roof.direction != E);
+			building->cells[i][x][y].roof.N_Extend = building->cells[i][x][y].roof.N_Extend || (N_Empty && N_UpEmpty) ||
+				(building->cells[i][x][y + 1].roof.type == RoofType::slope && building->cells[i][x][y + 1].roof.direction != S);
+			building->cells[i][x][y].roof.S_Extend = building->cells[i][x][y].roof.S_Extend || (S_Empty && S_UpEmpty) ||
+				(building->cells[i][x][y - 1].roof.type == RoofType::slope && building->cells[i][x][y - 1].roof.direction != N);
+			building->cells[i][x][y].roof.E_Extend = building->cells[i][x][y].roof.E_Extend || (E_Empty && E_UpEmpty) ||
+				(building->cells[i][x + 1][y].roof.type == RoofType::slope && building->cells[i][x + 1][y].roof.direction != W);
+			building->cells[i][x][y].roof.W_Extend = building->cells[i][x][y].roof.W_Extend || (W_Empty && W_UpEmpty) ||
+				(building->cells[i][x - 1][y].roof.type == RoofType::slope && building->cells[i][x - 1][y].roof.direction != E);
 		}
 	}
 }
@@ -878,30 +1038,30 @@ bool Buildings::MergePass(int i, int x, int y, D direction, bool N_Empty, bool S
 
 	if (direction == N)
 	{
-		if (N_Cone && building.cells[i][x][y + 1].roof.direction == E) 
+		if (N_Cone && building->cells[i][x][y + 1].roof.direction == E) 
 			merge = true;
-		else if (!N_Empty && building.cells[i][x][y + 1].roof.type == RoofType::slope && building.cells[i][x][y + 1].roof.direction == N) 
+		else if (!N_Empty && building->cells[i][x][y + 1].roof.type == RoofType::slope && building->cells[i][x][y + 1].roof.direction == N) 
 			merge = true;
 	}
 	else if (direction == S)
 	{
-		if (S_Cone && building.cells[i][x][y - 1].roof.direction == E)
+		if (S_Cone && building->cells[i][x][y - 1].roof.direction == E)
 			merge = true;
-		else if (!S_Empty && building.cells[i][x][y - 1].roof.type == RoofType::slope && building.cells[i][x][y - 1].roof.direction == S)
+		else if (!S_Empty && building->cells[i][x][y - 1].roof.type == RoofType::slope && building->cells[i][x][y - 1].roof.direction == S)
 			merge = true;
 	}
 	else if (direction == E)
 	{
-		if (E_Cone && building.cells[i][x + 1][y].roof.direction == N)
+		if (E_Cone && building->cells[i][x + 1][y].roof.direction == N)
 			merge = true;
-		else if (!E_Empty && building.cells[i][x + 1][y].roof.type == RoofType::slope && building.cells[i][x + 1][y].roof.direction == E)
+		else if (!E_Empty && building->cells[i][x + 1][y].roof.type == RoofType::slope && building->cells[i][x + 1][y].roof.direction == E)
 			merge = true;
 	}
 	else if (direction == W)
 	{
-		if (W_Cone && building.cells[i][x - 1][y].roof.direction == N)
+		if (W_Cone && building->cells[i][x - 1][y].roof.direction == N)
 			merge = true;
-		else if (!W_Empty && building.cells[i][x - 1][y].roof.type == RoofType::slope && building.cells[i][x - 1][y].roof.direction == W)
+		else if (!W_Empty && building->cells[i][x - 1][y].roof.type == RoofType::slope && building->cells[i][x - 1][y].roof.direction == W)
 			merge = true;
 	}
 
@@ -910,8 +1070,8 @@ bool Buildings::MergePass(int i, int x, int y, D direction, bool N_Empty, bool S
 
 bool Buildings::IsRoof(int i, int x, int y)
 {
-	return (CellValid(i, x, y) && !building.cells[i][x][y].Empty(false) && (!CellValid(i + 1, x, y) || 
-		building.cells[i + 1][x][y].Empty(false)));
+	return (CellValid(i, x, y) && !building->cells[i][x][y].Empty(false) && (!CellValid(i + 1, x, y) || 
+		building->cells[i + 1][x][y].Empty(false)));
 }
 
 Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, glm::vec3 rotation)
@@ -1413,36 +1573,39 @@ Shape Buildings::GeneratePart(PartType type, int rotate)
 
 void Buildings::GenerateMesh()
 {
-	if (building.mesh.created)
-		building.mesh.DestroyAtRuntime();
+	if (building->mesh.created)
+		building->mesh.DestroyAtRuntime();
 
-	building.mesh.coordinate = true;
-	building.mesh.normal = true;
-	building.mesh.color = true;
-	building.mesh.shape.coordinate = true;
-	building.mesh.shape.normal = true;
-	building.mesh.shape.color = true;
+	building->mesh.coordinate = true;
+	building->mesh.normal = true;
+	building->mesh.color = true;
+	building->mesh.shape.coordinate = true;
+	building->mesh.shape.normal = true;
+	building->mesh.shape.color = true;
 
-	for (int i = 0; i < building.cells.size(); i++)
+	for (int i = 0; i < building->cells.size(); i++)
 	{
 		GenerateFloors(i);
 		GenerateWalls(i);
 		GenerateRoofs(i);
 	}
 
-	building.mesh.RecalculateVertices();
-	building.mesh.Create();
+	float xOffset = float(generationConfig.maxSize.x - 1) * 0.5;
+	float zOffset = float(generationConfig.maxSize.z - 1) * 0.5;
+	building->mesh.shape.Move(glm::vec3(-5.0f * xOffset, 0.0f, -5.0f * zOffset));
+	building->mesh.RecalculateVertices();
+	building->mesh.Create();
 }
 
 void Buildings::GenerateFloors(int level)
 {
-	for (int x = 0; x < building.cells[level].size(); x++)
+	for (int x = 0; x < building->cells[level].size(); x++)
 	{
-		for (int y = 0; y < building.cells[level][x].size(); y++)
+		for (int y = 0; y < building->cells[level][x].size(); y++)
 		{
-			if (!building.cells[level][x][y].Empty())
+			if (!building->cells[level][x][y].Empty())
 			{
-				GenerateFloor(level, x , y, building.cells [level][x][y].floor.type);
+				GenerateFloor(level, x , y, building->cells [level][x][y].floor.type);
 			}
 		}
 	}
@@ -1461,23 +1624,23 @@ void Buildings::GenerateFloor(int i, int x, int y, FloorType type)
 		floor.Join(flatFloor);
 	}
 
-	if (i == 0 && !building.cells[i][x][y].walls.Empty())
+	if (i == 0 && !building->cells[i][x][y].walls.Empty())
 	{
 		Shape foundation = GeneratePart(PartType::foundation);
 		floor.Join(foundation);
 	}
 
 	floor.Move(glm::vec3(x, i, y) * generationConfig.scale);
-	building.mesh.shape.Join(floor);
+	building->mesh.shape.Join(floor);
 }
 
 void Buildings::GenerateWalls(int level)
 {
-	for (int x = 0; x < building.cells[level].size(); x++)
+	for (int x = 0; x < building->cells[level].size(); x++)
 	{
-		for (int y = 0; y < building.cells[level][x].size(); y++)
+		for (int y = 0; y < building->cells[level][x].size(); y++)
 		{
-			Walls walls = building.cells[level][x][y].walls;
+			Walls walls = building->cells[level][x][y].walls;
 
 			if (walls.N_Type != WallType::empty && walls.N_Type != WallType::beams)
 			{
@@ -1629,7 +1792,7 @@ void Buildings::GenerateWall(glm::vec3 offset, WallType type, D direction, int v
 
 	wall.Move(offset);
 
-	building.mesh.shape.Join(wall);
+	building->mesh.shape.Join(wall);
 }
 
 void Buildings::GenerateBeams(int i, int x, int y)
@@ -1639,7 +1802,7 @@ void Buildings::GenerateBeams(int i, int x, int y)
 	beams.coordinate = true;
 	beams.color = true;
 
-	Walls walls = building.cells[i][x][y].walls;
+	Walls walls = building->cells[i][x][y].walls;
 
 	bool N_Empty_B = CellEmpty(i, x, y + 1, false);
     bool N_Empty = CellEmpty(i, x, y + 1);
@@ -1732,19 +1895,19 @@ void Buildings::GenerateBeams(int i, int x, int y)
 	}*/
 
 	beams.Move(glm::vec3(x, i, y) * generationConfig.scale);
-	building.mesh.shape.Join(beams);
+	building->mesh.shape.Join(beams);
 }
 
 void Buildings::GenerateRoofs(int level)
 {
-	for (int x = 0; x < building.cells[level].size(); x++)
+	for (int x = 0; x < building->cells[level].size(); x++)
 	{
-		for (int y = 0; y < building.cells[level][x].size(); y++)
+		for (int y = 0; y < building->cells[level][x].size(); y++)
 		{
-			if (!building.cells[level][x][y].roof.Empty())
+			if (!building->cells[level][x][y].roof.Empty())
 			{
-				GenerateRoof(level, x, y, building.cells[level][x][y].roof.type,
-					building.cells[level][x][y].roof.direction);
+				GenerateRoof(level, x, y, building->cells[level][x][y].roof.type,
+					building->cells[level][x][y].roof.direction);
 			}
 		}
 	}
@@ -1752,7 +1915,7 @@ void Buildings::GenerateRoofs(int level)
 
 void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 {
-	Roof roofData = building.cells[i][x][y].roof;
+	Roof roofData = building->cells[i][x][y].roof;
 
 	Shape roof;
 	roof.coordinate = true;
@@ -1784,8 +1947,8 @@ void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 		sideBeam.Move(flatRoofConfig.offset * generationConfig.scale);
 		roof.Join(sideBeam);
 
-		if (!CellValid(i, x + 1, y) || (building.cells[i][x + 1][y].roof.type != RoofType::flatUp &&
-        	building.cells[i][x + 1][y].roof.type != RoofType::slope))
+		if (!CellValid(i, x + 1, y) || (building->cells[i][x + 1][y].roof.type != RoofType::flatUp &&
+        	building->cells[i][x + 1][y].roof.type != RoofType::slope))
 		{
 			sideBeam = GeneratePart(PartType::beam);
 			sideBeam.Rotate90();
@@ -1837,8 +2000,8 @@ void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 		roof.Scale(glm::vec3(extendScale, 1.0f, 1.0f));
 		roof.Move(glm::vec3(extendOffset, 0.0f, 0.0f) * generationConfig.scale);
 
-		if (!CellValid(i, x + 1, y) || (building.cells[i][x + 1][y].roof.type != RoofType::flatUp &&
-        	building.cells[i][x + 1][y].roof.type != RoofType::slope))
+		if (!CellValid(i, x + 1, y) || (building->cells[i][x + 1][y].roof.type != RoofType::flatUp &&
+        	building->cells[i][x + 1][y].roof.type != RoofType::slope))
 		{
 			Shape sideBeam = GeneratePart(PartType::beam);
 			sideBeam.Scale(glm::vec3(extendScale, 1.0f, 1.0f));
@@ -2010,7 +2173,7 @@ void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 
 	roof.Move(glm::vec3(x, i + 1, y) * generationConfig.scale);
 
-	building.mesh.shape.Join(roof);
+	building->mesh.shape.Join(roof);
 }
 
 bool Buildings::CellValid(int i, int x, int y)
@@ -2021,12 +2184,12 @@ bool Buildings::CellValid(int i, int x, int y)
 
 bool Buildings::CellEmpty(int i, int x, int y, bool countBeams)
 {
-	return (!CellValid(i, x, y) || building.cells[i][x][y].Empty(countBeams));
+	return (!CellValid(i, x, y) || building->cells[i][x][y].Empty(countBeams));
 }
 
 bool Buildings::FloorEmpty(int i, int x, int y)
 {
-	return (!CellValid(i, x, y) || building.cells[i][x][y].floor.Empty());
+	return (!CellValid(i, x, y) || building->cells[i][x][y].floor.Empty());
 }
 
 std::vector<Texture> Buildings::beamTextures;
@@ -2037,17 +2200,22 @@ std::vector<Texture> Buildings::brickTextures;
 Pipeline Buildings::graphicsPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Buildings::shadowPipeline{Manager::currentDevice, Manager::camera};
 
+std::vector<BuildingBuffer> Buildings::buildingBuffers;
+Buffer Buildings::uniformBuffer;
+
 Descriptor Buildings::graphicsDescriptor{Manager::currentDevice};
 Descriptor Buildings::shadowDescriptor{Manager::currentDevice};
 
 GenerationConfig Buildings::generationConfig;
 
-Building Buildings::building;
+std::vector<Building> Buildings::buildings = std::vector<Building>(100);
+Building *Buildings::building = nullptr;
+std::vector<Building *> Buildings::renderBuildings = std::vector<Building *>(0);
 
 Random Buildings::random;
 
 PartConfig Buildings::floorConfig{"floor", glm::vec3(1.0f, 0.05f, 1.0f)};
-PartConfig Buildings::foundationConfig{"foundation", glm::vec3(1.75f, 1.0f, 1.75f), glm::vec3(0.0f), glm::vec3(0.0f, -0.55f, 0.0f)};
+PartConfig Buildings::foundationConfig{"foundation", glm::vec3(2.0f, 1.0f, 2.0f), glm::vec3(0.0f), glm::vec3(0.0f, -0.55f, 0.0f)};
 PartConfig Buildings::flatWallConfig{"flat wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
 PartConfig Buildings::windowedWallConfig{"windowed wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
 PartConfig Buildings::dooredWallConfig{"doored wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};

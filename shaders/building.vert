@@ -6,30 +6,49 @@
 #define CASCADE_COUNT 3
 #endif
 
+struct BuildingData
+{
+	mat4 translation;
+	mat4 orientation;
+};
+
+layout(set = 1, binding = 0) uniform BuildingBuffers
+{
+	BuildingData buildingData[100];
+} buildingBuffers;
+
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec2 inCoordinate;
 layout(location = 2) in vec3 inNormal;
 layout(location = 3) in vec3 inColor;
 
-layout(location = 0) out vec3 worldPosition;
-layout(location = 1) out vec2 outCoordinate;
-layout(location = 2) out vec3 outNormal;
-layout(location = 3) out flat ivec2 type;
-layout(location = 4) out vec4 shadowPositions[CASCADE_COUNT];
+layout(location = 0) out vec3 objectPosition;
+layout(location = 1) out vec3 worldPosition;
+layout(location = 2) out vec2 outCoordinate;
+layout(location = 3) out vec3 objectNormal;
+layout(location = 4) out vec3 worldNormal;
+layout(location = 5) out mat4 orientation;
+layout(location = 9) out flat ivec2 type;
+layout(location = 10) out vec4 shadowPositions[CASCADE_COUNT];
 
 #include "variables.glsl"
 
 void main()
 {
-    outNormal = inNormal;
+	int index = gl_InstanceIndex;
+
+	orientation = buildingBuffers.buildingData[index].orientation;
+
+    objectNormal = inNormal;
+    worldNormal = (buildingBuffers.buildingData[index].orientation * vec4(inNormal, 0.0)).xyz;
 
 	outCoordinate = inCoordinate;
 
 	type = ivec2(int(inColor.x), int(inColor.y));
 
-    vec3 objectPosition = inPosition;
+    objectPosition = inPosition;
 
-    worldPosition = objectPosition + vec3(0.0, 2500.0, 0.0);
+    worldPosition = (buildingBuffers.buildingData[index].translation * buildingBuffers.buildingData[index].orientation * vec4(objectPosition, 1.0)).xyz + vec3(0.0, 2500.0, 0.0);
 
     worldPosition -= variables.terrainOffset;
 
