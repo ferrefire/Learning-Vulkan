@@ -134,7 +134,7 @@ layout(push_constant, std430) uniform PushConstants
     uint capturing;
 } pc;
 
-layout(local_size_x = 8, local_size_y = 8, local_size_z = 3) in;
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 #include "variables.glsl"
 #include "functions.glsl"
@@ -154,10 +154,10 @@ const float leafFadeDistance = 0.25;
 const float leafFadeStart = 1.0 - leafFadeDistance;
 const float leafFadeMult = 1.0 / leafFadeDistance;
 
-shared int sharedRender[64];
-shared TreeComputeResult sharedTreeResults[64];
-shared LodComputeResult sharedLodResults[64];
-shared IndexComputeResult sharedIndexResults[64];
+//shared int sharedRender[64];
+//shared TreeComputeResult sharedTreeResults[64];
+//shared LodComputeResult sharedLodResults[64];
+//shared IndexComputeResult sharedIndexResults[64];
 
 int Inside(vec2 pos)
 {
@@ -580,11 +580,11 @@ void main()
 		atomicExchange(countData.lod5ShadowCount, 0);
 	}
 
-	uint localIndex = gl_LocalInvocationID.y * gl_WorkGroupSize.x + gl_LocalInvocationID.x;
+	//uint localIndex = gl_LocalInvocationID.y * gl_WorkGroupSize.x + gl_LocalInvocationID.x;
 
-	if (gl_LocalInvocationID.z == 0)
+	//if (gl_LocalInvocationID.z == 0)
 	{
-		sharedRender[localIndex] = 0;
+		//sharedRender[localIndex] = 0;
 
 		TreeComputeResult treeResult = ComputeTreeData();
 		if (treeResult.render != 1) return;
@@ -596,20 +596,20 @@ void main()
 
 		SetRenderData(treeResult, lodResult, indexResult);
 
-		sharedTreeResults[localIndex] = treeResult;
-		sharedLodResults[localIndex] = lodResult;
-		sharedIndexResults[localIndex] = indexResult;
-		sharedRender[localIndex] = 1;
+		//sharedTreeResults[localIndex] = treeResult;
+		//sharedLodResults[localIndex] = lodResult;
+		//sharedIndexResults[localIndex] = indexResult;
+		//sharedRender[localIndex] = 1;
 
-		return;
+		//return;
 
 		//memoryBarrierShared();
 
-		//ComputeLeafData(treeResult, lodResult, indexResult);
+		ComputeLeafData(treeResult, lodResult, indexResult);
 	}
 
-	barrier();
+	/*barrier();
 	if (sharedRender[localIndex] == 0) return;
 	int id = int(gl_LocalInvocationID.z) - 1;
-	ComputeSharedLeafData(id, sharedTreeResults[localIndex], sharedLodResults[localIndex], sharedIndexResults[localIndex]);
+	ComputeSharedLeafData(id, sharedTreeResults[localIndex], sharedLodResults[localIndex], sharedIndexResults[localIndex]);*/
 }
