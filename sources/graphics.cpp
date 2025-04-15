@@ -229,7 +229,7 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	scissor.extent = window.swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	Terrain::RecordGraphicsCommands(commandBuffer);
+	if (Terrain::HeightMapsGenerated()) Terrain::RecordGraphicsCommands(commandBuffer);
 
 	if (BUILDINGS_ENABLED) Buildings::RecordGraphicsCommands(commandBuffer);
 

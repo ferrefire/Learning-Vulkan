@@ -116,7 +116,8 @@ void main()
 
 	//float shadow = GetCascadedShadow(shadowPositions, depth);
 
-    vec3 diffuse = DiffuseLighting(texNormal, shadow, 0.0375);
+    //vec3 diffuse = DiffuseLighting(texNormal, shadow, 0.0375);
+    vec3 diffuse = DiffuseLighting(texNormal, shadow);
 
     vec3 finalLighting = texColor * texAmbient * diffuse;
 

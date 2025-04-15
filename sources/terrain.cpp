@@ -544,9 +544,6 @@ void Terrain::Start()
 		}
 	}
 
-	//ComputeHeightMap(nullptr, 1);
-	//ComputeHeightMap(nullptr, 0); 
-
 	Menu &menu = UI::NewMenu("terrain");
 	menu.AddNode("water", true);
 	menu.AddSlider("water height", waterHeight, 0.0f, 2000.0f);
@@ -555,6 +552,9 @@ void Terrain::Start()
 	menu.AddText("test text");
 	menu.AddGraph("low lands", 32, lowLandsCurve);
 	menu.AddNode("biomes", false);
+
+	ComputeHeightMap(nullptr, 1);
+	ComputeHeightMap(nullptr, 0);
 }
 
 void Terrain::Frame()

@@ -437,7 +437,9 @@ void Buildings::Frame()
 {
 	//return;
 
-	int villageRange = 4;
+	if (!Terrain::HeightMapsGenerated()) return;
+
+	int villageRange = 8;
 	static int buildingIndex = 0;
 	static int buildingX = -villageRange;
 	static int buildingY = -villageRange;
@@ -449,7 +451,7 @@ void Buildings::Frame()
 		{
 			if (buildingY <= villageRange)
 			{
-				if (random.Next(0, villageRange) > glm::max(abs(buildingX), abs(buildingY)))
+				if (random.Next(0, villageRange) >= glm::max(abs(buildingX), abs(buildingY)))
 				{
 					building = &buildings[buildingIndex];
 					GenerateBuilding();
