@@ -1075,13 +1075,13 @@ Texture Terrain::heightMapLod1Texture{Manager::currentDevice};
 std::vector<Texture> Terrain::terrainShadowTextures;
 
 HeightMapComputeVariables Terrain::heightMapComputeVariables;
-Buffer Terrain::heightMapComputeVariablesBuffer;
-
 HeightMapArrayComputeVariables Terrain::heightMapArrayComputeVariables;
-Buffer Terrain::heightMapArrayComputeVariablesBuffer;
-
 std::vector<ShadowComputeVariables> Terrain::shadowComputeVariables;
+
+Buffer Terrain::heightMapComputeVariablesBuffer;
+Buffer Terrain::heightMapArrayComputeVariablesBuffer;
 Buffer Terrain::shadowComputeVariablesBuffer;
+Buffer Terrain::roadsBuffer;
 
 Descriptor Terrain::graphicsDescriptor{Manager::currentDevice};
 //Descriptor Terrain::graphicsLodDescriptor{Manager::currentDevice};
@@ -1137,6 +1137,8 @@ uint32_t Terrain::currentBoundHeightMap = -1;
 int Terrain::heightMapArrayLayersGenerated = 0;
 
 Curve Terrain::lowLandsCurve = Curve(32, EXPONENT);
+
+uint16_t Terrain::roadsData[1000000];
 
 //bool Terrain::terrainLod0OffsetReset = false;
 //bool Terrain::terrainLod1OffsetReset = false;

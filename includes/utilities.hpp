@@ -50,5 +50,6 @@ class Utilities
 		static float RandomFloat(float min, float max);
 		static int RandomInt(int min, int max, float seed);
 		static int RandomInt(int min, int max);
+		static float DistanceSqrd(glm::vec3 a, glm::vec3 b);
 		//static glm::vec2 XZ(glm::vec3 &vec);
 };

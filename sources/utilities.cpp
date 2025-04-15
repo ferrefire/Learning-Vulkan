@@ -235,6 +235,12 @@ int Utilities::RandomInt(int min, int max)
 	return (glm::mix(min, max, inter));
 }
 
+float Utilities::DistanceSqrd(glm::vec3 a, glm::vec3 b)
+{
+	glm::vec3 difference = b - a;
+	return (glm::dot(difference, difference));
+}
+
 //glm::vec2 Utilities::XZ(glm::vec3 &vec)
 //{
 //	return (glm::vec2(vec.x, vec.z));

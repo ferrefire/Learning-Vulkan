@@ -144,8 +144,10 @@ struct BuildingBuffer
 struct Building
 {
 	bool active = false;
+	bool lod = true;
 
 	Mesh mesh;
+	Mesh lodMesh;
 
 	glm::vec3 position = glm::vec3(0.0f);
 	glm::vec3 rotation = glm::vec3(0.0f);
@@ -180,6 +182,7 @@ struct GenerationConfig
 	int balconyFactor = 5;
 	bool random = false;
 	float scale = 7.5f;
+	bool lod = false;
 };
 
 struct PartConfig
@@ -205,8 +208,8 @@ class Buildings
 
 		static std::vector<BuildingBuffer> buildingBuffers;
 		static std::vector<BuildingBuffer> buildingShadowBuffers;
-		static Buffer uniformBuffer;
-		static Buffer uniformShadowBuffer;
+		static std::vector<Buffer> uniformBuffers;
+		static std::vector<Buffer> uniformShadowBuffers;
 
 		static Descriptor graphicsDescriptor;
         static Descriptor shadowDescriptor;
@@ -234,6 +237,9 @@ class Buildings
 		static PartConfig slopedBeamConfig;
 		static PartConfig slightSlopedBeamConfig;
 		static PartConfig collumnConfig;
+
+		static int maxRenderBuildings;
+		static int currentActiveBuildings;
 
 		static void Create();
         static void CreateMeshes();

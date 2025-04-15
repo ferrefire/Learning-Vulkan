@@ -62,8 +62,6 @@ struct ShadowComputeVariables
 class Terrain
 {
     private:
-		//static bool terrainLod0OffsetReset;
-		//static bool terrainLod1OffsetReset;
 
 	public:
 		static Mesh lod0Mesh;
@@ -78,7 +76,6 @@ class Terrain
 		static Pipeline shadowComputePipeline;
 
 		static Descriptor graphicsDescriptor;
-		//static Descriptor graphicsLodDescriptor;
 		static Descriptor cullDescriptor;
 		static Descriptor heightMapComputeDescriptor;
 		static Descriptor heightMapArrayComputeDescriptor;
@@ -101,13 +98,13 @@ class Terrain
 		static std::vector<Texture> terrainShadowTextures;
 
 		static HeightMapComputeVariables heightMapComputeVariables;
-		static Buffer heightMapComputeVariablesBuffer;
-
 		static HeightMapArrayComputeVariables heightMapArrayComputeVariables;
-		static Buffer heightMapArrayComputeVariablesBuffer;
-
 		static std::vector<ShadowComputeVariables> shadowComputeVariables;
+
+		static Buffer heightMapComputeVariablesBuffer;
+		static Buffer heightMapArrayComputeVariablesBuffer;
 		static Buffer shadowComputeVariablesBuffer;
+		static Buffer roadsBuffer;
 
 		static float terrainTotalSize;
 		static float terrainHeight;
@@ -142,6 +139,8 @@ class Terrain
 		static int heightMapArrayLayersGenerated;
 
 		static Curve lowLandsCurve;
+
+		static uint16_t roadsData[1000000];
 
 		static void Create();
         static void CreateTextures();

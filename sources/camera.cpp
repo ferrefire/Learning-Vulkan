@@ -308,12 +308,12 @@ glm::vec3 Camera::WorldToClip(glm::vec3 worldSpace)
 	return (clipSpace);
 }
 
-bool Camera::InView(glm::vec3 worldSpace)
+bool Camera::InView(glm::vec3 worldSpace, float tolerance)
 {
 	glm::vec3 clipSpace = WorldToClip(worldSpace);
 
-	bool xInView = clipSpace.x >= 0.0 && clipSpace.x <= 1.0;
-	bool yInView = clipSpace.y >= 0.0 && clipSpace.y <= 1.0;
+	bool xInView = clipSpace.x >= 0.0 - tolerance && clipSpace.x <= 1.0 + tolerance;
+	bool yInView = clipSpace.y >= 0.0 - tolerance && clipSpace.y <= 1.0 + tolerance;
 	bool zInView = clipSpace.z >= 0.0 && clipSpace.z <= 1.0;
 
 	return ((xInView && yInView && zInView) ? 1 : 0);

@@ -84,5 +84,5 @@ class Camera
 		glm::mat4 GetBoundedProjection(float nearDis, float farDis);
 
 		glm::vec3 WorldToClip(glm::vec3 worldSpace);
-		bool InView(glm::vec3 worldSpace);
+		bool InView(glm::vec3 worldSpace, float tolerance = 0.0f);
 };
