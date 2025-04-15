@@ -293,3 +293,28 @@ std::vector<glm::vec4> Camera::GetFrustumCorners(float nearDis, float farDis)
     }
     return (frustumCorners);
 }
+
+glm::vec3 Camera::WorldToClip(glm::vec3 worldSpace)
+{
+	glm::vec4 viewSpace = projection * view * glm::vec4(worldSpace, 1.0);
+
+	glm::vec3 clipSpace = viewSpace;
+	clipSpace /= viewSpace.w;
+
+	clipSpace.x = clipSpace.x * 0.5 + 0.5;
+	clipSpace.y = clipSpace.y * 0.5 + 0.5;
+	clipSpace.z = viewSpace.w / far;
+
+	return (clipSpace);
+}
+
+bool Camera::InView(glm::vec3 worldSpace)
+{
+	glm::vec3 clipSpace = WorldToClip(worldSpace);
+
+	bool xInView = clipSpace.x >= 0.0 && clipSpace.x <= 1.0;
+	bool yInView = clipSpace.y >= 0.0 && clipSpace.y <= 1.0;
+	bool zInView = clipSpace.z >= 0.0 && clipSpace.z <= 1.0;
+
+	return ((xInView && yInView && zInView) ? 1 : 0);
+}

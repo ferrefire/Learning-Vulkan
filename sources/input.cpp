@@ -69,8 +69,8 @@ void Input::Start()
 {
 	//Manager::camera.canLook = false;
 	Manager::camera.UpdateProjection();
-	//Manager::camera.Move(glm::vec3(3692.39, -997.286, 2000.46));
-	Manager::camera.Move(glm::vec3(0, 0, 0));
+	Manager::camera.Move(glm::vec3(3692.39, -997.286, 2000.46));
+	//Manager::camera.Move(glm::vec3(0, 0, 0));
 	Manager::camera.Rotate(glm::vec3(-8.79993, 183.699, 0));
 
 	Menu &menu = UI::NewMenu("camera");

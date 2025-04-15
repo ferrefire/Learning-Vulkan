@@ -54,7 +54,7 @@ void main()
 	{
 		vec3 weights = GetWeights(normal, 2.0);
 		texColor = SampleTriplanarColor(treeSamplers[0], worldPosition * 0.2, weights);
-		texNormal = SampleTriplanarNormal(treeSamplers[1], worldPosition * 0.2, weights, normal, 1.0 + (dis / 250.0) * 3.0);
+		if (shadow < 1.0) texNormal = SampleTriplanarNormal(treeSamplers[1], worldPosition * 0.2, weights, normal, 1.0 + (dis / 250.0) * 3.0);
 		texAmbient = SampleTriplanarColor(treeSamplers[2], worldPosition * 0.2, weights);
 
 		//texColor = texture(treeSamplers[0], inCoord * 0.25).xyz;

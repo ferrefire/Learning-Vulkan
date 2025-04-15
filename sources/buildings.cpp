@@ -5,6 +5,7 @@
 #include "ui.hpp"
 #include "time.hpp"
 #include "data.hpp"
+#include "terrain.hpp"
 
 #include <iostream>
 #include <cstdlib>
@@ -205,6 +206,17 @@ void Buildings::CreateBuffers()
 	bufferConfiguration.mapped = true;
 
 	uniformBuffer.Create(bufferConfiguration);
+
+	buildingShadowBuffers.resize(250);
+
+	BufferConfiguration shadowBufferConfiguration;
+	shadowBufferConfiguration.size = sizeof(BuildingBuffer) * buildingShadowBuffers.size();
+	shadowBufferConfiguration.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	shadowBufferConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	shadowBufferConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	shadowBufferConfiguration.mapped = true;
+
+	uniformShadowBuffer.Create(shadowBufferConfiguration);
 }
 
 void Buildings::CreateDescriptors()
@@ -277,8 +289,8 @@ void Buildings::CreateDescriptors()
 	shadowDescriptorConfig[index].type = UNIFORM_BUFFER;
 	shadowDescriptorConfig[index].stages = VERTEX_STAGE;
 	shadowDescriptorConfig[index].buffersInfo.resize(1);
-	shadowDescriptorConfig[index].buffersInfo[0].buffer = uniformBuffer.buffer;
-	shadowDescriptorConfig[index++].buffersInfo[0].range = sizeof(BuildingBuffer) * buildingBuffers.size();
+	shadowDescriptorConfig[index].buffersInfo[0].buffer = uniformShadowBuffer.buffer;
+	shadowDescriptorConfig[index++].buffersInfo[0].range = sizeof(BuildingBuffer) * buildingShadowBuffers.size();
 
 	shadowDescriptor.perFrame = false;
 	shadowDescriptor.Create(shadowDescriptorConfig, shadowPipeline.objectDescriptorSetLayout);
@@ -328,6 +340,7 @@ void Buildings::DestroyPipelines()
 void Buildings::DestroyBuffers()
 {
 	uniformBuffer.Destroy();
+	uniformShadowBuffer.Destroy();
 }
 
 void Buildings::DestroyDescriptors()
@@ -375,31 +388,43 @@ void Buildings::Start()
 	generationConfig.minSize = glm::ivec3(2);
 	generationConfig.maxSize = glm::ivec3(3, 3, 3);
 	generationConfig.random = true;
-
-	int index = 0;
-	int range = 16;
-
-	for (int x = -range; x <= range; x++)
-	{
-		for (int y = -range; y <= range; y++)
-		{
-			if (random.Next(0, range) < glm::max(abs(x), abs(y)) * 2) continue;
-
-			building = &buildings[index];
-			GenerateBuilding();
-			//building->position += glm::vec3(3.0f * generationConfig.scale * x, 0.0f, 3.0f * generationConfig.scale * y);
-			building->position += glm::vec3(5.0f * generationConfig.scale * x, 0.0f, 5.0f * generationConfig.scale * y);
-			building->position += glm::vec3(3250.0f, 0.0f * generationConfig.scale, 4000.0f);
-			building->Update();
-			Data::RequestData(buildings[index].position, &buildings[index].position.y, UpdateBuilding, index);
-			index++;
-		}
-	}
 }
 
 void Buildings::Frame()
 {
-	SetRenderBuildings();
+	int villageRange = 4;
+	static int buildingIndex = 0;
+	static int buildingX = -villageRange;
+	static int buildingY = -villageRange;
+
+	if (Time::newFrameTick)
+	{
+		if (buildingX <= villageRange)
+		{
+			if (buildingY <= villageRange)
+			{
+				if (random.Next(0, villageRange) > glm::max(abs(buildingX), abs(buildingY)))
+				{
+					building = &buildings[buildingIndex];
+					GenerateBuilding();
+					// building->position += glm::vec3(3.0f * generationConfig.scale * x, 0.0f, 3.0f * generationConfig.scale * y);
+					building->position += glm::vec3(5.0f * generationConfig.scale * buildingX, 0.0f, 5.0f * generationConfig.scale * buildingY);
+					building->position += glm::vec3(3250.0f, 0.0f * generationConfig.scale, 4000.0f);
+					building->Update();
+					Data::RequestData(buildings[buildingIndex].position, &buildings[buildingIndex].position.y, UpdateBuilding, buildingIndex);
+					buildingIndex++;
+				}
+
+				buildingY++;
+			}
+
+			if (buildingY > villageRange)
+			{
+				buildingX++;
+				buildingY = -villageRange;
+			}
+		}
+	}
 }
 
 void Buildings::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
@@ -426,9 +451,12 @@ void Buildings::RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade)
 
 void Buildings::RenderBuildings(VkCommandBuffer commandBuffer)
 {
+	SetRenderBuildings();
+
+	//copy memory all at once!!!!!!!
+
 	for (int i = 0; i < renderBuildings.size(); i++)
 	{
-		//buildings[i].Update();
 		buildingBuffers[i].translation = renderBuildings[i]->translation;
 		buildingBuffers[i].orientation = renderBuildings[i]->orientation;
 		memcpy(uniformBuffer.mappedBuffer + (i * sizeof(BuildingBuffer)), &buildingBuffers[i], sizeof(BuildingBuffer));
@@ -442,15 +470,20 @@ void Buildings::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 {
 	uint32_t cascadeIndex = cascade;
 
-	for (int i = 0; i < renderBuildings.size(); i++)
-	{
-		//buildingBuffers[i].translation = renderBuildings[i]->translation;
-		//buildingBuffers[i].orientation = renderBuildings[i]->orientation;
-		//memcpy(uniformBuffer.mappedBuffer, &buildingBuffers[i], sizeof(BuildingBuffer));
+	if (cascade == 0) SetRenderBuildingsShadow();
 
-		renderBuildings[i]->mesh.Bind(commandBuffer);
+	for (int i = 0; i < renderBuildingsShadow.size(); i++)
+	{
+		if (cascade == 0)
+		{
+			buildingShadowBuffers[i].translation = renderBuildingsShadow[i]->translation;
+			buildingShadowBuffers[i].orientation = renderBuildingsShadow[i]->orientation;
+			memcpy(uniformShadowBuffer.mappedBuffer + (i * sizeof(BuildingBuffer)), &buildingShadowBuffers[i], sizeof(BuildingBuffer));
+		}
+
+		renderBuildingsShadow[i]->mesh.Bind(commandBuffer);
 		vkCmdPushConstants(commandBuffer, shadowPipeline.graphicsPipelineLayout, VERTEX_STAGE, 0, sizeof(cascadeIndex), &cascadeIndex);
-		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(renderBuildings[i]->mesh.indices.size()), 1, 0, 0, i);
+		vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(renderBuildingsShadow[i]->mesh.indices.size()), 1, 0, 0, i);
 	}
 }
 
@@ -460,9 +493,22 @@ void Buildings::SetRenderBuildings()
 
 	for (int i = 0; i < buildings.size(); i++)
 	{
-		if (buildings[i].active)
+		if (buildings[i].active && BuildingInView(&buildings[i]))
 		{
 			renderBuildings.push_back(&buildings[i]);
+		}
+	}
+}
+
+void Buildings::SetRenderBuildingsShadow()
+{
+	renderBuildingsShadow.clear();
+
+	for (int i = 0; i < buildings.size(); i++)
+	{
+		if (buildings[i].active)
+		{
+			renderBuildingsShadow.push_back(&buildings[i]);
 		}
 	}
 }
@@ -471,10 +517,10 @@ void Buildings::GenerateBuilding()
 {
 	GenerateCells();
 	GenerateMesh();
-	//building->rotation = glm::vec3(0.0f, 90.0f * random.Next(0, 4), 0.0f);
+	building->active = true;
+
 	building->rotation = glm::vec3(0.0f, random.Next(0, 360), 0.0f);
 	building->Update();
-	building->active = true;
 
 	//std::cout << std::endl;
 	//std::cout << "vertex count: " << building->mesh.vertices.size() << std::endl;
@@ -484,7 +530,8 @@ void Buildings::GenerateBuilding()
 void Buildings::GenerateCells()
 {
 	building->cells.clear();
-	building->size = glm::ivec3(0, 0, 0);
+	building->size = generationConfig.maxSize;
+	generationConfig.currentSize = glm::ivec3(0, 0, 0);
 	if (generationConfig.random) generationConfig.seed = int(uint32_t(Time::GetCurrentTime() * 10000) % RAND_MAX);
 	random.SetSeed(generationConfig.seed);
 
@@ -508,7 +555,7 @@ void Buildings::GenerateCells()
 		{
 			ExpandLevel(i);
 			FillLevel(i);
-			building->size = glm::ivec3(0, building->size.y + 1, 0);
+			generationConfig.currentSize = glm::ivec3(0, generationConfig.currentSize.y + 1, 0);
 		}
 		else break;
 	}
@@ -569,13 +616,13 @@ void Buildings::ExpandCell(int i, int x, int y, int factor)
 
 bool Buildings::ExpansionValid(int i, int x, int y, int factor, int increase)
 {
-    if ((increase == 1 && building->size.x < generationConfig.minSize.x - i) || (increase == -1 && building->size.z < generationConfig.minSize.z - i))
+    if ((increase == 1 && generationConfig.currentSize.x < generationConfig.minSize.x - i) || (increase == -1 && generationConfig.currentSize.z < generationConfig.minSize.z - i))
         factor = 10;
     
     bool valid = CellValid(i, x, y) && building->cells[i][x][y].Empty() && random.Next(0, 9) < factor;
 
-    if (valid && increase == 1) building->size.x++;
-    else if (valid && increase == -1) building->size.z++;
+    if (valid && increase == 1) generationConfig.currentSize.x++;
+    else if (valid && increase == -1) generationConfig.currentSize.z++;
 
     return (valid);
 }
@@ -1622,7 +1669,7 @@ void Buildings::GenerateMesh()
 
 	float xOffset = float(generationConfig.maxSize.x - 1) * 0.5;
 	float zOffset = float(generationConfig.maxSize.z - 1) * 0.5;
-	building->mesh.shape.Move(glm::vec3(-generationConfig.scale * xOffset, 0.0f, -generationConfig.scale * zOffset));
+	building->mesh.shape.Move(glm::vec3(-generationConfig.scale * xOffset, 0.25f * generationConfig.scale, -generationConfig.scale * zOffset));
 	building->mesh.RecalculateVertices();
 	building->mesh.Create();
 }
@@ -2229,6 +2276,40 @@ void Buildings::UpdateBuilding(int i)
 	//std::cout << "building " << i << " height " << buildings[i].position.y << std::endl;
 }
 
+bool Buildings::BuildingInView(Building *b)
+{
+	glm::vec3 worldSpace = b->position - Terrain::terrainOffset;
+
+	float dis = glm::distance(worldSpace, Manager::camera.Position());
+	if (dis > 10000.0f) return (false);
+	if (Manager::camera.InView(worldSpace) || dis < 50.0f) return (true);
+	
+
+	float xOffset = float(b->size.x) * 0.5;
+	float yOffset = float(b->size.y) * 0.5;
+	float zOffset = float(b->size.z) * 0.5;
+
+	for (int y = 0; y <= 2; y++)
+	{
+		for (int x = -1; x <= 1; x++)
+		{
+			for (int z = -1; z <= 1; z++)
+			{
+				glm::vec3 sampleOffset = glm::vec3(x * xOffset, y * yOffset, z * zOffset) * generationConfig.scale;
+				sampleOffset = Utilities::RotateVec(sampleOffset, b->rotation.y, glm::vec3(0, 1, 0));
+				glm::vec3 samplePosition = worldSpace + sampleOffset;
+				
+				if (Manager::camera.InView(samplePosition))
+				{
+					return (true);
+				}
+			}
+		}
+	}
+
+	return (false);
+}
+
 std::vector<Texture> Buildings::beamTextures;
 std::vector<Texture> Buildings::plasteredTextures;
 std::vector<Texture> Buildings::reedTextures;
@@ -2238,7 +2319,9 @@ Pipeline Buildings::graphicsPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Buildings::shadowPipeline{Manager::currentDevice, Manager::camera};
 
 std::vector<BuildingBuffer> Buildings::buildingBuffers;
+std::vector<BuildingBuffer> Buildings::buildingShadowBuffers;
 Buffer Buildings::uniformBuffer;
+Buffer Buildings::uniformShadowBuffer;
 
 Descriptor Buildings::graphicsDescriptor{Manager::currentDevice};
 Descriptor Buildings::shadowDescriptor{Manager::currentDevice};
@@ -2248,11 +2331,12 @@ GenerationConfig Buildings::generationConfig;
 std::vector<Building> Buildings::buildings = std::vector<Building>(250);
 Building *Buildings::building = nullptr;
 std::vector<Building *> Buildings::renderBuildings = std::vector<Building *>(0);
+std::vector<Building *> Buildings::renderBuildingsShadow = std::vector<Building *>(0);
 
 Random Buildings::random;
 
 PartConfig Buildings::floorConfig{"floor", glm::vec3(1.0f, 0.05f, 1.0f)};
-PartConfig Buildings::foundationConfig{"foundation", glm::vec3(1.75f, 1.0f, 1.75f), glm::vec3(0.0f), glm::vec3(0.0f, -0.50f, 0.0f)};
+PartConfig Buildings::foundationConfig{"foundation", glm::vec3(1.125f, 1.0f, 1.125f), glm::vec3(0.0f), glm::vec3(0.0f, -0.50f, 0.0f)};
 PartConfig Buildings::flatWallConfig{"flat wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
 PartConfig Buildings::windowedWallConfig{"windowed wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
 PartConfig Buildings::dooredWallConfig{"doored wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};

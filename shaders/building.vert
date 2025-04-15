@@ -26,10 +26,9 @@ layout(location = 0) out vec3 objectPosition;
 layout(location = 1) out vec3 worldPosition;
 layout(location = 2) out vec2 outCoordinate;
 layout(location = 3) out vec3 objectNormal;
-layout(location = 4) out vec3 worldNormal;
-layout(location = 5) out mat4 orientation;
-layout(location = 9) out flat ivec2 type;
-layout(location = 10) out vec4 shadowPositions[CASCADE_COUNT];
+layout(location = 4) out mat4 orientation;
+layout(location = 8) out flat ivec2 type;
+layout(location = 9) out vec4 shadowPositions[CASCADE_COUNT];
 
 #include "variables.glsl"
 
@@ -40,7 +39,7 @@ void main()
 	orientation = buildingBuffers.buildingData[index].orientation;
 
     objectNormal = inNormal;
-    worldNormal = (buildingBuffers.buildingData[index].orientation * vec4(inNormal, 0.0)).xyz;
+    //worldNormal = (buildingBuffers.buildingData[index].orientation * vec4(inNormal, 0.0)).xyz;
 
 	outCoordinate = inCoordinate;
 

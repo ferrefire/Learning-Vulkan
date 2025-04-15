@@ -82,4 +82,7 @@ class Camera
 		std::vector<glm::vec4> GetFrustumCorners(float nearDis, float farDis, glm::mat4 tempView);
 		glm::mat4 GetTempProjection(float nearDis, float farDis);
 		glm::mat4 GetBoundedProjection(float nearDis, float farDis);
+
+		glm::vec3 WorldToClip(glm::vec3 worldSpace);
+		bool InView(glm::vec3 worldSpace);
 };

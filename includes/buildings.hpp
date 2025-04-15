@@ -172,7 +172,8 @@ struct GenerationConfig
     int seed = 1;
     glm::ivec3 minSize = glm::ivec3(2, 2, 2);
     glm::ivec3 maxSize = glm::ivec3(3, 3, 3);
-    int expansionFactor = 3;
+	glm::ivec3 currentSize = glm::ivec3(0);
+	int expansionFactor = 3;
     int levelFactor = 3;
 	int decoratedFactor = 0;
 	int scaffoldingReduction = 2;
@@ -203,7 +204,9 @@ class Buildings
 		static Pipeline shadowPipeline;
 
 		static std::vector<BuildingBuffer> buildingBuffers;
+		static std::vector<BuildingBuffer> buildingShadowBuffers;
 		static Buffer uniformBuffer;
+		static Buffer uniformShadowBuffer;
 
 		static Descriptor graphicsDescriptor;
         static Descriptor shadowDescriptor;
@@ -213,6 +216,7 @@ class Buildings
 		static std::vector<Building> buildings;
 		static Building *building;
 		static std::vector<Building *> renderBuildings;
+		static std::vector<Building *> renderBuildingsShadow;
 
 		static Random random;
 
@@ -255,8 +259,9 @@ class Buildings
         static void RenderShadows(VkCommandBuffer commandBuffer, int cascade);
 
 		static void SetRenderBuildings();
+		static void SetRenderBuildingsShadow();
 
-        static void GenerateBuilding();
+		static void GenerateBuilding();
 		static void GenerateCells();
 		static void ExpandLevel(int level);
 		static void FillLevel(int level);
@@ -289,4 +294,5 @@ class Buildings
 		static bool CellEmpty(int i, int x, int y, bool countBeams = true);
 		static bool FloorEmpty(int i, int x, int y);
 		static void UpdateBuilding(int i);
+		static bool BuildingInView(Building *b);
 };

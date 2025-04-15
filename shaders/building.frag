@@ -15,10 +15,9 @@ layout(location = 0) in vec3 objectPosition;
 layout(location = 1) in vec3 worldPosition;
 layout(location = 2) in vec2 inCoordinate;
 layout(location = 3) in vec3 objectNormal;
-layout(location = 4) in vec3 worldNormal;
-layout(location = 5) in mat4 orientation;
-layout(location = 9) in flat ivec2 type;
-layout(location = 10) in vec4 shadowPositions[CASCADE_COUNT];
+layout(location = 4) in mat4 orientation;
+layout(location = 8) in flat ivec2 type;
+layout(location = 9) in vec4 shadowPositions[CASCADE_COUNT];
 
 layout(location = 0) out vec4 outColor;
 
@@ -28,12 +27,22 @@ layout(location = 0) out vec4 outColor;
 #include "depth.glsl"
 #include "transformation.glsl"
 
+vec2 GetSampleStrength(float startDistance, float dis)
+{
+	float distanceFallof = startDistance * 0.2;
+	float maxDistance = startDistance + distanceFallof;
+	float normalStrength = (dis > maxDistance ? 0.0 : (1.0 - ((clamp(dis, startDistance, maxDistance) - startDistance) / distanceFallof)));
+	float ambientStrength = (dis > maxDistance ? 0.0 : (1.0 - ((clamp(dis, startDistance, maxDistance) - startDistance) / distanceFallof)));
+
+	return (vec2(normalStrength, ambientStrength));
+}
+
 void main()
 {
 	//if (type.x == 2) discard;
 
     vec3 oNormal = normalize(objectNormal);
-    vec3 wNormal = normalize(worldNormal);
+    //vec3 wNormal = normalize(worldNormal);
 
     vec3 weights = GetWeights(oNormal, 1);
 
@@ -43,74 +52,65 @@ void main()
 	float depth = GetDepth(gl_FragCoord.z);
 
     vec3 texColor;
-	vec3 texNormal;
-	vec3 texAmbient;
+	vec3 texNormal = oNormal;
+	vec3 texAmbient = vec3(1);
+	vec3 defaultAmbient = vec3(1);
+
+	float dis = depth * variables.ranges.y;
+	vec2 sampleStrength = vec2(0.0);
+
+	float shadow = GetTerrainShadow(worldPosition.xz);
+	if (shadow < 1.0)
+		shadow = clamp(shadow + GetCascadedShadow(shadowPositions, depth), 0.0, 1.0);
 
 	if (type.x == 0)
 	{
-		worldUV.y += 0.065;
+		sampleStrength = GetSampleStrength(50.0, dis);
 
+		worldUV.y += 0.065;
 		texColor = SampleTriplanarColor(beamSamplers[0], worldUV, weights);
-		texNormal = SampleTriplanarNormal(beamSamplers[1], worldUV, weights, oNormal, 1.0);
-		texAmbient = SampleTriplanarColor(beamSamplers[2], worldUV, weights);
+		if (shadow < 1.0 && sampleStrength.x > 0.0) texNormal = SampleTriplanarNormal(beamSamplers[1], worldUV, weights, oNormal, sampleStrength.x);
+		if (sampleStrength.y > 0.0) texAmbient = SampleTriplanarColor(beamSamplers[2], worldUV, weights);
 	}
 	else if (type.x == 1)
 	{
+		sampleStrength = GetSampleStrength(50.0, dis);
+
 		uv *= 0.5;
 		texColor = SampleTriplanarColor(plasteredSamplers[0], worldUV, weights);
-		texNormal = SampleTriplanarNormal(plasteredSamplers[1], worldUV, weights, oNormal, 1.0);
-		texAmbient = SampleTriplanarColor(plasteredSamplers[2], worldUV, weights);
+		if (shadow < 1.0 && sampleStrength.x > 0.0) texNormal = SampleTriplanarNormal(plasteredSamplers[1], worldUV, weights, oNormal, sampleStrength.x);
+		if (sampleStrength.y > 0.0) texAmbient = SampleTriplanarColor(plasteredSamplers[2], worldUV, weights);
 	}
 	else if (type.x == 2)
 	{
+		sampleStrength = GetSampleStrength(100.0, dis);
+
+		defaultAmbient = vec3(0.5);
 		texColor = SampleTriplanarColorFlat(reedSamplers[0], uv, weights);
-		texNormal = SampleTriplanarNormalFlat(reedSamplers[1], uv, weights, oNormal, 1.0);
-		texAmbient = SampleTriplanarColorFlat(reedSamplers[2], uv, weights);
+		if (shadow < 1.0 && sampleStrength.x > 0.0) texNormal = SampleTriplanarNormalFlat(reedSamplers[1], uv, weights, oNormal, sampleStrength.x);
+		if (sampleStrength.y > 0.0) texAmbient = SampleTriplanarColorFlat(reedSamplers[2], uv, weights);
 	}
 	else if (type.x == 3)
 	{
+		sampleStrength = GetSampleStrength(100.0, dis);
+
 		texColor = SampleTriplanarColor(brickSamplers[0], worldUV, weights);
-		texNormal = SampleTriplanarNormal(brickSamplers[1], worldUV, weights, oNormal, 1.0);
-		texAmbient = SampleTriplanarColor(brickSamplers[2], worldUV, weights);
+		if (shadow < 1.0 && sampleStrength.x > 0.0) texNormal = SampleTriplanarNormal(brickSamplers[1], worldUV, weights, oNormal, sampleStrength.x);
+		if (sampleStrength.y > 0.0) texAmbient = SampleTriplanarColor(brickSamplers[2], worldUV, weights);
 	}
 	else if (type.x == 4)
 	{
 		bool rotate = weights.y < weights.x || weights.y < weights.z;
 
+		sampleStrength = GetSampleStrength(50.0, dis);
+
 		worldUV.y += 0.065;
-
 		texColor = SampleTriplanarColor(beamSamplers[0], worldUV, weights, rotate);
-		texNormal = SampleTriplanarNormal(beamSamplers[1], worldUV, weights, oNormal, 0.5, rotate);
-		texAmbient = SampleTriplanarColor(beamSamplers[2], worldUV, weights, rotate);
+		if (shadow < 1.0 && sampleStrength.x > 0.0) texNormal = SampleTriplanarNormal(beamSamplers[1], worldUV, weights, oNormal, 0.5 * sampleStrength.x, rotate);
+		if (sampleStrength.y > 0.0) texAmbient = SampleTriplanarColor(beamSamplers[2], worldUV, weights, rotate);
 	}
-	/*else if (type.x == 3)
-	{
-		uv.xz += 0.5;
-		if (type.y == 0)
-		{
-			uv = uv.yxz;
-			weights = weights.yxz;
-		}
-		if (type.y == 1)
-		{
-			uv = uv.xzy;
-			weights = weights.xzy;
-		}
-		texColor = SampleTriplanarColor(beamSamplers[0], uv, weights);
-		texNormal = SampleTriplanarNormal(beamSamplers[1], uv, weights, normal, 1.0);
-		texAmbient = SampleTriplanarColor(beamSamplers[2], uv, weights);
-	}
-	else if (type.x == 4)
-	{
-		uv.xz += 0.5;
-		texColor = SampleTriplanarColor(beamSamplers[0], uv, weights);
-		texNormal = SampleTriplanarNormal(beamSamplers[1], uv, weights, normal, 1.0);
-		texAmbient = SampleTriplanarColor(beamSamplers[2], uv, weights);
-	}*/
 
-	float shadow = GetTerrainShadow(worldPosition.xz);
-	if (shadow < 1.0)
-		shadow = clamp(shadow + GetCascadedShadow(shadowPositions, depth), 0.0, 1.0);
+	texAmbient = mix(defaultAmbient, texAmbient, sampleStrength.y);
 
 	texNormal = (orientation * vec4(texNormal, 0.0)).xyz;
 
