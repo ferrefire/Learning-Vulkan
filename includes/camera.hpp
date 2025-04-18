@@ -85,4 +85,5 @@ class Camera
 
 		glm::vec3 WorldToClip(glm::vec3 worldSpace);
 		bool InView(glm::vec3 worldSpace, float tolerance = 0.0f);
+		bool AreaInView(glm::vec3 worldSpace, float size, int range = 1, float tolerance = 0.0f);
 };

@@ -140,16 +140,24 @@ void Data::SetData()
 	for (int i = 0; i < requestCount; i++)
 	{
 		*requestData[i].source += (*(((HeightData *)heightBuffer.mappedBuffer + sizeof(HeightData) * i))).position.w;
-		//*requestData[i].source = (*(HeightData *)(heightBuffer.mappedBuffer + (i))).position.w;
-		requestData[i].func(requestData[i].index);
+		if (requestData[i].func != nullptr) requestData[i].func(requestData[i].index);
 	}
 
 	requestCount = 0;
 }
 
+void Data::RequestData(glm::vec3 position, float *source)
+{
+	requestData[requestCount].position = position;
+	requestData[requestCount].source = source;
+	requestData[requestCount].func = nullptr;
+	//requestData[requestCount].index = index;
+
+	requestCount++;
+}
+
 void Data::RequestData(glm::vec3 position, float *source, void (*func)(int), int index)
 {
-	//DataRequest newRequest{position, source, func, index};
 	requestData[requestCount].position = position;
 	requestData[requestCount].source = source;
 	requestData[requestCount].func = func;

@@ -143,6 +143,7 @@ struct BuildingBuffer
 
 struct Building
 {
+	int id = -1;
 	bool active = false;
 	bool lod = true;
 
@@ -196,6 +197,7 @@ struct PartConfig
 class Buildings
 {
     private:
+		static Building *building;
 
     public:
 		static std::vector<Texture> beamTextures;
@@ -214,10 +216,11 @@ class Buildings
 		static Descriptor graphicsDescriptor;
         static Descriptor shadowDescriptor;
 
+		static bool generating;
+
         static GenerationConfig generationConfig;
 
-		static std::vector<Building> buildings;
-		static Building *building;
+		static std::vector<Building *> buildings;
 		static std::vector<Building *> renderBuildings;
 		static std::vector<Building *> renderBuildingsShadow;
 
@@ -254,9 +257,15 @@ class Buildings
 		static void DestroyPipelines();
 		static void DestroyBuffers();
 		static void DestroyDescriptors();
+		static void DestroyBuildings();
 
 		static void Start();
 		static void Frame();
+
+		static Building *CreateBuilding();
+		static void DestroyBuilding(int id);
+
+		static bool CreateBuildingMesh(Building *targetBuilding, bool lod);
 
 		static void RecordGraphicsCommands(VkCommandBuffer commandBuffer);
         static void RenderBuildings(VkCommandBuffer commandBuffer);

@@ -318,3 +318,19 @@ bool Camera::InView(glm::vec3 worldSpace, float tolerance)
 
 	return ((xInView && yInView && zInView) ? 1 : 0);
 }
+
+bool Camera::AreaInView(glm::vec3 worldSpace, float size, int range, float tolerance)
+{
+	for (int x = -range; x <= range; x++)
+	{
+		for (int y = -range; y <= range; y++)
+		{
+			if (InView(worldSpace + glm::vec3(x, 0, y) * size, tolerance))
+			{
+				return (true);
+			}
+		}
+	}
+
+	return (false);
+}

@@ -15,6 +15,7 @@
 #include "wind.hpp"
 #include "ui.hpp"
 #include "buildings.hpp"
+#include "simulation.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -277,21 +278,16 @@ void Manager::CreateOcclusionTexture()
 
 void Manager::Start()
 {
-	cameraIntersects.resize(4);
-	cameraIntersectIndexes.resize(4);
-
 	Input::Start();
 	Terrain::Start();
-	if (Manager::settings.trees)
-	{
-		Trees::Start();
-		Leaves::Start();
-	}
+	Trees::Start();
+	Leaves::Start();
 	Grass::Start();
 	Data::Start();
 	Wind::Start();
 	Shadow::Start();
 	Buildings::Start();
+	Simulation::Start();
 
 	Menu &menu = UI::NewMenu("light");
 	menu.AddSlider("sun speed", lightSpeed, 0.1f, 10.0f);
@@ -621,9 +617,6 @@ Object Manager::screenQuad;
 Descriptor Manager::screenQuadDescriptor;
 
 Texture Manager::occlusionTexture;
-
-std::vector<glm::vec3> Manager::cameraIntersects;
-std::vector<int> Manager::cameraIntersectIndexes;
 
 glm::vec3 Manager::lightAngles = glm::vec3(-35.0f, -135.0f, 0.0f);
 float Manager::lightSpeed = 4.0f;

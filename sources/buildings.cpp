@@ -6,6 +6,8 @@
 #include "time.hpp"
 #include "data.hpp"
 #include "terrain.hpp"
+#include "simulation.hpp"
+#include "settlement.hpp"
 
 #include <iostream>
 #include <cstdlib>
@@ -327,16 +329,17 @@ void Buildings::Destroy()
 	DestroyPipelines();
 	DestroyBuffers();
 	DestroyDescriptors();
+	DestroyBuildings();
 }
 
 void Buildings::DestroyMeshes()
 {
 	for (int i = 0; i < buildings.size(); i++)
 	{
-		if (buildings[i].active)
+		if (buildings[i]->active)
 		{
-			buildings[i].mesh.Destroy();
-			buildings[i].lodMesh.Destroy();
+			buildings[i]->mesh.Destroy();
+			buildings[i]->lodMesh.Destroy();
 		}
 	}
 }
@@ -384,6 +387,16 @@ void Buildings::DestroyDescriptors()
 {
     graphicsDescriptor.Destroy();
 	shadowDescriptor.Destroy();
+}
+
+void Buildings::DestroyBuildings()
+{
+	for (int i = 0; i < buildings.size(); i++)
+	{
+		if (!buildings[i]) continue;
+		delete(buildings[i]);
+	}
+	buildings.clear();
 }
 
 void Buildings::Start()
@@ -439,7 +452,7 @@ void Buildings::Frame()
 
 	if (!Terrain::HeightMapsGenerated()) return;
 
-	int villageRange = 8;
+	/*int villageRange = 8;
 	static int buildingIndex = 0;
 	static int buildingX = -villageRange;
 	static int buildingY = -villageRange;
@@ -482,7 +495,47 @@ void Buildings::Frame()
 			buildingX = -villageRange;
 			villageIndex++;
 		}
+	}*/
+}
+
+Building *Buildings::CreateBuilding()
+{
+	building = new Building;
+	building->id = currentActiveBuildings;
+	currentActiveBuildings++;
+	buildings.push_back(building);
+	GenerateCells();
+	return (building);
+}
+
+void Buildings::DestroyBuilding(int id)
+{
+	for (int i = 0; i < buildings.size(); i++)
+	{
+		if (buildings[i]->id == id)
+		{
+			buildings[i]->mesh.Destroy();
+			buildings[i]->lodMesh.Destroy();
+			delete(buildings[i]);
+			buildings.erase(buildings.begin() + i);
+			break;
+		}
 	}
+}
+
+bool Buildings::CreateBuildingMesh(Building *targetBuilding, bool lod)
+{
+	if (generating) return (false);
+
+	generating = true;
+
+	building = targetBuilding;
+	generationConfig.lod = lod;
+	GenerateMesh();
+	
+	generating = false;
+
+	return (true);
 }
 
 void Buildings::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
@@ -553,17 +606,33 @@ void Buildings::SetRenderBuildings()
 {
 	renderBuildings.clear();
 
-	for (int i = 0; i < currentActiveBuildings; i++)
+	for (int i = 0; i < Simulation::settlements.size(); i++)
 	{
-		if (buildings[i].active && BuildingInView(&buildings[i]))
+		if (renderBuildings.size() >= maxRenderBuildings) break;
+
+		std::vector<SettlementCell *> renderCells = Simulation::settlements[i]->GetRenderCells();
+
+		for (int j = 0; j < renderCells.size(); j++)
 		{
-			renderBuildings.push_back(&buildings[i]);
-			buildingBuffers[renderBuildings.size() - 1].translation = buildings[i].translation;
-			buildingBuffers[renderBuildings.size() - 1].orientation = buildings[i].orientation;
+			renderBuildings.push_back(renderCells[j]->building);
+			buildingBuffers[renderBuildings.size() - 1].translation = renderCells[j]->building->translation;
+			buildingBuffers[renderBuildings.size() - 1].orientation = renderCells[j]->building->orientation;
 
 			if (renderBuildings.size() >= maxRenderBuildings) break;
 		}
 	}
+
+	/*for (int i = 0; i < currentActiveBuildings; i++)
+	{
+		if (buildings[i]->active && BuildingInView(buildings[i]))
+		{
+			renderBuildings.push_back(buildings[i]);
+			buildingBuffers[renderBuildings.size() - 1].translation = buildings[i]->translation;
+			buildingBuffers[renderBuildings.size() - 1].orientation = buildings[i]->orientation;
+
+			if (renderBuildings.size() >= maxRenderBuildings) break;
+		}
+	}*/
 
 	memcpy(uniformBuffers[Manager::currentFrame].mappedBuffer, buildingBuffers.data(), sizeof(BuildingBuffer) * renderBuildings.size());
 }
@@ -572,17 +641,33 @@ void Buildings::SetRenderBuildingsShadow()
 {
 	renderBuildingsShadow.clear();
 
-	for (int i = 0; i < currentActiveBuildings; i++)
+	for (int i = 0; i < Simulation::settlements.size(); i++)
 	{
-		if (buildings[i].active && BuildingInView(&buildings[i]))
+		if (renderBuildingsShadow.size() >= maxRenderBuildings) break;
+
+		std::vector<SettlementCell *> renderCells = Simulation::settlements[i]->GetRenderCells();
+
+		for (int j = 0; j < renderCells.size(); j++)
 		{
-			renderBuildingsShadow.push_back(&buildings[i]);
-			buildingShadowBuffers[renderBuildingsShadow.size() - 1].translation = buildings[i].translation;
-			buildingShadowBuffers[renderBuildingsShadow.size() - 1].orientation = buildings[i].orientation;
+			renderBuildingsShadow.push_back(renderCells[j]->building);
+			buildingShadowBuffers[renderBuildingsShadow.size() - 1].translation = renderCells[j]->building->translation;
+			buildingShadowBuffers[renderBuildingsShadow.size() - 1].orientation = renderCells[j]->building->orientation;
 
 			if (renderBuildingsShadow.size() >= maxRenderBuildings) break;
 		}
 	}
+
+	/*for (int i = 0; i < currentActiveBuildings; i++)
+	{
+		if (buildings[i]->active && BuildingInView(buildings[i]))
+		{
+			renderBuildingsShadow.push_back(buildings[i]);
+			buildingShadowBuffers[renderBuildingsShadow.size() - 1].translation = buildings[i]->translation;
+			buildingShadowBuffers[renderBuildingsShadow.size() - 1].orientation = buildings[i]->orientation;
+
+			if (renderBuildingsShadow.size() >= maxRenderBuildings) break;
+		}
+	}*/
 
 	memcpy(uniformShadowBuffers[Manager::currentFrame].mappedBuffer, buildingShadowBuffers.data(), sizeof(BuildingBuffer) * renderBuildingsShadow.size());
 }
@@ -2379,9 +2464,15 @@ bool Buildings::FloorEmpty(int i, int x, int y)
 	return (!CellValid(i, x, y) || building->cells[i][x][y].floor.Empty());
 }
 
-void Buildings::UpdateBuilding(int i)
+void Buildings::UpdateBuilding(int id)
 {
-	buildings[i].Update();
+	for (int i = 0; i < buildings.size(); i++)
+	{
+		if (buildings[i]->id == id)
+		{
+			buildings[i]->Update();
+		}
+	}
 
 	//std::cout << "building " << i << " height " << buildings[i].position.y << std::endl;
 }
@@ -2442,12 +2533,15 @@ std::vector<Buffer> Buildings::uniformShadowBuffers;
 Descriptor Buildings::graphicsDescriptor{Manager::currentDevice};
 Descriptor Buildings::shadowDescriptor{Manager::currentDevice};
 
+bool Buildings::generating = false;
+
 GenerationConfig Buildings::generationConfig;
 
 int Buildings::maxRenderBuildings = 250;
 int Buildings::currentActiveBuildings = 0;
 
-std::vector<Building> Buildings::buildings = std::vector<Building>(2500);
+//std::vector<Building> Buildings::buildings = std::vector<Building>(2500);
+std::vector<Building *> Buildings::buildings;
 Building *Buildings::building = nullptr;
 std::vector<Building *> Buildings::renderBuildings = std::vector<Building *>(0);
 std::vector<Building *> Buildings::renderBuildingsShadow = std::vector<Building *>(0);

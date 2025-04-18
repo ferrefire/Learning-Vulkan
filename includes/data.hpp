@@ -63,5 +63,6 @@ class Data
         static void ComputeGeneralData(VkCommandBuffer commandBuffer);
         static void SetData();
         static GeneralData GetGeneralData();
+		static void RequestData(glm::vec3 position, float *source);
 		static void RequestData(glm::vec3 position, float *source, void (*func)(int), int index);
 };

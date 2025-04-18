@@ -17,6 +17,7 @@
 #include "wind.hpp"
 #include "ui.hpp"
 #include "buildings.hpp"
+#include "simulation.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -786,6 +787,7 @@ void Graphics::Destroy()
 	Sky::Destroy();
 	Water::Destroy();
 	Wind::Destroy();
+	Simulation::Destroy();
 	Buildings::Destroy();
 	//Capture::Destroy();
 	Manager::screenQuadDescriptor.Destroy();
