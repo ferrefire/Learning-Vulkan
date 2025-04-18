@@ -423,7 +423,7 @@ void Buildings::Start()
 	menu.AddButton("generate", GenerateBuilding);
 	menu.AddNode("generation config", false);
 
-	generationConfig.minSize = glm::ivec3(1);
+	generationConfig.minSize = glm::ivec3(2);
 	generationConfig.maxSize = glm::ivec3(3);
 	generationConfig.random = true;
 
@@ -476,7 +476,8 @@ void Buildings::Frame()
 			}
 		}
 
-		if (buildingX > villageRange && villageIndex < 2)
+		//if (buildingX > villageRange && villageIndex < 2)
+		if (buildingX > villageRange && villageIndex < 0)
 		{
 			buildingX = -villageRange;
 			villageIndex++;

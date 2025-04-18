@@ -27,12 +27,15 @@ layout(location = 0) out vec4 outColor;
 #include "depth.glsl"
 #include "transformation.glsl"
 
-vec2 GetSampleStrength(float startDistance, float dis)
+vec2 GetSampleStrength(float normalDistance, float ambientDistance, float dis)
 {
-	float distanceFallof = startDistance * 0.2;
-	float maxDistance = startDistance + distanceFallof;
-	float normalStrength = (dis > maxDistance ? 0.0 : (1.0 - ((clamp(dis, startDistance, maxDistance) - startDistance) / distanceFallof)));
-	float ambientStrength = (dis > maxDistance ? 0.0 : (1.0 - ((clamp(dis, startDistance, maxDistance) - startDistance) / distanceFallof)));
+	float normalDistanceFallof = normalDistance * 0.2;
+	float maxNormalDistance = normalDistance + normalDistanceFallof;
+	float ambientDistanceFallof = ambientDistance * 0.2;
+	float maxAmbientDistance = ambientDistance + ambientDistanceFallof;
+
+	float normalStrength = (dis > maxNormalDistance ? 0.0 : (1.0 - ((clamp(dis, normalDistance, maxNormalDistance) - normalDistance) / normalDistanceFallof)));
+	float ambientStrength = (dis > maxAmbientDistance ? 0.0 : (1.0 - ((clamp(dis, ambientDistance, maxAmbientDistance) - ambientDistance) / ambientDistanceFallof)));
 
 	return (vec2(normalStrength, ambientStrength));
 }
@@ -65,25 +68,25 @@ void main()
 
 	if (type.x == 0)
 	{
-		sampleStrength = GetSampleStrength(50.0, dis);
+		sampleStrength = GetSampleStrength(50.0, 50.0, dis);
 
 		worldUV.y += 0.065;
 		texColor = SampleTriplanarColor(beamSamplers[0], worldUV, weights);
 		if (shadow < 1.0 && sampleStrength.x > 0.0) texNormal = SampleTriplanarNormal(beamSamplers[1], worldUV, weights, oNormal, sampleStrength.x);
-		if (sampleStrength.y > 0.0) texAmbient = SampleTriplanarColor(beamSamplers[2], worldUV, weights);
+		if (sampleStrength.y > 0.0) texAmbient = pow(SampleTriplanarColor(beamSamplers[2], worldUV, weights), vec3(4.0));
 	}
 	else if (type.x == 1)
 	{
-		sampleStrength = GetSampleStrength(50.0, dis);
+		sampleStrength = GetSampleStrength(50.0, 100.0, dis);
 
 		uv *= 0.5;
 		texColor = SampleTriplanarColor(plasteredSamplers[0], worldUV, weights);
 		if (shadow < 1.0 && sampleStrength.x > 0.0) texNormal = SampleTriplanarNormal(plasteredSamplers[1], worldUV, weights, oNormal, sampleStrength.x);
-		if (sampleStrength.y > 0.0) texAmbient = SampleTriplanarColor(plasteredSamplers[2], worldUV, weights);
+		if (sampleStrength.y > 0.0) texAmbient = pow(SampleTriplanarColor(plasteredSamplers[2], worldUV, weights), vec3(4.0));
 	}
 	else if (type.x == 2)
 	{
-		sampleStrength = GetSampleStrength(100.0, dis);
+		sampleStrength = GetSampleStrength(100.0, 100.0, dis);
 
 		defaultAmbient = vec3(0.5);
 		texColor = SampleTriplanarColorFlat(reedSamplers[0], uv, weights);
@@ -92,7 +95,7 @@ void main()
 	}
 	else if (type.x == 3)
 	{
-		sampleStrength = GetSampleStrength(100.0, dis);
+		sampleStrength = GetSampleStrength(100.0, 100.0, dis);
 
 		texColor = SampleTriplanarColor(brickSamplers[0], worldUV, weights);
 		if (shadow < 1.0 && sampleStrength.x > 0.0) texNormal = SampleTriplanarNormal(brickSamplers[1], worldUV, weights, oNormal, sampleStrength.x);
@@ -102,12 +105,12 @@ void main()
 	{
 		bool rotate = weights.y < weights.x || weights.y < weights.z;
 
-		sampleStrength = GetSampleStrength(50.0, dis);
+		sampleStrength = GetSampleStrength(50.0, 50.0, dis);
 
 		worldUV.y += 0.065;
 		texColor = SampleTriplanarColor(beamSamplers[0], worldUV, weights, rotate);
 		if (shadow < 1.0 && sampleStrength.x > 0.0) texNormal = SampleTriplanarNormal(beamSamplers[1], worldUV, weights, oNormal, 0.5 * sampleStrength.x, rotate);
-		if (sampleStrength.y > 0.0) texAmbient = SampleTriplanarColor(beamSamplers[2], worldUV, weights, rotate);
+		if (sampleStrength.y > 0.0) texAmbient = pow(SampleTriplanarColor(beamSamplers[2], worldUV, weights, rotate), vec3(4.0));
 	}
 
 	texAmbient = mix(defaultAmbient, texAmbient, sampleStrength.y);
