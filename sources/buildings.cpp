@@ -638,7 +638,7 @@ void Buildings::SetRenderBuildings()
 {
 	renderBuildings.clear();
 
-	/*for (int i = 0; i < Simulation::settlements.size(); i++)
+	for (int i = 0; i < Simulation::settlements.size(); i++)
 	{
 		if (renderBuildings.size() >= maxRenderBuildings) break;
 
@@ -652,9 +652,9 @@ void Buildings::SetRenderBuildings()
 
 			if (renderBuildings.size() >= maxRenderBuildings) break;
 		}
-	}*/
+	}
 
-	for (int i = 0; i < buildings.size(); i++)
+	/*for (int i = 0; i < buildings.size(); i++)
 	{
 		if (buildings[i]->active && BuildingInView(buildings[i]))
 		{
@@ -664,7 +664,7 @@ void Buildings::SetRenderBuildings()
 
 			if (renderBuildings.size() >= maxRenderBuildings) break;
 		}
-	}
+	}*/
 
 	memcpy(uniformBuffers[Manager::currentFrame].mappedBuffer, buildingBuffers.data(), sizeof(BuildingBuffer) * renderBuildings.size());
 }
@@ -673,7 +673,7 @@ void Buildings::SetRenderBuildingsShadow()
 {
 	renderBuildingsShadow.clear();
 
-	/*for (int i = 0; i < Simulation::settlements.size(); i++)
+	for (int i = 0; i < Simulation::settlements.size(); i++)
 	{
 		if (renderBuildingsShadow.size() >= maxRenderBuildings) break;
 
@@ -687,9 +687,9 @@ void Buildings::SetRenderBuildingsShadow()
 
 			if (renderBuildingsShadow.size() >= maxRenderBuildings) break;
 		}
-	}*/
+	}
 
-	for (int i = 0; i < buildings.size(); i++)
+	/*for (int i = 0; i < buildings.size(); i++)
 	{
 		if (buildings[i]->active && BuildingInView(buildings[i]))
 		{
@@ -699,7 +699,7 @@ void Buildings::SetRenderBuildingsShadow()
 
 			if (renderBuildingsShadow.size() >= maxRenderBuildings) break;
 		}
-	}
+	}*/
 
 	memcpy(uniformShadowBuffers[Manager::currentFrame].mappedBuffer, buildingShadowBuffers.data(), sizeof(BuildingBuffer) * renderBuildingsShadow.size());
 }
@@ -763,8 +763,8 @@ void Buildings::ExpandLevel(int level)
 {
     glm::ivec2 start;
 
-    start.x = int(round(float(generationConfig.maxSize.x - 1) * 0.5));
-    start.y = int(round(float(generationConfig.maxSize.z - 1) * 0.5));
+    start.x = int(floor(float(generationConfig.maxSize.x) * 0.5f));
+    start.y = int(floor(float(generationConfig.maxSize.z) * 0.5f));
 
 	ExpandCell(level, start.x, start.y, glm::clamp(generationConfig.expansionFactor - level, 1, generationConfig.expansionFactor));
 }
@@ -2595,9 +2595,9 @@ bool Buildings::FloorEmpty(int i, int x, int y)
 
 void Buildings::UpdateBuilding(int id)
 {
-	buildings[id]->Update();
+	//buildings[id]->Update();
 
-	/*for (int i = 0; i < buildings.size(); i++)
+	for (int i = 0; i < buildings.size(); i++)
 	{
 		if (buildings[i]->id == id)
 		{
@@ -2605,7 +2605,7 @@ void Buildings::UpdateBuilding(int id)
 			//std::cout << "building " << i << " id " << id << " height " << buildings[i]->position.y << std::endl;
 			return;
 		}
-	}*/
+	}
 
 	//std::cout << "building id " << id << std::endl;
 }

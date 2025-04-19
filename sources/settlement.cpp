@@ -10,11 +10,7 @@
 
 Settlement::Settlement()
 {
-    //radius = 0;
-    //length = radius * 2 + 1;
-    //chunks.resize(length * length);
-    //chunks[0].Setup(0, 0);
-    //Set chunk y position!!! and also settlement itself
+    
 }
 
 Settlement::~Settlement()
@@ -22,13 +18,11 @@ Settlement::~Settlement()
     Destroy();
 }
 
-void Settlement::Start(int id)
+void Settlement::Start(int id, glm::vec3 position)
 {
     this->id = id;
-    radius = 0;
-    length = radius * 2 + 1;
-    chunks.resize(length * length);
-    chunks[0].Setup(0, 0, id);
+	this->position = position;
+	Data::RequestData(position, &this->position.y);
 }
 
 void Settlement::Destroy()
@@ -49,7 +43,15 @@ void Settlement::Destroy()
     }
 }
 
-void Settlement::IncreaseRadius(int amount)
+void Settlement::AddChunk(glm::ivec2 coordinates)
+{
+	if (GetChunk(coordinates.x, coordinates.y) != nullptr) return;
+
+	chunks.resize(chunks.size() + 1);
+	chunks[chunks.size() - 1].Setup(id, chunks.size() - 1, coordinates);
+}
+
+/*void Settlement::IncreaseRadius(int amount)
 {
     radius += amount;
     length = radius * 2 + 1;
@@ -82,9 +84,9 @@ void Settlement::IncreaseRadius(int amount)
     }
 
     std::cout << "increased" << std::endl;
-}
+}*/
 
-void SettlementChunk::Setup(int x, int y, int id)
+/*void SettlementChunk::Setup(int x, int y, int id)
 {
     settlementID = id;
     index = glm::ivec2(x, y);
@@ -107,11 +109,40 @@ void SettlementChunk::Setup(int x, int y, int id)
     }
 
     initialized = true;
+}*/
+
+void SettlementChunk::Setup(int settlementID, int id, glm::ivec2 coordinates)
+{
+	this->settlementID = settlementID;
+	this->id = id;
+	this->coordinates = coordinates;
+	this->localPosition = glm::vec3(coordinates.x, 0.0f, coordinates.y) * (CHUNK_LENGTH * CELL_SIZE);
+	Data::RequestData(localPosition + Simulation::settlements[settlementID]->position, &localPosition.y);
+
+	for (int cx = 0; cx < CHUNK_LENGTH; cx++)
+	{
+		for (int cy = 0; cy < CHUNK_LENGTH; cy++)
+		{
+			cells[cx][cy].settlementID = settlementID;
+			cells[cx][cy].chunkID = id;
+			cells[cx][cy].index = glm::ivec2(cx, cy);
+			cells[cx][cy].coordinates = glm::ivec2(cx - CHUNK_RADIUS, cy - CHUNK_RADIUS);
+			cells[cx][cy].localPosition.x = cells[cx][cy].coordinates.x * CELL_SIZE;
+			cells[cx][cy].localPosition.y = 0;
+			cells[cx][cy].localPosition.z = cells[cx][cy].coordinates.y * CELL_SIZE;
+			cells[cx][cy].building = nullptr;
+			// Data::RequestData(localPosition + Simulation::settlements[settlementID]->position, &localPosition[1]);
+		}
+	}
+
+	initialized = true;
 }
 
 SettlementCell *SettlementChunk::GetCell(int x, int y)
 {
     if (x < 0 || x >= CHUNK_LENGTH || y < 0 || y >= CHUNK_LENGTH) return (nullptr);
+
+	std::cout << "cell coordinates " << x << " " << y << std::endl;
 
     return (&cells[x][y]);
 }
@@ -120,27 +151,33 @@ SettlementCell *SettlementChunk::GetCell(glm::vec3 target, bool local)
 {
     if (!local) target -= localPosition;
 
-    int x = glm::floor(target.x / CELL_SIZE) + CHUNK_RADIUS;
-    int y = glm::floor(target.z / CELL_SIZE) + CHUNK_RADIUS;
+    int x = glm::floor((target.x + (CELL_SIZE * 0.5f)) / CELL_SIZE) + CHUNK_RADIUS;
+	int y = glm::floor((target.z + (CELL_SIZE * 0.5f)) / CELL_SIZE) + CHUNK_RADIUS;
 
-    return (GetCell(x, y));
+	return (GetCell(x, y));
 }
 
 SettlementChunk *Settlement::GetChunk(int x, int y)
 {
-    int index = y * length + x;
-    
-    if (index < 0 || index >= chunks.size()) return (nullptr);
+	glm::ivec2 targetCoordinates = glm::ivec2(x, y);
 
-    return (&chunks[index]);
+    for (int i = 0; i < chunks.size(); i++)
+	{
+		if (chunks[i].coordinates == targetCoordinates)
+		{
+			return (&chunks[i]);
+		}
+	}
+
+	return (nullptr);
 }
 
 SettlementChunk *Settlement::GetChunk(glm::vec3 target, bool local)
 {
     if (!local) target -= position;
 
-    int x = glm::floor((target.x + (CELL_SIZE * CHUNK_LENGTH * 0.5f)) / (CELL_SIZE * CHUNK_LENGTH)) + radius;
-    int y = glm::floor((target.z + (CELL_SIZE * CHUNK_LENGTH * 0.5f)) / (CELL_SIZE * CHUNK_LENGTH)) + radius;
+    int x = glm::floor((target.x + (CELL_SIZE * CHUNK_LENGTH * 0.5f)) / (CELL_SIZE * CHUNK_LENGTH));
+    int y = glm::floor((target.z + (CELL_SIZE * CHUNK_LENGTH * 0.5f)) / (CELL_SIZE * CHUNK_LENGTH));
 
     return (GetChunk(x, y));
 }
@@ -151,7 +188,7 @@ SettlementCell *Settlement::GetCell(glm::vec3 target, bool local)
 
     if (!chunk) return (nullptr);
 
-    std::cout << "chunk id " << chunk->index.x << " " << chunk->index.y << std::endl;
+    std::cout << "chunk coordinates " << chunk->coordinates.x << " " << chunk->coordinates.y << std::endl;
 
     return (chunk->GetCell(target));
 }
@@ -160,11 +197,10 @@ void Settlement::GenerateBuilding(SettlementCell *cell)
 {
     cell->building = Buildings::CreateBuilding();
     cell->building->position = cell->localPosition;
-    cell->building->position += chunks[cell->chunkIndex.y * length + cell->chunkIndex.x].localPosition;
+    cell->building->position += chunks[cell->chunkID].localPosition;
     cell->building->position += position;
     cell->building->position.y = 0.0f;
     cell->building->Update();
-    //cell->building->position = glm::vec3(0.0f);
 
     Data::RequestData(cell->building->position, &cell->building->position.y, Buildings::UpdateBuilding, cell->building->id);
 }

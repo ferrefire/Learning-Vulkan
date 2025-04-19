@@ -12,12 +12,15 @@
 #define CHUNK_LENGTH (CHUNK_RADIUS * 2 + 1)
 #define CELL_SIZE (8.0f * 3.0f)
 
+enum class ChunkDirection { North, Eeast, South, West };
+
 struct SettlementCell
 {
     int settlementID;
-    glm::ivec2 chunkIndex;
-    glm::ivec2 index;
-    glm::vec3 localPosition;
+    int chunkID;
+	glm::ivec2 index;
+	glm::ivec2 coordinates;
+	glm::vec3 localPosition;
     Building *building;
 };
 
@@ -25,11 +28,12 @@ struct SettlementChunk
 {
     bool initialized = false;
     int settlementID;
-    glm::ivec2 index;
+	int id;
+    glm::ivec2 coordinates;
     glm::vec3 localPosition;
     SettlementCell cells[CHUNK_LENGTH][CHUNK_LENGTH];
 
-    void Setup(int x, int y, int id);
+    void Setup(int settlementID, int id, glm::ivec2 coordinates);
 
     SettlementCell *GetCell(int x, int y);
     SettlementCell *GetCell(glm::vec3 target, bool local = false);
@@ -45,14 +49,15 @@ class Settlement
 
         int id;
         glm::vec3 position;
-        int radius;
-        int length;
+        //int radius;
+        //int length;
         std::vector<SettlementChunk> chunks;
 
-        void Start(int id);
+        void Start(int id, glm::vec3 position);
         void Destroy();
 
-        void IncreaseRadius(int amount);
+		void AddChunk(glm::ivec2 coordinates);
+        //void IncreaseRadius(int amount);
 
         SettlementChunk *GetChunk(int x, int y);
         SettlementChunk *GetChunk(glm::vec3 target, bool local = false);
