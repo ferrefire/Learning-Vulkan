@@ -76,10 +76,12 @@ void Input::Start()
 	//Manager::camera.Rotate(glm::vec3(-8.79993, 183.699, 0));
 	//Manager::camera.Rotate(glm::vec3(-40.9999, -287.8, 0));
 	//Manager::camera.Rotate(glm::vec3(-19.4, -185.799, 0));
-    Manager::camera.Move(glm::vec3(2683.6, -1468.66, 2098.1));
-	Manager::camera.Rotate(glm::vec3(-26.6999, -846.307, 0));
+    //Manager::camera.Move(glm::vec3(2683.6, -1468.66, 2098.1));
+	//Manager::camera.Rotate(glm::vec3(-26.6999, -846.307, 0));
     //Manager::camera.Move(glm::vec3(5272.46, -1923.35, -1738.65));
 	//Manager::camera.Rotate(glm::vec3(1.8002, -4247.02, 0));
+	Manager::camera.Move(glm::vec3(24.6182, 19.1743, 14.6599));
+	Manager::camera.Rotate(glm::vec3(-13.4999, -867.011, 0));
 
 	Menu &menu = UI::NewMenu("camera");
 	menu.AddText("camera values");

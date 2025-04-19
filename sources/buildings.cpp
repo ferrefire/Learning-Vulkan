@@ -431,7 +431,9 @@ void Buildings::Start()
 	menu.AddSlider("scaffolding", generationConfig.scaffoldingReduction, 1, 10);
 	menu.AddNode("factors", false);
 	menu.AddNode("part properties", true);
-	std::vector<void *> parts = {&floorConfig, &foundationConfig, &flatWallConfig, &windowedWallConfig, &slopedWallConfig, &flatRoofConfig, &slopedRoofConfig, &coneRoofConfig, 
+	std::vector<void *> parts = {&floorConfig, &foundationConfig, &flatWallConfig, &windowedWallConfig, 
+		&slopedWallConfig, &slopedLowWallConfig, &flatRoofConfig, &flatLowRoofConfig, &slopedRoofConfig, &slopedLowRoofConfig, 
+		&coneRoofConfig, &coneLowRoofConfig,
 		&coneRoofExtensionConfig, &beamConfig, &slopedBeamConfig, &slightSlopedBeamConfig, &collumnConfig};
 	for (void *part : parts)
 	{
@@ -452,8 +454,11 @@ void Buildings::Start()
 	menu.AddButton("generate", GenerateBuilding);
 	menu.AddNode("generation config", false);
 
-	generationConfig.minSize = glm::ivec3(2);
+	generationConfig.minSize = glm::ivec3(3);
 	generationConfig.maxSize = glm::ivec3(3);
+	//generationConfig.seed = 224388;
+	//generationConfig.seed = 1347167;
+	//generationConfig.seed = 1372670;
 	//generationConfig.scaffoldingReduction = 1;
 	generationConfig.random = true;
 
@@ -461,11 +466,19 @@ void Buildings::Start()
 	//GenerateBuilding();
 	//building->position.y = 2500.0f;
 	//building->Update();
+
+	//building = new Building;
+	//building->id = currentActiveBuildings;
+	//GenerateBuilding();
+	//building->position += glm::vec3(0.0f, 2500.0f, 0.0f);
+	//building->Update();
+	//currentActiveBuildings++;
+	//buildings.push_back(building);
 }
 
 void Buildings::Frame()
 {
-	//return;
+	return;
 
 	if (!Terrain::HeightMapsGenerated()) return;
 
@@ -487,7 +500,6 @@ void Buildings::Frame()
 					building = new Building;
 					building->id = currentActiveBuildings;
 					GenerateBuilding();
-					// building->position += glm::vec3(3.0f * generationConfig.scale * x, 0.0f, 3.0f * generationConfig.scale * y);
 					building->position += glm::vec3(5.0f * generationConfig.scale * buildingX, 0.0f, 5.0f * generationConfig.scale * buildingY);
 					if (villageIndex == 0) building->position += glm::vec3(3250.0f, 0.0f * generationConfig.scale, 4000.0f);
 					else if (villageIndex == 1) building->position += glm::vec3(8125.0f, 0.0f * generationConfig.scale, 5075.0f);
@@ -1111,11 +1123,18 @@ void Buildings::RoofTypePass(int i, int x, int y)
 		int EW_Empty = ((E_Empty || E_Cone) ? 1 : 0) + ((W_Empty || W_Cone) ? 1 : 0);
 
 		if (building->cells[i][x][y].roof.type == RoofType::cone || emptyAmount >= 3)
+		{
 			building->cells[i][x][y].roof.type = RoofType::cone;
+		}
 		else if (emptyAmount + coneAmount >= 1 && EW_Empty != 0)
+		{
+			//building->cells[i][x][y].roof.type = RoofType::slopeLow;
 			building->cells[i][x][y].roof.type = RoofType::slope;
+		}
 		else 
+		{
 			building->cells[i][x][y].roof.type = RoofType::flatUp;
+		}
 	}
 }
 
@@ -1487,6 +1506,20 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 
 		part.Join(wall);
 	}
+	else if (type == PartType::slopedLowWall)
+	{
+		Shape wall = Shape(PRISM, true, true, true);
+		wall.SetColors(glm::vec3(1, 0, 0));
+		wall.Scale(slopedLowWallConfig.scale * generationConfig.scale);
+		wall.Scale(scale);
+		wall.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		wall.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		wall.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		wall.Move(slopedLowWallConfig.offset * generationConfig.scale);
+		wall.Move(offset * generationConfig.scale);
+
+		part.Join(wall);
+	}
 	else if (type == PartType::flatRoof)
 	{
 		Shape roof = Shape(CUBE, true, true, true);
@@ -1517,6 +1550,21 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 
 		part.Join(roof);
 	}
+	else if (type == PartType::slopedLowRoof)
+	{
+		Shape roof = Shape(CUBE, true, true, true);
+		roof.SetColors(glm::vec3(2, 0, 0));
+		roof.Scale(slopedLowRoofConfig.scale * generationConfig.scale);
+		roof.Scale(scale);
+		roof.Rotate(slopedLowRoofConfig.rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		roof.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		roof.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		roof.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		roof.Move(slopedLowRoofConfig.offset * generationConfig.scale);
+		roof.Move(offset * generationConfig.scale);
+
+		part.Join(roof);
+	}
 	else if (type == PartType::coneRoof)
 	{
 		Shape leftRoof = Shape(CUBE, true, true, true);
@@ -1543,6 +1591,37 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 		rightRoof.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
 		rightRoof.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
 		rightRoof.Move(coneRoofConfig.offset * glm::vec3(-1.0f, 1.0f, 1.0f) * generationConfig.scale);
+		rightRoof.Move(offset * generationConfig.scale);
+
+		part.Join(leftRoof);
+		part.Join(rightRoof);
+	}
+	else if (type == PartType::coneLowRoof)
+	{
+		Shape leftRoof = Shape(CUBE, true, true, true);
+		leftRoof.InverseCoordinates(false, true);
+		leftRoof.SwapCoordinates();
+		leftRoof.SetColors(glm::vec3(2, 0, 0));
+		leftRoof.Scale(coneLowRoofConfig.scale * generationConfig.scale);
+		leftRoof.Scale(scale);
+		leftRoof.Rotate(coneLowRoofConfig.rotation.x, glm::vec3(0.0f, 0.0f, 1.0f));
+		leftRoof.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		leftRoof.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		leftRoof.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		leftRoof.Move(coneLowRoofConfig.offset * generationConfig.scale);
+		leftRoof.Move(offset * generationConfig.scale);
+
+		Shape rightRoof = Shape(CUBE, true, true, true);
+		rightRoof.InverseCoordinates(true, true);
+		rightRoof.SwapCoordinates();
+		rightRoof.SetColors(glm::vec3(2, 0, 0));
+		rightRoof.Scale(coneLowRoofConfig.scale * generationConfig.scale);
+		rightRoof.Scale(scale);
+		rightRoof.Rotate(-coneLowRoofConfig.rotation.x, glm::vec3(0.0f, 0.0f, 1.0f));
+		rightRoof.Rotate(rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+		rightRoof.Rotate(rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+		rightRoof.Rotate(rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+		rightRoof.Move(coneLowRoofConfig.offset * glm::vec3(-1.0f, 1.0f, 1.0f) * generationConfig.scale);
 		rightRoof.Move(offset * generationConfig.scale);
 
 		part.Join(leftRoof);
@@ -2245,7 +2324,7 @@ void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 			roof.Join(sideBeam);
 
 			if (!CellValid(i, x + 1, y) || (building->cells[i][x + 1][y].roof.type != RoofType::flatUp &&
-											building->cells[i][x + 1][y].roof.type != RoofType::slope))
+				building->cells[i][x + 1][y].roof.type != RoofType::slope))
 			{
 				sideBeam = GeneratePart(PartType::beam);
 				sideBeam.Rotate90();
@@ -2261,20 +2340,22 @@ void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 			if (roofData.Extend((D)d))
 			{
 				Shape wall = GeneratePart(PartType::flatWall);
-				wall.Scale(glm::vec3(1.0f, 0.6f, 1.0f));
+				//wall.Scale(glm::vec3(1.0f, 0.6f, 1.0f));
 
 				if (!generationConfig.lod)
 				{
 					Shape beam = GeneratePart(PartType::beam);
-					beam.Move(glm::vec3(0.0f, 0.6f, 0.0f) * generationConfig.scale);
+					//beam.Move(glm::vec3(0.0f, 0.6f, 0.0f) * generationConfig.scale);
+					beam.Move(glm::vec3(0.0f, 0.95f, 0.0f) * generationConfig.scale);
 					wall.Join(beam);
 
 					Shape collumn = GeneratePart(PartType::collumn);
-					collumn.Scale(glm::vec3(1.0f, 0.6f, 1.0f));
+					//collumn.Scale(glm::vec3(1.0f, 0.6f, 1.0f));
 					wall.Join(collumn);
 
 					beam = GeneratePart(PartType::beam, glm::vec3(0.75f, 1.0f, 0.75f), glm::vec3(0.0f, 0.0f, 0.075f), glm::vec3(0.0f));
-					beam.Move(glm::vec3(0.0f, 0.6f, 0.0f) * generationConfig.scale);
+					//beam.Move(glm::vec3(0.0f, 0.6f, 0.0f) * generationConfig.scale);
+					beam.Move(glm::vec3(0.0f, 0.95f, 0.0f) * generationConfig.scale);
 					wall.Join(beam);
 				}
 
@@ -2283,9 +2364,12 @@ void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 			}
 		}
 	}
-	else if (type == RoofType::slope)
+	else if (type == RoofType::slope || type == RoofType::slopeLow)
 	{
-		roof = GeneratePart(PartType::slopedRoof);
+		PartType slopedRoof = type == RoofType::slope ? PartType::slopedRoof : PartType::slopedLowRoof;
+		PartType slopedWall = type == RoofType::slope ? PartType::slopedWall : PartType::slopedLowWall;
+
+		roof = GeneratePart(slopedRoof);
 		float extendScale = 1.0f;
 		float extendOffset = 0.0f;
 		if (roofData.LocalExtend(E))
@@ -2332,7 +2416,7 @@ void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 
 		if (roofData.LocalExtend(W))
 		{
-			Shape wall = GeneratePart(PartType::slopedWall);
+			Shape wall = GeneratePart(slopedWall);
 			wall.Scale(glm::vec3(1.0f, 0.6f, 1.0f));
 			wall.Rotate90();
 			roof.Join(wall);
@@ -2340,7 +2424,7 @@ void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 			if (!generationConfig.lod)
 			{
 				Shape collumn = GeneratePart(PartType::collumn);
-				collumn.Scale(glm::vec3(1.0f, 0.6f, 1.0f));
+				//collumn.Scale(glm::vec3(1.0f, 0.6f, 1.0f));
 				collumn.Move(glm::vec3(0.0f, 0.0f, -collumnConfig.offset.z * 2.0f) * generationConfig.scale);
 				roof.Join(collumn);
 
@@ -2358,7 +2442,7 @@ void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 
 		if (roofData.LocalExtend(E))
 		{
-			Shape wall = GeneratePart(PartType::slopedWall);
+			Shape wall = GeneratePart(slopedWall);
 			wall.Scale(glm::vec3(1.0f, 0.6f, 1.0f));
 			wall.Rotate90();
 			wall.Move(glm::vec3(-slopedWallConfig.offset.z * 2.0f, 0.0f, 0.0f) * generationConfig.scale);
@@ -2410,7 +2494,8 @@ void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 
 		if (!generationConfig.lod)
 		{
-			Shape sideBeam = GeneratePart(PartType::beam, glm::vec3(1.0f, extendScale, 1.0f), glm::vec3(0.0f, 0.35f, -beamConfig.offset.z + extendOffset), glm::vec3(0.0f, -90.0f, 0.0f));
+			Shape sideBeam = GeneratePart(PartType::beam, glm::vec3(1.0f, extendScale, 0.75f), glm::vec3(0.0f, 0.3125f, -beamConfig.offset.z + extendOffset), glm::vec3(0.0f, -90.0f, 0.0f));
+			sideBeam.Scale(glm::vec3(1.0f, 1.5f, 1.0f));
 			roof.Join(sideBeam);
 
 			Shape midBeamLeft = GeneratePart(PartType::slightSlopedBeam, glm::vec3(0.75f, 1.35f, 0.75f), glm::vec3(-0.1f, -0.05f, -0.5f), glm::vec3(0.0f));
@@ -2426,12 +2511,12 @@ void Buildings::GenerateRoof(int i, int x, int y, RoofType type, D direction)
 		{
 			if (roofData.Extend((D)(d + roofData.direction)))
 			{
-				Shape wallLeft = GeneratePart(PartType::slopedWall);
+				Shape wallLeft = GeneratePart(PartType::slopedLowWall);
 				wallLeft.Scale(glm::vec3(0.5f, 0.3f, 1.0f));
 				wallLeft.Move(glm::vec3(-0.25f, 0.0f, 0.0f) * generationConfig.scale);
 				wallLeft.Rotate90(d);
 
-				Shape wallRight = GeneratePart(PartType::slopedWall, 2);
+				Shape wallRight = GeneratePart(PartType::slopedLowWall, 2);
 				wallRight.Scale(glm::vec3(0.5f, 0.3f, 1.0f));
 				wallRight.Move(glm::vec3(0.25f, 0.0f, 0.0f) * generationConfig.scale);
 				wallRight.Rotate90(d);
@@ -2601,18 +2686,26 @@ PartConfig Buildings::foundationConfig{"foundation", glm::vec3(1.0f, 1.0f, 1.0f)
 PartConfig Buildings::flatWallConfig{"flat wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
 PartConfig Buildings::windowedWallConfig{"windowed wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
 PartConfig Buildings::dooredWallConfig{"doored wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
-PartConfig Buildings::slopedWallConfig{"sloped wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
-PartConfig Buildings::flatRoofConfig{"flat roof", glm::vec3(1.0f, 0.05f, 1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.675f, 0.0f)};
+PartConfig Buildings::slopedWallConfig{"sloped wall", glm::vec3(1.0f, 1.6f, 0.05f), glm::vec3(0.0f), glm::vec3(-0.05f, 0.8f, 0.5f)};
+//PartConfig Buildings::slopedLowWallConfig{"sloped low wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
+PartConfig Buildings::slopedLowWallConfig{"sloped low wall", glm::vec3(1.0f, 1.6f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.8f, 0.5f)};
+PartConfig Buildings::flatRoofConfig{"flat roof", glm::vec3(1.0f, 0.05f, 1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f)};
+PartConfig Buildings::flatLowRoofConfig{"flat low roof", glm::vec3(1.0f, 0.05f, 1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 0.675f, 0.0f)};
 //PartConfig Buildings::slopedRoofConfig{"sloped roof", glm::vec3(1.0f, 0.05f, 1.5f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(0.0f, 0.3f, 0.1f)};
 //PartConfig Buildings::slopedRoofConfig{"sloped roof", glm::vec3(1.0f, 0.1f, 1.25f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(0.0f, 0.3f, 0.0f)};
-PartConfig Buildings::slopedRoofConfig{"sloped roof", glm::vec3(1.0f, 0.05f, 1.375f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(0.0f, 0.31f, 0.1f)};
-PartConfig Buildings::coneRoofConfig{"cone roof", glm::vec3(0.785f, 0.05f, 1.0f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(-0.35f, 0.15f, 0.0f)};
+PartConfig Buildings::slopedRoofConfig{"sloped roof", glm::vec3(1.0f, 0.05f, 1.5f), glm::vec3(43.2f, 0.0f, 0.0f), glm::vec3(0.0f, 0.475f, 0.07f)};
+PartConfig Buildings::slopedLowRoofConfig{"sloped low roof", glm::vec3(1.0f, 0.05f, 1.375f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(0.0f, 0.31f, 0.1f)};
+PartConfig Buildings::coneRoofConfig{"cone roof", glm::vec3(0.815f, 0.05f, 1.0f), glm::vec3(43.2f, 0.0f, 0.0f), glm::vec3(-0.32f, 0.24f, 0.0f)};
+PartConfig Buildings::coneLowRoofConfig{"cone low roof", glm::vec3(0.785f, 0.05f, 1.0f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(-0.35f, 0.15f, 0.0f)};
 //PartConfig Buildings::coneRoofConfig{"cone roof", glm::vec3(0.635f, 0.1f, 1.0f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(-0.26f, 0.135f, 0.0f)};
 //PartConfig Buildings::coneRoofConfig{"cone roof", glm::vec3(0.850f, 0.05f, 1.0f), glm::vec3(32.5f, 0.0f, 0.0f), glm::vec3(-0.375f, 0.125f, 0.0f)};
 //PartConfig Buildings::coneRoofExtensionConfig{"cone roof extension", glm::vec3(0.5f, 0.635f, 0.1f), glm::vec3(122.5f, 0.0f, 0.0f), glm::vec3(-0.26f, 0.135f, 0.250f)};
-PartConfig Buildings::coneRoofExtensionConfig{"cone roof extension", glm::vec3(0.5f, 0.785f, 0.05f), glm::vec3(122.5f, 0.0f, 0.0f), glm::vec3(-0.35f, 0.15f, 0.250f)};
+//PartConfig Buildings::coneRoofExtensionConfig{"cone roof extension", glm::vec3(0.5f, 0.785f, 0.05f), glm::vec3(122.5f, 0.0f, 0.0f), glm::vec3(-0.35f, 0.15f, 0.250f)};
+PartConfig Buildings::coneRoofExtensionConfig{"cone roof extension", glm::vec3(0.5f, 0.785f, 0.05f), glm::vec3(133.3f, 0.0f, 0.0f), glm::vec3(-0.31f, 0.25f, 0.250f)};
 //PartConfig Buildings::beamConfig{"beam", glm::vec3(1.1f, 0.15f, 0.15f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.5f)};
 PartConfig Buildings::beamConfig{"beam", glm::vec3(0.1f, 1.1f, 0.1f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.5f)};
-PartConfig Buildings::slopedBeamConfig{"sloped beam", glm::vec3(0.1f, 1.15f, 0.1f), glm::vec3(-57.5f, 0.0f, 0.0f), glm::vec3(0.0f, 0.025f, 0.5f)};
-PartConfig Buildings::slightSlopedBeamConfig{"slight sloped beam", glm::vec3(0.1f, 0.6f, 0.1f), glm::vec3(-57.5f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.5f)};
+PartConfig Buildings::slopedBeamConfig{"sloped beam", glm::vec3(0.1f, 1.25f, 0.1f), glm::vec3(-46.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.2f, 0.5f)};
+//PartConfig Buildings::slopedBeamConfig{"sloped beam", glm::vec3(0.1f, 1.15f, 0.1f), glm::vec3(-57.5f, 0.0f, 0.0f), glm::vec3(0.0f, 0.025f, 0.5f)};
+//PartConfig Buildings::slightSlopedBeamConfig{"slight sloped beam", glm::vec3(0.1f, 0.6f, 0.1f), glm::vec3(-57.5f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.5f)};
+PartConfig Buildings::slightSlopedBeamConfig{"slight sloped beam", glm::vec3(0.1f, 0.6f, 0.1f), glm::vec3(-46.8f, 0.0f, 0.0f), glm::vec3(0.0f, 0.07f, 0.5f)};
 PartConfig Buildings::collumnConfig{"collumn", glm::vec3(0.1f, 1.0f, 0.1f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.499f, 0.5f, 0.499f)};

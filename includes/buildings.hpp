@@ -18,8 +18,8 @@
 enum D {N = 0, S = 2, E = 1, W = 3};
 enum class FloorType {empty, flat, stairs, beams};
 enum class WallType {empty, flat, window, door, balcony, beams};
-enum class RoofType {empty, flat, flatUp, slope, cone};
-enum class PartType {floor, foundation, flatWall, windowedWall, dooredWall, slopedWall, flatRoof, slopedRoof, coneRoof, coneRoofExtension, beam, slopedBeam, slightSlopedBeam, collumn};
+enum class RoofType {empty, flat, flatUp, slope, slopeLow, cone};
+enum class PartType {floor, foundation, flatWall, windowedWall, dooredWall, slopedWall, slopedLowWall, flatRoof, flatLowRoof, slopedRoof, slopedLowRoof, coneRoof, coneLowRoof, coneRoofExtension, beam, slopedBeam, slightSlopedBeam, collumn};
 
 struct Floor
 {
@@ -181,7 +181,7 @@ struct GenerationConfig
 	int decoratedFactor = 0;
 	int scaffoldingReduction = 2;
 	int balconyFactor = 5;
-	bool random = true;
+	bool random = false;
 	float scale = 7.5f;
 	bool lod = false;
 };
@@ -232,9 +232,13 @@ class Buildings
 		static PartConfig windowedWallConfig;
 		static PartConfig dooredWallConfig;
 		static PartConfig slopedWallConfig;
+		static PartConfig slopedLowWallConfig;
 		static PartConfig flatRoofConfig;
+		static PartConfig flatLowRoofConfig;
 		static PartConfig slopedRoofConfig;
+		static PartConfig slopedLowRoofConfig;
 		static PartConfig coneRoofConfig;
+		static PartConfig coneLowRoofConfig;
 		static PartConfig coneRoofExtensionConfig;
 		static PartConfig beamConfig;
 		static PartConfig slopedBeamConfig;
