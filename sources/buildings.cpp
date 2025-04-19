@@ -454,6 +454,7 @@ void Buildings::Start()
 
 	generationConfig.minSize = glm::ivec3(2);
 	generationConfig.maxSize = glm::ivec3(3);
+	//generationConfig.scaffoldingReduction = 1;
 	generationConfig.random = true;
 
 	//building = &buildings[0];
@@ -464,7 +465,7 @@ void Buildings::Start()
 
 void Buildings::Frame()
 {
-	return;
+	//return;
 
 	if (!Terrain::HeightMapsGenerated()) return;
 
@@ -1853,7 +1854,7 @@ void Buildings::GenerateMesh()
 
 	float xOffset = float(generationConfig.maxSize.x - 1) * 0.5;
 	float zOffset = float(generationConfig.maxSize.z - 1) * 0.5;
-	currentMesh->shape.Move(glm::vec3(-generationConfig.scale * xOffset, 0.5f * generationConfig.scale, -generationConfig.scale * zOffset));
+	currentMesh->shape.Move(glm::vec3(-generationConfig.scale * xOffset, 0.375f * generationConfig.scale, -generationConfig.scale * zOffset));
 	currentMesh->RecalculateVertices();
 	currentMesh->Create();
 }
@@ -1887,8 +1888,32 @@ void Buildings::GenerateFloor(int i, int x, int y, FloorType type)
 
 	if (i == 0 && !building->cells[i][x][y].walls.Empty())
 	{
-		Shape foundation = GeneratePart(PartType::foundation);
-		floor.Join(foundation);
+		if (!building->cells[i][x][y].walls.Empty(false))
+		{
+			Shape foundation = GeneratePart(PartType::foundation);
+			floor.Join(foundation);
+		}
+
+		if (!generationConfig.lod)
+		{
+			bool N_Empty = CellEmpty(i, x, y + 1, false);
+			bool S_Empty = CellEmpty(i, x, y - 1, false);
+			bool E_Empty = CellEmpty(i, x + 1, y, false);
+			bool W_Empty = CellEmpty(i, x - 1, y, false);
+			bool empties[] = {N_Empty, E_Empty, S_Empty, W_Empty};
+
+			for (int d = 0; d < 4; d++)
+			{
+				if (empties[d] && empties[(d + 1) % 4])
+				{
+					Shape collumn = GeneratePart(PartType::collumn);
+					collumn.Rotate90(d);
+					collumn.Move(glm::vec3(0.0f, -1.0f, 0.0f) * generationConfig.scale);
+					floor.Join(collumn);
+					//break;
+				}
+			}
+		}
 	}
 
 	floor.Move(glm::vec3(x, i, y) * generationConfig.scale);
@@ -2572,7 +2597,7 @@ std::vector<Building *> Buildings::renderBuildingsShadow = std::vector<Building 
 Random Buildings::random;
 
 PartConfig Buildings::floorConfig{"floor", glm::vec3(1.0f, 0.05f, 1.0f)};
-PartConfig Buildings::foundationConfig{"foundation", glm::vec3(1.125f, 1.0f, 1.125f), glm::vec3(0.0f), glm::vec3(0.0f, -0.50f, 0.0f)};
+PartConfig Buildings::foundationConfig{"foundation", glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f), glm::vec3(0.0f, -0.50f, 0.0f)};
 PartConfig Buildings::flatWallConfig{"flat wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
 PartConfig Buildings::windowedWallConfig{"windowed wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
 PartConfig Buildings::dooredWallConfig{"doored wall", glm::vec3(1.0f, 1.0f, 0.05f), glm::vec3(0.0f), glm::vec3(0.0f, 0.5f, 0.5f)};
