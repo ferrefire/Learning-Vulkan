@@ -54,27 +54,48 @@ void Terrain::CreateTextures()
 	SamplerConfiguration grassSamplerConfig;
 	grassSamplerConfig.repeatMode = REPEAT;
 	grassSamplerConfig.mipLodBias = 0.0f;
-	grassSamplerConfig.anisotrophic = VK_TRUE;
-	grassSamplerConfig.anisotrophicSampleCount = 4.0;
-	grassSamplerConfig.mipLodBias = 0.0f;
+	grassSamplerConfig.anisotrophic = VK_FALSE;
+	grassSamplerConfig.anisotrophicSampleCount = 0.0;
 
-	//grassDiffuseTexture.CreateTexture("rocky_grass_diff.jpg", grassSamplerConfig);
 	grassTextures.resize(3);
 	grassTextures[0].CreateTexture("leafy_grass_diff.jpg", grassSamplerConfig);
+	grassSamplerConfig.anisotrophic = VK_TRUE;
+	grassSamplerConfig.anisotrophicSampleCount = 2.0;
 	grassTextures[1].CreateTexture("leafy_grass_norm.jpg", grassSamplerConfig);
+	grassSamplerConfig.anisotrophic = VK_FALSE;
+	grassSamplerConfig.anisotrophicSampleCount = 0.0;
+	grassSamplerConfig.mipLodBias = 1.0f;
 	grassTextures[2].CreateTexture("rocky_grass_ao.jpg", grassSamplerConfig);
 
-	//rockDiffuseTexture.CreateTexture("rock_diff.jpg", grassSamplerConfig);
-	rockTextures.resize(3);
-	rockTextures[0].CreateTexture("large_rock_diff.jpg", grassSamplerConfig);
-	rockTextures[1].CreateTexture("large_rock_norm.jpg", grassSamplerConfig);
-	rockTextures[2].CreateTexture("rock_ao.jpg", grassSamplerConfig);
+	SamplerConfiguration rockSamplerConfig;
+	rockSamplerConfig.repeatMode = REPEAT;
+	rockSamplerConfig.mipLodBias = 0.0f;
+	rockSamplerConfig.anisotrophic = VK_FALSE;
+	rockSamplerConfig.anisotrophicSampleCount = 0.0;
 
-	//dirtDiffuseTexture.CreateTexture("dirt_diff.jpg", grassSamplerConfig);
+	rockTextures.resize(3);
+	rockTextures[0].CreateTexture("large_rock_diff.jpg", rockSamplerConfig);
+	rockSamplerConfig.anisotrophic = VK_TRUE;
+	rockSamplerConfig.anisotrophicSampleCount = 4.0;
+	rockSamplerConfig.mipLodBias = 0.0f;
+	rockTextures[1].CreateTexture("large_rock_norm.jpg", rockSamplerConfig);
+	rockSamplerConfig.anisotrophic = VK_FALSE;
+	rockSamplerConfig.anisotrophicSampleCount = 0.0;
+	rockSamplerConfig.mipLodBias = 0.0f;
+	rockTextures[2].CreateTexture("rock_ao.jpg", rockSamplerConfig);
+
+	SamplerConfiguration dirtSamplerConfig;
+	dirtSamplerConfig.repeatMode = REPEAT;
+	dirtSamplerConfig.mipLodBias = 1.0f;
+	dirtSamplerConfig.anisotrophic = VK_FALSE;
+	dirtSamplerConfig.anisotrophicSampleCount = 0.0;
+
 	dirtTextures.resize(3);
-	dirtTextures[0].CreateTexture("rocky_dirt_diff.jpg", grassSamplerConfig);
-	dirtTextures[1].CreateTexture("rocky_dirt_norm.jpg", grassSamplerConfig);
-	dirtTextures[2].CreateTexture("rocky_dirt_ao.jpg", grassSamplerConfig);
+	dirtTextures[0].CreateTexture("rocky_dirt_diff.jpg", dirtSamplerConfig);
+	dirtSamplerConfig.mipLodBias = 0.0f;
+	dirtTextures[1].CreateTexture("rocky_dirt_norm.jpg", dirtSamplerConfig);
+	dirtSamplerConfig.mipLodBias = 1.0f;
+	dirtTextures[2].CreateTexture("rocky_dirt_ao.jpg", dirtSamplerConfig);
 
 	SamplerConfiguration heightMapSamplerConfig;
 	//heightMapSamplerConfig.anisotrophic = VK_TRUE;

@@ -230,15 +230,17 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 	scissor.extent = window.swapChainExtent;
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-	if (Terrain::HeightMapsGenerated()) Terrain::RecordGraphicsCommands(commandBuffer);
+	//if (Terrain::HeightMapsGenerated()) Terrain::RecordGraphicsCommands(commandBuffer);
 
 	if (BUILDINGS_ENABLED) Buildings::RecordGraphicsCommands(commandBuffer);
 
-	if (TREES_ENABLED) Trees::RecordGraphicsCommands(commandBuffer);
-
 	if (LEAVES_ENABLED) Leaves::RecordGraphicsCommands(commandBuffer);
 
+	if (TREES_ENABLED) Trees::RecordGraphicsCommands(commandBuffer);
+
 	if (GRASS_ENABLED) Grass::RecordGraphicsCommands(commandBuffer);
+
+	if (Terrain::HeightMapsGenerated()) Terrain::RecordGraphicsCommands(commandBuffer);
 
 	if (Manager::settings.screenQuad && Terrain::HeightMapsGenerated())
 	{
@@ -410,9 +412,9 @@ void Graphics::RenderShadows(VkCommandBuffer commandBuffer)
 
 		if (BUILDINGS_ENABLED) Buildings::RecordShadowCommands(commandBuffer, i);
 
-		if (LEAVES_ENABLED) Leaves::RecordShadowCommands(commandBuffer, i);
-
 		if (TREES_ENABLED) Trees::RecordShadowCommands(commandBuffer, i);
+
+		if (LEAVES_ENABLED) Leaves::RecordShadowCommands(commandBuffer, i);
 
 		if (GRASS_ENABLED) Grass::RecordShadowCommands(commandBuffer, i);
 
@@ -435,6 +437,7 @@ void Graphics::RecordComputeCommands(VkCommandBuffer commandBuffer)
 	//Terrain::RecordComputeCommands(commandBuffer);
 	if (TREES_ENABLED) Trees::RecordComputeCommands(commandBuffer);
 	if (GRASS_ENABLED) Grass::RecordComputeCommands(commandBuffer);
+	//if (Terrain::HeightMapsGenerated()) Sky::RecordComputeCommands(commandBuffer);
 	Data::RecordComputeCommands(commandBuffer);
 	if (WIND_ENABLED) Wind::RecordComputeCommands(commandBuffer);
 

@@ -122,42 +122,58 @@ void Buildings::CreateTextures()
 {
     SamplerConfiguration beamSamplerConfig;
 	beamSamplerConfig.repeatMode = REPEAT;
-	beamSamplerConfig.anisotrophic = VK_TRUE;
-	beamSamplerConfig.anisotrophicSampleCount = 4;
+	beamSamplerConfig.anisotrophic = VK_FALSE;
+	beamSamplerConfig.anisotrophicSampleCount = 0;
 
     beamTextures.resize(3);
 	beamTextures[0].CreateTexture("beam_diff.jpg", beamSamplerConfig);
+	beamSamplerConfig.anisotrophic = VK_TRUE;
+	beamSamplerConfig.anisotrophicSampleCount = 2;
 	beamTextures[1].CreateTexture("beam_norm.jpg", beamSamplerConfig);
+	beamSamplerConfig.anisotrophic = VK_TRUE;
+	beamSamplerConfig.anisotrophicSampleCount = 2;
 	beamTextures[2].CreateTexture("beam_ao.jpg", beamSamplerConfig);
 
 	SamplerConfiguration plasteredSamplerConfig;
 	plasteredSamplerConfig.repeatMode = REPEAT;
-	plasteredSamplerConfig.anisotrophic = VK_TRUE;
-	plasteredSamplerConfig.anisotrophicSampleCount = 4;
+	plasteredSamplerConfig.anisotrophic = VK_FALSE;
+	plasteredSamplerConfig.anisotrophicSampleCount = 0;
 
 	plasteredTextures.resize(3);
 	plasteredTextures[0].CreateTexture("plastered_diff.jpg", plasteredSamplerConfig);
+	plasteredSamplerConfig.anisotrophic = VK_TRUE;
+	plasteredSamplerConfig.anisotrophicSampleCount = 2;
 	plasteredTextures[1].CreateTexture("plastered_norm.jpg", plasteredSamplerConfig);
+	plasteredSamplerConfig.anisotrophic = VK_TRUE;
+	plasteredSamplerConfig.anisotrophicSampleCount = 2;
 	plasteredTextures[2].CreateTexture("plastered_ao.jpg", plasteredSamplerConfig);
 
 	SamplerConfiguration reedSamplerConfig;
 	reedSamplerConfig.repeatMode = REPEAT;
-	reedSamplerConfig.anisotrophic = VK_TRUE;
-	reedSamplerConfig.anisotrophicSampleCount = 4;
+	reedSamplerConfig.anisotrophic = VK_FALSE;
+	reedSamplerConfig.anisotrophicSampleCount = 0;
 
 	reedTextures.resize(3);
 	reedTextures[0].CreateTexture("reed_diff.jpg", reedSamplerConfig);
+	reedSamplerConfig.anisotrophic = VK_TRUE;
+	reedSamplerConfig.anisotrophicSampleCount = 4;
 	reedTextures[1].CreateTexture("reed_norm.jpg", reedSamplerConfig);
+	reedSamplerConfig.anisotrophic = VK_TRUE;
+	reedSamplerConfig.anisotrophicSampleCount = 4;
 	reedTextures[2].CreateTexture("reed_ao.jpg", reedSamplerConfig);
 
 	SamplerConfiguration brickSamplerConfig;
 	brickSamplerConfig.repeatMode = REPEAT;
-	brickSamplerConfig.anisotrophic = VK_TRUE;
-	brickSamplerConfig.anisotrophicSampleCount = 4;
+	brickSamplerConfig.anisotrophic = VK_FALSE;
+	brickSamplerConfig.anisotrophicSampleCount = 0;
 
 	brickTextures.resize(3);
 	brickTextures[0].CreateTexture("brick_diff.jpg", brickSamplerConfig);
+	brickSamplerConfig.anisotrophic = VK_TRUE;
+	brickSamplerConfig.anisotrophicSampleCount = 4;
 	brickTextures[1].CreateTexture("brick_norm.jpg", brickSamplerConfig);
+	brickSamplerConfig.anisotrophic = VK_TRUE;
+	brickSamplerConfig.anisotrophicSampleCount = 4;
 	brickTextures[2].CreateTexture("brick_ao.jpg", brickSamplerConfig);
 }
 
@@ -452,7 +468,7 @@ void Buildings::Frame()
 
 	if (!Terrain::HeightMapsGenerated()) return;
 
-	/*int villageRange = 8;
+	int villageRange = 8;
 	static int buildingIndex = 0;
 	static int buildingX = -villageRange;
 	static int buildingY = -villageRange;
@@ -466,7 +482,9 @@ void Buildings::Frame()
 			{
 				if (random.Next(0, villageRange) >= glm::max(abs(buildingX), abs(buildingY)))
 				{
-					building = &buildings[buildingIndex];
+					//building = &buildings[buildingIndex];
+					building = new Building;
+					building->id = currentActiveBuildings;
 					GenerateBuilding();
 					// building->position += glm::vec3(3.0f * generationConfig.scale * x, 0.0f, 3.0f * generationConfig.scale * y);
 					building->position += glm::vec3(5.0f * generationConfig.scale * buildingX, 0.0f, 5.0f * generationConfig.scale * buildingY);
@@ -474,9 +492,10 @@ void Buildings::Frame()
 					else if (villageIndex == 1) building->position += glm::vec3(8125.0f, 0.0f * generationConfig.scale, 5075.0f);
 					else if (villageIndex == 2) building->position += glm::vec3(5650.0f, 0.0f * generationConfig.scale, 3030.0f);
 					building->Update();
-					Data::RequestData(buildings[buildingIndex].position, &buildings[buildingIndex].position.y, UpdateBuilding, buildingIndex);
+					Data::RequestData(building->position, &building->position.y, UpdateBuilding, buildingIndex);
 					buildingIndex++;
 					currentActiveBuildings++;
+					buildings.push_back(building);
 				}
 
 				buildingY++;
@@ -495,14 +514,14 @@ void Buildings::Frame()
 			buildingX = -villageRange;
 			villageIndex++;
 		}
-	}*/
+	}
 }
 
 Building *Buildings::CreateBuilding()
 {
 	building = new Building;
-	building->id = currentActiveBuildings;
 	currentActiveBuildings++;
+	building->id = currentActiveBuildings;
 	buildings.push_back(building);
 	GenerateCells();
 	return (building);
@@ -606,7 +625,7 @@ void Buildings::SetRenderBuildings()
 {
 	renderBuildings.clear();
 
-	for (int i = 0; i < Simulation::settlements.size(); i++)
+	/*for (int i = 0; i < Simulation::settlements.size(); i++)
 	{
 		if (renderBuildings.size() >= maxRenderBuildings) break;
 
@@ -620,9 +639,9 @@ void Buildings::SetRenderBuildings()
 
 			if (renderBuildings.size() >= maxRenderBuildings) break;
 		}
-	}
+	}*/
 
-	/*for (int i = 0; i < currentActiveBuildings; i++)
+	for (int i = 0; i < buildings.size(); i++)
 	{
 		if (buildings[i]->active && BuildingInView(buildings[i]))
 		{
@@ -632,7 +651,7 @@ void Buildings::SetRenderBuildings()
 
 			if (renderBuildings.size() >= maxRenderBuildings) break;
 		}
-	}*/
+	}
 
 	memcpy(uniformBuffers[Manager::currentFrame].mappedBuffer, buildingBuffers.data(), sizeof(BuildingBuffer) * renderBuildings.size());
 }
@@ -641,7 +660,7 @@ void Buildings::SetRenderBuildingsShadow()
 {
 	renderBuildingsShadow.clear();
 
-	for (int i = 0; i < Simulation::settlements.size(); i++)
+	/*for (int i = 0; i < Simulation::settlements.size(); i++)
 	{
 		if (renderBuildingsShadow.size() >= maxRenderBuildings) break;
 
@@ -655,9 +674,9 @@ void Buildings::SetRenderBuildingsShadow()
 
 			if (renderBuildingsShadow.size() >= maxRenderBuildings) break;
 		}
-	}
+	}*/
 
-	/*for (int i = 0; i < currentActiveBuildings; i++)
+	for (int i = 0; i < buildings.size(); i++)
 	{
 		if (buildings[i]->active && BuildingInView(buildings[i]))
 		{
@@ -667,7 +686,7 @@ void Buildings::SetRenderBuildingsShadow()
 
 			if (renderBuildingsShadow.size() >= maxRenderBuildings) break;
 		}
-	}*/
+	}
 
 	memcpy(uniformShadowBuffers[Manager::currentFrame].mappedBuffer, buildingShadowBuffers.data(), sizeof(BuildingBuffer) * renderBuildingsShadow.size());
 }
@@ -1834,7 +1853,7 @@ void Buildings::GenerateMesh()
 
 	float xOffset = float(generationConfig.maxSize.x - 1) * 0.5;
 	float zOffset = float(generationConfig.maxSize.z - 1) * 0.5;
-	currentMesh->shape.Move(glm::vec3(-generationConfig.scale * xOffset, 0.25f * generationConfig.scale, -generationConfig.scale * zOffset));
+	currentMesh->shape.Move(glm::vec3(-generationConfig.scale * xOffset, 0.5f * generationConfig.scale, -generationConfig.scale * zOffset));
 	currentMesh->RecalculateVertices();
 	currentMesh->Create();
 }
@@ -2466,15 +2485,19 @@ bool Buildings::FloorEmpty(int i, int x, int y)
 
 void Buildings::UpdateBuilding(int id)
 {
-	for (int i = 0; i < buildings.size(); i++)
+	buildings[id]->Update();
+
+	/*for (int i = 0; i < buildings.size(); i++)
 	{
 		if (buildings[i]->id == id)
 		{
 			buildings[i]->Update();
+			//std::cout << "building " << i << " id " << id << " height " << buildings[i]->position.y << std::endl;
+			return;
 		}
-	}
+	}*/
 
-	//std::cout << "building " << i << " height " << buildings[i].position.y << std::endl;
+	//std::cout << "building id " << id << std::endl;
 }
 
 bool Buildings::BuildingInView(Building *b)

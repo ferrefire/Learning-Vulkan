@@ -91,7 +91,7 @@ layout(std430, set = 1, binding = 3) buffer CountBuffer
 	CountData countData;
 };
 
-layout(set = 1, binding = 4) uniform TreeVariables
+layout(set = 1, binding = 4) readonly restrict uniform TreeVariables
 {
 	uint treeBase;
 	uint treeCount;
@@ -242,14 +242,15 @@ TreeComputeResult ComputeTreeData()
 
 	if (dataIndexVec.x < 0 || dataIndexVec.x > treeVariables.treeBase || dataIndexVec.y < 0 || dataIndexVec.y > treeVariables.treeBase) return (treeResult);
 	uint dataIndex = uint(floor(dataIndexVec.x * treeVariables.treeBase + dataIndexVec.y));
-	if (data[dataIndex].life == 0) return (treeResult);
+	TreeData currentTreeData = data[dataIndex];
+	if (currentTreeData.life == 0) return (treeResult);
 
 	vec3 offset = vec3(0);
-	offset.xz = unpackHalf2x16(data[dataIndex].posxz);
-	vec2 posyroty = unpackHalf2x16(data[dataIndex].posyroty);
+	offset.xz = unpackHalf2x16(currentTreeData.posxz);
+	vec2 posyroty = unpackHalf2x16(currentTreeData.posyroty);
 	offset.y = posyroty.x;
 	float rotation = posyroty.y;
-	vec2 xx = unpackHalf2x16(data[dataIndex].scaxcoly);
+	vec2 xx = unpackHalf2x16(currentTreeData.scaxcoly);
 	float scale = xx.x;
 	float color = xx.y;
 
@@ -446,7 +447,7 @@ void ComputeLeafData(TreeComputeResult treeResult, LodComputeResult lodResult, I
 	int leafIndex = 0;
 	mat4 rotationMatrix = GetRotationMatrix(radians(treeResult.rotation * 360.0), vec3(0.0, 1.0, 0.0));
 
-	while (leafIndex < uint(treeVariables.leafCounts[0].x))
+	while (leafIndex < treeVariables.leafCounts[0].x)
 	{
 		vec3 leafLocalPosition = (rotationMatrix * vec4(leafPositions[leafIndex].xyz * treeResult.scale, 1.0)).xyz;
 		vec3 leafWorldPosition = treeResult.position.xyz + leafLocalPosition - treeResult.viewPosition.xyz;
@@ -467,10 +468,10 @@ void ComputeLeafData(TreeComputeResult treeResult, LodComputeResult lodResult, I
 		float leafScale = leafLodScale + (Random11(leafRan) * leafLodScale) * 0.25;
 		float leafRotationX = Random01(leafIndex * 0.001 + leafRan);
 		float leafRotationY = Random01(leafIndex * 0.001 * 2.0 + leafRan * 0.5);
-		float leafRotationZ = Random01(leafIndex * 0.001 * 0.5 + leafRan * 10.0);
+		//float leafRotationZ = Random01(leafIndex * 0.001 * 0.5 + leafRan * 10.0);
 		float leafColor = 1.0 + (Random01(leafIndex * 0.001 * 0.5 + leafRan * 2.0 + leafRotationX + leafRotationY) - 0.5);
 
-		leafRotationZ = 1.0;
+		//leafRotationZ = 1.0;
 
 		float leafSturdiness = 0.0;
 		if (leafLod <= 1) leafSturdiness = leafPositions[leafIndex].w;

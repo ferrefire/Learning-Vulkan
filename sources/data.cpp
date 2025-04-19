@@ -139,7 +139,7 @@ void Data::SetData()
 
 	for (int i = 0; i < requestCount; i++)
 	{
-		*requestData[i].source += (*(((HeightData *)heightBuffer.mappedBuffer + sizeof(HeightData) * i))).position.w;
+		*requestData[i].source += (*((HeightData *)heightBuffer.mappedBuffer + (i))).position.w;
 		if (requestData[i].func != nullptr) requestData[i].func(requestData[i].index);
 	}
 

@@ -281,11 +281,11 @@ void Sky::Start()
 
 void Sky::Frame()
 {
-	if (Input::GetKey(GLFW_KEY_L).pressed)
-	{
-		Recompute();
-		return;
-	}
+	//if (Input::GetKey(GLFW_KEY_L).pressed)
+	//{
+	//	Recompute();
+	//	return;
+	//}
 
 	if (!transmittanceComputed && Terrain::HeightMapsGenerated())
 	{
@@ -352,6 +352,12 @@ void Sky::RenderSky(VkCommandBuffer commandBuffer)
 {
 	skyMesh.Bind(commandBuffer);
 	vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(skyMesh.indices.size()), 1, 0, 0, 0);
+}
+
+void Sky::RecordComputeCommands(VkCommandBuffer commandBuffer)
+{
+	ComputeView(commandBuffer);
+	ComputeAerial(commandBuffer);
 }
 
 void Sky::ComputeTransmittance()

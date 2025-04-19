@@ -181,7 +181,7 @@ struct GenerationConfig
 	int decoratedFactor = 0;
 	int scaffoldingReduction = 2;
 	int balconyFactor = 5;
-	bool random = false;
+	bool random = true;
 	float scale = 7.5f;
 	bool lod = false;
 };

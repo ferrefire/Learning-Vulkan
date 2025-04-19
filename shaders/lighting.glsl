@@ -358,7 +358,8 @@ float BlendCascadedShadow(vec3 projectionCoordinates, int lod, int samples)
 
 	if (samples <= 0)
 	{
-		shadow = textureLod(shadowSamplers[lod], projectionCoordinates.xyz, 0);
+		//shadow = textureLod(shadowSamplers[lod], projectionCoordinates.xyz, 0);
+		shadow = texture(shadowSamplers[lod], projectionCoordinates.xyz);
 		return (shadow);
 	}
 	else if (samples <= 1)
@@ -369,7 +370,8 @@ float BlendCascadedShadow(vec3 projectionCoordinates, int lod, int samples)
 			{
 				coords = projectionCoordinates.xy + (vec2(x, y) - 0.5) * texelSize;
 				if (abs(coords.x - 0.5) > 0.5 || abs(coords.y - 0.5) > 0.5) continue;
-				shadow += textureLod(shadowSamplers[lod], vec3(coords.xy, projectionCoordinates.z), 0);
+				//shadow += textureLod(shadowSamplers[lod], vec3(coords.xy, projectionCoordinates.z), 0);
+				shadow += texture(shadowSamplers[lod], vec3(coords.xy, projectionCoordinates.z));
 			}
 		}
 		return (shadow * rangeMults[0]);
@@ -382,7 +384,8 @@ float BlendCascadedShadow(vec3 projectionCoordinates, int lod, int samples)
 			{
 				coords = projectionCoordinates.xy + vec2(x, y) * texelSize;
 				if (abs(coords.x - 0.5) > 0.5 || abs(coords.y - 0.5) > 0.5) continue;
-				shadow += textureLod(shadowSamplers[lod], vec3(coords.xy, projectionCoordinates.z), 0);
+				//shadow += textureLod(shadowSamplers[lod], vec3(coords.xy, projectionCoordinates.z), 0);
+				shadow += texture(shadowSamplers[lod], vec3(coords.xy, projectionCoordinates.z));
 			}
 		}
 		return (shadow * 0.11111111111111);
@@ -580,10 +583,11 @@ ShadowResults GetCascadedShadowResults(vec4 shadowSpaces[CASCADE_COUNT], float d
 
 			//blendShadow = BlendCascadedShadow(projectionCoordinates, i, range);
 			//shadow = BlendCascadedShadow(projectionCoordinates, i, range);
-			blendShadow = BlendCascadedShadow(projectionCoordinates, i, range);
+			blendShadow = BlendCascadedShadow(projectionCoordinates, i, 0);
 			//shadow = clamp(shadow + blendShadow, 0.0, 1.0);
 			if (blendShadow > shadow)
 			{
+				blendShadow = BlendCascadedShadow(projectionCoordinates, i, range);
 				shadow = blendShadow;
 				if (lod == -1)
 				{

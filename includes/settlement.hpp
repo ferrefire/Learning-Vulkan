@@ -9,23 +9,27 @@
 #include <vector>
 
 #define CHUNK_RADIUS 2
-#define CHUNK_LENGTH CHUNK_RADIUS * 2 + 1
-#define CELL_SIZE 7.5f
+#define CHUNK_LENGTH (CHUNK_RADIUS * 2 + 1)
+#define CELL_SIZE (8.0f * 3.0f)
 
 struct SettlementCell
 {
-    glm::ivec3 index;
+    int settlementID;
+    glm::ivec2 chunkIndex;
+    glm::ivec2 index;
     glm::vec3 localPosition;
     Building *building;
 };
 
 struct SettlementChunk
 {
-    glm::ivec3 index;
+    bool initialized = false;
+    int settlementID;
+    glm::ivec2 index;
     glm::vec3 localPosition;
     SettlementCell cells[CHUNK_LENGTH][CHUNK_LENGTH];
 
-    void Setup(int x, int y);
+    void Setup(int x, int y, int id);
 
     SettlementCell *GetCell(int x, int y);
     SettlementCell *GetCell(glm::vec3 target, bool local = false);
@@ -39,18 +43,24 @@ class Settlement
         Settlement();
         ~Settlement();
 
+        int id;
         glm::vec3 position;
         int radius;
         int length;
         std::vector<SettlementChunk> chunks;
 
+        void Start(int id);
+        void Destroy();
+
+        void IncreaseRadius(int amount);
+
         SettlementChunk *GetChunk(int x, int y);
         SettlementChunk *GetChunk(glm::vec3 target, bool local = false);
         SettlementCell *GetCell(glm::vec3 target, bool local = false);
 
+        //void AddRadius();
+
         void GenerateBuilding(SettlementCell *cell);
 
         std::vector<SettlementCell *> GetRenderCells();
-
-        void Destroy();
 };

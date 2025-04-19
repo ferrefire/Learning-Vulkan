@@ -175,8 +175,9 @@ void Trees::CreateMeshes()
 	branchConfig.resolution = 4;
 	branchConfig.minSize = 0.75;
 	branchConfig.lod = 3;
+	branchConfig.branchThickness = 2.0f;
 	GenerateTrunkMesh(treeLod3Mesh, branchConfig);
-	treeLod3Mesh.shape.Scale(glm::vec3(2.25, 1.5, 2.25));
+	treeLod3Mesh.shape.Scale(glm::vec3(1.0, 1.5, 1.0));
 	treeLod3Mesh.RecalculateVertices();
 	treeLod3Mesh.Create();
 
@@ -210,14 +211,18 @@ void Trees::CreateMeshes()
 
 void Trees::CreateGraphicsPipeline()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(3);
-	descriptorLayoutConfig[0].type = STORAGE_BUFFER;
-	descriptorLayoutConfig[0].stages = VERTEX_STAGE;
-	descriptorLayoutConfig[1].type = UNIFORM_BUFFER;
-	descriptorLayoutConfig[1].stages = VERTEX_STAGE;
-	descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[2].stages = FRAGMENT_STAGE;
-	descriptorLayoutConfig[2].count = treeTextures.size();
+	int i = 0;
+
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(4);
+	descriptorLayoutConfig[i].type = STORAGE_BUFFER;
+	descriptorLayoutConfig[i++].stages = VERTEX_STAGE;
+	descriptorLayoutConfig[i].type = UNIFORM_BUFFER;
+	descriptorLayoutConfig[i++].stages = VERTEX_STAGE;
+	descriptorLayoutConfig[i].type = UNIFORM_BUFFER;
+	descriptorLayoutConfig[i++].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[i++].count = treeTextures.size();
 	//descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
 	//descriptorLayoutConfig[3].stages = FRAGMENT_STAGE;
 	//descriptorLayoutConfig[3].count = Capture::captureCount;
@@ -320,6 +325,8 @@ void Trees::CreateTextures()
 	SamplerConfiguration samplerConfig;
 	samplerConfig.repeatMode = REPEAT;
 	samplerConfig.mipLodBias = 0.0f;
+	samplerConfig.anisotrophic = VK_TRUE;
+	samplerConfig.anisotrophicSampleCount = 2.0;
 
 	treeTextures.resize(3);
 	treeTextures[0].CreateTexture("tree_diff.jpg", samplerConfig);
@@ -397,46 +404,66 @@ void Trees::CreateBuffers()
 	leafPositionsConfiguration.mapped = false;
 
 	leafPositionsBuffer.Create(leafPositions.data(), leafPositionsConfiguration);
+
+	BufferConfiguration trunkConfiguration;
+	trunkConfiguration.size = sizeof(TrunkVariables);
+	trunkConfiguration.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	trunkConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	trunkConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	trunkConfiguration.mapped = true;
+
+	trunkBuffer.Create(trunkConfiguration);
 }
 
 void Trees::CreateGraphicsDescriptor()
 {
-	std::vector<DescriptorConfiguration> descriptorConfig(3);
+	int i = 0;
 
-	descriptorConfig[0].type = STORAGE_BUFFER;
-	descriptorConfig[0].stages = VERTEX_STAGE;
-	descriptorConfig[0].buffersInfo.resize(renderBuffers.size());
+	std::vector<DescriptorConfiguration> descriptorConfig(4);
+
+	descriptorConfig[i].type = STORAGE_BUFFER;
+	descriptorConfig[i].stages = VERTEX_STAGE;
+	descriptorConfig[i].buffersInfo.resize(renderBuffers.size());
 	int index = 0;
 	for (Buffer &buffer : renderBuffers)
 	{
-		descriptorConfig[0].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[0].buffersInfo[index].range = sizeof(TreeRenderData) * treeTotalRenderCount;
-		descriptorConfig[0].buffersInfo[index].offset = 0;
+		descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
+		descriptorConfig[i].buffersInfo[index].range = sizeof(TreeRenderData) * treeTotalRenderCount;
+		descriptorConfig[i].buffersInfo[index].offset = 0;
 		index++;
 	}
+	i++;
 
-	descriptorConfig[1].type = UNIFORM_BUFFER;
-	descriptorConfig[1].stages = VERTEX_STAGE;
-	descriptorConfig[1].buffersInfo.resize(variableBuffers.size());
+	descriptorConfig[i].type = UNIFORM_BUFFER;
+	descriptorConfig[i].stages = VERTEX_STAGE;
+	descriptorConfig[i].buffersInfo.resize(variableBuffers.size());
 	index = 0;
 	for (Buffer &buffer : variableBuffers)
 	{
-		descriptorConfig[1].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[1].buffersInfo[index].range = sizeof(TreeVariables);
-		descriptorConfig[1].buffersInfo[index].offset = 0;
+		descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
+		descriptorConfig[i].buffersInfo[index].range = sizeof(TreeVariables);
+		descriptorConfig[i].buffersInfo[index].offset = 0;
 		index++;
 	}
+	i++;
 
-	descriptorConfig[2].type = IMAGE_SAMPLER;
-	descriptorConfig[2].stages = FRAGMENT_STAGE;
-	descriptorConfig[2].count = treeTextures.size();
-	descriptorConfig[2].imageInfos.resize(treeTextures.size());
-	for (int i = 0; i < treeTextures.size(); i++)
+	descriptorConfig[i].type = UNIFORM_BUFFER;
+	descriptorConfig[i].stages = FRAGMENT_STAGE;
+	descriptorConfig[i].buffersInfo.resize(1);
+	descriptorConfig[i].buffersInfo[0].buffer = trunkBuffer.buffer;
+	descriptorConfig[i++].buffersInfo[0].range = sizeof(TrunkVariables);
+
+	descriptorConfig[i].type = IMAGE_SAMPLER;
+	descriptorConfig[i].stages = FRAGMENT_STAGE;
+	descriptorConfig[i].count = treeTextures.size();
+	descriptorConfig[i].imageInfos.resize(treeTextures.size());
+	for (int j = 0; j < treeTextures.size(); j++)
 	{
-		descriptorConfig[2].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[2].imageInfos[i].imageView = treeTextures[i].imageView;
-		descriptorConfig[2].imageInfos[i].sampler = treeTextures[i].sampler;
+		descriptorConfig[i].imageInfos[j].imageLayout = LAYOUT_READ_ONLY;
+		descriptorConfig[i].imageInfos[j].imageView = treeTextures[j].imageView;
+		descriptorConfig[i].imageInfos[j].sampler = treeTextures[j].sampler;
 	}
+	i++;
 	//descriptorConfig[2].imageInfo.imageLayout = LAYOUT_READ_ONLY;
 	//descriptorConfig[2].imageInfo.imageView = diffuseTexture.imageView;
 	//descriptorConfig[2].imageInfo.sampler = diffuseTexture.sampler;
@@ -710,6 +737,8 @@ void Trees::DestroyBuffers()
 	}
 	variableBuffers.clear();
 
+	trunkBuffer.Destroy();
+
 	leafPositionsBuffer.Destroy();
 }
 
@@ -760,6 +789,10 @@ void Trees::Start()
 	//ComputeTreeSetup();
 
 	Menu &menu = UI::NewMenu("trees");
+	menu.AddNode("trunk", true);
+	menu.AddColor("trunk lod color", trunkVariables.trunkLodColor);
+	menu.AddColor("trunk tint", trunkVariables.trunkTint);
+	menu.AddNode("trunk", false);
 	menu.AddNode("leaves", true);
 	menu.AddColor("leaf color", Leaves::leafVariables.leafTint);
 	menu.AddNode("leaves", false);
@@ -808,6 +841,8 @@ void Trees::Frame()
 		GenerateTrunkMesh(treeLod0Mesh, branchConfig);
 		treeLod0Mesh.Create();
 	}
+
+	memcpy(trunkBuffer.mappedBuffer, &trunkVariables, sizeof(TrunkVariables));
 }
 
 void Trees::PostFrame()
@@ -1104,7 +1139,7 @@ Shape BranchConfiguration::Generate()
 	float branchSeed = angles.length() + base.length() + offset.y + seed;
 
 	Shape branch = Shape(CYLINDER, resolution);
-	branch.Scale(glm::vec3(scale.x, scale.y, scale.x));
+	branch.Scale(glm::vec3(scale.x * branchThickness, scale.y, scale.x * branchThickness));
 
 	float angleDiff = angles.x - angles.y;
 	glm::vec2 vec2Offset = glm::vec2(offset.x, offset.z);
@@ -1424,8 +1459,10 @@ std::vector<Buffer> Trees::renderBuffers;
 std::vector<Buffer> Trees::shadowBuffers;
 std::vector<Buffer> Trees::countBuffers;
 std::vector<Buffer> Trees::variableBuffers;
+Buffer Trees::trunkBuffer;
 
 TreeVariables Trees::treeVariables;
+TrunkVariables Trees::trunkVariables;
 uint32_t Trees::totalLeafCount = 0;
 
 bool Trees::treesComputed = false;

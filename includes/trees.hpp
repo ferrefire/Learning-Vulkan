@@ -35,8 +35,10 @@ struct BranchConfiguration
 	float minSize = 0.1f;
 	float angleRandomness = 0.25f;
 	float reach = 2.0f;
+	//float thickness = 0.6f;
 	float thickness = 0.6f;
 	float length = 0.75f;
+	float branchThickness = 1.25f;
 	
 	glm::vec2 sturdiness = glm::vec2(0);
 	glm::vec2 steepness = glm::vec2(-10.0f, 45.0f);
@@ -108,6 +110,13 @@ struct TreeVariables
 	alignas(16) glm::vec4 leafCounts[6];
 };
 
+struct TrunkVariables
+{
+	//glm::vec4 trunkColor = glm::vec4(48.0f, 32.0f, 16.0f, 255.0f) / 255.0f;
+	glm::vec4 trunkLodColor = glm::vec4(36.0f, 30.0f, 22.0f, 255.0f) / 255.0f;
+	glm::vec4 trunkTint = glm::vec4(255.0f, 217.0f, 169.0f, 255.0f) / 255.0f;
+};
+
 class Trees
 {
 	private:
@@ -168,9 +177,12 @@ class Trees
 		static std::vector<Buffer> shadowBuffers;
 		static std::vector<Buffer> countBuffers;
 		static std::vector<Buffer> variableBuffers;
+		static Buffer trunkBuffer;
 
 		static TreeVariables treeVariables;
 		static uint32_t totalLeafCount;
+
+		static TrunkVariables trunkVariables;
 
 		static bool treesComputed;
 		static bool shouldUpdateLodTree;

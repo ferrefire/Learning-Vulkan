@@ -74,10 +74,10 @@ struct ShaderVariables
 	alignas(16) glm::vec4 ranges = glm::vec4(0);
 	alignas(16) glm::vec3 lightDirection;
 	alignas(16) glm::vec3 rotatedLightDirection;
-	alignas(16) glm::vec3 terrainOffset;
 	alignas(16) glm::mat4 shadowCascadeMatrix[SHADOW_CASCADE_COUNT];
 	alignas(16) glm::vec4 terrainShadowOffsets[3];
 	alignas(16) glm::vec4 terrainShadowDistances[3];
+	alignas(16) glm::vec3 terrainOffset;
 	alignas(8) glm::vec2 terrainLod0Offset;
 	alignas(8) glm::vec2 terrainLod1Offset;
 	alignas(8) glm::vec2 waterHeight;
@@ -179,6 +179,7 @@ class Manager
 		static void Frame();
 		static void PostFrame();
 		static void UpdateShaderVariables();
+		static void UpdateTerrainOffsets();
 
 		static Window &GetWindow();
 		static Graphics &GetGraphics();
