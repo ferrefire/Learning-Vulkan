@@ -327,6 +327,8 @@ void Trees::CreateTextures()
 	samplerConfig.mipLodBias = 0.0f;
 	samplerConfig.anisotrophic = VK_TRUE;
 	samplerConfig.anisotrophicSampleCount = 2.0;
+	//samplerConfig.anisotrophic = VK_FALSE;
+	//samplerConfig.anisotrophicSampleCount = 0;
 
 	treeTextures.resize(3);
 	treeTextures[0].CreateTexture("tree_diff.jpg", samplerConfig);

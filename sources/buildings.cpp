@@ -464,7 +464,7 @@ void Buildings::Start()
 
 void Buildings::Frame()
 {
-	//return;
+	return;
 
 	if (!Terrain::HeightMapsGenerated()) return;
 

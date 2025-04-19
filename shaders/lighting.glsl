@@ -581,13 +581,13 @@ ShadowResults GetCascadedShadowResults(vec4 shadowSpaces[CASCADE_COUNT], float d
 			//if (abs(projectionCoordinates.y - 0.5) > 0.4 || abs(projectionCoordinates.x - 0.5) > 0.4) return (ShadowResults(1.0, -1, 0.0, 1.0));
 			//else return (ShadowResults(0.0, -1, 0.0, 1.0));
 
-			//blendShadow = BlendCascadedShadow(projectionCoordinates, i, range);
+			blendShadow = BlendCascadedShadow(projectionCoordinates, i, range);
 			//shadow = BlendCascadedShadow(projectionCoordinates, i, range);
-			blendShadow = BlendCascadedShadow(projectionCoordinates, i, 0);
+			//blendShadow = BlendCascadedShadow(projectionCoordinates, i, 0);
 			//shadow = clamp(shadow + blendShadow, 0.0, 1.0);
 			if (blendShadow > shadow)
 			{
-				blendShadow = BlendCascadedShadow(projectionCoordinates, i, range);
+				//blendShadow = BlendCascadedShadow(projectionCoordinates, i, range);
 				shadow = blendShadow;
 				if (lod == -1)
 				{

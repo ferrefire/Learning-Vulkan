@@ -464,14 +464,14 @@ void Manager::UpdateShaderVariables()
 
 void Manager::UpdateTerrainOffsets()
 {
-	shaderVariables.terrainOffset = Terrain::terrainOffset;
+	/*shaderVariables.terrainOffset = Terrain::terrainOffset;
 	shaderVariables.terrainLod0Offset = Terrain::terrainLod0Offset;
 	shaderVariables.terrainLod1Offset = Terrain::terrainLod1Offset;
 
 	size_t offset = (char *)&shaderVariables.terrainOffset - (char *)&shaderVariables;
 	size_t size = (char *)&shaderVariables.waterHeight - (char *)&shaderVariables.terrainOffset;
 
-	memcpy((void *)((char *)shaderVariableBuffers[currentFrame].mappedBuffer + offset), &shaderVariables + offset, size);
+	memcpy((void *)((char *)shaderVariableBuffers[currentFrame].mappedBuffer + offset), &shaderVariables + offset, size);*/
 }
 
 void Manager::DestroyPipelines()

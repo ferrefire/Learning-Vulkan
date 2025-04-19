@@ -163,6 +163,8 @@ void main()
 
 	int lod = InsideWorld(position);
 
+	if (Occluded(WorldToCull(position), 0.001) == 1) return;
+
 	//if (lod == -1) return;
 	if (lod == -1 || (lod == 1 && InView(position + vec3(0, 0.5, 0), 0) == 0)) return;
 	//{
@@ -200,11 +202,11 @@ void main()
 
 	if (lod == 0 && InView(position + vec3(0, 1, 0), 0) == 0 && InView(position, 0) == 0) return;
 
-	if (variables.occlusionCulling == 1)
-	{
-		vec3 clipPosition = WorldToCull(position);
-		if (Occluded(clipPosition, 0.001) == 1) return;
-	}
+	//if (variables.occlusionCulling == 1)
+	//{
+	//	vec3 clipPosition = WorldToCull(position);
+	//	if (Occluded(clipPosition, 0.001) == 1) return;
+	//}
 
 	//vec3 terrainNormal = SampleNormalDynamic(position.xz, 0.5);
 	Normals terrainNormals = SampleNormalsDynamic(position.xz, 0.5);
