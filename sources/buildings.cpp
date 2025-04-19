@@ -454,13 +454,13 @@ void Buildings::Start()
 	menu.AddButton("generate", GenerateBuilding);
 	menu.AddNode("generation config", false);
 
-	generationConfig.minSize = glm::ivec3(3);
+	generationConfig.minSize = glm::ivec3(2);
 	generationConfig.maxSize = glm::ivec3(3);
 	//generationConfig.seed = 224388;
 	//generationConfig.seed = 1347167;
 	//generationConfig.seed = 1372670;
 	//generationConfig.scaffoldingReduction = 1;
-	generationConfig.random = true;
+	//generationConfig.random = true;
 
 	//building = &buildings[0];
 	//GenerateBuilding();
@@ -530,13 +530,17 @@ void Buildings::Frame()
 	}
 }
 
-Building *Buildings::CreateBuilding()
+Building *Buildings::CreateBuilding(int seed)
 {
+	generationConfig.seed = seed;
+
 	building = new Building;
 	currentActiveBuildings++;
 	building->id = currentActiveBuildings;
 	buildings.push_back(building);
 	GenerateCells();
+	//building->rotation = glm::vec3(0.0f, random.Next(0, 360), 0.0f);
+	building->rotation = glm::vec3(0.0f, random.Next(0, 3) * 90.0f, 0.0f);
 	return (building);
 }
 
@@ -1354,6 +1358,11 @@ bool Buildings::IsRoof(int i, int x, int y)
 
 Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, glm::vec3 rotation)
 {
+	//if (building->id == 1 && generationConfig.lod)
+	//{
+	//	partCount++;
+	//}
+
 	Shape part;
 	part.coordinate = true;
 	part.normal = true;
@@ -1376,7 +1385,9 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 	}
 	else if (type == PartType::foundation)
 	{
-		Shape floor = Shape(CUBE, true, true, true);
+		//Shape floor = Shape(CUBE, true, true, true);
+		Shape floor = Shape(NO_SHAPE, true, true, true);
+		floor.SetCube(true, true, true, true, false, false);
 		floor.SetColors(glm::vec3(3, 0, 0));
 		floor.Scale(foundationConfig.scale * generationConfig.scale);
 		floor.Scale(scale);
@@ -1392,7 +1403,7 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 	{
 		//Shape wall = Shape(CUBE, true, true, true);
 		Shape wall = Shape(NO_SHAPE, true, true, true);
-		wall.SetCube(true, true, false, false, false, false);
+		wall.SetCube(true, !generationConfig.lod, false, false, false, false);
 		wall.SetColors(glm::vec3(1, 0, 0));
 		wall.Scale(flatWallConfig.scale * generationConfig.scale);
 		wall.Scale(scale);
@@ -1522,7 +1533,9 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 	}
 	else if (type == PartType::flatRoof)
 	{
-		Shape roof = Shape(CUBE, true, true, true);
+		//Shape roof = Shape(CUBE, true, true, true);
+		Shape roof = Shape(NO_SHAPE, true, true, true);
+		roof.SetCube(true, true, true, true, true, !generationConfig.lod);
 		roof.SetColors(glm::vec3(2, 0, 0));
 		roof.SwapCoordinates();
 		roof.Scale(flatRoofConfig.scale * generationConfig.scale);
@@ -1537,7 +1550,8 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 	}
 	else if (type == PartType::slopedRoof)
 	{
-		Shape roof = Shape(CUBE, true, true, true);
+		Shape roof = Shape(NO_SHAPE, true, true, true);
+		roof.SetCube(true, false, true, true, !generationConfig.lod, true);
 		roof.SetColors(glm::vec3(2, 0, 0));
 		roof.Scale(slopedRoofConfig.scale * generationConfig.scale);
 		roof.Scale(scale);
@@ -1567,7 +1581,8 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 	}
 	else if (type == PartType::coneRoof)
 	{
-		Shape leftRoof = Shape(CUBE, true, true, true);
+		Shape leftRoof = Shape(NO_SHAPE, true, true, true);
+		leftRoof.SetCube(true, true, false, true, !generationConfig.lod, true);
 		leftRoof.InverseCoordinates(false, true);
 		leftRoof.SwapCoordinates();
 		leftRoof.SetColors(glm::vec3(2, 0, 0));
@@ -1580,7 +1595,8 @@ Shape Buildings::GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, 
 		leftRoof.Move(coneRoofConfig.offset * generationConfig.scale);
 		leftRoof.Move(offset * generationConfig.scale);
 
-		Shape rightRoof = Shape(CUBE, true, true, true);
+		Shape rightRoof = Shape(NO_SHAPE, true, true, true);
+		rightRoof.SetCube(true, true, true, false, !generationConfig.lod, true);
 		rightRoof.InverseCoordinates(true, true);
 		rightRoof.SwapCoordinates();
 		rightRoof.SetColors(glm::vec3(2, 0, 0));
@@ -1931,6 +1947,11 @@ void Buildings::GenerateMesh()
 		GenerateRoofs(i);
 	}
 
+	//if (building->id == 1 && generationConfig.lod)
+	//{
+	//	std::cout << "part count: " << partCount << std::endl;
+	//}
+
 	float xOffset = float(generationConfig.maxSize.x - 1) * 0.5;
 	float zOffset = float(generationConfig.maxSize.z - 1) * 0.5;
 	currentMesh->shape.Move(glm::vec3(-generationConfig.scale * xOffset, 0.375f * generationConfig.scale, -generationConfig.scale * zOffset));
@@ -1967,7 +1988,12 @@ void Buildings::GenerateFloor(int i, int x, int y, FloorType type)
 
 	if (i == 0 && !building->cells[i][x][y].walls.Empty())
 	{
-		if (!building->cells[i][x][y].walls.Empty(false))
+		bool N_Empty = CellEmpty(i, x, y + 1, false);
+		bool S_Empty = CellEmpty(i, x, y - 1, false);
+		bool E_Empty = CellEmpty(i, x + 1, y, false);
+		bool W_Empty = CellEmpty(i, x - 1, y, false);
+
+		if ((N_Empty + S_Empty + E_Empty + W_Empty) > 0 && !building->cells[i][x][y].walls.Empty(false))
 		{
 			Shape foundation = GeneratePart(PartType::foundation);
 			floor.Join(foundation);
@@ -1975,10 +2001,6 @@ void Buildings::GenerateFloor(int i, int x, int y, FloorType type)
 
 		if (!generationConfig.lod)
 		{
-			bool N_Empty = CellEmpty(i, x, y + 1, false);
-			bool S_Empty = CellEmpty(i, x, y - 1, false);
-			bool E_Empty = CellEmpty(i, x + 1, y, false);
-			bool W_Empty = CellEmpty(i, x - 1, y, false);
 			bool empties[] = {N_Empty, E_Empty, S_Empty, W_Empty};
 
 			for (int d = 0; d < 4; d++)
@@ -2672,6 +2694,8 @@ GenerationConfig Buildings::generationConfig;
 
 int Buildings::maxRenderBuildings = 250;
 int Buildings::currentActiveBuildings = 0;
+
+int Buildings::partCount = 0;
 
 //std::vector<Building> Buildings::buildings = std::vector<Building>(2500);
 std::vector<Building *> Buildings::buildings;

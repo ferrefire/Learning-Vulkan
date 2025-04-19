@@ -18,10 +18,13 @@ struct SettlementCell
 {
     int settlementID;
     int chunkID;
+	int seed;
 	glm::ivec2 index;
 	glm::ivec2 coordinates;
 	glm::vec3 localPosition;
     Building *building;
+
+	glm::vec3 GetGlobalPosition();
 };
 
 struct SettlementChunk
@@ -37,6 +40,14 @@ struct SettlementChunk
 
     SettlementCell *GetCell(int x, int y);
     SettlementCell *GetCell(glm::vec3 target, bool local = false);
+
+	glm::vec3 GetGlobalPosition();
+};
+
+struct ChunkProximity
+{
+	int chunkID = -1;
+	float distanceSquared = MAXFLOAT;
 };
 
 class Settlement
@@ -49,23 +60,25 @@ class Settlement
 
         int id;
         glm::vec3 position;
-        //int radius;
-        //int length;
         std::vector<SettlementChunk> chunks;
+		bool generating;
 
         void Start(int id, glm::vec3 position);
         void Destroy();
 
 		void AddChunk(glm::ivec2 coordinates);
-        //void IncreaseRadius(int amount);
 
-        SettlementChunk *GetChunk(int x, int y);
-        SettlementChunk *GetChunk(glm::vec3 target, bool local = false);
-        SettlementCell *GetCell(glm::vec3 target, bool local = false);
+		void FillChunk(glm::ivec2 coordinates);
 
-        //void AddRadius();
+		SettlementChunk *GetChunk(int x, int y);
+		SettlementChunk *GetChunk(glm::vec3 target, bool local = false);
+		int GetChunkID(glm::vec3 target, bool local = false);
+		SettlementCell *GetCell(glm::vec3 target, bool local = false);
 
-        void GenerateBuilding(SettlementCell *cell);
+		void GenerateBuilding(SettlementCell *cell);
+		void GenerateBuilding(glm::vec3 target, bool local = false);
 
-        std::vector<SettlementCell *> GetRenderCells();
+		std::vector<ChunkProximity> GetChunkProximity(glm::vec3 target);
+
+		std::vector<SettlementCell *> GetRenderCells();
 };

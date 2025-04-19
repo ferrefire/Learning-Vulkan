@@ -14,6 +14,8 @@ class Random
 		Random(uint32_t seed);
 		~Random();
 
+		static int Int(int seed);
+
 		void SetSeed(uint32_t seed);
 		int Next(int min, int max);
 };

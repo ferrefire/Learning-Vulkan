@@ -20,6 +20,12 @@ Random::~Random()
 
 }
 
+int Random::Int(int seed)
+{
+	srand(seed);
+	return (rand());
+}
+
 double Random::Interpolater()
 {
 	srand(this->seed);

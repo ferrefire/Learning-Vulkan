@@ -248,6 +248,8 @@ class Buildings
 		static int maxRenderBuildings;
 		static int currentActiveBuildings;
 
+		static int partCount;
+
 		static void Create();
         static void CreateMeshes();
         static void CreateTextures();
@@ -266,7 +268,7 @@ class Buildings
 		static void Start();
 		static void Frame();
 
-		static Building *CreateBuilding();
+		static Building *CreateBuilding(int seed = 1);
 		static void DestroyBuilding(int id);
 
 		static bool CreateBuildingMesh(Building *targetBuilding, bool lod);

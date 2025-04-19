@@ -39,7 +39,7 @@ void Data::CreateBuffers()
 	generalBuffer.Create(generalBufferConfiguration);
 
 	BufferConfiguration heightBufferConfiguration;
-	heightBufferConfiguration.size = sizeof(HeightData) * 100;
+	heightBufferConfiguration.size = sizeof(HeightData) * heightData.size();
 	heightBufferConfiguration.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 	heightBufferConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 	heightBufferConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -66,7 +66,7 @@ void Data::CreateDescriptors()
 	descriptorConfig[i].stages = COMPUTE_STAGE;
 	descriptorConfig[i].buffersInfo.resize(1);
 	descriptorConfig[i].buffersInfo[0].buffer = heightBuffer.buffer;
-	descriptorConfig[i].buffersInfo[0].range = sizeof(HeightData) * 100;
+	descriptorConfig[i].buffersInfo[0].range = sizeof(HeightData) * heightData.size();
 	descriptorConfig[i++].buffersInfo[0].offset = 0;
 
 	computeDescriptor.perFrame = false;
@@ -226,7 +226,7 @@ Buffer Data::heightBuffer;
 Descriptor Data::computeDescriptor{Manager::currentDevice};
 
 std::vector<GeneralData> Data::generalData;
-std::vector<HeightData> Data::heightData = std::vector<HeightData>(100);
-std::vector<DataRequest> Data::requestData = std::vector<DataRequest>(100);
+std::vector<HeightData> Data::heightData = std::vector<HeightData>(250);
+std::vector<DataRequest> Data::requestData = std::vector<DataRequest>(250);
 
 int Data::requestCount = 0;
