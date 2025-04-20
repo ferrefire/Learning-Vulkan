@@ -16,7 +16,7 @@ Settlement::Settlement()
 
 Settlement::~Settlement()
 {
-    Destroy();
+    //Destroy();
 }
 
 void Settlement::Start(int id, glm::vec3 position)
@@ -35,7 +35,7 @@ void Settlement::Destroy()
             for (int y = 0; y < CHUNK_LENGTH; y++)
             {
                 SettlementCell &cell = chunk.cells[x][y];
-                if (cell.building)
+                if (cell.building != nullptr)
                 {
                     Buildings::DestroyBuilding(cell.building->id);
                 }

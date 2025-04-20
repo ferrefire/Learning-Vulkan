@@ -154,13 +154,13 @@ void Buildings::CreateTextures()
 	reedSamplerConfig.anisotrophicSampleCount = 0;
 
 	reedTextures.resize(3);
-	reedTextures[0].CreateTexture("reed_diff.jpg", reedSamplerConfig);
+	reedTextures[0].CreateTexture("slate_diff.jpg", reedSamplerConfig);
 	reedSamplerConfig.anisotrophic = VK_TRUE;
 	reedSamplerConfig.anisotrophicSampleCount = 4;
-	reedTextures[1].CreateTexture("reed_norm.jpg", reedSamplerConfig);
+	reedTextures[1].CreateTexture("slate_norm.jpg", reedSamplerConfig);
 	reedSamplerConfig.anisotrophic = VK_TRUE;
 	reedSamplerConfig.anisotrophicSampleCount = 4;
-	reedTextures[2].CreateTexture("reed_ao.jpg", reedSamplerConfig);
+	reedTextures[2].CreateTexture("slate_ao.jpg", reedSamplerConfig);
 
 	SamplerConfiguration brickSamplerConfig;
 	brickSamplerConfig.repeatMode = REPEAT;
@@ -179,10 +179,12 @@ void Buildings::CreateTextures()
 
 void Buildings::CreatePipelines()
 {
-    std::vector<DescriptorLayoutConfiguration> graphicsDescriptorLayoutConfig(5);
+    std::vector<DescriptorLayoutConfiguration> graphicsDescriptorLayoutConfig(6);
 	int i = 0;
 	graphicsDescriptorLayoutConfig[i].type = UNIFORM_BUFFER;
 	graphicsDescriptorLayoutConfig[i++].stages = VERTEX_STAGE;
+	graphicsDescriptorLayoutConfig[i].type = UNIFORM_BUFFER;
+	graphicsDescriptorLayoutConfig[i++].stages = FRAGMENT_STAGE;
 	graphicsDescriptorLayoutConfig[i].type = IMAGE_SAMPLER;
 	graphicsDescriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
 	graphicsDescriptorLayoutConfig[i++].count = beamTextures.size();
@@ -247,11 +249,20 @@ void Buildings::CreateBuffers()
 	}
 
 	//uniformShadowBuffer.Create(shadowBufferConfiguration);
+
+	BufferConfiguration variablesConfiguration;
+	variablesConfiguration.size = sizeof(BuildingVariables);
+	variablesConfiguration.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	variablesConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	variablesConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	variablesConfiguration.mapped = true;
+
+	variablesBuffer.Create(variablesConfiguration);
 }
 
 void Buildings::CreateDescriptors()
 {
-    std::vector<DescriptorConfiguration> graphicsDescriptorConfig(5);
+    std::vector<DescriptorConfiguration> graphicsDescriptorConfig(6);
 
 	int index = 0;
 
@@ -266,6 +277,12 @@ void Buildings::CreateDescriptors()
 	index++;
 	//graphicsDescriptorConfig[index].buffersInfo[0].buffer = uniformBuffer.buffer;
 	//graphicsDescriptorConfig[index++].buffersInfo[0].range = sizeof(BuildingBuffer) * buildingBuffers.size();
+
+	graphicsDescriptorConfig[index].type = UNIFORM_BUFFER;
+	graphicsDescriptorConfig[index].stages = FRAGMENT_STAGE;
+	graphicsDescriptorConfig[index].buffersInfo.resize(1);
+	graphicsDescriptorConfig[index].buffersInfo[0].buffer = variablesBuffer.buffer;
+	graphicsDescriptorConfig[index++].buffersInfo[0].range = sizeof(BuildingVariables);
 
 	graphicsDescriptorConfig[index].type = IMAGE_SAMPLER;
 	graphicsDescriptorConfig[index].stages = FRAGMENT_STAGE;
@@ -352,7 +369,7 @@ void Buildings::DestroyMeshes()
 {
 	for (int i = 0; i < buildings.size(); i++)
 	{
-		if (buildings[i]->active)
+		if (buildings[i] != nullptr)
 		{
 			buildings[i]->mesh.Destroy();
 			buildings[i]->lodMesh.Destroy();
@@ -397,6 +414,8 @@ void Buildings::DestroyBuffers()
 
 	//uniformBuffer.Destroy();
 	//uniformShadowBuffer.Destroy();
+
+	variablesBuffer.Destroy();
 }
 
 void Buildings::DestroyDescriptors()
@@ -454,6 +473,31 @@ void Buildings::Start()
 	menu.AddButton("generate", GenerateBuilding);
 	menu.AddNode("generation config", false);
 
+	menu.AddNode("building variables", true);
+	menu.AddNode("building textures", true);
+	menu.AddNode("roof variables", true);
+	menu.AddColor("roof tint", buildingVariables.roofTint);
+	menu.AddSlider("roof normal", buildingVariables.roofNormal, 0.0f, 16.0f);
+	menu.AddSlider("roof ambient", buildingVariables.roofAmbient, 0.0f, 16.0f);
+	menu.AddNode("roof variables", false);
+	menu.AddNode("wall variables", true);
+	menu.AddColor("wall tint", buildingVariables.wallTint);
+	menu.AddSlider("wall normal", buildingVariables.wallNormal, 0.0f, 16.0f);
+	menu.AddSlider("wall ambient", buildingVariables.wallAmbient, 0.0f, 16.0f);
+	menu.AddNode("wall variables", false);
+	menu.AddNode("beam variables", true);
+	menu.AddColor("beam tint", buildingVariables.beamTint);
+	menu.AddSlider("beam normal", buildingVariables.beamNormal, 0.0f, 16.0f);
+	menu.AddSlider("beam ambient", buildingVariables.beamAmbient, 0.0f, 16.0f);
+	menu.AddNode("beam variables", false);
+	menu.AddNode("brick variables", true);
+	menu.AddColor("brick tint", buildingVariables.brickTint);
+	menu.AddSlider("brick normal", buildingVariables.brickNormal, 0.0f, 16.0f);
+	menu.AddSlider("brick ambient", buildingVariables.brickAmbient, 0.0f, 16.0f);
+	menu.AddNode("brick variables", false);
+	menu.AddNode("building textures", false);
+	menu.AddNode("building variables", false);
+
 	generationConfig.minSize = glm::ivec3(2);
 	generationConfig.maxSize = glm::ivec3(3);
 	//generationConfig.seed = 224388;
@@ -478,7 +522,9 @@ void Buildings::Start()
 
 void Buildings::Frame()
 {
-	return;
+	memcpy(variablesBuffer.mappedBuffer, &buildingVariables, sizeof(BuildingVariables));
+
+	/*return;
 
 	if (!Terrain::HeightMapsGenerated()) return;
 
@@ -527,7 +573,7 @@ void Buildings::Frame()
 			buildingX = -villageRange;
 			villageIndex++;
 		}
-	}
+	}*/
 }
 
 Building *Buildings::CreateBuilding(int seed)
@@ -2684,9 +2730,12 @@ std::vector<BuildingBuffer> Buildings::buildingBuffers;
 std::vector<BuildingBuffer> Buildings::buildingShadowBuffers;
 std::vector<Buffer> Buildings::uniformBuffers;
 std::vector<Buffer> Buildings::uniformShadowBuffers;
+Buffer Buildings::variablesBuffer;
 
 Descriptor Buildings::graphicsDescriptor{Manager::currentDevice};
 Descriptor Buildings::shadowDescriptor{Manager::currentDevice};
+
+BuildingVariables Buildings::buildingVariables;
 
 bool Buildings::generating = false;
 

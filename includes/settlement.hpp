@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <vector>
+#include <cstdint>
 
 #define CHUNK_RADIUS 2
 #define CHUNK_LENGTH (CHUNK_RADIUS * 2 + 1)
@@ -47,7 +48,7 @@ struct SettlementChunk
 struct ChunkProximity
 {
 	int chunkID = -1;
-	float distanceSquared = MAXFLOAT;
+	float distanceSquared = FLT_MAX;
 };
 
 class Settlement

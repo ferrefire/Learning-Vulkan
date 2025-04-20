@@ -194,6 +194,22 @@ struct PartConfig
 	glm::vec3 offset = glm::vec3(0);
 };
 
+struct BuildingVariables
+{
+	glm::vec4 roofTint = glm::vec4(98.0f, 122.0f, 181.0f, 255.0f) / 255.0f;
+	glm::vec4 wallTint = glm::vec4(255.0f, 255.0f, 255.0f, 255.0f) / 255.0f;
+	glm::vec4 beamTint = glm::vec4(213.0f, 234.0f, 236.0f, 255.0f) / 255.0f;
+	glm::vec4 brickTint = glm::vec4(255.0f, 255.0f, 255.0f, 255.0f) / 255.0f;
+	float roofNormal = 2.0f;
+	float wallNormal = 2.0f;
+	float beamNormal = 1.0f;
+	float brickNormal = 1.0f;
+	float roofAmbient = 4.0f;
+	float wallAmbient = 6.0f;
+	float beamAmbient = 4.0f;
+	float brickAmbient = 1.0f;
+};
+
 class Buildings
 {
     private:
@@ -212,9 +228,12 @@ class Buildings
 		static std::vector<BuildingBuffer> buildingShadowBuffers;
 		static std::vector<Buffer> uniformBuffers;
 		static std::vector<Buffer> uniformShadowBuffers;
+		static Buffer variablesBuffer;
 
 		static Descriptor graphicsDescriptor;
         static Descriptor shadowDescriptor;
+
+		static BuildingVariables buildingVariables;
 
 		static bool generating;
 
