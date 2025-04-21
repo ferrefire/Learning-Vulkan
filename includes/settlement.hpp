@@ -45,15 +45,17 @@ struct SettlementChunk
 	glm::vec3 GetGlobalPosition();
 };
 
-struct ChunkProximity
+struct ProximityData
 {
-	int chunkID = -1;
+	int id = -1;
 	float distanceSquared = FLT_MAX;
 };
 
 class Settlement
 {
     private:
+        std::vector<Building *> buildingsToGenerate;
+        void GenerateBuildings();
 
     public:
         Settlement();
@@ -79,7 +81,9 @@ class Settlement
 		void GenerateBuilding(SettlementCell *cell);
 		void GenerateBuilding(glm::vec3 target, bool local = false);
 
-		std::vector<ChunkProximity> GetChunkProximity(glm::vec3 target);
+		std::vector<ProximityData> GetChunkProximity(glm::vec3 target);
 
 		std::vector<SettlementCell *> GetRenderCells();
+
+        int MaxCoordinate();
 };

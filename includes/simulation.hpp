@@ -17,6 +17,7 @@ class Simulation
 
     public:
         static bool started;
+        static bool generating;
 
         static std::vector<Settlement *> settlements;
 
@@ -27,4 +28,6 @@ class Simulation
 
         static void Start();
         static void Frame();
+
+        static std::vector<ProximityData> GetSettlementProximity(glm::vec3 target);
 };

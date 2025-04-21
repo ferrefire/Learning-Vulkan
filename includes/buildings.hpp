@@ -33,6 +33,9 @@ struct Floor
 
 struct Walls
 {
+	//WallType types[4] = {WallType::empty, WallType::empty, WallType::empty, WallType::empty};
+	//int variants[4] = {0, 0, 0, 0};
+
     WallType N_Type = WallType::empty;
     WallType S_Type = WallType::empty;
     WallType E_Type = WallType::empty;
@@ -200,14 +203,22 @@ struct BuildingVariables
 	glm::vec4 wallTint = glm::vec4(255.0f, 255.0f, 255.0f, 255.0f) / 255.0f;
 	glm::vec4 beamTint = glm::vec4(213.0f, 234.0f, 236.0f, 255.0f) / 255.0f;
 	glm::vec4 brickTint = glm::vec4(255.0f, 255.0f, 255.0f, 255.0f) / 255.0f;
-	float roofNormal = 2.0f;
+	alignas(8) glm::vec2 roofDistance = glm::vec2(150.0f, 100.0f);
+	glm::vec2 wallDistance = glm::vec2(50.0f, 100.0f);
+	glm::vec2 beamDistance = glm::vec2(50.0f, 50.0f);
+	glm::vec2 brickDistance = glm::vec2(100.0f, 100.0f);
+	float roofNormal = 4.0f;
 	float wallNormal = 2.0f;
 	float beamNormal = 1.0f;
 	float brickNormal = 1.0f;
 	float roofAmbient = 4.0f;
 	float wallAmbient = 6.0f;
 	float beamAmbient = 4.0f;
-	float brickAmbient = 1.0f;
+	float brickAmbient = 2.0f;
+	float roofAmbientDefault = 0.6f;
+	float wallAmbientDefault = 0.75f;
+	float beamAmbientDefault = 1.0f;
+	float brickAmbientDefault = 1.0f;
 };
 
 class Buildings
@@ -302,37 +313,37 @@ class Buildings
 		static void SetRenderBuildingsShadow();
 
 		static void GenerateBuilding();
-		static void GenerateCells();
-		static void ExpandLevel(int level);
-		static void FillLevel(int level);
-		static void ExpandCell(int i, int x, int y, int factor);
-        static bool ExpansionValid(int i, int x, int y, int factor, int increase);
-		static void SetWalls();
-		static void SetBeams();
-		static void SetRoof();
-        static bool BeamPass(int i, int x, int y, D direction, bool N_Empty, bool S_Empty, bool E_Empty, bool W_Empty, bool NE_Empty, bool NW_Empty, bool SE_Empty, bool SW_Empty);
-		static void RoofTypePass(int i, int x, int y);
-		static void RoofConePass(int i, int x, int y);
-		static void RoofDirectionPass(int i, int x, int y);
-		static void RoofMergePass(int i, int x, int y);
-		static void RoofExtendPass(int i, int x, int y);
-		static D GetRoofDirection(RoofType type, bool N_Empty, bool S_Empty, bool E_Empty, bool W_Empty, bool N_Cone,
-			bool S_Cone, bool E_Cone, bool W_Cone, bool E_UpEmpty, bool W_UpEmpty);
-		static bool MergePass(int i, int x, int y, D direction, bool N_Empty, bool S_Empty, bool E_Empty, bool W_Empty, bool N_Cone, bool S_Cone, bool E_Cone, bool W_Cone);
-		static bool IsRoof(int i, int x, int y);
-		static Shape GeneratePart(PartType type, int rotate = 0);
-		static Shape GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, glm::vec3 rotation);
-		static void GenerateMesh();
-		static void GenerateFloors(int level);
-		static void GenerateFloor(int i, int x, int y, FloorType type);
-		static void GenerateWalls(int level);
-		static void GenerateWall(glm::vec3 offset, WallType type, D direction, int variant);
-		static void GenerateBeams(int i, int x, int y);
-		static void GenerateRoofs(int level);
-		static void GenerateRoof(int i, int x, int y, RoofType type, D direction);
-		static bool CellValid(int i, int x, int y);
-		static bool CellEmpty(int i, int x, int y, bool countBeams = true);
-		static bool FloorEmpty(int i, int x, int y);
+		//static void GenerateCells();
+		//static void ExpandLevel(int level);
+		//static void FillLevel(int level);
+		//static void ExpandCell(int i, int x, int y, int factor);
+        //static bool ExpansionValid(int i, int x, int y, int factor, int increase);
+		//static void SetWalls();
+		//static void SetBeams();
+		//static void SetRoof();
+        //static bool BeamPass(int i, int x, int y, D direction, bool N_Empty, bool S_Empty, bool E_Empty, bool W_Empty, bool NE_Empty, bool NW_Empty, bool SE_Empty, bool SW_Empty);
+		//static void RoofTypePass(int i, int x, int y);
+		//static void RoofConePass(int i, int x, int y);
+		//static void RoofDirectionPass(int i, int x, int y);
+		//static void RoofMergePass(int i, int x, int y);
+		//static void RoofExtendPass(int i, int x, int y);
+		//static D GetRoofDirection(RoofType type, bool N_Empty, bool S_Empty, bool E_Empty, bool W_Empty, bool N_Cone,
+		//	bool S_Cone, bool E_Cone, bool W_Cone, bool E_UpEmpty, bool W_UpEmpty);
+		//static bool MergePass(int i, int x, int y, D direction, bool N_Empty, bool S_Empty, bool E_Empty, bool W_Empty, bool N_Cone, bool S_Cone, bool E_Cone, bool W_Cone);
+		//static Shape GeneratePart(PartType type, int rotate = 0);
+		//static Shape GeneratePart(PartType type, glm::vec3 scale, glm::vec3 offset, glm::vec3 rotation);
+		//static void GenerateMesh();
+		//static void GenerateFloors(int level);
+		//static void GenerateFloor(int i, int x, int y, FloorType type);
+		//static void GenerateWalls(int level);
+		//static void GenerateWall(glm::vec3 offset, WallType type, D direction, int variant);
+		//static void GenerateBeams(int i, int x, int y);
+		//static void GenerateRoofs(int level);
+		//static void GenerateRoof(int i, int x, int y, RoofType type, D direction);
+		//static bool IsRoof(int i, int x, int y);
+		//static bool CellValid(int i, int x, int y);
+		//static bool CellEmpty(int i, int x, int y, bool countBeams = true);
+		//static bool FloorEmpty(int i, int x, int y);
 		static void UpdateBuilding(int i);
 		static bool BuildingInView(Building *b);
 };

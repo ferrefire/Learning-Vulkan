@@ -323,12 +323,15 @@ bool Camera::AreaInView(glm::vec3 worldSpace, float size, int range, float toler
 {
 	for (int x = -range; x <= range; x++)
 	{
-		for (int y = -range; y <= range; y++)
+		for (int z = -range; z <= range; z++)
 		{
-			if (InView(worldSpace + glm::vec3(x, 0, y) * size, tolerance))
+			for (int y = -range; y <= range; y++)
+		{
+			if (InView(worldSpace + glm::vec3(x, y, z) * size, tolerance))
 			{
 				return (true);
 			}
+		}
 		}
 	}
 

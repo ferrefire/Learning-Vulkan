@@ -8,9 +8,11 @@
 #include "terrain.hpp"
 #include "simulation.hpp"
 #include "settlement.hpp"
+#include "buildingGenerator.hpp"
 
 #include <iostream>
 #include <cstdlib>
+//#include <thread>
 
 void Buildings::Create()
 {
@@ -470,7 +472,7 @@ void Buildings::Start()
 	menu.AddInput("seed", generationConfig.seed);
 	menu.AddCheck("lod", generationConfig.lod);
 	menu.AddCheck("random", generationConfig.random);
-	menu.AddButton("generate", GenerateBuilding);
+	//menu.AddButton("generate", GenerateBuilding);
 	menu.AddNode("generation config", false);
 
 	menu.AddNode("building variables", true);
@@ -479,27 +481,41 @@ void Buildings::Start()
 	menu.AddColor("roof tint", buildingVariables.roofTint);
 	menu.AddSlider("roof normal", buildingVariables.roofNormal, 0.0f, 16.0f);
 	menu.AddSlider("roof ambient", buildingVariables.roofAmbient, 0.0f, 16.0f);
+	menu.AddSlider("roof ambient default", buildingVariables.roofAmbientDefault, 0.0f, 16.0f);
+	menu.AddSlider("roof normal distance", buildingVariables.roofDistance.x, 0.0f, 250.0f);
+	menu.AddSlider("roof ambient distance", buildingVariables.roofDistance.y, 0.0f, 250.0f);
 	menu.AddNode("roof variables", false);
 	menu.AddNode("wall variables", true);
 	menu.AddColor("wall tint", buildingVariables.wallTint);
 	menu.AddSlider("wall normal", buildingVariables.wallNormal, 0.0f, 16.0f);
 	menu.AddSlider("wall ambient", buildingVariables.wallAmbient, 0.0f, 16.0f);
+	menu.AddSlider("wall ambient default", buildingVariables.wallAmbientDefault, 0.0f, 16.0f);
+	menu.AddSlider("wall normal distance", buildingVariables.wallDistance.x, 0.0f, 250.0f);
+	menu.AddSlider("wall ambient distance", buildingVariables.wallDistance.y, 0.0f, 250.0f);
 	menu.AddNode("wall variables", false);
 	menu.AddNode("beam variables", true);
 	menu.AddColor("beam tint", buildingVariables.beamTint);
 	menu.AddSlider("beam normal", buildingVariables.beamNormal, 0.0f, 16.0f);
 	menu.AddSlider("beam ambient", buildingVariables.beamAmbient, 0.0f, 16.0f);
+	menu.AddSlider("beam ambient default", buildingVariables.beamAmbientDefault, 0.0f, 16.0f);
+	menu.AddSlider("beam normal distance", buildingVariables.beamDistance.x, 0.0f, 250.0f);
+	menu.AddSlider("beam ambient distance", buildingVariables.beamDistance.y, 0.0f, 250.0f);
 	menu.AddNode("beam variables", false);
 	menu.AddNode("brick variables", true);
 	menu.AddColor("brick tint", buildingVariables.brickTint);
 	menu.AddSlider("brick normal", buildingVariables.brickNormal, 0.0f, 16.0f);
 	menu.AddSlider("brick ambient", buildingVariables.brickAmbient, 0.0f, 16.0f);
+	menu.AddSlider("brick ambient default", buildingVariables.brickAmbientDefault, 0.0f, 16.0f);
+	menu.AddSlider("brick normal distance", buildingVariables.brickDistance.x, 0.0f, 250.0f);
+	menu.AddSlider("brick ambient distance", buildingVariables.brickDistance.y, 0.0f, 250.0f);
 	menu.AddNode("brick variables", false);
 	menu.AddNode("building textures", false);
 	menu.AddNode("building variables", false);
 
 	generationConfig.minSize = glm::ivec3(2);
 	generationConfig.maxSize = glm::ivec3(3);
+	//generationConfig.minSize = glm::ivec3(1);
+	//generationConfig.maxSize = glm::ivec3(2);
 	//generationConfig.seed = 224388;
 	//generationConfig.seed = 1347167;
 	//generationConfig.seed = 1372670;
@@ -523,6 +539,8 @@ void Buildings::Start()
 void Buildings::Frame()
 {
 	memcpy(variablesBuffer.mappedBuffer, &buildingVariables, sizeof(BuildingVariables));
+
+	SetRenderBuildings();
 
 	/*return;
 
@@ -584,7 +602,9 @@ Building *Buildings::CreateBuilding(int seed)
 	currentActiveBuildings++;
 	building->id = currentActiveBuildings;
 	buildings.push_back(building);
-	GenerateCells();
+	//GenerateCells();
+	BuildingGenerator bg(generationConfig);
+	building->cells = bg.GetCells();
 	//building->rotation = glm::vec3(0.0f, random.Next(0, 360), 0.0f);
 	building->rotation = glm::vec3(0.0f, random.Next(0, 3) * 90.0f, 0.0f);
 	return (building);
@@ -613,7 +633,22 @@ bool Buildings::CreateBuildingMesh(Building *targetBuilding, bool lod)
 
 	building = targetBuilding;
 	generationConfig.lod = lod;
-	GenerateMesh();
+
+	Mesh *currentMesh = &building->mesh;
+	if (generationConfig.lod) currentMesh = &building->lodMesh;
+	
+	if (currentMesh->created) currentMesh->DestroyAtRuntime();
+
+	currentMesh->coordinate = true;
+	currentMesh->normal = true;
+	currentMesh->color = true;
+
+	BuildingGenerator bg(generationConfig, targetBuilding->cells);
+	currentMesh->shape = bg.GetShape();
+	currentMesh->RecalculateVertices();
+	currentMesh->Create();
+
+	//GenerateMesh();
 	
 	generating = false;
 
@@ -644,7 +679,7 @@ void Buildings::RecordShadowCommands(VkCommandBuffer commandBuffer, int cascade)
 
 void Buildings::RenderBuildings(VkCommandBuffer commandBuffer)
 {
-	SetRenderBuildings();
+	//SetRenderBuildings();
 
 	for (int i = 0; i < renderBuildings.size(); i++)
 	{
@@ -688,11 +723,18 @@ void Buildings::SetRenderBuildings()
 {
 	renderBuildings.clear();
 
-	for (int i = 0; i < Simulation::settlements.size(); i++)
+	std::vector<ProximityData> settlementProximity = Simulation::GetSettlementProximity(Manager::camera.Position());
+	for (ProximityData proximityData : settlementProximity)
 	{
 		if (renderBuildings.size() >= maxRenderBuildings) break;
 
-		std::vector<SettlementCell *> renderCells = Simulation::settlements[i]->GetRenderCells();
+		//if (Simulation::settlements[proximityData.id]->GetChunkID(Manager::camera.Position() + Terrain::terrainOffset) == -1 && 
+		//	!Manager::camera.AreaInView(Simulation::settlements[proximityData.id]->position - Terrain::terrainOffset, (CELL_SIZE * CHUNK_LENGTH), Simulation::settlements[proximityData.id]->MaxCoordinate() + 1))
+		//{
+		//	continue;
+		//}
+
+		std::vector<SettlementCell *> renderCells = Simulation::settlements[proximityData.id]->GetRenderCells();
 
 		for (int j = 0; j < renderCells.size(); j++)
 		{
@@ -716,18 +758,24 @@ void Buildings::SetRenderBuildings()
 		}
 	}*/
 
+	renderBuildingsShadow = renderBuildings;
+
 	memcpy(uniformBuffers[Manager::currentFrame].mappedBuffer, buildingBuffers.data(), sizeof(BuildingBuffer) * renderBuildings.size());
+	memcpy(uniformShadowBuffers[Manager::currentFrame].mappedBuffer, buildingBuffers.data(), sizeof(BuildingBuffer) * renderBuildingsShadow.size());
 }
 
 void Buildings::SetRenderBuildingsShadow()
 {
+	return;
+
 	renderBuildingsShadow.clear();
 
-	for (int i = 0; i < Simulation::settlements.size(); i++)
+	std::vector<ProximityData> settlementProximity = Simulation::GetSettlementProximity(Manager::camera.Position());
+	for (ProximityData proximityData : settlementProximity)
 	{
 		if (renderBuildingsShadow.size() >= maxRenderBuildings) break;
 
-		std::vector<SettlementCell *> renderCells = Simulation::settlements[i]->GetRenderCells();
+		std::vector<SettlementCell *> renderCells = Simulation::settlements[proximityData.id]->GetRenderCells();
 
 		for (int j = 0; j < renderCells.size(); j++)
 		{
@@ -754,9 +802,9 @@ void Buildings::SetRenderBuildingsShadow()
 	memcpy(uniformShadowBuffers[Manager::currentFrame].mappedBuffer, buildingShadowBuffers.data(), sizeof(BuildingBuffer) * renderBuildingsShadow.size());
 }
 
-void Buildings::GenerateBuilding()
+/*void Buildings::GenerateBuilding()
 {
-	GenerateCells();
+	//GenerateCells();
 	generationConfig.lod = false;
 	GenerateMesh();
 	generationConfig.lod = true;
@@ -769,9 +817,9 @@ void Buildings::GenerateBuilding()
 	//std::cout << std::endl;
 	//std::cout << "vertex count: " << building->mesh.vertices.size() << std::endl;
 	//std::cout << "indice count: " << building->mesh.indices.size() << std::endl;
-}
+}*/
 
-void Buildings::GenerateCells()
+/*void Buildings::GenerateCells()
 {
 	building->cells.clear();
 	building->size = generationConfig.maxSize;
@@ -1394,9 +1442,9 @@ bool Buildings::MergePass(int i, int x, int y, D direction, bool N_Empty, bool S
 	}
 
 	return (merge);
-}
+}*/
 
-bool Buildings::IsRoof(int i, int x, int y)
+/*bool Buildings::IsRoof(int i, int x, int y)
 {
 	return (CellValid(i, x, y) && !building->cells[i][x][y].Empty(false) && (!CellValid(i + 1, x, y) || 
 		building->cells[i + 1][x][y].Empty(false)));
@@ -1968,7 +2016,7 @@ Shape Buildings::GeneratePart(PartType type, int rotate)
 		part.Join(collumn);
 	}
 	
-	return (part);*/
+	return (part);
 }
 
 void Buildings::GenerateMesh()
@@ -2334,7 +2382,7 @@ void Buildings::GenerateBeams(int i, int x, int y)
 		Shape collumn = GeneratePart(PartType::collumn);
 		collumn.Rotate(270.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 		beams.Join(collumn);
-	}*/
+	}
 
 	beams.Move(glm::vec3(x, i, y) * generationConfig.scale);
 	building->mesh.shape.Join(beams);
@@ -2659,7 +2707,7 @@ bool Buildings::CellEmpty(int i, int x, int y, bool countBeams)
 bool Buildings::FloorEmpty(int i, int x, int y)
 {
 	return (!CellValid(i, x, y) || building->cells[i][x][y].floor.Empty());
-}
+}*/
 
 void Buildings::UpdateBuilding(int id)
 {

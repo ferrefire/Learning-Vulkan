@@ -1,6 +1,7 @@
 #include "device.hpp"
 
 #include "manager.hpp"
+#include "buffer.hpp"
 
 #include <stdexcept>
 #include <vector>
@@ -619,4 +620,16 @@ VkSampleCountFlagBits Device::MaxDeviceSampleCount()
 bool Device::HasStencilComponent(VkFormat format)
 {
 	return (format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT);
+}
+
+void Device::DestroyStagingBuffers()
+{
+	for (int i = 0; i < stagingBuffers.size(); i++)
+	{
+		if (!stagingBuffers[i]) continue;
+
+		((Buffer *)stagingBuffers[i])->Destroy();
+		delete(((Buffer *)stagingBuffers[i]));
+	}
+	stagingBuffers.clear();
 }

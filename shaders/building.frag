@@ -12,6 +12,10 @@ layout(set = 1, binding = 1) uniform BuildingVariables
 	vec4 wallTint;
 	vec4 beamTint;
 	vec4 brickTint;
+	vec2 roofDistance;
+	vec2 wallDistance;
+	vec2 beamDistance;
+	vec2 brickDistance;
 	float roofNormal;
 	float wallNormal;
 	float beamNormal;
@@ -20,6 +24,10 @@ layout(set = 1, binding = 1) uniform BuildingVariables
 	float wallAmbient;
 	float beamAmbient;
 	float brickAmbient;
+	float roofAmbientDefault;
+	float wallAmbientDefault;
+	float beamAmbientDefault;
+	float brickAmbientDefault;
 } buildingVariables;
 layout(set = 1, binding = 2) uniform sampler2D beamSamplers[3];
 layout(set = 1, binding = 3) uniform sampler2D plasteredSamplers[3];
@@ -83,7 +91,9 @@ void main()
 
 	if (type.x == 0)
 	{
-		sampleStrength = GetSampleStrength(50.0, 50.0, dis);
+		defaultAmbient = vec3(buildingVariables.beamAmbientDefault);
+
+		sampleStrength = GetSampleStrength(buildingVariables.beamDistance.x, buildingVariables.beamDistance.y, dis);
 
 		worldUV.y += 0.065;
 		texColor = SampleTriplanarColor(beamSamplers[0], worldUV, weights) * buildingVariables.beamTint.rgb;
@@ -102,7 +112,9 @@ void main()
 	}
 	else if (type.x == 1)
 	{
-		sampleStrength = GetSampleStrength(50.0, 250.0, dis);
+		defaultAmbient = vec3(buildingVariables.wallAmbientDefault);
+
+		sampleStrength = GetSampleStrength(buildingVariables.wallDistance.x, buildingVariables.wallDistance.y, dis);
 
 		uv *= 0.5;
 		texColor = SampleTriplanarColor(plasteredSamplers[0], worldUV, weights) * buildingVariables.wallTint.rgb;
@@ -121,7 +133,9 @@ void main()
 	}
 	else if (type.x == 2)
 	{
-		sampleStrength = GetSampleStrength(100.0, 250.0, dis);
+		defaultAmbient = vec3(buildingVariables.roofAmbientDefault);
+
+		sampleStrength = GetSampleStrength(buildingVariables.roofDistance.x, buildingVariables.roofDistance.y, dis);
 
 		//defaultAmbient = vec3(0.5);
 		texColor = SampleTriplanarColorFlat(reedSamplers[0], uv, weights) * buildingVariables.roofTint.rgb;
@@ -140,7 +154,9 @@ void main()
 	}
 	else if (type.x == 3)
 	{
-		sampleStrength = GetSampleStrength(100.0, 100.0, dis);
+		defaultAmbient = vec3(buildingVariables.brickAmbientDefault);
+
+		sampleStrength = GetSampleStrength(buildingVariables.brickDistance.x, buildingVariables.brickDistance.y, dis);
 
 		texColor = SampleTriplanarColor(brickSamplers[0], worldUV, weights) * buildingVariables.brickTint.rgb;
 		if (shadow < 1.0 && sampleStrength.x > 0.0) texNormal = SampleTriplanarNormal(brickSamplers[1], worldUV, weights, oNormal, buildingVariables.brickNormal * sampleStrength.x);
@@ -158,9 +174,11 @@ void main()
 	}
 	else if (type.x == 4)
 	{
+		defaultAmbient = vec3(buildingVariables.beamAmbientDefault);
+
 		bool rotate = weights.y < weights.x || weights.y < weights.z;
 
-		sampleStrength = GetSampleStrength(50.0, 50.0, dis);
+		sampleStrength = GetSampleStrength(buildingVariables.beamDistance.x, buildingVariables.beamDistance.y, dis);
 
 		worldUV.y += 0.065;
 		texColor = SampleTriplanarColor(beamSamplers[0], worldUV, weights, rotate) * buildingVariables.beamTint.rgb;
@@ -184,8 +202,8 @@ void main()
 
 	//float shadow = GetCascadedShadow(shadowPositions, depth);
 
-    vec3 diffuse = DiffuseLighting(texNormal, shadow, 0.0375);
-    //vec3 diffuse = DiffuseLighting(texNormal, shadow);
+    //vec3 diffuse = DiffuseLighting(texNormal, shadow, 0.0375);
+    vec3 diffuse = DiffuseLighting(texNormal, shadow);
 
     vec3 finalLighting = texColor * texAmbient * diffuse;
 

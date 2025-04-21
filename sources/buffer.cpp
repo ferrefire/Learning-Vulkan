@@ -55,14 +55,27 @@ void Buffer::Create(BufferConfiguration &configuration)
 	CreateBuffer(configuration);
 }
 
-void Buffer::Create(void *data, BufferConfiguration &configuration)
+void Buffer::Create(void *data, BufferConfiguration &configuration, VkCommandBuffer commandBuffer)
 {
-	Buffer stagingBuffer;
-	stagingBuffer.CreateStagingBuffer(data, configuration.size);
+	bool oneTimeBuffer = commandBuffer == nullptr;
+	if (oneTimeBuffer)
+	{
+		Buffer stagingBuffer;
+		stagingBuffer.CreateStagingBuffer(data, configuration.size);
 
-	Create(configuration);
-	stagingBuffer.CopyTo(buffer, configuration.size);
-	stagingBuffer.Destroy();
+		Create(configuration);
+		stagingBuffer.CopyTo(buffer, configuration.size, commandBuffer);
+		stagingBuffer.Destroy();
+	}
+	else
+	{
+		Buffer *stagingBuffer = new Buffer;
+		device.stagingBuffers.push_back(stagingBuffer);
+		stagingBuffer->CreateStagingBuffer(data, configuration.size);
+
+		Create(configuration);
+		stagingBuffer->CopyTo(buffer, configuration.size, commandBuffer);
+	}
 }
 
 void Buffer::CreateBuffer(BufferConfiguration &configuration)
@@ -138,9 +151,12 @@ void Buffer::DestroyBuffer()
 	}
 }
 
-void Buffer::CopyTo(VkBuffer targetBuffer, VkDeviceSize size)
+void Buffer::CopyTo(VkBuffer targetBuffer, VkDeviceSize size, VkCommandBuffer commandBuffer)
 {
-	VkCommandBuffer commandBuffer = device.BeginGraphicsCommand();
+	//VkCommandBuffer commandBuffer = device.BeginGraphicsCommand();
+
+	bool oneTimeBuffer = commandBuffer == nullptr;
+	if (oneTimeBuffer) commandBuffer = device.BeginGraphicsCommand();
 
 	VkBufferCopy copyRegion{};
 	copyRegion.srcOffset = 0;
@@ -149,7 +165,7 @@ void Buffer::CopyTo(VkBuffer targetBuffer, VkDeviceSize size)
 
 	vkCmdCopyBuffer(commandBuffer, buffer, targetBuffer, 1, &copyRegion);
 
-	device.EndGraphicsCommand(commandBuffer);
+	if (oneTimeBuffer) device.EndGraphicsCommand(commandBuffer);
 }
 
 void Buffer::CopyTo(VkImage targetImage, ImageConfiguration &configuration)

@@ -40,13 +40,13 @@ class Buffer
 		void * mappedBuffer = nullptr;
 
 		void Create(BufferConfiguration &configuration);
-		void Create(void *data, BufferConfiguration &configuration);
+		void Create(void *data, BufferConfiguration &configuration, VkCommandBuffer commandBuffer = nullptr);
 		void CreateBuffer(BufferConfiguration &configuration);
 		void CreateStagingBuffer(void *data, VkDeviceSize size);
 
 		void Destroy();
 		void DestroyBuffer();
 
-		void CopyTo(VkBuffer targetBuffer, VkDeviceSize size);
+		void CopyTo(VkBuffer targetBuffer, VkDeviceSize size, VkCommandBuffer commandBuffer = nullptr);
 		void CopyTo(VkImage targetImage, ImageConfiguration &configuration);
 };

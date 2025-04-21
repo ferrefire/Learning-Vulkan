@@ -34,14 +34,14 @@ Mesh::~Mesh()
 	Destroy();
 }
 
-void Mesh::Create()
+void Mesh::Create(VkCommandBuffer commandBuffer)
 {
-	CreateVertexBuffer();
-	CreateIndexBuffer();
+	CreateVertexBuffer(commandBuffer);
+	CreateIndexBuffer(commandBuffer);
 	this->created = true;
 }
 
-void Mesh::CreateVertexBuffer()
+void Mesh::CreateVertexBuffer(VkCommandBuffer commandBuffer)
 {
 	if (vertexBuffer.buffer || vertexBuffer.memory) throw std::runtime_error(name + ": cannot create vertex buffer because it already exists");
 	if (verticesData.size() == 0) throw std::runtime_error(name + ": cannot create vertex buffer because there are no vertices");
@@ -51,10 +51,10 @@ void Mesh::CreateVertexBuffer()
 	BufferConfiguration configuration = Buffer::VertexBuffer();
 	configuration.size = bufferSize;
 
-	vertexBuffer.Create(verticesData.data(), configuration);
+	vertexBuffer.Create(verticesData.data(), configuration, commandBuffer);
 }
 
-void Mesh::CreateIndexBuffer()
+void Mesh::CreateIndexBuffer(VkCommandBuffer commandBuffer)
 {
 	if (indexBuffer.buffer || indexBuffer.memory) throw std::runtime_error(name + ": cannot create index buffer because it already exists");
 	if (indices.size() == 0) throw std::runtime_error(name + ": cannot create index buffer because there are no indices");
@@ -64,7 +64,7 @@ void Mesh::CreateIndexBuffer()
 	BufferConfiguration configuration = Buffer::IndexBuffer();
 	configuration.size = bufferSize;
 
-	indexBuffer.Create(indices.data(), configuration);
+	indexBuffer.Create(indices.data(), configuration, commandBuffer);
 }
 
 void Mesh::Destroy()

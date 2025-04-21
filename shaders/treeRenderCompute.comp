@@ -295,7 +295,7 @@ LodComputeResult ComputeLod(inout TreeComputeResult treeResult)
 		if (abs(fadeDiff) < 0.2) treeResult.scale *= clamp(abs(fadeDiff) * 5.0, 0.1, 1.0);
 	}
 
-	if (Occluded(WorldToCull(treeResult.position.xyz + vec3(0, 60, 0)), 0.005) == 1) return (lodResult);
+	//if (Occluded(WorldToCull(treeResult.position.xyz + vec3(0, 60, 0)), 0.005) == 1) return (lodResult);
 	if (lod > 3)
 	{
 		if (InView(treeResult.position.xyz, 0) == 0) return (lodResult);
@@ -326,7 +326,7 @@ LodComputeResult ComputeLod(inout TreeComputeResult treeResult)
 	{
 		if (AreaInView2(treeResult.position.xyz + vec3(0, 40, 0), 40.0) == 0) lod = -1;
 	}
-	//if (Occluded(WorldToCull(treeResult.position.xyz + vec3(0, 60, 0)), 0.005) == 1) return (lodResult);
+	if (Occluded(WorldToCull(treeResult.position.xyz + vec3(0, 60, 0)), 0.005) == 1) return (lodResult);
 
 	lodResult.lodInter = lodInter;
 	lodResult.lodDis = lodDis;

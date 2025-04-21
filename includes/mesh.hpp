@@ -62,9 +62,9 @@ class Mesh
 		Buffer vertexBuffer;
 		Buffer indexBuffer;
 
-		void Create();
-		void CreateVertexBuffer();
-		void CreateIndexBuffer();
+		void Create(VkCommandBuffer commandBuffer = nullptr);
+		void CreateVertexBuffer(VkCommandBuffer commandBuffer = nullptr);
+		void CreateIndexBuffer(VkCommandBuffer commandBuffer = nullptr);
 
 		void Destroy();
 		void DestroyAtRuntime();

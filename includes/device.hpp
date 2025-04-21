@@ -75,6 +75,8 @@ class Device
 		SwapChainSupportDetails swapChainSupportDetails;
         const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
+        std::vector<void *> stagingBuffers;
+
         void Create(VkInstance instance, VkSurfaceKHR surface);
         void DestroyLogicalDevice();
 
@@ -108,4 +110,6 @@ class Device
 		
 		VkSampleCountFlagBits MaxSampleCount();
 		VkSampleCountFlagBits MaxDeviceSampleCount();
+
+        void DestroyStagingBuffers();
 };
