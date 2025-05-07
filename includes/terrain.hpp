@@ -120,6 +120,7 @@ class Terrain
 		static int terrainChunkLength;
 		static int terrainChunkCount;
 
+		static float heightMapScale;
 		static int heightMapRadius;
 		static int heightMapLength;
 		static int heightMapCount;

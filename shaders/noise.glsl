@@ -136,11 +136,15 @@ float GenerateNoise(vec2 uv, int layers, int curve)
 		if (biome >= -blendDistance && biome <= blendDistance)
 		{
 			noise = mix(CubicCurve(LOWLANDS, noise).y, noise, (biome / blendDistance) * 0.5 + 0.5);
+			//noise = mix(noise * noise, noise, (biome / blendDistance) * 0.5 + 0.5);
 		}
     	else if (biome <= -blendDistance)
     	{
     	    noise = CubicCurve(LOWLANDS, noise).y;
+    	    //noise = noise * noise;
     	}
+
+        //noise = noise * noise;
 	}
 
     return (noise);

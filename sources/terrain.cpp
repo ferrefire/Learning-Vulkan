@@ -852,7 +852,7 @@ void Terrain::ComputeHeightMap(VkCommandBuffer commandBuffer, uint32_t lod)
 	}
 
 	heightMapComputeDescriptor.Bind(commandBuffer, heightMapComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
-	heightMapComputeVariables.mapScale = (lod == 0 ? terrainLod0Size : (lod == 1 ? terrainLod1Size : terrainChunkSize)) / terrainChunkSize;
+	heightMapComputeVariables.mapScale = ((lod == 0 ? terrainLod0Size : (lod == 1 ? terrainLod1Size : terrainChunkSize)) / terrainChunkSize) * heightMapScale;
 	heightMapComputeVariables.mapOffset = (lod == 0 ? ((terrainLod0Offset + XZ2XY(terrainOffset)) / terrainLod0Size) : ((terrainLod1Offset + XZ2XY(terrainOffset)) / terrainLod1Size));
 	memcpy(heightMapComputeVariablesBuffer.mappedBuffer, &heightMapComputeVariables, sizeof(heightMapComputeVariables));
 	vkCmdDispatch(commandBuffer, dispatchCount, dispatchCount, 1); //Change dispatch count
@@ -877,7 +877,7 @@ void Terrain::ComputeHeightMapArray(VkCommandBuffer commandBuffer, uint32_t inde
 	//Manager::UpdateShaderVariables();
 
 	heightMapArrayComputeDescriptor.Bind(commandBuffer, heightMapArrayComputePipeline.computePipelineLayout, COMPUTE_BIND_POINT, 1);
-	heightMapArrayComputeVariables.mapScale = 1.0;
+	heightMapArrayComputeVariables.mapScale = heightMapScale;
 	heightMapArrayComputeVariables.currentChunkIndex = index;
 	heightMapArrayComputeVariables.mapOffset = glm::vec2(y, x);
 	memcpy(heightMapArrayComputeVariablesBuffer.mappedBuffer, &heightMapArrayComputeVariables, sizeof(heightMapArrayComputeVariables));
@@ -1130,6 +1130,7 @@ int Terrain::terrainChunkRadius = 3;
 int Terrain::terrainChunkLength = Terrain::terrainChunkRadius * 2 + 1;
 int Terrain::terrainChunkCount = Terrain::terrainChunkLength * Terrain::terrainChunkLength;
 
+float Terrain::heightMapScale = 1.0f;
 int Terrain::heightMapRadius = 4;
 int Terrain::heightMapLength = Terrain::heightMapRadius * 2 + 1;
 int Terrain::heightMapCount = Terrain::heightMapLength * Terrain::heightMapLength;
