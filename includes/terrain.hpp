@@ -59,6 +59,30 @@ struct ShadowComputeVariables
 	int lod = 0;
 };
 
+struct BlendConfig
+{
+	float blendDistance;
+	float startDistance;
+	float distanceIncrease;
+	float startScale;
+	float scaleIncrease;
+	float startNormal;
+	float normalIncrease;
+	float startAmbient;
+	float ambientIncrease;
+	int decreaseLod;
+	float decreaseAmount;
+	alignas(16) glm::vec4 defaultColor;
+	alignas(16) glm::vec4 tintColor;
+};
+
+struct TerrainTextureVariables
+{
+	BlendConfig grassConfig;
+	BlendConfig rockConfig;
+	BlendConfig dirtConfig;
+};
+
 class Terrain
 {
     private:
@@ -83,9 +107,21 @@ class Terrain
 
 		static std::vector<Object> terrainChunks;
 
+		static int grassTextureIndex;
+		static int rockTextureIndex;
+		static int dirtTextureIndex;
+
 		static std::vector<Texture> grassTextures;
 		static std::vector<Texture> rockTextures;
 		static std::vector<Texture> dirtTextures;
+
+		static TerrainTextureVariables terrainTextureVariables;
+		static std::vector<BlendConfig> grassBlendConfigs;
+		static std::vector<BlendConfig> rockBlendConfigs;
+		static std::vector<BlendConfig> dirtBlendConfigs;
+		static BlendConfig &currentGrassBlendConfig;
+		static BlendConfig &currentRockBlendConfig;
+		static BlendConfig &currentDirtBlendConfig;
 
 		static int heightMapResolution;
 		static int heightMapLod0Resolution;
@@ -104,6 +140,7 @@ class Terrain
 		static Buffer heightMapComputeVariablesBuffer;
 		static Buffer heightMapArrayComputeVariablesBuffer;
 		static Buffer shadowComputeVariablesBuffer;
+		static Buffer textureVariablesBuffer;
 		static Buffer roadsBuffer;
 
 		static float terrainTotalSize;
@@ -181,4 +218,6 @@ class Terrain
 		static bool InView(const glm::vec3 &position, float tolerance, const glm::mat4 &projection, const glm::mat4 &view, bool lod);
 		static bool ChunkInView(glm::vec3 position, float tolerance, glm::mat4 projection, glm::mat4 view, bool main, bool lod);
 		static bool HeightMapsGenerated();
+		static void EditTextureIndex();
+		static void UpdateTextureVariables();
 };

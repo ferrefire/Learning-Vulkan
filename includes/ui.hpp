@@ -28,8 +28,17 @@
 #define CHECK_COMPONENT 9
 #define FLOAT3_DRAG_COMPONENT 10
 #define COLOR_COMPONENT 11
+#define DROPDOWN_COMPONENT 12
 
 #define TEST_REPLACE_DEFINE "another replaceeeeeed"
+
+struct DropdownComponent
+{
+	std::string name = "dropdown";
+	std::vector<std::string> options = {"option 1"};
+	int &value;
+	void(*func)(void) = nullptr;
+};
 
 struct ColorComponent
 {
@@ -112,6 +121,7 @@ struct NodeComponent
 {
 	std::string name = "node";
 	bool begin = true;
+	void(*func)(void) = nullptr;
 };
 
 struct Component
@@ -138,12 +148,14 @@ struct Menu
 	std::vector<CheckComponent> checkComponents;
 	std::vector<Float3DragComponent> float3DragComponents;
 	std::vector<ColorComponent> colorComponents;
+	std::vector<DropdownComponent> dropdownComponents;
 
-	void AddNode(std::string name, bool begin)
+	void AddNode(std::string name, bool begin, void(*func)(void) = nullptr)
 	{
 		NodeComponent newNodeComponent;
 		newNodeComponent.name = name;
 		newNodeComponent.begin = begin;
+		newNodeComponent.func = func;
 		nodeComponents.push_back(newNodeComponent);
 
 		Component newComponent;
@@ -273,6 +285,17 @@ struct Menu
 		newComponent.index = colorComponents.size() - 1;
 		components.push_back(newComponent);
 	}
+
+	void AddDropdown(std::string name, std::vector<std::string> options, int &value, void(*func)(void) = nullptr)
+	{
+		DropdownComponent newDropdownComponent{name, options, value, func};
+		dropdownComponents.push_back(newDropdownComponent);
+
+		Component newComponent;
+		newComponent.type = DROPDOWN_COMPONENT;
+		newComponent.index = dropdownComponents.size() - 1;
+		components.push_back(newComponent);
+	}
 };
 
 class UI
@@ -316,6 +339,7 @@ class UI
 		static void RenderCheckComponent(CheckComponent &checkComponent);
 		static void RenderDragComponent(Float3DragComponent &dragComponent);
 		static void RenderColorComponent(ColorComponent &colorComponent);
+		static void RenderDropdownComponent(DropdownComponent &dropdownComponent);
 
 		static int FindNodeEnd(Menu &menu, std::string name, int start);
 		static void DraggingGraphPoint(int index);

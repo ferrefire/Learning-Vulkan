@@ -184,6 +184,8 @@ void UI::RenderFPS()
 
 void UI::RenderComponents(Menu &menu, int start, int end)
 {
+	static void(*nodeFunc)(void) = nullptr;
+
 	for (int i = start; i < end; i++)
 	{
 		Component &component = menu.components[i];
@@ -210,6 +212,10 @@ void UI::RenderComponents(Menu &menu, int start, int end)
 			RenderDragComponent(menu.float3DragComponents[component.index]);
 		else if (component.type == COLOR_COMPONENT)
 			RenderColorComponent(menu.colorComponents[component.index]);
+		else if (component.type == DROPDOWN_COMPONENT)
+			RenderDropdownComponent(menu.dropdownComponents[component.index]);
+
+		if (nodeFunc != nullptr && ImGui::IsItemEdited()) nodeFunc();
 
 		if (component.type == NODE_COMPONENT)
 		{
@@ -218,7 +224,9 @@ void UI::RenderComponents(Menu &menu, int start, int end)
 
 			if (ImGui::TreeNode(menu.nodeComponents[component.index].name.c_str()))
 			{
+				nodeFunc = menu.nodeComponents[component.index].func;
 				RenderComponents(menu, nodeStart, nodeEnd);
+				nodeFunc = nullptr;
 				ImGui::TreePop();
 			}
 
@@ -309,6 +317,17 @@ void UI::RenderDragComponent(Float3DragComponent &dragComponent)
 void UI::RenderColorComponent(ColorComponent &colorComponent)
 {
 	ImGui::ColorEdit3(colorComponent.name.c_str(), &colorComponent.value[0]);
+}
+
+void UI::RenderDropdownComponent(DropdownComponent &dropdownComponent)
+{
+	std::vector<const char *> items(dropdownComponent.options.size());
+	for (int i = 0; i < dropdownComponent.options.size(); i++)
+	{
+		items[i] = dropdownComponent.options[i].c_str();
+	}
+	ImGui::Combo(dropdownComponent.name.c_str(), &dropdownComponent.value, items.data(), dropdownComponent.options.size());
+	if (dropdownComponent.func != nullptr && ImGui::IsItemEdited()) dropdownComponent.func();
 }
 
 int UI::FindNodeEnd(Menu &menu, std::string name, int start)

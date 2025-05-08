@@ -33,6 +33,26 @@ void Terrain::Create()
 	shadowComputeVariables[1].spacing = shadowComputeVariables[1].resolutionMultiplier * shadowComputeVariables[1].distance;
 	shadowComputeVariables[2].spacing = shadowComputeVariables[2].resolutionMultiplier * shadowComputeVariables[2].distance;
 
+	grassBlendConfigs.resize(3);
+	grassBlendConfigs[0] = BlendConfig{0.5, float(glm::pow(25.0, 2)), 30.0, 0.15, 0.2, 0.5, 1.0, 1.5, 1.1, 4, 2.0, glm::pow(glm::vec4(93, 99, 44, 255) / 255.0f, glm::vec4(2.2f)), glm::vec4(1.0)};
+	grassBlendConfigs[1] = BlendConfig{0.5, float(glm::pow(25.0, 2)), 30.0, 0.15, 0.2, 0.5, 1.0, 1.5, 1.1, 4, 2.0, glm::vec4(19, 18, 4, 255) / 255.0f, glm::vec4(1.0)};
+	grassBlendConfigs[2] = BlendConfig{0.5, float(glm::pow(25.0, 2)), 30.0, 0.15, 0.2, 0.5, 1.0, 1.5, 1.1, 4, 2.0, glm::vec4(28, 26, 5, 255) / 255.0f, glm::vec4(1.0)};
+	currentGrassBlendConfig = grassBlendConfigs[grassTextureIndex];
+
+	rockBlendConfigs.resize(2);
+	rockBlendConfigs[0] = BlendConfig{0.75, float(glm::pow(50.0, 2)), 25.0, 0.1, 0.2, 1.0, 1.0, 1.0, 1.25, 4, 7.5, glm::pow(glm::vec4(145, 141, 128, 255) / 255.0f, glm::vec4(2.2f)), glm::vec4(1.0)};
+	rockBlendConfigs[1] = BlendConfig{0.75, float(glm::pow(50.0, 2)), 25.0, 0.1, 0.2, 1.0, 1.0, 1.0, 1.25, 4, 7.5, glm::vec4(80, 50, 20, 255) / 255.0f, glm::vec4(1.0)};
+	//rockBlendConfigs[2] = BlendConfig{0.75, float(glm::pow(50.0, 2)), 25.0, 0.1, 0.2, 1.0, 1.0, 1.0, 1.25, 4, 7.5, glm::pow(glm::vec4(145, 141, 128, 255) / 255.0f, glm::vec4(2.2f)), glm::vec4(1.0)};
+	currentRockBlendConfig = rockBlendConfigs[rockTextureIndex];
+
+	dirtBlendConfigs.resize(1);
+	dirtBlendConfigs[0] = BlendConfig{0.75, float(glm::pow(20.0, 2)), 30.0, 0.275, 0.2875, 1.0, 1.0, 1.5, 1.1, 4, 1.0, glm::pow(glm::vec4(89, 74, 62, 255) / 255.0f, glm::vec4(2.2f)), glm::vec4(1.0)};
+	currentDirtBlendConfig = dirtBlendConfigs[dirtTextureIndex];
+
+	terrainTextureVariables.grassConfig = grassBlendConfigs[grassTextureIndex];
+	terrainTextureVariables.rockConfig = rockBlendConfigs[rockTextureIndex];
+	terrainTextureVariables.dirtConfig = dirtBlendConfigs[dirtTextureIndex];
+
 	//Manager::shaderVariables.terrainShadowDistances[0] = shadowComputeVariables.terrainShadowDistances[0];
 
 	CreateMeshes();
@@ -57,15 +77,21 @@ void Terrain::CreateTextures()
 	grassSamplerConfig.anisotrophic = VK_FALSE;
 	grassSamplerConfig.anisotrophicSampleCount = 0.0;
 
-	grassTextures.resize(3);
+	grassTextures.resize(9);
 	grassTextures[0].CreateTexture("leafy_grass_diff.jpg", grassSamplerConfig);
+	grassTextures[3].CreateTexture("rocky_grass_diff.jpg", grassSamplerConfig);
+	grassTextures[6].CreateTexture("grass_diff.jpg", grassSamplerConfig);
 	grassSamplerConfig.anisotrophic = VK_TRUE;
 	grassSamplerConfig.anisotrophicSampleCount = 2.0;
 	grassTextures[1].CreateTexture("leafy_grass_norm.jpg", grassSamplerConfig);
+	grassTextures[4].CreateTexture("rocky_grass_norm.jpg", grassSamplerConfig);
+	grassTextures[7].CreateTexture("grass_norm.jpg", grassSamplerConfig);
 	grassSamplerConfig.anisotrophic = VK_FALSE;
 	grassSamplerConfig.anisotrophicSampleCount = 0.0;
 	grassSamplerConfig.mipLodBias = 1.0f;
 	grassTextures[2].CreateTexture("rocky_grass_ao.jpg", grassSamplerConfig);
+	grassTextures[5].CreateTexture("rocky_grass_ao.jpg", grassSamplerConfig);
+	grassTextures[8].CreateTexture("rocky_grass_ao.jpg", grassSamplerConfig);
 
 	SamplerConfiguration rockSamplerConfig;
 	rockSamplerConfig.repeatMode = REPEAT;
@@ -73,16 +99,19 @@ void Terrain::CreateTextures()
 	rockSamplerConfig.anisotrophic = VK_FALSE;
 	rockSamplerConfig.anisotrophicSampleCount = 0.0;
 
-	rockTextures.resize(3);
+	rockTextures.resize(6);
 	rockTextures[0].CreateTexture("large_rock_diff.jpg", rockSamplerConfig);
+	rockTextures[3].CreateTexture("rock_diff.jpg", rockSamplerConfig);
 	rockSamplerConfig.anisotrophic = VK_TRUE;
 	rockSamplerConfig.anisotrophicSampleCount = 4.0;
 	rockSamplerConfig.mipLodBias = 0.0f;
 	rockTextures[1].CreateTexture("large_rock_norm.jpg", rockSamplerConfig);
+	rockTextures[4].CreateTexture("rock_norm.jpg", rockSamplerConfig);
 	rockSamplerConfig.anisotrophic = VK_FALSE;
 	rockSamplerConfig.anisotrophicSampleCount = 0.0;
 	rockSamplerConfig.mipLodBias = 0.0f;
 	rockTextures[2].CreateTexture("rock_ao.jpg", rockSamplerConfig);
+	rockTextures[5].CreateTexture("rock_ao.jpg", rockSamplerConfig);
 
 	SamplerConfiguration dirtSamplerConfig;
 	dirtSamplerConfig.repeatMode = REPEAT;
@@ -165,19 +194,24 @@ void Terrain::CreateObjects()
 
 void Terrain::CreateGraphicsPipeline()
 {
-	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(4);
-	descriptorLayoutConfig[0].type = UNIFORM_BUFFER;
-	descriptorLayoutConfig[0].stages = VERTEX_STAGE | TESSELATION_EVALUATION_STAGE;
-	descriptorLayoutConfig[0].count = terrainChunkCount;
-	descriptorLayoutConfig[1].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[1].stages = FRAGMENT_STAGE;
-	descriptorLayoutConfig[1].count = 3;
-	descriptorLayoutConfig[2].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[2].stages = FRAGMENT_STAGE;
-	descriptorLayoutConfig[2].count = 3;
-	descriptorLayoutConfig[3].type = IMAGE_SAMPLER;
-	descriptorLayoutConfig[3].stages = FRAGMENT_STAGE;
-	descriptorLayoutConfig[3].count = 3;
+	int i = 0;
+
+	std::vector<DescriptorLayoutConfiguration> descriptorLayoutConfig(5);
+	descriptorLayoutConfig[i].type = UNIFORM_BUFFER;
+	descriptorLayoutConfig[i].stages = VERTEX_STAGE | TESSELATION_EVALUATION_STAGE;
+	descriptorLayoutConfig[i++].count = terrainChunkCount;
+	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[i++].count = 3;
+	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[i++].count = 3;
+	descriptorLayoutConfig[i].type = IMAGE_SAMPLER;
+	descriptorLayoutConfig[i].stages = FRAGMENT_STAGE;
+	descriptorLayoutConfig[i++].count = 3;
+	descriptorLayoutConfig[i].type = UNIFORM_BUFFER;
+	descriptorLayoutConfig[i++].stages = FRAGMENT_STAGE;
+	//descriptorLayoutConfig[i++].count = terrainChunkCount;
 
 	PipelineConfiguration pipelineConfiguration = Pipeline::DefaultConfiguration();
 	pipelineConfiguration.tesselation = true;
@@ -252,69 +286,72 @@ void Terrain::CreateShadowPipeline()
 
 void Terrain::CreateGraphicsDescriptor()
 {
-	std::vector<DescriptorConfiguration> descriptorConfig(4);
+	int index = 0;
+
+	std::vector<DescriptorConfiguration> descriptorConfig(5);
 
 	int bufferCount = terrainChunks[0].uniformBuffers.size();
 	int objectCount = terrainChunks.size();
 
-	descriptorConfig[0].type = UNIFORM_BUFFER;
-	descriptorConfig[0].stages = VERTEX_STAGE | TESSELATION_EVALUATION_STAGE;
-	descriptorConfig[0].count = objectCount;
-	descriptorConfig[0].buffersInfo.resize(bufferCount * objectCount);
+	descriptorConfig[index].type = UNIFORM_BUFFER;
+	descriptorConfig[index].stages = VERTEX_STAGE | TESSELATION_EVALUATION_STAGE;
+	descriptorConfig[index].count = objectCount;
+	descriptorConfig[index].buffersInfo.resize(bufferCount * objectCount);
 	
 	for (int i = 0; i < bufferCount; i++)
 	{
 		int j = 0;
 		for (Object &object : terrainChunks)
 		{
-			descriptorConfig[0].buffersInfo[i * objectCount + j].buffer = object.uniformBuffers[i].buffer;
-			descriptorConfig[0].buffersInfo[i * objectCount + j].range = sizeof(UniformBufferObject);
-			descriptorConfig[0].buffersInfo[i * objectCount + j].offset = 0;
+			descriptorConfig[index].buffersInfo[i * objectCount + j].buffer = object.uniformBuffers[i].buffer;
+			descriptorConfig[index].buffersInfo[i * objectCount + j].range = sizeof(UniformBufferObject);
+			descriptorConfig[index].buffersInfo[i * objectCount + j].offset = 0;
 			j++;
 		}
 	}
+	index++;
 
-	descriptorConfig[1].type = IMAGE_SAMPLER;
-	descriptorConfig[1].stages = FRAGMENT_STAGE;
-	descriptorConfig[1].count = 3;
-	descriptorConfig[1].imageInfos.resize(3);
-	for (int i = 0; i < grassTextures.size(); i++) 
+	descriptorConfig[index].type = IMAGE_SAMPLER;
+	descriptorConfig[index].stages = FRAGMENT_STAGE;
+	descriptorConfig[index].count = 3;
+	descriptorConfig[index].imageInfos.resize(3);
+	for (int i = 0; i < 3; i++) 
 	{
-		descriptorConfig[1].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[1].imageInfos[i].imageView = grassTextures[i].imageView;
-		descriptorConfig[1].imageInfos[i].sampler = grassTextures[i].sampler;
+		descriptorConfig[index].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		descriptorConfig[index].imageInfos[i].imageView = grassTextures[i + (grassTextureIndex * 3)].imageView;
+		descriptorConfig[index].imageInfos[i].sampler = grassTextures[i + (grassTextureIndex * 3)].sampler;
 	}
-	//descriptorConfig[1].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	//descriptorConfig[1].imageInfo.imageView = grassDiffuseTexture.imageView;
-	//descriptorConfig[1].imageInfo.sampler = grassDiffuseTexture.sampler;
+	index++;
 
-	descriptorConfig[2].type = IMAGE_SAMPLER;
-	descriptorConfig[2].stages = FRAGMENT_STAGE;
-	descriptorConfig[2].count = 3;
-	descriptorConfig[2].imageInfos.resize(3);
-	for (int i = 0; i < rockTextures.size(); i++) 
+	descriptorConfig[index].type = IMAGE_SAMPLER;
+	descriptorConfig[index].stages = FRAGMENT_STAGE;
+	descriptorConfig[index].count = 3;
+	descriptorConfig[index].imageInfos.resize(3);
+	for (int i = 0; i < 3; i++)
 	{
-		descriptorConfig[2].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[2].imageInfos[i].imageView = rockTextures[i].imageView;
-		descriptorConfig[2].imageInfos[i].sampler = rockTextures[i].sampler;
+		descriptorConfig[index].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		descriptorConfig[index].imageInfos[i].imageView = rockTextures[i + (rockTextureIndex * 3)].imageView;
+		descriptorConfig[index].imageInfos[i].sampler = rockTextures[i + (rockTextureIndex * 3)].sampler;
 	}
-	//descriptorConfig[2].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	//descriptorConfig[2].imageInfo.imageView = rockDiffuseTexture.imageView;
-	//descriptorConfig[2].imageInfo.sampler = rockDiffuseTexture.sampler;
+	index++;
 
-	descriptorConfig[3].type = IMAGE_SAMPLER;
-	descriptorConfig[3].stages = FRAGMENT_STAGE;
-	descriptorConfig[3].count = 3;
-	descriptorConfig[3].imageInfos.resize(3);
+	descriptorConfig[index].type = IMAGE_SAMPLER;
+	descriptorConfig[index].stages = FRAGMENT_STAGE;
+	descriptorConfig[index].count = 3;
+	descriptorConfig[index].imageInfos.resize(3);
 	for (int i = 0; i < dirtTextures.size(); i++) 
 	{
-		descriptorConfig[3].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
-		descriptorConfig[3].imageInfos[i].imageView = dirtTextures[i].imageView;
-		descriptorConfig[3].imageInfos[i].sampler = dirtTextures[i].sampler;
+		descriptorConfig[index].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		descriptorConfig[index].imageInfos[i].imageView = dirtTextures[i].imageView;
+		descriptorConfig[index].imageInfos[i].sampler = dirtTextures[i].sampler;
 	}
-	//descriptorConfig[3].imageInfo.imageLayout = LAYOUT_READ_ONLY;
-	//descriptorConfig[3].imageInfo.imageView = dirtDiffuseTexture.imageView;
-	//descriptorConfig[3].imageInfo.sampler = dirtDiffuseTexture.sampler;
+	index++;
+
+	descriptorConfig[index].type = UNIFORM_BUFFER;
+	descriptorConfig[index].stages = FRAGMENT_STAGE;
+	descriptorConfig[index].buffersInfo.resize(1);
+	descriptorConfig[index].buffersInfo[0].buffer = textureVariablesBuffer.buffer;
+	descriptorConfig[index++].buffersInfo[0].range = sizeof(TerrainTextureVariables);
 
 	graphicsDescriptor.Create(descriptorConfig, graphicsPipeline.objectDescriptorSetLayout);
 }
@@ -439,7 +476,17 @@ void Terrain::CreateBuffers()
 	shadowComputeConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 	shadowComputeConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	shadowComputeConfiguration.mapped = true;
+
 	shadowComputeVariablesBuffer.Create(shadowComputeConfiguration);
+
+	BufferConfiguration textureVariablesConfiguration;
+	textureVariablesConfiguration.size = sizeof(TerrainTextureVariables);
+	textureVariablesConfiguration.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+	textureVariablesConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+	textureVariablesConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	textureVariablesConfiguration.mapped = true;
+
+	textureVariablesBuffer.Create(textureVariablesConfiguration);
 }
 
 void Terrain::Destroy()
@@ -540,6 +587,8 @@ void Terrain::DestroyBuffers()
 	heightMapArrayComputeVariablesBuffer.Destroy();
 
 	shadowComputeVariablesBuffer.Destroy();
+
+	textureVariablesBuffer.Destroy();
 }
 
 void Terrain::Start()
@@ -565,6 +614,8 @@ void Terrain::Start()
 		}
 	}
 
+	memcpy(textureVariablesBuffer.mappedBuffer, &terrainTextureVariables, sizeof(TerrainTextureVariables));
+
 	Menu &menu = UI::NewMenu("terrain");
 	menu.AddNode("water", true);
 	menu.AddSlider("water height", waterHeight, 0.0f, 2000.0f);
@@ -573,6 +624,55 @@ void Terrain::Start()
 	menu.AddText("test text");
 	menu.AddGraph("low lands", 32, lowLandsCurve);
 	menu.AddNode("biomes", false);
+	menu.AddNode("terrain textures", true);
+	menu.AddNode("grass config", true, UpdateTextureVariables);
+	menu.AddDropdown("grass textures", {"leafy grass", "rocky grass", "muddy grass"}, grassTextureIndex, EditTextureIndex);
+	menu.AddSlider("grass blend distance", currentGrassBlendConfig.blendDistance, 0.0f, 1.0f);
+	menu.AddSlider("grass start distance", currentGrassBlendConfig.startDistance, 0.0f, 10000.0f);
+	menu.AddSlider("grass distance increase", currentGrassBlendConfig.distanceIncrease, 0.0f, 100.0f);
+	menu.AddSlider("grass start scale", currentGrassBlendConfig.startScale, 0.0f, 1.0f);
+	menu.AddSlider("grass scale increase", currentGrassBlendConfig.scaleIncrease, 0.0f, 1.0f);
+	menu.AddSlider("grass start normal", currentGrassBlendConfig.startNormal, 0.0f, 2.0f);
+	menu.AddSlider("grass normal increase", currentGrassBlendConfig.normalIncrease, 0.0f, 2.0f);
+	menu.AddSlider("grass start ambient", currentGrassBlendConfig.startAmbient, 0.0f, 2.0f);
+	menu.AddSlider("grass ambient increase", currentGrassBlendConfig.ambientIncrease, 0.0f, 2.0f);
+	menu.AddSlider("grass decrease lod", currentGrassBlendConfig.decreaseLod, 0, 6);
+	menu.AddSlider("grass lod decrease amount", currentGrassBlendConfig.decreaseAmount, 0.0f, 10.0f);
+	menu.AddColor("grass default color", currentGrassBlendConfig.defaultColor);
+	menu.AddColor("grass tint color", currentGrassBlendConfig.tintColor);
+	menu.AddNode("grass config", false);
+	menu.AddNode("rock config", true, UpdateTextureVariables);
+	menu.AddDropdown("rock textures", {"large rock", "sun rock"}, rockTextureIndex, EditTextureIndex);
+	menu.AddSlider("rock blend distance", currentRockBlendConfig.blendDistance, 0.0f, 1.0f);
+	menu.AddSlider("rock start distance", currentRockBlendConfig.startDistance, 0.0f, 10000.0f);
+	menu.AddSlider("rock distance increase", currentRockBlendConfig.distanceIncrease, 0.0f, 100.0f);
+	menu.AddSlider("rock start scale", currentRockBlendConfig.startScale, 0.0f, 1.0f);
+	menu.AddSlider("rock scale increase", currentRockBlendConfig.scaleIncrease, 0.0f, 1.0f);
+	menu.AddSlider("rock start normal", currentRockBlendConfig.startNormal, 0.0f, 2.0f);
+	menu.AddSlider("rock normal increase", currentRockBlendConfig.normalIncrease, 0.0f, 2.0f);
+	menu.AddSlider("rock start ambient", currentRockBlendConfig.startAmbient, 0.0f, 2.0f);
+	menu.AddSlider("rock ambient increase", currentRockBlendConfig.ambientIncrease, 0.0f, 2.0f);
+	menu.AddSlider("rock decrease lod", currentRockBlendConfig.decreaseLod, 0, 6);
+	menu.AddSlider("rock lod decrease amount", currentRockBlendConfig.decreaseAmount, 0.0f, 10.0f);
+	menu.AddColor("rock default color", currentRockBlendConfig.defaultColor);
+	menu.AddColor("rock tint color", currentRockBlendConfig.tintColor);
+	menu.AddNode("rock config", false);
+	menu.AddNode("dirt config", true, UpdateTextureVariables);
+	menu.AddSlider("dirt blend distance", currentDirtBlendConfig.blendDistance, 0.0f, 1.0f);
+	menu.AddSlider("dirt start distance", currentDirtBlendConfig.startDistance, 0.0f, 10000.0f);
+	menu.AddSlider("dirt distance increase", currentDirtBlendConfig.distanceIncrease, 0.0f, 100.0f);
+	menu.AddSlider("dirt start scale", currentDirtBlendConfig.startScale, 0.0f, 1.0f);
+	menu.AddSlider("dirt scale increase", currentDirtBlendConfig.scaleIncrease, 0.0f, 1.0f);
+	menu.AddSlider("dirt start normal", currentDirtBlendConfig.startNormal, 0.0f, 2.0f);
+	menu.AddSlider("dirt normal increase", currentDirtBlendConfig.normalIncrease, 0.0f, 2.0f);
+	menu.AddSlider("dirt start ambient", currentDirtBlendConfig.startAmbient, 0.0f, 2.0f);
+	menu.AddSlider("dirt ambient increase", currentDirtBlendConfig.ambientIncrease, 0.0f, 2.0f);
+	menu.AddSlider("dirt decrease lod", currentDirtBlendConfig.decreaseLod, 0, 6);
+	menu.AddSlider("dirt lod decrease amount", currentDirtBlendConfig.decreaseAmount, 0.0f, 10.0f);
+	menu.AddColor("dirt default color", currentDirtBlendConfig.defaultColor);
+	menu.AddColor("dirt tint color", currentDirtBlendConfig.tintColor);
+	menu.AddNode("dirt config", false);
+	menu.AddNode("terrain textures", false);
 
 	ComputeHeightMap(nullptr, 1);
 	ComputeHeightMap(nullptr, 0);
@@ -1075,6 +1175,38 @@ bool Terrain::HeightMapsGenerated()
 	return (heightMapArrayLayersGenerated == heightMapCount);
 }
 
+void Terrain::EditTextureIndex()
+{
+	vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
+	for (int i = 0; i < 3; i++)
+	{
+		graphicsDescriptor.descriptorConfigs[1].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		graphicsDescriptor.descriptorConfigs[1].imageInfos[i].imageView = grassTextures[i + (grassTextureIndex * 3)].imageView;
+		graphicsDescriptor.descriptorConfigs[1].imageInfos[i].sampler = grassTextures[i + (grassTextureIndex * 3)].sampler;
+	}
+	for (int i = 0; i < 3; i++)
+	{
+		graphicsDescriptor.descriptorConfigs[2].imageInfos[i].imageLayout = LAYOUT_READ_ONLY;
+		graphicsDescriptor.descriptorConfigs[2].imageInfos[i].imageView = rockTextures[i + (rockTextureIndex * 3)].imageView;
+		graphicsDescriptor.descriptorConfigs[2].imageInfos[i].sampler = rockTextures[i + (rockTextureIndex * 3)].sampler;
+	}
+	graphicsDescriptor.Update();
+
+	currentGrassBlendConfig = grassBlendConfigs[grassTextureIndex];
+	currentRockBlendConfig = rockBlendConfigs[rockTextureIndex];
+	currentDirtBlendConfig = dirtBlendConfigs[dirtTextureIndex];
+	terrainTextureVariables.grassConfig = grassBlendConfigs[grassTextureIndex];
+	terrainTextureVariables.rockConfig = rockBlendConfigs[rockTextureIndex];
+	terrainTextureVariables.dirtConfig = dirtBlendConfigs[dirtTextureIndex];
+	//UpdateTextureVariables();
+}
+
+void Terrain::UpdateTextureVariables()
+{
+	//vkQueueWaitIdle(Manager::currentDevice.graphicsQueue);
+	memcpy(textureVariablesBuffer.mappedBuffer, &terrainTextureVariables, sizeof(TerrainTextureVariables));
+}
+
 Pipeline Terrain::graphicsPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Terrain::graphicsLodPipeline{Manager::currentDevice, Manager::camera};
 Pipeline Terrain::cullPipeline{Manager::currentDevice, Manager::camera};
@@ -1082,12 +1214,21 @@ Pipeline Terrain::heightMapComputePipeline{Manager::currentDevice, Manager::came
 Pipeline Terrain::heightMapArrayComputePipeline{Manager::currentDevice, Manager::camera};
 Pipeline Terrain::shadowComputePipeline{Manager::currentDevice, Manager::camera};
 
+int Terrain::grassTextureIndex = 0;
+int Terrain::rockTextureIndex = 0;
+int Terrain::dirtTextureIndex = 0;
+
 std::vector<Texture> Terrain::grassTextures;
 std::vector<Texture> Terrain::rockTextures;
 std::vector<Texture> Terrain::dirtTextures;
-//Texture Terrain::grassDiffuseTexture{Manager::currentDevice};
-//Texture Terrain::rockDiffuseTexture{Manager::currentDevice};
-//Texture Terrain::dirtDiffuseTexture{Manager::currentDevice};
+
+TerrainTextureVariables Terrain::terrainTextureVariables;
+std::vector<BlendConfig> Terrain::grassBlendConfigs;
+std::vector<BlendConfig> Terrain::rockBlendConfigs;
+std::vector<BlendConfig> Terrain::dirtBlendConfigs;
+BlendConfig &Terrain::currentGrassBlendConfig = Terrain::terrainTextureVariables.grassConfig;
+BlendConfig &Terrain::currentRockBlendConfig = Terrain::terrainTextureVariables.rockConfig;
+BlendConfig &Terrain::currentDirtBlendConfig = Terrain::terrainTextureVariables.dirtConfig;
 
 Texture Terrain::heightMapArrayTexture{Manager::currentDevice};
 Texture Terrain::heightMapLod0Texture{Manager::currentDevice};
@@ -1102,6 +1243,7 @@ std::vector<ShadowComputeVariables> Terrain::shadowComputeVariables;
 Buffer Terrain::heightMapComputeVariablesBuffer;
 Buffer Terrain::heightMapArrayComputeVariablesBuffer;
 Buffer Terrain::shadowComputeVariablesBuffer;
+Buffer Terrain::textureVariablesBuffer;
 Buffer Terrain::roadsBuffer;
 
 Descriptor Terrain::graphicsDescriptor{Manager::currentDevice};
