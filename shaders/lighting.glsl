@@ -35,7 +35,8 @@ layout(std430, set = 0, binding = 7) readonly buffer SunBuffer
 //const vec3 lightDirection = vec3(0.25, 0.5, 0.25);
 
 const float ambient = 0.1 * 0.5;
-const float ambientMult = 2.0;
+//const float ambientMult = 2.0;
+const float ambientMult = 1.0;
 //const float ambient = 0.4;
 const float shadowDis = 250.0;
 const float shadowDepth = shadowDis / 25000.0;

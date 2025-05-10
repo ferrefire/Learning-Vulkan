@@ -80,6 +80,7 @@ vec3 GetSkyColor(vec3 normal)
 vec4 GetAerialColor()
 {
 	float linearDepth = clamp(GetDepth(gl_FragCoord.z) * variables.ranges.y, 0.0, 25000.0) / 25000.0;
+	//float modDepth = clamp(linearDepth + 0.15, 0.0, 1.0);
 	float modDepth = clamp(linearDepth + 0.1, 0.0, 1.0);
 	vec4 aerialPerspective = texture(aerialSampler, vec3(gl_FragCoord.xy / variables.resolution.xy, modDepth));
 	vec4 aerialColor = vec4(aerialPerspective.rgb * LIGHT_COLOR * 4.0, aerialPerspective.a);
