@@ -438,6 +438,8 @@ void Buildings::DestroyBuildings()
 
 void Buildings::Start()
 {
+	memcpy(variablesBuffer.mappedBuffer, &buildingVariables, sizeof(BuildingVariables));
+
 	Menu &menu = UI::NewMenu("buildings");
 	menu.AddNode("generation config", true);
 	menu.AddNode("bounds", true);
@@ -475,9 +477,9 @@ void Buildings::Start()
 	//menu.AddButton("generate", GenerateBuilding);
 	menu.AddNode("generation config", false);
 
-	menu.AddNode("building variables", true);
-	menu.AddNode("building textures", true);
-	menu.AddNode("roof variables", true);
+	menu.AddNode("building variables", true, UpdateBuildingVariables);
+	menu.AddNode("building textures", true, UpdateBuildingVariables);
+	menu.AddNode("roof variables", true, UpdateBuildingVariables);
 	menu.AddColor("roof tint", buildingVariables.roofTint);
 	menu.AddSlider("roof normal", buildingVariables.roofNormal, 0.0f, 16.0f);
 	menu.AddSlider("roof ambient", buildingVariables.roofAmbient, 0.0f, 16.0f);
@@ -485,7 +487,7 @@ void Buildings::Start()
 	menu.AddSlider("roof normal distance", buildingVariables.roofDistance.x, 0.0f, 250.0f);
 	menu.AddSlider("roof ambient distance", buildingVariables.roofDistance.y, 0.0f, 250.0f);
 	menu.AddNode("roof variables", false);
-	menu.AddNode("wall variables", true);
+	menu.AddNode("wall variables", true, UpdateBuildingVariables);
 	menu.AddColor("wall tint", buildingVariables.wallTint);
 	menu.AddSlider("wall normal", buildingVariables.wallNormal, 0.0f, 16.0f);
 	menu.AddSlider("wall ambient", buildingVariables.wallAmbient, 0.0f, 16.0f);
@@ -493,7 +495,7 @@ void Buildings::Start()
 	menu.AddSlider("wall normal distance", buildingVariables.wallDistance.x, 0.0f, 250.0f);
 	menu.AddSlider("wall ambient distance", buildingVariables.wallDistance.y, 0.0f, 250.0f);
 	menu.AddNode("wall variables", false);
-	menu.AddNode("beam variables", true);
+	menu.AddNode("beam variables", true, UpdateBuildingVariables);
 	menu.AddColor("beam tint", buildingVariables.beamTint);
 	menu.AddSlider("beam normal", buildingVariables.beamNormal, 0.0f, 16.0f);
 	menu.AddSlider("beam ambient", buildingVariables.beamAmbient, 0.0f, 16.0f);
@@ -501,7 +503,7 @@ void Buildings::Start()
 	menu.AddSlider("beam normal distance", buildingVariables.beamDistance.x, 0.0f, 250.0f);
 	menu.AddSlider("beam ambient distance", buildingVariables.beamDistance.y, 0.0f, 250.0f);
 	menu.AddNode("beam variables", false);
-	menu.AddNode("brick variables", true);
+	menu.AddNode("brick variables", true, UpdateBuildingVariables);
 	menu.AddColor("brick tint", buildingVariables.brickTint);
 	menu.AddSlider("brick normal", buildingVariables.brickNormal, 0.0f, 16.0f);
 	menu.AddSlider("brick ambient", buildingVariables.brickAmbient, 0.0f, 16.0f);
@@ -538,7 +540,7 @@ void Buildings::Start()
 
 void Buildings::Frame()
 {
-	memcpy(variablesBuffer.mappedBuffer, &buildingVariables, sizeof(BuildingVariables));
+	//memcpy(variablesBuffer.mappedBuffer, &buildingVariables, sizeof(BuildingVariables));
 
 	SetRenderBuildings();
 
@@ -2764,6 +2766,11 @@ bool Buildings::BuildingInView(Building *b)
 	}*/
 
 	return (false);
+}
+
+void Buildings::UpdateBuildingVariables()
+{
+	memcpy(variablesBuffer.mappedBuffer, &buildingVariables, sizeof(BuildingVariables));
 }
 
 std::vector<Texture> Buildings::beamTextures;

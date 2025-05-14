@@ -375,7 +375,7 @@ void Graphics::RecordShadowCommands()
 void Graphics::RenderShadows(VkCommandBuffer commandBuffer)
 {
 	int cascadeRange = Shadow::cascadeCount;
-	if (Capture::capturing) cascadeRange = 1;
+	//if (Capture::capturing) cascadeRange = 1;
 
 	for (int i = 0; i < cascadeRange; i++)
 	{
@@ -465,6 +465,8 @@ void Graphics::Frame()
 
 	if (Terrain::HeightMapsGenerated())
 	{
+		Sky::Frame();
+
 		RecordCullCommands();
 
 		ComputeFrame();

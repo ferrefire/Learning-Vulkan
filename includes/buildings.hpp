@@ -346,4 +346,5 @@ class Buildings
 		//static bool FloorEmpty(int i, int x, int y);
 		static void UpdateBuilding(int i);
 		static bool BuildingInView(Building *b);
+		static void UpdateBuildingVariables();
 };

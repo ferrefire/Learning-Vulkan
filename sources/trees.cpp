@@ -97,7 +97,7 @@ void Trees::CreateMeshes()
 
 	float decreaseFactor = 2.0;
 
-	treeVariables.leafCounts[0].x = leafPositions.size();
+	treeVariables.leafCounts[0].x = int(floor(float(leafPositions.size()) / glm::clamp((0.5f * decreaseFactor), 1.0f, 10.0f)));
 	treeVariables.leafCounts[0].y = 0;
 	treeVariables.leafCounts[0].z = 1;
 	treeVariables.leafCounts[0].w = 1 * 0.25;
@@ -790,13 +790,17 @@ void Trees::Start()
 
 	//ComputeTreeSetup();
 
+	UpdateTreeVariables();
+
 	Menu &menu = UI::NewMenu("trees");
-	menu.AddNode("trunk", true);
+	menu.AddNode("trunk", true, UpdateTreeVariables);
 	menu.AddColor("trunk lod color", trunkVariables.trunkLodColor);
 	menu.AddColor("trunk tint", trunkVariables.trunkTint);
+	menu.AddSlider("trunk ambient", trunkVariables.trunkAmbient, 0.0f, 1.0f);
 	menu.AddNode("trunk", false);
-	menu.AddNode("leaves", true);
+	menu.AddNode("leaves", true, Leaves::UpdateLeafVariables);
 	menu.AddColor("leaf color", Leaves::leafVariables.leafTint);
+	menu.AddSlider("leaf ambient", Leaves::leafVariables.leafAmbient, 0.0f, 1.0f);
 	menu.AddNode("leaves", false);
 }
 
@@ -814,7 +818,7 @@ void Trees::Frame()
 		ComputeTreeSetup();
 	}
 
-	if (Input::GetKey(GLFW_KEY_G).pressed)
+	/*if (Input::GetKey(GLFW_KEY_G).pressed)
 	{
 		treeLod0Mesh.DestroyAtRuntime();
 
@@ -842,14 +846,14 @@ void Trees::Frame()
 
 		GenerateTrunkMesh(treeLod0Mesh, branchConfig);
 		treeLod0Mesh.Create();
-	}
+	}*/
 
-	memcpy(trunkBuffer.mappedBuffer, &trunkVariables, sizeof(TrunkVariables));
+	//memcpy(trunkBuffer.mappedBuffer, &trunkVariables, sizeof(TrunkVariables));
 }
 
 void Trees::PostFrame()
 {
-	ComputeTreeRender(nullptr);
+	//ComputeTreeRender(nullptr);
 }
 
 void Trees::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
@@ -1388,6 +1392,11 @@ void Trees::CaptureTree()
 	Manager::UpdateShaderVariables();
 
 	Capture::capturing = false;
+}
+
+void Trees::UpdateTreeVariables()
+{
+	memcpy(trunkBuffer.mappedBuffer, &trunkVariables, sizeof(TrunkVariables));
 }
 
 uint32_t Trees::treeBase = 2048;

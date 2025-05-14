@@ -12,6 +12,7 @@
 
 layout(set = 1, binding = 2) uniform TrunkVariables
 {
+	float trunkAmbient;
 	vec4 trunkLodColor;
 	vec4 trunkTint;
 } trunkVariables;
@@ -67,7 +68,8 @@ void main()
 		//texAmbient = (texture(treeSamplers[2], inCoord * 0.25).xyz);
 	}
 	
-	vec3 diffuse = DiffuseLighting(texNormal, shadow, 0.025 * 0.5);
+	//vec3 diffuse = DiffuseLighting(texNormal, shadow, 0.025 * 0.5);
+	vec3 diffuse = DiffuseLighting(texNormal, shadow, trunkVariables.trunkAmbient);
 	vec3 combinedColor = diffuse * (texColor * trunkVariables.trunkTint.rgb) * texAmbient;
 	
 	

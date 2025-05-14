@@ -27,7 +27,8 @@ struct LeafData
 struct LeafVariables
 {
 	//glm::vec4 leafTint = glm::vec4(93.0f, 99.0f, 44.0f, 255.0f) / 255.0f;
-	glm::vec4 leafTint = glm::vec4(21.0f, 24.0f, 2.0f, 255.0f) / 255.0f;
+	float leafAmbient = 0.05f;
+	alignas(16) glm::vec4 leafTint = glm::vec4(21.0f, 24.0f, 2.0f, 255.0f) / 255.0f;
 };
 
 class Leaves
@@ -74,4 +75,5 @@ class Leaves
 		static void RecordCaptureCommands(VkCommandBuffer commandBuffer);
 		static void RenderLeaves(VkCommandBuffer commandBuffer);
 		static void RenderShadows(VkCommandBuffer commandBuffer, int cascade);
+		static void UpdateLeafVariables();
 };

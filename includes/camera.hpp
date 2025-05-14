@@ -51,6 +51,8 @@ class Camera
 		float oldX = 0;
 		float oldY = 0;
 		float sensitivity = 0.1f;
+		//float sensitivity = 0.002f;
+		// float sensitivity = 5.0f;
 		float oldFOV = FOV;
 
 		uint32_t cameraWidth = 800;

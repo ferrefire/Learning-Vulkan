@@ -8,6 +8,7 @@
 
 layout(set = 1, binding = 1) uniform LeafVariables
 {
+	float leafAmbient;
 	vec4 leafTint;
 } leafVariables;
 
@@ -92,7 +93,8 @@ void main()
 	//vec3 terrainNormal = SampleNormalDynamic(worldPosition.xz, 1.0);
 	//vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow, 0.25, 0.1);
 	//vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow, 0.025 + 0.075 * diffuseEdgeBlend * (baseRotation != 0.0 ? 1.0 : 0.0), 0.025);
-	vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow, 0.025 + 0.075 * diffuseEdgeBlend, 0.025);
+	//vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow, 0.025 + 0.075 * diffuseEdgeBlend, 0.025);
+	vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow, leafVariables.leafAmbient + (leafVariables.leafAmbient * 3.0) * diffuseEdgeBlend, leafVariables.leafAmbient);
 	//vec3 leafDiffuse = DiffuseLightingRealistic(leafNormal, worldPosition, shadow, 0.1, 0.1);
 	//vec3 leafDiffuse = DiffuseLighting(leafNormal, shadow);
 	vec3 endColor = leafDiffuse * leafVariables.leafTint.rgb * leafColor.y;

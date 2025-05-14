@@ -220,6 +220,8 @@ void Camera::UpdateRotation(double xpos, double ypos)
 	lastX = xpos;
 	lastY = ypos;
 
+	//xoffset *= sensitivity * Time::deltaTime;
+	//yoffset *= sensitivity * Time::deltaTime;
 	xoffset *= sensitivity;
 	yoffset *= sensitivity;
 

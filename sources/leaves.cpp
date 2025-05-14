@@ -198,11 +198,12 @@ void Leaves::DestroyBuffers()
 void Leaves::Start()
 {
 	//memcpy(variablesBuffer.mappedBuffer, &leafVariables, sizeof(LeafVariables));
+	UpdateLeafVariables();
 }
 
 void Leaves::Frame()
 {
-	memcpy(variablesBuffer.mappedBuffer, &leafVariables, sizeof(LeafVariables));
+	//memcpy(variablesBuffer.mappedBuffer, &leafVariables, sizeof(LeafVariables));
 }
 
 void Leaves::RecordGraphicsCommands(VkCommandBuffer commandBuffer)
@@ -364,6 +365,12 @@ void Leaves::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 			0, 0, Trees::treeVariables.leafCounts[4].y);
 	}
 }
+
+void Leaves::UpdateLeafVariables()
+{
+	memcpy(variablesBuffer.mappedBuffer, &leafVariables, sizeof(LeafVariables));
+}
+
 Mesh Leaves::leafMeshLod0;
 Mesh Leaves::leafMeshLod1;
 Mesh Leaves::leafMeshLod2;

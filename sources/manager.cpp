@@ -309,7 +309,7 @@ void Manager::PreFrame()
 	Trees::Frame();
 	Leaves::Frame();
 	Grass::Frame();
-	Sky::Frame();
+	//Sky::Frame();
 	Shadow::Frame();
 	Simulation::Frame();
 }

@@ -113,7 +113,8 @@ struct TreeVariables
 struct TrunkVariables
 {
 	//glm::vec4 trunkColor = glm::vec4(48.0f, 32.0f, 16.0f, 255.0f) / 255.0f;
-	glm::vec4 trunkLodColor = glm::vec4(36.0f, 30.0f, 22.0f, 255.0f) / 255.0f;
+	float trunkAmbient = 0.025f;
+	alignas(16) glm::vec4 trunkLodColor = glm::vec4(36.0f, 30.0f, 22.0f, 255.0f) / 255.0f;
 	glm::vec4 trunkTint = glm::vec4(255.0f, 217.0f, 169.0f, 255.0f) / 255.0f;
 };
 
@@ -224,6 +225,7 @@ class Trees
 		static void ComputeTreeRender(VkCommandBuffer commandBuffer, bool capture = false);
 		static void SetData();
 		static void CaptureTree();
+		static void UpdateTreeVariables();
 
 		static void GenerateTrunkMesh(Mesh &mesh, BranchConfiguration config);
 		//static Shape GenerateBranchShape(BranchConfiguration branchConfig);

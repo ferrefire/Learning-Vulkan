@@ -120,4 +120,5 @@ class Grass
 		static void ComputeGrass(VkCommandBuffer commandBuffer);
 		static void ComputeClumping();
 		static void SetData();
+		static void UpdataGrassVariables();
 };

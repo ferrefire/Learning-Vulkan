@@ -36,6 +36,8 @@ void Input::ProcessInput()
     SetKeyStatus();
 
 	Manager::camera.UpdateMovement();
+
+	//Manager::camera.UpdateView();
 }
 
 void Input::mouse_callback(GLFWwindow *window, double xpos, double ypos)
@@ -67,7 +69,7 @@ Input::KeyStatus Input::GetKey(int keyCode, bool mouse)
 
 void Input::Start()
 {
-	Manager::camera.canLook = false;
+	Manager::camera.canLook = true;
 	Manager::camera.UpdateProjection();
 	//Manager::camera.Move(glm::vec3(3692.39, -997.286, 2000.46));
 	//Manager::camera.Move(glm::vec3(3833.49, -1390.03, 4944.97));
