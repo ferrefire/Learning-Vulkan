@@ -42,7 +42,7 @@ void Simulation::Start()
 	//Settlement *newSettlement2 = new Settlement;
     //settlements.push_back(newSettlement2);
 	//newSettlement2->Start(settlements.size() - 1, glm::vec3(8125.0f, 0.0f, 5075.0f));
-	//
+
 	//Settlement *newSettlement3 = new Settlement;
     //settlements.push_back(newSettlement3);
 	//newSettlement3->Start(settlements.size() - 1, glm::vec3(5650.0f, 0.0f, 3030.0f));
@@ -89,10 +89,10 @@ void Simulation::Frame()
 		}
 	}
 
-	if (Input::GetKey(GLFW_KEY_I).pressed)
-	{
-		
-	}
+	//if (Input::GetKey(GLFW_KEY_I).pressed)
+	//{
+	//	settlements[0]->chunks[0].GenerateChunkMesh();
+	//}
 }
 
 std::vector<ProximityData> Simulation::GetSettlementProximity(glm::vec3 target)

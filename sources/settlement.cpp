@@ -26,6 +26,8 @@ void Settlement::Start(int id, glm::vec3 position)
 {
     this->id = id;
 	this->position = position;
+	this->settlementBuilding = new Building;
+	this->settlementBuilding->lod = true;
 	Data::RequestData(position, &this->position.y);
 }
 
@@ -44,7 +46,18 @@ void Settlement::Destroy()
                 }
             }
         }
+
+		if (chunk.chunkBuilding)
+		{
+			chunk.chunkBuilding->mesh.Destroy();
+			chunk.chunkBuilding->lodMesh.Destroy();
+			delete(chunk.chunkBuilding);
+		}
     }
+
+	settlementBuilding->mesh.Destroy();
+	settlementBuilding->lodMesh.Destroy();
+	delete(settlementBuilding);
 }
 
 void Settlement::AddChunk(glm::ivec2 coordinates)
@@ -113,6 +126,7 @@ void SettlementChunk::Setup(int settlementID, int id, glm::ivec2 coordinates)
 	this->id = id;
 	this->coordinates = coordinates;
 	this->localPosition = glm::vec3(coordinates.x, 0.0f, coordinates.y) * (CHUNK_LENGTH * CELL_SIZE);
+	this->chunkBuilding = new Building;
 	Data::RequestData(this->localPosition + Simulation::settlements[settlementID]->position, &this->localPosition.y);
 
 	for (int cx = 0; cx < CHUNK_LENGTH; cx++)
@@ -135,6 +149,53 @@ void SettlementChunk::Setup(int settlementID, int id, glm::ivec2 coordinates)
 	}
 
 	initialized = true;
+}
+
+void SettlementChunk::GenerateChunkMesh()
+{
+	Mesh *currentMesh = chunkBuilding->GetMesh();
+
+	currentMesh->shape.coordinate = true;
+	currentMesh->shape.normal = true;
+	currentMesh->shape.color = true;
+	currentMesh->coordinate = true;
+	currentMesh->normal = true;
+	currentMesh->color = true;
+
+	for (int cx = 0; cx < CHUNK_LENGTH; cx++)
+	{
+		for (int cy = 0; cy < CHUNK_LENGTH; cy++)
+		{
+			if (cells[cx][cy].building && cells[cx][cy].building->GetMesh(chunkBuilding->lod)->created)
+			{
+				Shape temp = cells[cx][cy].building->GetMesh(chunkBuilding->lod)->shape;
+				temp.Rotate(cells[cx][cy].building->rotation.y, glm::vec3(0, 1, 0));
+				temp.Move(cells[cx][cy].building->position);
+				currentMesh->shape.Join(temp);
+			}
+		}
+	}
+
+	currentMesh->RecalculateVertices();
+	currentMesh->Create();
+
+	//std::cout << "chunk mesh generated" << std::endl;
+}
+
+bool SettlementChunk::CanGenerateChunkMesh()
+{
+	for (int cx = 0; cx < CHUNK_LENGTH; cx++)
+	{
+		for (int cy = 0; cy < CHUNK_LENGTH; cy++)
+		{
+			if (cells[cx][cy].building && !cells[cx][cy].building->GetMesh(chunkBuilding->lod)->created)
+			{
+				return (false);
+			}
+		}
+	}
+
+	return (true);
 }
 
 SettlementCell *SettlementChunk::GetCell(int x, int y)
@@ -225,20 +286,93 @@ void Settlement::GenerateBuilding(glm::vec3 target, bool local)
 	GenerateBuilding(GetCell(target, local));
 }
 
-std::vector<SettlementCell *> Settlement::GetRenderCells()
+bool Settlement::CanGenerateSettlementMesh()
 {
-    std::vector<SettlementCell *> renderCells;
+	if (chunks.size() <= 0) return (false);
+
+	for (SettlementChunk &chunk : chunks)
+	{
+		if (!chunk.chunkBuilding->lodMesh.created)
+		{
+			return (false);
+		}
+	}
+
+	return (true);
+}
+
+void Settlement::GenerateSettlementMesh()
+{
+	Mesh *currentMesh = &settlementBuilding->lodMesh;
+
+	currentMesh->shape.coordinate = true;
+	currentMesh->shape.normal = true;
+	currentMesh->shape.color = true;
+	currentMesh->coordinate = true;
+	currentMesh->normal = true;
+	currentMesh->color = true;
+
+	for (SettlementChunk &chunk : chunks)
+	{
+		if (chunk.chunkBuilding->lodMesh.created)
+		{
+			Shape temp = chunk.chunkBuilding->lodMesh.shape;
+			temp.Rotate(chunk.chunkBuilding->rotation.y, glm::vec3(0, 1, 0));
+			temp.Move(chunk.chunkBuilding->position);
+			currentMesh->shape.Join(temp);
+		}
+	}
+
+	currentMesh->RecalculateVertices();
+	currentMesh->Create();
+}
+
+SettlementRenderData Settlement::GetRenderData()
+{
+	SettlementRenderData renderData;
+    //std::vector<SettlementCell *> renderCells;
 
     glm::vec3 worldSpace = position - Terrain::terrainOffset;
 
 	float dis = Utilities::DistanceSqrd(worldSpace, Manager::camera.Position());
-	if (dis > 7500.0f * 7500.0f) return (renderCells);
+
+	//if (dis > 10000.0f * 10000.0f) return (renderData);
+
+	//if ((dis > 4000.0f * 4000.0f) && (Manager::camera.AreaInView(worldSpace, (CELL_SIZE * (CHUNK_RADIUS + 1)) * (MaxCoordinate() + 1))));
+	//if ((dis > 7500.0f * 7500.0f) && (Manager::camera.AreaInView(worldSpace, (CELL_SIZE * (CHUNK_RADIUS + 1)) * (MaxCoordinate() + 1))));
+	//{
+	//	settlementBuilding->lod = true;
+	//	if (settlementBuilding->lodMesh.created)
+	//	{
+	//		renderData.settlementBuilding = settlementBuilding;
+	//		return (renderData);
+	//	}
+	//	else if (CanGenerateSettlementMesh())
+	//	{
+	//		GenerateSettlementMesh();
+	//	}
+	//}
 
 	int inChunk = GetChunkID(Manager::camera.Position() + Terrain::terrainOffset);
 
 	std::vector<ProximityData> chunkProximities = GetChunkProximity(Manager::camera.Position());
 
-	//for (SettlementChunk &chunk : chunks)
+	if (chunkProximities.size() > 0 && chunkProximities[0].distanceSquared > 4000.0f * 4000.0f)
+	{
+		if (chunkProximities[0].distanceSquared > 15000.0f * 15000.0f || !Manager::camera.AreaInView(worldSpace, (CELL_SIZE * (CHUNK_RADIUS + 1)) * (MaxCoordinate() + 1))) return (renderData);
+
+		settlementBuilding->lod = true;
+		if (settlementBuilding->lodMesh.created)
+		{
+			renderData.settlementBuilding = settlementBuilding;
+			return (renderData);
+		}
+		else if (CanGenerateSettlementMesh())
+		{
+			GenerateSettlementMesh();
+		}
+	}
+
 	for (ProximityData &chunkProximity : chunkProximities)
 	{
 		SettlementChunk &chunk = chunks[chunkProximity.id];
@@ -247,17 +381,30 @@ std::vector<SettlementCell *> Settlement::GetRenderCells()
         worldSpace.y = chunk.localPosition.y;
         worldSpace -= Terrain::terrainOffset;
 
-		//dis = Utilities::DistanceSqrd(worldSpace, Manager::camera.Position());
 		dis = chunkProximity.distanceSquared;
 		if (dis > 5000.0f * 5000.0f) continue;
 
-		//if (chunk.id == inChunk || Manager::camera.AreaInView(worldSpace, (CELL_SIZE * 0.5f) + (CELL_SIZE * CHUNK_RADIUS)))
 		if (chunk.id == inChunk || Manager::camera.AreaInView(worldSpace, (CELL_SIZE * (CHUNK_RADIUS + 1))))
         {
 			//buildingsToGenerate.clear();
 
             bool lod = true;
-            if (dis < 1000.0f * 1000.0f) lod = false;
+            if (dis < 2000.0f * 2000.0f) lod = false;
+
+			chunk.chunkBuilding->lod = lod;
+
+			if (dis > 250.0f * 250.0f)
+			{
+				if (chunk.chunkBuilding->GetMesh()->created)
+				{
+					renderData.renderChunks.push_back(&chunk);
+					continue;
+				}
+				else if (chunk.CanGenerateChunkMesh())
+				{
+					chunk.GenerateChunkMesh();
+				}
+			}
 
             for (int x = 0; x < CHUNK_LENGTH; x++)
             {
@@ -277,12 +424,12 @@ std::vector<SettlementCell *> Settlement::GetRenderCells()
                         if (!needsMesh)
 						{
 							chunk.cells[x][y].building->lod = lod;
-							renderCells.push_back(&chunk.cells[x][y]);
+							renderData.renderCells.push_back(&chunk.cells[x][y]);
 						}
 						else if (chunk.cells[x][y].building->lodMesh.created)
 						{
 							chunk.cells[x][y].building->lod = true;
-							renderCells.push_back(&chunk.cells[x][y]);
+							renderData.renderCells.push_back(&chunk.cells[x][y]);
 						}
                     }
                 }
@@ -292,7 +439,7 @@ std::vector<SettlementCell *> Settlement::GetRenderCells()
         }
 	}
 
-    return (renderCells);
+    return (renderData);
 }
 
 std::vector<ProximityData> Settlement::GetChunkProximity(glm::vec3 target)

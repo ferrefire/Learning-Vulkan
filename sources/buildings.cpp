@@ -736,13 +736,32 @@ void Buildings::SetRenderBuildings()
 		//	continue;
 		//}
 
-		std::vector<SettlementCell *> renderCells = Simulation::settlements[proximityData.id]->GetRenderCells();
+		//std::vector<SettlementCell *> renderCells = Simulation::settlements[proximityData.id]->GetRenderCells();
+		SettlementRenderData settlementRenderData = Simulation::settlements[proximityData.id]->GetRenderData();
 
-		for (int j = 0; j < renderCells.size(); j++)
+		if (settlementRenderData.settlementBuilding && settlementRenderData.settlementBuilding->lodMesh.created)
 		{
-			renderBuildings.push_back(renderCells[j]->building);
-			buildingBuffers[renderBuildings.size() - 1].translation = renderCells[j]->building->translation;
-			buildingBuffers[renderBuildings.size() - 1].orientation = renderCells[j]->building->orientation;
+			renderBuildings.push_back(settlementRenderData.settlementBuilding);
+			buildingBuffers[renderBuildings.size() - 1].translation = settlementRenderData.settlementBuilding->translation;
+			buildingBuffers[renderBuildings.size() - 1].orientation = settlementRenderData.settlementBuilding->orientation;
+
+			if (renderBuildings.size() >= maxRenderBuildings) break;
+		}
+
+		for (int j = 0; j < settlementRenderData.renderChunks.size(); j++)
+		{
+			renderBuildings.push_back(settlementRenderData.renderChunks[j]->chunkBuilding);
+			buildingBuffers[renderBuildings.size() - 1].translation = settlementRenderData.renderChunks[j]->chunkBuilding->translation;
+			buildingBuffers[renderBuildings.size() - 1].orientation = settlementRenderData.renderChunks[j]->chunkBuilding->orientation;
+
+			if (renderBuildings.size() >= maxRenderBuildings) break;
+		}
+
+		for (int j = 0; j < settlementRenderData.renderCells.size(); j++)
+		{
+			renderBuildings.push_back(settlementRenderData.renderCells[j]->building);
+			buildingBuffers[renderBuildings.size() - 1].translation = settlementRenderData.renderCells[j]->building->translation;
+			buildingBuffers[renderBuildings.size() - 1].orientation = settlementRenderData.renderCells[j]->building->orientation;
 
 			if (renderBuildings.size() >= maxRenderBuildings) break;
 		}
@@ -770,7 +789,7 @@ void Buildings::SetRenderBuildingsShadow()
 {
 	return;
 
-	renderBuildingsShadow.clear();
+	/*renderBuildingsShadow.clear();
 
 	std::vector<ProximityData> settlementProximity = Simulation::GetSettlementProximity(Manager::camera.Position());
 	for (ProximityData proximityData : settlementProximity)
@@ -789,19 +808,9 @@ void Buildings::SetRenderBuildingsShadow()
 		}
 	}
 
-	/*for (int i = 0; i < buildings.size(); i++)
-	{
-		if (buildings[i]->active && BuildingInView(buildings[i]))
-		{
-			renderBuildingsShadow.push_back(buildings[i]);
-			buildingShadowBuffers[renderBuildingsShadow.size() - 1].translation = buildings[i]->translation;
-			buildingShadowBuffers[renderBuildingsShadow.size() - 1].orientation = buildings[i]->orientation;
+	
 
-			if (renderBuildingsShadow.size() >= maxRenderBuildings) break;
-		}
-	}*/
-
-	memcpy(uniformShadowBuffers[Manager::currentFrame].mappedBuffer, buildingShadowBuffers.data(), sizeof(BuildingBuffer) * renderBuildingsShadow.size());
+	memcpy(uniformShadowBuffers[Manager::currentFrame].mappedBuffer, buildingShadowBuffers.data(), sizeof(BuildingBuffer) * renderBuildingsShadow.size());*/
 }
 
 /*void Buildings::GenerateBuilding()
