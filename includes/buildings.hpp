@@ -171,6 +171,16 @@ struct Building
 		orientation = glm::rotate(orientation, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
 		orientation = glm::rotate(orientation, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 	}
+
+	Mesh *GetMesh()
+	{
+		return (lod ? &lodMesh : &mesh);
+	}
+
+	Mesh *GetMesh(bool _lod)
+	{
+		return (_lod ? &lodMesh : &mesh);
+	}
 };
 
 struct GenerationConfig

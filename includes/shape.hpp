@@ -17,11 +17,11 @@
 #define TRIANGLE 8
 #define PRISM 9
 
-#define INDEX_TYPE VK_INDEX_TYPE_UINT16
-//#define INDEX_TYPE VK_INDEX_TYPE_UINT32
+//#define INDEX_TYPE VK_INDEX_TYPE_UINT16
+#define INDEX_TYPE VK_INDEX_TYPE_UINT32
 
-typedef uint16_t indexType;
-//typedef uint32_t indexType;
+//typedef uint16_t indexType;
+typedef uint32_t indexType;
 
 class Shape
 {

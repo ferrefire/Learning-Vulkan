@@ -1,6 +1,7 @@
 #pragma once
 
 #include "buildings.hpp"
+#include "mesh.hpp"
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -11,7 +12,7 @@
 
 #define CHUNK_RADIUS 2
 #define CHUNK_LENGTH (CHUNK_RADIUS * 2 + 1)
-#define CELL_SIZE (10.0f * 3.0f)
+#define CELL_SIZE (9.0f * 3.0f)
 
 enum class ChunkDirection { North, Eeast, South, West };
 
@@ -36,8 +37,11 @@ struct SettlementChunk
     glm::ivec2 coordinates;
     glm::vec3 localPosition;
     SettlementCell cells[CHUNK_LENGTH][CHUNK_LENGTH];
+    Building *chunkBuilding = nullptr;
 
     void Setup(int settlementID, int id, glm::ivec2 coordinates);
+    void GenerateChunkMesh();
+    bool CanGenerateChunkMesh();
 
     SettlementCell *GetCell(int x, int y);
     SettlementCell *GetCell(glm::vec3 target, bool local = false);
@@ -49,6 +53,13 @@ struct ProximityData
 {
 	int id = -1;
 	float distanceSquared = FLT_MAX;
+};
+
+struct SettlementRenderData
+{
+    Building *settlementBuilding;
+    std::vector<SettlementCell *> renderCells;
+    std::vector<SettlementChunk *> renderChunks;
 };
 
 class Settlement
@@ -64,6 +75,7 @@ class Settlement
         int id;
         glm::vec3 position;
         std::vector<SettlementChunk> chunks;
+        Building *settlementBuilding = nullptr;
 		bool generating;
 
         void Start(int id, glm::vec3 position);
@@ -83,7 +95,12 @@ class Settlement
 
 		std::vector<ProximityData> GetChunkProximity(glm::vec3 target);
 
-		std::vector<SettlementCell *> GetRenderCells();
+        void GenerateSettlementMesh();
+        bool CanGenerateSettlementMesh();
+
+		SettlementRenderData GetRenderData();
+		//std::vector<SettlementCell *> GetRenderCells();
+		//std::vector<SettlementChunk *> GetRenderChunks();
 
         int MaxCoordinate();
 };
