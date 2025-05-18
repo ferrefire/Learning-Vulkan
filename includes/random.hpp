@@ -15,6 +15,9 @@ class Random
 		~Random();
 
 		static int Int(int seed);
+		static int Int(int seed, int min, int max);
+
+		//static float Float(float seed, float min, float max);
 
 		void SetSeed(uint32_t seed);
 		int Next(int min, int max);

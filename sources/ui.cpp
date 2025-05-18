@@ -250,6 +250,7 @@ void UI::RenderSliderComponent(FloatSliderComponent &sliderComponent)
 	ImGui::PushItemWidth(250.0f);
 	ImGui::SliderFloat(sliderComponent.name.c_str(), &sliderComponent.value, sliderComponent.min, sliderComponent.max);
 	ImGui::PopItemWidth();
+	if (sliderComponent.func != nullptr && ImGui::IsItemEdited()) sliderComponent.func();
 }
 
 void UI::RenderSliderComponent(IntSliderComponent &sliderComponent)
@@ -257,6 +258,7 @@ void UI::RenderSliderComponent(IntSliderComponent &sliderComponent)
 	ImGui::PushItemWidth(250.0f);
 	ImGui::SliderInt(sliderComponent.name.c_str(), &sliderComponent.value, sliderComponent.min, sliderComponent.max);
 	ImGui::PopItemWidth();
+	if (sliderComponent.func != nullptr && ImGui::IsItemEdited()) sliderComponent.func();
 }
 
 void UI::RenderRangeComponent(FloatRangeComponent &rangeComponent)

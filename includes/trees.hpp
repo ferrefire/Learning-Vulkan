@@ -107,6 +107,14 @@ struct TreeVariables
 	alignas(4) float spacing;
 	alignas(4) float spacingMult;
 
+	alignas(4) float leafSizeMultiplier;
+	alignas(4) float leafBlendDistance;
+	alignas(4) float leafBlendStart;
+	alignas(4) float leafBlendMult;
+	alignas(4) float leafFadeDistance;
+	alignas(4) float leafFadeStart;
+	alignas(4) float leafFadeMult;
+
 	alignas(16) glm::vec4 leafCounts[6];
 };
 
@@ -177,7 +185,8 @@ class Trees
 		static std::vector<Buffer> renderBuffers;
 		static std::vector<Buffer> shadowBuffers;
 		static std::vector<Buffer> countBuffers;
-		static std::vector<Buffer> variableBuffers;
+		//static std::vector<Buffer> variableBuffers;
+		static Buffer variableBuffer;
 		static Buffer trunkBuffer;
 
 		static TreeVariables treeVariables;

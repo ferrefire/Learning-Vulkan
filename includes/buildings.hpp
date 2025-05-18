@@ -200,7 +200,7 @@ struct PartConfig
 struct BuildingVariables
 {
 	glm::vec4 roofTint = glm::vec4(98.0f, 122.0f, 181.0f, 255.0f) / 255.0f;
-	glm::vec4 wallTint = glm::vec4(255.0f, 255.0f, 255.0f, 255.0f) / 255.0f;
+	glm::vec4 wallTint = glm::vec4(205.0f, 185.0f, 166.0f, 255.0f) / 255.0f;
 	glm::vec4 beamTint = glm::vec4(213.0f, 234.0f, 236.0f, 255.0f) / 255.0f;
 	glm::vec4 brickTint = glm::vec4(255.0f, 255.0f, 255.0f, 255.0f) / 255.0f;
 	alignas(8) glm::vec2 roofDistance = glm::vec2(150.0f, 100.0f);

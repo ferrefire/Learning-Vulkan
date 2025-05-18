@@ -84,6 +84,7 @@ struct FloatSliderComponent
 	float &value;
 	float min = 0.0f;
 	float max = 1.0f;
+	void(*func)(void);
 };
 
 struct IntSliderComponent
@@ -92,6 +93,7 @@ struct IntSliderComponent
 	int &value;
 	int min = 0;
 	int max = 1;
+	void(*func)(void);
 };
 
 struct FloatRangeComponent
@@ -176,9 +178,9 @@ struct Menu
 		components.push_back(newComponent);
 	}
 
-	void AddSlider(std::string name, float &value, float min, float max)
+	void AddSlider(std::string name, float &value, float min, float max, void(*func)(void) = nullptr)
 	{
-		FloatSliderComponent newFloatSliderComponent{name, value, min, max};
+		FloatSliderComponent newFloatSliderComponent{name, value, min, max, func};
 		floatSliderComponents.push_back(newFloatSliderComponent);
 
 		Component newComponent;
@@ -187,9 +189,9 @@ struct Menu
 		components.push_back(newComponent);
 	}
 
-	void AddSlider(std::string name, int &value, int min, int max)
+	void AddSlider(std::string name, int &value, int min, int max, void(*func)(void) = nullptr)
 	{
-		IntSliderComponent newIntSliderComponent{name, value, min, max};
+		IntSliderComponent newIntSliderComponent{name, value, min, max, func};
 		intSliderComponents.push_back(newIntSliderComponent);
 
 		Component newComponent;

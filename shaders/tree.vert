@@ -38,6 +38,13 @@ layout(set = 1, binding = 1) uniform TreeVariables //make readonly
 	uint treeTotalRenderCount;
 	float spacing;
 	float spacingMult;
+	float leafSizeMultiplier;
+	float leafBlendDistance;
+	float leafBlendStart;
+	float leafBlendMult;
+	float leafFadeDistance;
+	float leafFadeStart;
+	float leafFadeMult;
 	vec4 leafCounts[6];
 } treeVariables;
 

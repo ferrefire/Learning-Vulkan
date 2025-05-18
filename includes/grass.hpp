@@ -85,7 +85,8 @@ class Grass
 
 		static std::vector<Buffer> dataBuffers;
 		static std::vector<Buffer> countBuffers;
-		static std::vector<Buffer> variableBuffers;
+		static Buffer variableBuffer;
+		//static std::vector<Buffer> variableBuffers;
 
 		static Texture clumpingTexture;
 

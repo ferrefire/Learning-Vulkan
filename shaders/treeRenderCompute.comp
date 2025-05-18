@@ -111,6 +111,13 @@ layout(set = 1, binding = 4) readonly restrict uniform TreeVariables
 	uint treeTotalRenderCount;
 	float spacing;
 	float spacingMult;
+	float leafSizeMultiplier;
+	float leafBlendDistance;
+	float leafBlendStart;
+	float leafBlendMult;
+	float leafFadeDistance;
+	float leafFadeStart;
+	float leafFadeMult;
 	vec4 leafCounts[6];
 } treeVariables;
 
@@ -146,13 +153,13 @@ const int frustumCheckDis = 35 * 35;
 //const vec3 treeCenter = vec3(-3.05, 47.22, -5.725);
 const vec3 treeCenter = vec3(0.0, 40.0, 0.0);
 
-const float leafBlendDistance = 0.5;
-const float leafBlendStart = 1.0 - leafBlendDistance;
-const float leafBlendMult = 1.0 / leafBlendDistance;
+//const float leafBlendDistance = 0.5;
+//const float leafBlendStart = 1.0 - leafBlendDistance;
+//const float leafBlendMult = 1.0 / leafBlendDistance;
 
-const float leafFadeDistance = 0.25;
-const float leafFadeStart = 1.0 - leafFadeDistance;
-const float leafFadeMult = 1.0 / leafFadeDistance;
+//const float leafFadeDistance = 0.25;
+//const float leafFadeStart = 1.0 - leafFadeDistance;
+//const float leafFadeMult = 1.0 / leafFadeDistance;
 
 //shared int sharedRender[64];
 //shared TreeComputeResult sharedTreeResults[64];
@@ -454,25 +461,25 @@ void ComputeLeafData(TreeComputeResult treeResult, LodComputeResult lodResult, I
 		vec3 leafWorldPosition = treeResult.position.xyz + leafLocalPosition - treeResult.viewPosition.xyz;
 
 		float scaleMult = treeVariables.leafCounts[leafLod].w;
-		if (leafLod < 5 && lodResult.lodDis > leafBlendStart && leafIndex % int(treeVariables.leafCounts[leafLod + 1].z) == 0)
+		if (leafLod < 5 && lodResult.lodDis > treeVariables.leafBlendStart && leafIndex % int(treeVariables.leafCounts[leafLod + 1].z) == 0)
 		{
-			scaleMult = mix(scaleMult, treeVariables.leafCounts[leafLod + 1].w, (lodResult.lodDis - leafBlendStart) * leafBlendMult);
+			scaleMult = mix(scaleMult, treeVariables.leafCounts[leafLod + 1].w, (lodResult.lodDis - treeVariables.leafBlendStart) * treeVariables.leafBlendMult);
 		}
 
 		float leafLodScale = 2.0 + scaleMult;
-		if (leafLod < 5 && lodResult.lodDis > leafFadeStart && leafIndex % int(treeVariables.leafCounts[leafLod + 1].z) != 0)
+		if (leafLod < 5 && lodResult.lodDis > treeVariables.leafFadeStart && leafIndex % int(treeVariables.leafCounts[leafLod + 1].z) != 0)
 		{
-			leafLodScale = mix(leafLodScale, 0.1, (lodResult.lodDis - leafFadeStart) * leafFadeMult);
+			leafLodScale = mix(leafLodScale, 0.1, (lodResult.lodDis - treeVariables.leafFadeStart) * treeVariables.leafFadeMult);
 		}
+
+		scaleMult *= treeVariables.leafSizeMultiplier;
+		leafLodScale *= treeVariables.leafSizeMultiplier;
 
 		float leafRan = length(leafPositions[leafIndex].xyz) + treeResult.dataIndex;
 		float leafScale = leafLodScale + (Random11(leafRan) * leafLodScale) * 0.25;
 		float leafRotationX = Random01(leafIndex * 0.001 + leafRan);
 		float leafRotationY = Random01(leafIndex * 0.001 * 2.0 + leafRan * 0.5);
-		//float leafRotationZ = Random01(leafIndex * 0.001 * 0.5 + leafRan * 10.0);
 		float leafColor = 1.0 + (Random01(leafIndex * 0.001 * 0.5 + leafRan * 2.0 + leafRotationX + leafRotationY) - 0.5);
-
-		//leafRotationZ = 1.0;
 
 		float leafSturdiness = 0.0;
 		if (leafLod <= 1) leafSturdiness = leafPositions[leafIndex].w;
@@ -494,7 +501,7 @@ void ComputeLeafData(TreeComputeResult treeResult, LodComputeResult lodResult, I
 	}
 }
 
-void ComputeSharedLeafData(int id, TreeComputeResult treeResult, LodComputeResult lodResult, IndexComputeResult indexResult)
+/*void ComputeSharedLeafData(int id, TreeComputeResult treeResult, LodComputeResult lodResult, IndexComputeResult indexResult)
 {
 	int leafLod = lodResult.shadowLod;
 
@@ -559,7 +566,7 @@ void ComputeSharedLeafData(int id, TreeComputeResult treeResult, LodComputeResul
 		leafShadowIndex++;
 		leafIndex += int(treeVariables.leafCounts[leafLod].z);
 	}
-}
+}*/
 
 void main()
 {

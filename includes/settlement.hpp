@@ -11,7 +11,7 @@
 
 #define CHUNK_RADIUS 2
 #define CHUNK_LENGTH (CHUNK_RADIUS * 2 + 1)
-#define CELL_SIZE (8.0f * 3.0f)
+#define CELL_SIZE (10.0f * 3.0f)
 
 enum class ChunkDirection { North, Eeast, South, West };
 

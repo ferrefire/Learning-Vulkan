@@ -56,8 +56,8 @@ void Trees::CreateMeshes()
 	BranchConfiguration branchConfig;
 	branchConfig.main = true;
 	branchConfig.splitCount = 4;
-	//branchConfig.resolution = 32;
-	branchConfig.resolution = 24;
+	branchConfig.resolution = 32;
+	//branchConfig.resolution = 24;
 	//branchConfig.blendRange = 8;
 	//branchConfig.minSize = 0.75;
 	branchConfig.minSize = 0.1;
@@ -95,41 +95,53 @@ void Trees::CreateMeshes()
 	//treeVariables.leafCount3 = int(floor(float(treeVariables.leafCountTotal) / 16.0f));
 	//treeVariables.leafCount4 = int(floor(float(treeVariables.leafCountTotal) / 32.0f));
 
-	float decreaseFactor = 2.0;
+	float decreaseFactor = 1.0;
 
 	treeVariables.leafCounts[0].x = int(floor(float(leafPositions.size()) / glm::clamp((0.5f * decreaseFactor), 1.0f, 10.0f)));
 	treeVariables.leafCounts[0].y = 0;
 	treeVariables.leafCounts[0].z = 1;
-	treeVariables.leafCounts[0].w = 1 * 0.25;
+	treeVariables.leafCounts[0].w = 0.0;
+	//treeVariables.leafCounts[0].w = 0;
+	//treeVariables.leafCounts[0].w = 1 * 0.25;
 
 	treeVariables.leafCounts[1].x = int(floor(float(treeVariables.leafCounts[0].x) / (2.0f * decreaseFactor)));
 	treeVariables.leafCounts[1].y = treeLod0RenderCount * treeVariables.leafCounts[0].x;
 	treeVariables.leafCounts[1].z = 2 * decreaseFactor;
-	treeVariables.leafCounts[1].w = 2 * 1.0;
+	treeVariables.leafCounts[1].w = 1.5;
+	//treeVariables.leafCounts[1].w = 2.5;
+	//treeVariables.leafCounts[1].w = 2 * 1.0;
 
 	treeVariables.leafCounts[2].x = int(floor(float(treeVariables.leafCounts[0].x) / (8.0f * decreaseFactor)));
 	treeVariables.leafCounts[2].y = treeLod1RenderCount * treeVariables.leafCounts[1].x +
 		treeVariables.leafCounts[1].y;
 	treeVariables.leafCounts[2].z = 8 * decreaseFactor;
-	treeVariables.leafCounts[2].w = 2 * 4;
+	treeVariables.leafCounts[2].w = 6;
+	//treeVariables.leafCounts[2].w = 8;
+	//treeVariables.leafCounts[2].w = 2 * 4;
 
 	treeVariables.leafCounts[3].x = int(floor(float(treeVariables.leafCounts[0].x) / (48.0f * decreaseFactor)));
 	treeVariables.leafCounts[3].y = treeLod2RenderCount * treeVariables.leafCounts[2].x +
 		treeVariables.leafCounts[2].y;
 	treeVariables.leafCounts[3].z = 48 * decreaseFactor;
-	treeVariables.leafCounts[3].w = 6 * 3.0;
+	treeVariables.leafCounts[3].w = 17;
+	//treeVariables.leafCounts[3].w = 20;
+	//treeVariables.leafCounts[3].w = 6 * 3.0;
 
 	treeVariables.leafCounts[4].x = int(floor(float(treeVariables.leafCounts[0].x) / (96.0f * decreaseFactor)));
 	treeVariables.leafCounts[4].y = treeLod3RenderCount * treeVariables.leafCounts[3].x +
 		treeVariables.leafCounts[3].y;
 	treeVariables.leafCounts[4].z = 96 * decreaseFactor;
-	treeVariables.leafCounts[4].w = 16 * 2.5;
+	treeVariables.leafCounts[4].w = 30;
+	//treeVariables.leafCounts[4].w = 30;
+	//treeVariables.leafCounts[4].w = 16 * 2.5;
 
 	treeVariables.leafCounts[5].x = int(floor(float(treeVariables.leafCounts[0].x) / (288.0f * decreaseFactor)));
 	treeVariables.leafCounts[5].y = treeLod4RenderCount * treeVariables.leafCounts[4].x +
 		treeVariables.leafCounts[4].y;
 	treeVariables.leafCounts[5].z = 288 * decreaseFactor;
-	treeVariables.leafCounts[5].w = 32 * 1.5;
+	treeVariables.leafCounts[5].w = 75;
+	//treeVariables.leafCounts[5].w = 75;
+	//treeVariables.leafCounts[5].w = 32 * 1.5;
 
 	totalLeafCount = (treeLod5RenderCount * treeVariables.leafCounts[5].x) + treeVariables.leafCounts[5].y;
 
@@ -384,7 +396,7 @@ void Trees::CreateBuffers()
 		buffer.Create(countConfiguration);
 	}
 
-	variableBuffers.resize(Manager::settings.maxFramesInFlight);
+	//variableBuffers.resize(Manager::settings.maxFramesInFlight);
 
 	BufferConfiguration variablesConfiguration;
 	variablesConfiguration.size = sizeof(TreeVariables);
@@ -392,11 +404,12 @@ void Trees::CreateBuffers()
 	variablesConfiguration.memoryProperties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 	variablesConfiguration.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	variablesConfiguration.mapped = true;
+	variableBuffer.Create(variablesConfiguration);
 
-	for (Buffer &buffer : variableBuffers)
-	{
-		buffer.Create(variablesConfiguration);
-	}
+	//for (Buffer &buffer : variableBuffers)
+	//{
+	//	buffer.Create(variablesConfiguration);
+	//}
 
 	BufferConfiguration leafPositionsConfiguration;
 	leafPositionsConfiguration.size = sizeof(glm::vec4) * treeVariables.leafCounts[0].x;
@@ -438,15 +451,18 @@ void Trees::CreateGraphicsDescriptor()
 
 	descriptorConfig[i].type = UNIFORM_BUFFER;
 	descriptorConfig[i].stages = VERTEX_STAGE;
-	descriptorConfig[i].buffersInfo.resize(variableBuffers.size());
-	index = 0;
-	for (Buffer &buffer : variableBuffers)
-	{
-		descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[i].buffersInfo[index].range = sizeof(TreeVariables);
-		descriptorConfig[i].buffersInfo[index].offset = 0;
-		index++;
-	}
+	descriptorConfig[i].buffersInfo.resize(1);
+	descriptorConfig[i].buffersInfo[0].buffer = variableBuffer.buffer;
+	descriptorConfig[i].buffersInfo[0].range = sizeof(TreeVariables);
+	//descriptorConfig[i].buffersInfo.resize(variableBuffers.size());
+	//index = 0;
+	//for (Buffer &buffer : variableBuffers)
+	//{
+	//	descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
+	//	descriptorConfig[i].buffersInfo[index].range = sizeof(TreeVariables);
+	//	descriptorConfig[i].buffersInfo[index].offset = 0;
+	//	index++;
+	//}
 	i++;
 
 	descriptorConfig[i].type = UNIFORM_BUFFER;
@@ -502,15 +518,19 @@ void Trees::CreateShadowDescriptor()
 
 	descriptorConfig[1].type = UNIFORM_BUFFER;
 	descriptorConfig[1].stages = VERTEX_STAGE;
-	descriptorConfig[1].buffersInfo.resize(variableBuffers.size());
-	index = 0;
-	for (Buffer &buffer : variableBuffers)
-	{
-		descriptorConfig[1].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[1].buffersInfo[index].range = sizeof(TreeVariables);
-		descriptorConfig[1].buffersInfo[index].offset = 0;
-		index++;
-	}
+	descriptorConfig[1].buffersInfo.resize(1);
+	descriptorConfig[1].buffersInfo[0].buffer = variableBuffer.buffer;
+	descriptorConfig[1].buffersInfo[0].range = sizeof(TreeVariables);
+	//descriptorConfig[i].buffersInfo.resize(variableBuffers.size());
+	//index = 0;
+	//for (Buffer &buffer : variableBuffers)
+	//{
+	//	descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
+	//	descriptorConfig[i].buffersInfo[index].range = sizeof(TreeVariables);
+	//	descriptorConfig[i].buffersInfo[index].offset = 0;
+	//	index++;
+	//}
+	//i++;
 
 	shadowDescriptor.Create(descriptorConfig, shadowPipeline.objectDescriptorSetLayout);
 }
@@ -533,15 +553,19 @@ void Trees::CreateCullDescriptor()
 
 	descriptorConfig[1].type = UNIFORM_BUFFER;
 	descriptorConfig[1].stages = VERTEX_STAGE;
-	descriptorConfig[1].buffersInfo.resize(variableBuffers.size());
-	index = 0;
-	for (Buffer &buffer : variableBuffers)
-	{
-		descriptorConfig[1].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[1].buffersInfo[index].range = sizeof(TreeVariables);
-		descriptorConfig[1].buffersInfo[index].offset = 0;
-		index++;
-	}
+	descriptorConfig[1].buffersInfo.resize(1);
+	descriptorConfig[1].buffersInfo[0].buffer = variableBuffer.buffer;
+	descriptorConfig[1].buffersInfo[0].range = sizeof(TreeVariables);
+	//descriptorConfig[i].buffersInfo.resize(variableBuffers.size());
+	//index = 0;
+	//for (Buffer &buffer : variableBuffers)
+	//{
+	//	descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
+	//	descriptorConfig[i].buffersInfo[index].range = sizeof(TreeVariables);
+	//	descriptorConfig[i].buffersInfo[index].offset = 0;
+	//	index++;
+	//}
+	//i++;
 
 	cullDescriptor.Create(descriptorConfig, cullPipeline.objectDescriptorSetLayout);
 }
@@ -560,7 +584,8 @@ void Trees::CreateComputeSetupDescriptor()
 	descriptorConfig[1].type = UNIFORM_BUFFER;
 	descriptorConfig[1].stages = COMPUTE_STAGE;
 	descriptorConfig[1].buffersInfo.resize(1);
-	descriptorConfig[1].buffersInfo[0].buffer = variableBuffers[0].buffer;
+	//descriptorConfig[1].buffersInfo[0].buffer = variableBuffers[0].buffer;
+	descriptorConfig[1].buffersInfo[0].buffer = variableBuffer.buffer;
 	descriptorConfig[1].buffersInfo[0].range = sizeof(TreeVariables);
 	descriptorConfig[1].buffersInfo[0].offset = 0;
 
@@ -622,16 +647,19 @@ void Trees::CreateComputeRenderDescriptor()
 	i++;
 
 	descriptorConfig[i].type = UNIFORM_BUFFER;
-	descriptorConfig[i].stages = COMPUTE_STAGE;
-	descriptorConfig[i].buffersInfo.resize(variableBuffers.size());
-	index = 0;
-	for (Buffer &buffer : variableBuffers)
-	{
-		descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
-		descriptorConfig[i].buffersInfo[index].range = sizeof(TreeVariables);
-		descriptorConfig[i].buffersInfo[index].offset = 0;
-		index++;
-	}
+	descriptorConfig[i].stages = VERTEX_STAGE;
+	descriptorConfig[i].buffersInfo.resize(1);
+	descriptorConfig[i].buffersInfo[0].buffer = variableBuffer.buffer;
+	descriptorConfig[i].buffersInfo[0].range = sizeof(TreeVariables);
+	//descriptorConfig[i].buffersInfo.resize(variableBuffers.size());
+	//index = 0;
+	//for (Buffer &buffer : variableBuffers)
+	//{
+	//	descriptorConfig[i].buffersInfo[index].buffer = buffer.buffer;
+	//	descriptorConfig[i].buffersInfo[index].range = sizeof(TreeVariables);
+	//	descriptorConfig[i].buffersInfo[index].offset = 0;
+	//	index++;
+	//}
 	i++;
 
 	descriptorConfig[i].type = STORAGE_BUFFER;
@@ -733,11 +761,12 @@ void Trees::DestroyBuffers()
 	}
 	countBuffers.clear();
 
-	for (Buffer &buffer : variableBuffers)
-	{
-		buffer.Destroy();
-	}
-	variableBuffers.clear();
+	//for (Buffer &buffer : variableBuffers)
+	//{
+	//	buffer.Destroy();
+	//}
+	//variableBuffers.clear();
+	variableBuffer.Destroy();
 
 	trunkBuffer.Destroy();
 
@@ -774,6 +803,14 @@ void Trees::Start()
 	treeVariables.spacing = 50;
 	treeVariables.spacingMult = 1.0 / treeVariables.spacing;
 
+	treeVariables.leafSizeMultiplier = 1.0;
+	//treeVariables.leafBlendDistance = 0.5;
+	//treeVariables.leafFadeDistance = 0.25;
+	//treeVariables.leafBlendDistance = 0.1;
+	//treeVariables.leafFadeDistance = 0.05;
+	treeVariables.leafBlendDistance = 0.25;
+	treeVariables.leafFadeDistance = 0.125;
+
 	//treeVariables.leafCount0 = leafPositions0.size();
 	//treeVariables.leafCount1 = leafPositions1.size();
 	//for (int i = 0; i < Leaves::leafCount; i++) treeVariables.leafPositions[i] = glm::vec4(leafPositions[i], 0.0);
@@ -783,10 +820,10 @@ void Trees::Start()
 
 	treeRenderCounts.resize(Manager::settings.maxFramesInFlight);
 
-	for (Buffer &buffer : variableBuffers)
-	{
-		memcpy(buffer.mappedBuffer, &treeVariables, sizeof(treeVariables));
-	}
+	//for (Buffer &buffer : variableBuffers)
+	//{
+	//	memcpy(buffer.mappedBuffer, &treeVariables, sizeof(treeVariables));
+	//}
 
 	//ComputeTreeSetup();
 
@@ -801,6 +838,19 @@ void Trees::Start()
 	menu.AddNode("leaves", true, Leaves::UpdateLeafVariables);
 	menu.AddColor("leaf color", Leaves::leafVariables.leafTint);
 	menu.AddSlider("leaf ambient", Leaves::leafVariables.leafAmbient, 0.0f, 1.0f);
+	menu.AddNode("leaf sizes", true, UpdateTreeVariables);
+	menu.AddSlider("global leaf size", treeVariables.leafSizeMultiplier, 0.0f, 3.0f);
+	menu.AddSlider("lod 0 leaf size", treeVariables.leafCounts[0].w, 0.0f, 1.0f);
+	menu.AddSlider("lod 1 leaf size", treeVariables.leafCounts[1].w, 0.0f, 5.0f);
+	menu.AddSlider("lod 2 leaf size", treeVariables.leafCounts[2].w, 0.0f, 15.0f);
+	menu.AddSlider("lod 3 leaf size", treeVariables.leafCounts[3].w, 0.0f, 30.0f);
+	menu.AddSlider("lod 4 leaf size", treeVariables.leafCounts[4].w, 0.0f, 75.0f);
+	menu.AddSlider("lod 5 leaf size", treeVariables.leafCounts[5].w, 0.0f, 150.0f);
+	menu.AddNode("leaf sizes", false);
+	menu.AddNode("leaf transitions", true, UpdateTreeVariables);
+	menu.AddSlider("leaf blend distance", treeVariables.leafBlendDistance, 0.0f, 1.0f);
+	menu.AddSlider("leaf fade distance", treeVariables.leafFadeDistance, 0.0f, 1.0f);
+	menu.AddNode("leaf transitions", false);
 	menu.AddNode("leaves", false);
 }
 
@@ -1167,7 +1217,7 @@ Shape BranchConfiguration::Generate()
 
 		// glm::mat4 rotationMatrix = Utilities::GetRotationMatrix(glm::vec3(xAngle, yAngle, 0));
 		int l = int(glm::clamp(float(resolution) / 4.0f, 1.0f, float(resolution)));
-		int leafRes = int(glm::clamp(float(resolution) / 4.0f, 1.0f, float(resolution)));
+		int leafRes = int(glm::clamp(float(resolution) / 2.0f, 1.0f, float(resolution)));
 
 		for (int x = 0; x <= resolution; x++)
 		{
@@ -1396,6 +1446,12 @@ void Trees::CaptureTree()
 
 void Trees::UpdateTreeVariables()
 {
+	treeVariables.leafBlendStart = 1.0 - treeVariables.leafBlendDistance;
+	treeVariables.leafBlendMult = 1.0 / treeVariables.leafBlendDistance;
+	treeVariables.leafFadeStart = 1.0 - treeVariables.leafFadeDistance;
+	treeVariables.leafFadeMult = 1.0 / treeVariables.leafFadeDistance;
+
+	memcpy(variableBuffer.mappedBuffer, &treeVariables, sizeof(treeVariables));
 	memcpy(trunkBuffer.mappedBuffer, &trunkVariables, sizeof(TrunkVariables));
 }
 
@@ -1469,7 +1525,8 @@ Buffer Trees::leafPositionsBuffer;
 std::vector<Buffer> Trees::renderBuffers;
 std::vector<Buffer> Trees::shadowBuffers;
 std::vector<Buffer> Trees::countBuffers;
-std::vector<Buffer> Trees::variableBuffers;
+//std::vector<Buffer> Trees::variableBuffers;
+Buffer Trees::variableBuffer;
 Buffer Trees::trunkBuffer;
 
 TreeVariables Trees::treeVariables;

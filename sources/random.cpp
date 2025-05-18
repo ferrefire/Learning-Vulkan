@@ -26,6 +26,18 @@ int Random::Int(int seed)
 	return (rand());
 }
 
+int Random::Int(int seed, int min, int max)
+{
+	Random temp(seed);
+
+	for (int i = 0; i < 10; i++)
+	{
+		temp.Next(min, max);
+	}
+
+	return (temp.Next(min, max));
+}
+
 double Random::Interpolater()
 {
 	srand(this->seed);

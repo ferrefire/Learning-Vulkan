@@ -213,6 +213,8 @@ void Settlement::GenerateBuilding(SettlementCell *cell)
     cell->building->position += chunks[cell->chunkID].localPosition;
     cell->building->position += position;
     cell->building->position.y = 0.0f;
+	cell->building->rotation.y += Random::Int(cell->seed, -10, 10);
+	//std::cout << "seed: " << cell->seed << " result: " << Random::Float(cell->seed, -45.0f, 45.0f) << std::endl;
     cell->building->Update();
 
     Data::RequestData(cell->building->position, &cell->building->position.y, Buildings::UpdateBuilding, cell->building->id);
