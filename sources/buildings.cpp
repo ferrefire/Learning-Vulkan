@@ -664,11 +664,11 @@ void Building::GenerateShape(bool meshLod)
 	GenerationConfig config = Buildings::generationConfig;
 	config.lod = meshLod;
 
-	Shape *currentShape = &GetMesh(meshLod)->shape;
-	currentShape->Clear();
+	Mesh *currentMesh = GetMesh(meshLod);
+	//currentMesh->Clear();
 
 	BuildingGenerator bg(config, cells);
-	*currentShape = bg.GetShape();
+	currentMesh->shape = bg.GetShape();
 
 	if (meshLod) lodShapeGenerated = true;
 	else shapeGenerated = true;

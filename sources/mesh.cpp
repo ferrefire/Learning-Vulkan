@@ -219,7 +219,7 @@ VertexInfo Mesh::GetVertexInfo(bool position, bool coordinate, bool normal, bool
 		index++;
 	}
 
-	vertexInfo.floatCount = vertexInfo.bindingDescription.stride / 4;
+	vertexInfo.floatCount = vertexInfo.bindingDescription.stride / 8;
 
 	return (vertexInfo);
 }
