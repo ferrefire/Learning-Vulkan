@@ -33,34 +33,24 @@ void Simulation::DestroySettlements()
 
 void Simulation::Start()
 {
-    started = true;
-
     Settlement *newSettlement = new Settlement;
     settlements.push_back(newSettlement);
 	newSettlement->Start(settlements.size() - 1, glm::vec3(3250.0f, 0.0f, 4000.0f));
 
-	//Settlement *newSettlement2 = new Settlement;
-    //settlements.push_back(newSettlement2);
-	//newSettlement2->Start(settlements.size() - 1, glm::vec3(8125.0f, 0.0f, 5075.0f));
+	Settlement *newSettlement2 = new Settlement;
+    settlements.push_back(newSettlement2);
+	newSettlement2->Start(settlements.size() - 1, glm::vec3(8125.0f, 0.0f, 5075.0f));
 
-	//Settlement *newSettlement3 = new Settlement;
-    //settlements.push_back(newSettlement3);
-	//newSettlement3->Start(settlements.size() - 1, glm::vec3(5650.0f, 0.0f, 3030.0f));
+	Settlement *newSettlement3 = new Settlement;
+    settlements.push_back(newSettlement3);
+	newSettlement3->Start(settlements.size() - 1, glm::vec3(5650.0f, 0.0f, 3030.0f));
+
+	started = true;
 }
 
 void Simulation::Frame()
 {
 	if (!started) return;
-
-	if (Time::newFrameTick)
-	{
-		generating = true;
-
-		//for (Settlement *settlement : settlements)
-		//{
-		//	settlement->generating = true;
-		//}
-	}
 
 	int chunkRange = 1;
 
@@ -87,6 +77,16 @@ void Simulation::Frame()
 				chunkCountX++;
 			}
 		}
+	}
+
+	if (Time::newFrameTick)
+	{
+		generating = true;
+	}
+
+	for (Settlement *settlement : settlements)
+	{
+		settlement->Frame();
 	}
 
 	//if (Input::GetKey(GLFW_KEY_I).pressed)

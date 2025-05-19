@@ -13,6 +13,8 @@
 #define CHUNK_RADIUS 2
 #define CHUNK_LENGTH (CHUNK_RADIUS * 2 + 1)
 #define CELL_SIZE (9.0f * 3.0f)
+#define CHUNK_REGEN_TIME (1.0f)
+#define SETTLEMENT_REGEN_TIME (3.0f)
 
 enum class ChunkDirection { North, Eeast, South, West };
 
@@ -34,7 +36,9 @@ struct SettlementChunk
     bool initialized = false;
     int settlementID;
 	int id;
-    glm::ivec2 coordinates;
+	float regenerateTimer = CHUNK_REGEN_TIME;
+	bool shouldRegenerate = false;
+	glm::ivec2 coordinates;
     glm::vec3 localPosition;
     SettlementCell cells[CHUNK_LENGTH][CHUNK_LENGTH];
     Building *chunkBuilding = nullptr;
@@ -66,7 +70,8 @@ class Settlement
 {
     private:
         std::vector<Building *> buildingsToGenerate;
-        void GenerateBuildings();
+
+		void GenerateBuildings();
 
     public:
         Settlement();
@@ -77,9 +82,13 @@ class Settlement
         std::vector<SettlementChunk> chunks;
         Building *settlementBuilding = nullptr;
 		bool generating;
+		float regenerateTimer = SETTLEMENT_REGEN_TIME;
+		bool shouldRegenerate = false;
 
-        void Start(int id, glm::vec3 position);
+		void Start(int id, glm::vec3 position);
         void Destroy();
+
+		void Frame();
 
 		void AddChunk(glm::ivec2 coordinates);
 

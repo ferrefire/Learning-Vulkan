@@ -14,7 +14,8 @@
 
 Settlement::Settlement()
 {
-    
+	this->settlementBuilding = new Building;
+	this->settlementBuilding->lod = true;
 }
 
 Settlement::~Settlement()
@@ -26,8 +27,8 @@ void Settlement::Start(int id, glm::vec3 position)
 {
     this->id = id;
 	this->position = position;
-	this->settlementBuilding = new Building;
-	this->settlementBuilding->lod = true;
+	//this->settlementBuilding = new Building;
+	//this->settlementBuilding->lod = true;
 	Data::RequestData(position, &this->position.y);
 }
 
@@ -60,12 +61,24 @@ void Settlement::Destroy()
 	delete(settlementBuilding);
 }
 
+void Settlement::Frame()
+{
+	if (shouldRegenerate && regenerateTimer > 0.0f) regenerateTimer -= Time::deltaTime;
+
+	for (SettlementChunk &chunk : chunks)
+	{
+		if (chunk.shouldRegenerate && chunk.regenerateTimer > 0.0f) chunk.regenerateTimer -= Time::deltaTime;
+	}
+}
+
 void Settlement::AddChunk(glm::ivec2 coordinates)
 {
 	if (GetChunk(coordinates.x, coordinates.y) != nullptr) return;
 
 	chunks.resize(chunks.size() + 1);
 	chunks[chunks.size() - 1].Setup(id, chunks.size() - 1, coordinates);
+
+	//regenerateTimer = SETTLEMENT_REGEN_TIME;
 }
 
 void Do(Building *building)
@@ -156,7 +169,12 @@ void SettlementChunk::Setup(int settlementID, int id, glm::ivec2 coordinates)
 
 void SettlementChunk::GenerateChunkMesh()
 {
+	shouldRegenerate = false;
+
 	Mesh *currentMesh = chunkBuilding->GetMesh();
+
+	if (currentMesh->created) currentMesh->DestroyAtRuntime();
+	currentMesh->shape.Clear();
 
 	currentMesh->shape.coordinate = true;
 	currentMesh->shape.normal = true;
@@ -184,23 +202,30 @@ void SettlementChunk::GenerateChunkMesh()
 
 	if (chunkBuilding->lod) chunkBuilding->lodShapeGenerated = true;
 	else if (!chunkBuilding->lod) chunkBuilding->shapeGenerated = true;
-	//std::cout << "chunk mesh generated" << std::endl;
+
+	Simulation::settlements[settlementID]->regenerateTimer = SETTLEMENT_REGEN_TIME;
+	Simulation::settlements[settlementID]->shouldRegenerate = true;
 }
 
 bool SettlementChunk::CanGenerateChunkMesh()
 {
-	for (int cx = 0; cx < CHUNK_LENGTH; cx++)
+	if (shouldRegenerate && regenerateTimer <= 0.0f)
 	{
-		for (int cy = 0; cy < CHUNK_LENGTH; cy++)
+		for (int cx = 0; cx < CHUNK_LENGTH; cx++)
 		{
-			if (cells[cx][cy].building && !(chunkBuilding->lod ? cells[cx][cy].building->lodShapeGenerated : cells[cx][cy].building->shapeGenerated))
+			for (int cy = 0; cy < CHUNK_LENGTH; cy++)
 			{
-				return (false);
+				if (cells[cx][cy].building && !(chunkBuilding->lod ? cells[cx][cy].building->lodShapeGenerated : cells[cx][cy].building->shapeGenerated))
+				{
+					return (false);	
+				}
 			}
 		}
+
+		return (true);
 	}
 
-	return (true);
+	return (false);
 }
 
 SettlementCell *SettlementChunk::GetCell(int x, int y)
@@ -281,7 +306,11 @@ void Settlement::GenerateBuilding(SettlementCell *cell)
     cell->building->position.y = 0.0f;
 	cell->building->rotation.y += Random::Int(cell->seed, -10, 10);
     cell->building->Update();
-	//cell->building->GenerateShape(true);
+	cell->building->GenerateShape(true);
+	//cell->building->GenerateShape(false);
+
+	chunks[cell->chunkID].regenerateTimer = CHUNK_REGEN_TIME;
+	chunks[cell->chunkID].shouldRegenerate = true;
 
     Data::RequestData(cell->building->position, &cell->building->position.y, Buildings::UpdateBuilding, cell->building->id);
 }
@@ -295,20 +324,29 @@ bool Settlement::CanGenerateSettlementMesh()
 {
 	if (chunks.size() <= 0) return (false);
 
-	for (SettlementChunk &chunk : chunks)
+	if (shouldRegenerate && regenerateTimer <= 0.0f)
 	{
-		if (!chunk.chunkBuilding->lodShapeGenerated)
+		for (SettlementChunk &chunk : chunks)
 		{
-			return (false);
+			if (!chunk.chunkBuilding->lodShapeGenerated)
+			{
+				return (false);
+			}
 		}
+
+		return (true);
 	}
 
-	return (true);
+	return (false);
 }
 
 void Settlement::GenerateSettlementMesh()
 {
+	shouldRegenerate = false;
+
 	Mesh *currentMesh = &settlementBuilding->lodMesh;
+	if (currentMesh->created) currentMesh->DestroyAtRuntime();
+	currentMesh->shape.Clear();
 
 	currentMesh->shape.coordinate = true;
 	currentMesh->shape.normal = true;
@@ -367,14 +405,14 @@ SettlementRenderData Settlement::GetRenderData()
 		if (chunkProximities[0].distanceSquared > 15000.0f * 15000.0f || !Manager::camera.AreaInView(worldSpace, (CELL_SIZE * (CHUNK_RADIUS + 1)) * (MaxCoordinate() + 1))) return (renderData);
 
 		settlementBuilding->lod = true;
-		if (settlementBuilding->lodMesh.created)
+		if (CanGenerateSettlementMesh())
+		{
+			GenerateSettlementMesh();
+		}
+		else if (settlementBuilding->lodMesh.created)
 		{
 			renderData.settlementBuilding = settlementBuilding;
 			return (renderData);
-		}
-		else if (CanGenerateSettlementMesh())
-		{
-			GenerateSettlementMesh();
 		}
 	}
 
@@ -400,14 +438,14 @@ SettlementRenderData Settlement::GetRenderData()
 
 			if (dis > 250.0f * 250.0f)
 			{
-				if (chunk.chunkBuilding->GetMesh()->created)
+				if (chunk.CanGenerateChunkMesh())
+				{
+					chunk.GenerateChunkMesh();
+				}
+				else if (chunk.chunkBuilding->GetMesh()->created)
 				{
 					renderData.renderChunks.push_back(&chunk);
 					continue;
-				}
-				else if (chunk.CanGenerateChunkMesh())
-				{
-					chunk.GenerateChunkMesh();
 				}
 			}
 
