@@ -118,6 +118,8 @@ void Settlement::FillChunk(glm::ivec2 coordinates)
 			GenerateBuilding(chunk->localPosition + glm::vec3(CELL_SIZE * x, 0.0f, CELL_SIZE * y), true);
 		}
 	}
+
+	//if (chunk->CanGenerateChunkMesh()) chunk->GenerateChunkMesh();
 }
 
 void SettlementChunk::Setup(int settlementID, int id, glm::ivec2 coordinates)
@@ -127,6 +129,7 @@ void SettlementChunk::Setup(int settlementID, int id, glm::ivec2 coordinates)
 	this->coordinates = coordinates;
 	this->localPosition = glm::vec3(coordinates.x, 0.0f, coordinates.y) * (CHUNK_LENGTH * CELL_SIZE);
 	this->chunkBuilding = new Building;
+	this->chunkBuilding->lod = true;
 	Data::RequestData(this->localPosition + Simulation::settlements[settlementID]->position, &this->localPosition.y);
 
 	for (int cx = 0; cx < CHUNK_LENGTH; cx++)
@@ -166,7 +169,7 @@ void SettlementChunk::GenerateChunkMesh()
 	{
 		for (int cy = 0; cy < CHUNK_LENGTH; cy++)
 		{
-			if (cells[cx][cy].building && cells[cx][cy].building->GetMesh(chunkBuilding->lod)->created)
+			if (cells[cx][cy].building && (chunkBuilding->lod ? cells[cx][cy].building->lodShapeGenerated : cells[cx][cy].building->shapeGenerated))
 			{
 				Shape temp = cells[cx][cy].building->GetMesh(chunkBuilding->lod)->shape;
 				temp.Rotate(cells[cx][cy].building->rotation.y, glm::vec3(0, 1, 0));
@@ -179,6 +182,8 @@ void SettlementChunk::GenerateChunkMesh()
 	currentMesh->RecalculateVertices();
 	currentMesh->Create();
 
+	if (chunkBuilding->lod) chunkBuilding->lodShapeGenerated = true;
+	else if (!chunkBuilding->lod) chunkBuilding->shapeGenerated = true;
 	//std::cout << "chunk mesh generated" << std::endl;
 }
 
@@ -188,7 +193,7 @@ bool SettlementChunk::CanGenerateChunkMesh()
 	{
 		for (int cy = 0; cy < CHUNK_LENGTH; cy++)
 		{
-			if (cells[cx][cy].building && !cells[cx][cy].building->GetMesh(chunkBuilding->lod)->created)
+			if (cells[cx][cy].building && !(chunkBuilding->lod ? cells[cx][cy].building->lodShapeGenerated : cells[cx][cy].building->shapeGenerated))
 			{
 				return (false);
 			}
@@ -275,8 +280,8 @@ void Settlement::GenerateBuilding(SettlementCell *cell)
     cell->building->position += position;
     cell->building->position.y = 0.0f;
 	cell->building->rotation.y += Random::Int(cell->seed, -10, 10);
-	//std::cout << "seed: " << cell->seed << " result: " << Random::Float(cell->seed, -45.0f, 45.0f) << std::endl;
     cell->building->Update();
+	//cell->building->GenerateShape(true);
 
     Data::RequestData(cell->building->position, &cell->building->position.y, Buildings::UpdateBuilding, cell->building->id);
 }
@@ -292,7 +297,7 @@ bool Settlement::CanGenerateSettlementMesh()
 
 	for (SettlementChunk &chunk : chunks)
 	{
-		if (!chunk.chunkBuilding->lodMesh.created)
+		if (!chunk.chunkBuilding->lodShapeGenerated)
 		{
 			return (false);
 		}
@@ -314,7 +319,7 @@ void Settlement::GenerateSettlementMesh()
 
 	for (SettlementChunk &chunk : chunks)
 	{
-		if (chunk.chunkBuilding->lodMesh.created)
+		if (chunk.chunkBuilding->lodShapeGenerated)
 		{
 			Shape temp = chunk.chunkBuilding->lodMesh.shape;
 			temp.Rotate(chunk.chunkBuilding->rotation.y, glm::vec3(0, 1, 0));
@@ -417,7 +422,8 @@ SettlementRenderData Settlement::GetRenderData()
                         {
 							//buildingsToGenerate.push_back(chunk.cells[x][y].building);
 							Simulation::generating = false;
-							Buildings::CreateBuildingMesh(chunk.cells[x][y].building, lod);
+							//Buildings::CreateBuildingMesh(chunk.cells[x][y].building, lod);
+							chunk.cells[x][y].building->GenerateMesh(lod);
 							needsMesh = false;
 						}
 

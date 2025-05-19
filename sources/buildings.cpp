@@ -627,13 +627,14 @@ void Buildings::DestroyBuilding(int id)
 	}
 }
 
-bool Buildings::CreateBuildingMesh(Building *targetBuilding, bool lod)
+/*bool Buildings::CreateBuildingMesh(Building *targetBuilding, bool lod)
 {
 	if (generating) return (false);
 
 	generating = true;
 
 	building = targetBuilding;
+
 	generationConfig.lod = lod;
 
 	Mesh *currentMesh = &building->mesh;
@@ -647,6 +648,7 @@ bool Buildings::CreateBuildingMesh(Building *targetBuilding, bool lod)
 
 	BuildingGenerator bg(generationConfig, targetBuilding->cells);
 	currentMesh->shape = bg.GetShape();
+	
 	currentMesh->RecalculateVertices();
 	currentMesh->Create();
 
@@ -655,6 +657,46 @@ bool Buildings::CreateBuildingMesh(Building *targetBuilding, bool lod)
 	generating = false;
 
 	return (true);
+}*/
+
+void Building::GenerateShape(bool meshLod)
+{
+	GenerationConfig config = Buildings::generationConfig;
+	config.lod = meshLod;
+
+	Shape *currentShape = &GetMesh(meshLod)->shape;
+	currentShape->Clear();
+
+	BuildingGenerator bg(config, cells);
+	*currentShape = bg.GetShape();
+
+	if (meshLod) lodShapeGenerated = true;
+	else shapeGenerated = true;
+}
+
+void Building::GenerateShape()
+{
+	GenerateShape(lod);
+}
+
+void Building::GenerateMesh(bool meshLod)
+{
+	if ((meshLod && !lodShapeGenerated) || (!meshLod && !shapeGenerated)) GenerateShape(meshLod);
+
+	Mesh *currentMesh = GetMesh(meshLod);
+	if (currentMesh->created) currentMesh->DestroyAtRuntime();
+
+	currentMesh->coordinate = true;
+	currentMesh->normal = true;
+	currentMesh->color = true;
+
+	currentMesh->RecalculateVertices();
+	currentMesh->Create();
+}
+
+void Building::GenerateMesh()
+{
+	GenerateMesh(lod);
 }
 
 void Buildings::RecordGraphicsCommands(VkCommandBuffer commandBuffer)

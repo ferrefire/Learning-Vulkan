@@ -53,6 +53,8 @@ class Shape
 		bool normal = false;
 		bool color = false;
 
+        void Clear();
+
 		void SetShape(int type, int resolution = 1);
 		void SetCube(bool front, bool back, bool left, bool right, bool top, bool bottom);
 

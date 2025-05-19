@@ -149,6 +149,8 @@ struct Building
 	int id = -1;
 	bool active = false;
 	bool lod = true;
+	bool shapeGenerated = false;
+	bool lodShapeGenerated = false;
 
 	Mesh mesh;
 	Mesh lodMesh;
@@ -172,14 +174,20 @@ struct Building
 		orientation = glm::rotate(orientation, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 	}
 
+	void GenerateShape();
+	void GenerateShape(bool meshLod);
+
+	void GenerateMesh();
+	void GenerateMesh(bool meshLod);
+
 	Mesh *GetMesh()
 	{
 		return (lod ? &lodMesh : &mesh);
 	}
 
-	Mesh *GetMesh(bool _lod)
+	Mesh *GetMesh(bool meshLod)
 	{
-		return (_lod ? &lodMesh : &mesh);
+		return (meshLod ? &lodMesh : &mesh);
 	}
 };
 
@@ -217,7 +225,7 @@ struct BuildingVariables
 	glm::vec2 wallDistance = glm::vec2(50.0f, 100.0f);
 	glm::vec2 beamDistance = glm::vec2(50.0f, 50.0f);
 	glm::vec2 brickDistance = glm::vec2(100.0f, 100.0f);
-	float roofNormal = 4.0f;
+	float roofNormal = 1.0f;
 	float wallNormal = 2.0f;
 	float beamNormal = 1.0f;
 	float brickNormal = 1.0f;
@@ -311,7 +319,7 @@ class Buildings
 		static Building *CreateBuilding(int seed = 1);
 		static void DestroyBuilding(int id);
 
-		static bool CreateBuildingMesh(Building *targetBuilding, bool lod);
+		//static bool CreateBuildingMesh(Building *targetBuilding, bool lod);
 
 		static void RecordGraphicsCommands(VkCommandBuffer commandBuffer);
         static void RenderBuildings(VkCommandBuffer commandBuffer);
@@ -322,7 +330,7 @@ class Buildings
 		static void SetRenderBuildings();
 		static void SetRenderBuildingsShadow();
 
-		static void GenerateBuilding();
+		//static void GenerateBuilding();
 		//static void GenerateCells();
 		//static void ExpandLevel(int level);
 		//static void FillLevel(int level);

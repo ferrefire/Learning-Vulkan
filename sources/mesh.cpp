@@ -80,7 +80,7 @@ void Mesh::DestroyAtRuntime()
 
 	Destroy();
 
-	shape = Shape();
+	//shape = Shape();
 	vertices.clear();
 	verticesData.clear();
 	indices.clear();

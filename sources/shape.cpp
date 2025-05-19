@@ -30,6 +30,26 @@ Shape::~Shape()
 
 }
 
+void Shape::Clear()
+{
+	positions.clear();
+	coordinates.clear();
+	normals.clear();
+	colors.clear();
+
+	mergeTopPoints.clear();
+	mergeBottomPoints.clear();
+	pointBlended.clear();
+	pointMerged.clear();
+
+	centerMergePoint = -1;
+	createResolution = -1;
+
+	coordinate = false;
+	normal = false;
+	color = false;
+}
+
 void Shape::SetShape(int type, int resolution)
 {
 	createResolution = resolution;
