@@ -218,9 +218,9 @@ void main()
 
 	vec3 rotations = vec3(0);
     //float wave = 0;
-	vec2 windUV = (position.xz + variables.terrainOffset.xz) * variables.windDistanceMult;
-	float wave = 1.0 - textureLod(windSampler, windUV, 0).r;
-	//wave = 1.0 - textureLod(windSampler, position.xz * 0.005, 0).r;
+	//vec2 windUV = (position.xz + variables.terrainOffset.xz) * variables.windDistanceMult;
+	//float wave = 1.0 - textureLod(windSampler, windUV, 0).r;
+	float wave = 1.0 - textureLod(windSampler, position.xz * 0.005, 0).r;
 
 	ran = random(position.xz * ranMult + vec2(position.y, -position.y) * 0.01);
     rotations.x = mix(0.25, 1.0, ran);
