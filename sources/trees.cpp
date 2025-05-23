@@ -139,7 +139,7 @@ void Trees::CreateMeshes()
 	treeVariables.leafCounts[5].y = treeLod4RenderCount * treeVariables.leafCounts[4].x +
 		treeVariables.leafCounts[4].y;
 	treeVariables.leafCounts[5].z = 288 * decreaseFactor;
-	treeVariables.leafCounts[5].w = 75;
+	treeVariables.leafCounts[5].w = 50;
 	//treeVariables.leafCounts[5].w = 75;
 	//treeVariables.leafCounts[5].w = 32 * 1.5;
 
