@@ -41,7 +41,7 @@ struct Settings
 {
 	uint32_t extraFrames = 1;
 	uint32_t maxFramesInFlight = 2;
-	bool fullscreen = false;
+	bool fullscreen = true;
 	bool wireframe = false;
 	bool discrete = true;
 	bool msaa = false;
