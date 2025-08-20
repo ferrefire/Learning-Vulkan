@@ -33,6 +33,14 @@ void Simulation::DestroySettlements()
 
 void Simulation::Start()
 {
+	if (Manager::settings.settlementCount == 0)
+	{
+		setupCompleted = true;
+		Manager::currentWindow.SetMouseVisibility(false, false);
+		Manager::camera.flying = false;
+		Manager::camera.canLook = true;
+		Manager::camera.canMove = true;
+	}
 	if (Manager::settings.settlementCount > 0)
 	{
 		Settlement *newSettlement = new Settlement;
