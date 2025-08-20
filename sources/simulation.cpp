@@ -33,17 +33,24 @@ void Simulation::DestroySettlements()
 
 void Simulation::Start()
 {
-    Settlement *newSettlement = new Settlement;
-    settlements.push_back(newSettlement);
-	newSettlement->Start(settlements.size() - 1, glm::vec3(3250.0f, 0.0f, 4000.0f));
-
-	Settlement *newSettlement2 = new Settlement;
-    settlements.push_back(newSettlement2);
-	newSettlement2->Start(settlements.size() - 1, glm::vec3(8125.0f, 0.0f, 5075.0f));
-
-	Settlement *newSettlement3 = new Settlement;
-    settlements.push_back(newSettlement3);
-	newSettlement3->Start(settlements.size() - 1, glm::vec3(5650.0f, 0.0f, 3030.0f));
+	if (Manager::settings.settlementCount > 0)
+	{
+		Settlement *newSettlement = new Settlement;
+    	settlements.push_back(newSettlement);
+		newSettlement->Start(settlements.size() - 1, glm::vec3(5650.0f, 0.0f, 3030.0f));
+	}
+	if (Manager::settings.settlementCount > 1)
+	{
+		Settlement *newSettlement2 = new Settlement;
+    	settlements.push_back(newSettlement2);
+		newSettlement2->Start(settlements.size() - 1, glm::vec3(3250.0f, 0.0f, 4000.0f));
+	}
+	if (Manager::settings.settlementCount > 2)
+	{
+		Settlement *newSettlement3 = new Settlement;
+    	settlements.push_back(newSettlement3);
+		newSettlement3->Start(settlements.size() - 1, glm::vec3(8125.0f, 0.0f, 5075.0f));
+	}
 
 	started = true;
 }
@@ -93,6 +100,16 @@ void Simulation::Frame()
 	//{
 	//	settlements[0]->chunks[0].GenerateChunkMesh();
 	//}
+
+	if (!setupCompleted && chunkCountX > chunkRange)
+	{
+		setupCompleted = true;
+		Manager::currentWindow.SetMouseVisibility(false, false);
+		Manager::camera.flying = false;
+		Manager::camera.canLook = true;
+		Manager::camera.canMove = true;
+		//Manager::camera.TriggerMouse();
+	}
 }
 
 std::vector<ProximityData> Simulation::GetSettlementProximity(glm::vec3 target)
@@ -127,6 +144,8 @@ std::vector<ProximityData> Simulation::GetSettlementProximity(glm::vec3 target)
 
 	return (proximityResults);
 }
+
+bool Simulation::setupCompleted = false;
 
 bool Simulation::started = false;
 bool Simulation::generating = false;

@@ -156,6 +156,14 @@ void Camera::PrintStatus()
 	//}
 }
 
+void Camera::TriggerMouse()
+{
+	window.SetMouseVisibility(!window.mouseVisible, !window.mouseVisible);
+
+	canMove = !window.mouseVisible;
+	canLook = !window.mouseVisible;
+}
+
 void Camera::UpdateMovement()
 {
 	if (FOV != oldFOV)
@@ -166,10 +174,7 @@ void Camera::UpdateMovement()
 
 	if (Input::GetKey(GLFW_KEY_M).pressed)
 	{
-		window.SetMouseVisibility(!window.mouseVisible);
-
-		canMove = !window.mouseVisible;
-		canLook = !window.mouseVisible;
+		TriggerMouse();
 	}
 
 	if (!canMove) return;

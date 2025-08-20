@@ -64,6 +64,31 @@ void Setup(int argc, char **argv)
 			Manager::cinematic.name = (Utilities::GetPath() + "/cinematics/" + (argv[i] + arg.find('=') + 1) + ".txt");
 			Manager::cinematic.creating = true;
 		}
+		else if (std::string(argv[i]).compare(0, 6, "trees=") == 0)
+		{
+			std::string arg = argv[i];
+			std::string val = (argv[i] + arg.find('=') + 1);
+			int value = std::stoi(val);
+			
+			if (value >= 1 && value <= 3)
+			{
+				Manager::settings.treeQuality = value;
+				std::cout << Manager::settings.treeQuality << std::endl;
+			}
+		}
+		else if (std::string(argv[i]).compare(0, 6, "settc=") == 0)
+		{
+			std::string arg = argv[i];
+			std::string val = (argv[i] + arg.find('=') + 1);
+			int value = std::stoi(val);
+			
+			if (value >= 0 && value <= 3)
+			{
+				Manager::settings.settlementCount = value;
+
+				std::cout << Manager::settings.settlementCount << std::endl;
+			}
+		}
 	}
 }
 

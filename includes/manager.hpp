@@ -57,6 +57,8 @@ struct Settings
 	bool performanceMode = false;
 	bool startTimes = false;
 	bool frameTimes = false;
+	size_t treeQuality = 2;
+	size_t settlementCount = 1;
 };
 
 struct ShaderVariables

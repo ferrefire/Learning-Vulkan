@@ -232,7 +232,7 @@ void Graphics::RenderGraphics(VkCommandBuffer commandBuffer, uint32_t imageIndex
 
 	//if (Terrain::HeightMapsGenerated()) Terrain::RecordGraphicsCommands(commandBuffer);
 
-	if (BUILDINGS_ENABLED) Buildings::RecordGraphicsCommands(commandBuffer);
+	if (BUILDINGS_ENABLED && Manager::settings.settlementCount > 0) Buildings::RecordGraphicsCommands(commandBuffer);
 
 	if (LEAVES_ENABLED) Leaves::RecordGraphicsCommands(commandBuffer);
 

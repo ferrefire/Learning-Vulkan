@@ -69,6 +69,7 @@ class Camera
 		void UpdateMovement();
 		void UpdateRotation(double xpos, double ypos);
 		void PrintStatus();
+		void TriggerMouse();
 
 		const glm::vec3 &Position();
 		const glm::vec3 &Front();

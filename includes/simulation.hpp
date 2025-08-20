@@ -18,6 +18,7 @@ class Simulation
     public:
         static bool started;
         static bool generating;
+		static bool setupCompleted;
 
         static std::vector<Settlement *> settlements;
 

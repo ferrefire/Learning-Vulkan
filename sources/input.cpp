@@ -82,8 +82,8 @@ void Input::Start()
 	//Manager::camera.Rotate(glm::vec3(-26.6999, -846.307, 0));
     //Manager::camera.Move(glm::vec3(5272.46, -1923.35, -1738.65));
 	//Manager::camera.Rotate(glm::vec3(1.8002, -4247.02, 0));
-	Manager::camera.Move(glm::vec3(24.6182, 19.1743, 14.6599));
-	Manager::camera.Rotate(glm::vec3(-13.4999, -867.011, 0));
+	//Manager::camera.Move(glm::vec3(24.6182, 19.1743, 14.6599));
+	//Manager::camera.Rotate(glm::vec3(-13.4999, -867.011, 0));
 	//Manager::camera.Move(glm::vec3(2261.03, -1828.33, 3524.79));
 	//Manager::camera.Rotate(glm::vec3(-22.0999, -709.411, 0));
 	//Manager::camera.Move(glm::vec3(16453.4, -1764.23, -16834.3));
@@ -91,9 +91,15 @@ void Input::Start()
 	//Manager::camera.Move(glm::vec3(2963.76, -1790.95, 4301.57));
 	//Manager::camera.Rotate(glm::vec3(-16.4998, -1486.73, 0));
 
+	Manager::camera.Move(glm::vec3(4558.53, -1246.5, 895.8));
+	Manager::camera.Rotate(glm::vec3(-2.9999, -990.925, 0));
+
 	Menu &menu = UI::NewMenu("camera");
 	menu.AddText("camera values");
 	menu.AddSlider("field of view", Manager::camera.FOV, 25.0f, 180.0f);
+
+	//Manager::camera.TriggerMouse();
+	//Manager::camera.canLook = true;
 }
 
 void Input::Frame()

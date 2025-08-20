@@ -44,7 +44,7 @@ void Window::Create()
     }
 
 	glfwSetFramebufferSizeCallback(data, Window::framebufferResizeCallback);
-	SetMouseVisibility(mouseVisible);
+	SetMouseVisibility(mouseVisible, false);
 	glfwSetCursorPosCallback(data, Input::mouse_callback);
 	glfwSetScrollCallback(data, Input::scroll_callback);
 }
@@ -725,7 +725,7 @@ void Window::DestroyShadowResources()
 }
 */
 
-void Window::SetMouseVisibility(bool visible)
+void Window::SetMouseVisibility(bool visible, bool triggerUI)
 {
 	mouseVisible = visible;
 
@@ -733,7 +733,7 @@ void Window::SetMouseVisibility(bool visible)
 
 	UI::TriggerMouseInput(visible);
 
-	UI::TriggerUI(visible);
+	UI::TriggerUI(triggerUI);
 
 	if (visible)
 	{

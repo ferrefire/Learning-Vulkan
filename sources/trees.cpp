@@ -96,6 +96,9 @@ void Trees::CreateMeshes()
 	//treeVariables.leafCount4 = int(floor(float(treeVariables.leafCountTotal) / 32.0f));
 
 	float decreaseFactor = 1.0;
+	if (Manager::settings.treeQuality == 1) decreaseFactor = 2.0;
+	if (Manager::settings.treeQuality == 2) decreaseFactor = 1.0;
+	if (Manager::settings.treeQuality == 3) decreaseFactor = 0.5;
 
 	treeVariables.leafCounts[0].x = int(floor(float(leafPositions.size()) / glm::clamp((0.5f * decreaseFactor), 1.0f, 10.0f)));
 	treeVariables.leafCounts[0].y = 0;

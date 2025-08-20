@@ -727,12 +727,12 @@ void Buildings::RenderBuildings(VkCommandBuffer commandBuffer)
 
 	for (int i = 0; i < renderBuildings.size(); i++)
 	{
-		if (renderBuildings[i]->lod)
+		if (renderBuildings[i]->lod && renderBuildings[i]->lodMesh.created)
 		{
 			renderBuildings[i]->lodMesh.Bind(commandBuffer);
 			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(renderBuildings[i]->lodMesh.indices.size()), 1, 0, 0, i);
 		}
-		else
+		else if (renderBuildings[i]->mesh.created)
 		{
 			renderBuildings[i]->mesh.Bind(commandBuffer);
 			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(renderBuildings[i]->mesh.indices.size()), 1, 0, 0, i);
@@ -750,12 +750,12 @@ void Buildings::RenderShadows(VkCommandBuffer commandBuffer, int cascade)
 
 	for (int i = 0; i < renderBuildingsShadow.size(); i++)
 	{
-		if (renderBuildingsShadow[i]->lod)
+		if (renderBuildingsShadow[i]->lod && renderBuildingsShadow[i]->lodMesh.created)
 		{
 			renderBuildingsShadow[i]->lodMesh.Bind(commandBuffer);
 			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(renderBuildingsShadow[i]->lodMesh.indices.size()), 1, 0, 0, i);
 		}
-		else
+		else if (renderBuildingsShadow[i]->mesh.created)
 		{
 			renderBuildingsShadow[i]->mesh.Bind(commandBuffer);
 			vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(renderBuildingsShadow[i]->mesh.indices.size()), 1, 0, 0, i);

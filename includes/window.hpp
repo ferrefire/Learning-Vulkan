@@ -80,6 +80,6 @@ class Window
 		VkPresentModeKHR ChooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
 		VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
 		void RecreateSwapChain();
-		void SetMouseVisibility(bool visible);
+		void SetMouseVisibility(bool visible, bool triggerUI);
 		void SetMouseLocked(bool locked);
 };

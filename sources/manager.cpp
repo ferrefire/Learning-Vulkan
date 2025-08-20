@@ -305,13 +305,13 @@ void Manager::Start()
 void Manager::PreFrame()
 {
 	Terrain::Frame();
-	Buildings::Frame();
+	if (settings.settlementCount > 0) Buildings::Frame();
 	Trees::Frame();
 	Leaves::Frame();
 	Grass::Frame();
 	//Sky::Frame();
 	Shadow::Frame();
-	Simulation::Frame();
+	if (settings.settlementCount > 0) Simulation::Frame();
 }
 
 void Manager::Frame()
@@ -338,7 +338,11 @@ void Manager::Frame()
 		cinematic.AddKey(camera.Position(), camera.Angles());
 	}
 
-	if (Input::GetKey(GLFW_MOUSE_BUTTON_RIGHT, true).pressed && !UI::enabled) camera.PrintStatus();
+	if (Input::GetKey(GLFW_MOUSE_BUTTON_RIGHT, true).pressed && !UI::enabled)
+	{
+		camera.PrintStatus();
+		Utilities::PrintVec(lightAngles);
+	}
 
 	//Terrain::Frame();
 	//if (Manager::settings.trees)
@@ -355,12 +359,42 @@ void Manager::Frame()
 	else if (Input::GetKey(GLFW_KEY_UP).down) lightAngles.x += Time::deltaTime * 15.0f * lightSpeed;
 	else lightUpdated = false;
 
+	static float sunTimer = 0.0;
+
+	if (sunTimer <= 10.0 && Simulation::setupCompleted)
+	{
+		//if (sunTimer <= 1.0)
+		//{
+		//	lightAngles = glm::mix(glm::vec3(-109.121, -180.006, 0), glm::vec3(-81.6337, -181.996, 0), sunTimer);
+		//}
+		//else if (sunTimer <= 2.0)
+		//{
+		//	lightAngles = glm::mix(glm::vec3(-81.6337, -181.996, 0), glm::vec3(-79.3538, -185.834, 0), sunTimer - 1.0);
+		//}
+		//else if (sunTimer <= 3.0)
+		//{
+		//	lightAngles = glm::mix(glm::vec3(-79.3538, -185.834, 0), glm::vec3(-76.0065, -193.365, 0), sunTimer - 2.0);
+		//}
+		//else if (sunTimer <= 4.0)
+		//{
+		//	lightAngles = glm::mix(glm::vec3(-76.0065, -193.365, 0), glm::vec3(-72.9201, -196.828, 0), sunTimer - 3.0);
+		//}
+
+		lightAngles = glm::mix(glm::vec3(-109.121, -180.006, 0), glm::vec3(-72.9201, -196.828, 0), sunTimer * 0.1);
+
+		sunTimer += Time::deltaTime;
+
+		lightUpdated = true;
+	}
+	
 	if (lightUpdated)
 	{
 		Terrain::updateTerrainShadows = true;
 		Sky::shouldUpdateView = true;
 		Sky::shouldUpdateAerial = true;
 		Trees::shouldUpdateLodTree = true;
+
+		//Utilities::PrintVec(lightAngles);
 	}
 
 	//if (Input::GetKey(GLFW_KEY_C).pressed)
@@ -636,7 +670,9 @@ Descriptor Manager::screenQuadDescriptor;
 
 Texture Manager::occlusionTexture;
 
-glm::vec3 Manager::lightAngles = glm::vec3(-35.0f, -135.0f, 0.0f);
-float Manager::lightSpeed = 4.0f;
+//glm::vec3 Manager::lightAngles = glm::vec3(-35.0f, -135.0f, 0.0f);
+//glm::vec3 Manager::lightAngles = glm::vec3(-80.8367f, -199.592f, 0.0f);
+glm::vec3 Manager::lightAngles = glm::vec3(-109.121, -180.006, 0);
+float Manager::lightSpeed = 1.0f;
 
 DescriptorInfo Manager::descriptorInfo;
