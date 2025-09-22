@@ -38,7 +38,12 @@ void main()
 
 	//vec3 bladeDiffuse = DiffuseLighting(normal, shadow, 0.0, ambient);
 
-	if (!gl_FrontFacing) normal *= -1;
+	//if (!gl_FrontFacing) normal *= -1;
+	if (!gl_FrontFacing)
+	{
+		normal.y *= -1;
+		normal.z *= -1;
+	}
 
 	//outColor = vec4(normal * 0.5 + 0.5, 1.0);
 	//return;
@@ -48,6 +53,7 @@ void main()
 	//ao /= 25000.0;
 	
 	//vec3 bladeDiffuse = DiffuseLighting(normal, shadow, 0.0, ambient);
+	vec3 bladeDiffuse = DiffuseLighting(normal, shadow);
 
 	vec3 bladeColor = mix(grassColor.xyz * 0.3, grassColor.xyz, uv.y);
 
@@ -57,8 +63,11 @@ void main()
 	//vec3 diffuse = clamp(terrainDiffuse * 0.9 + bladeDiffuse, vec3(0.0), lightColor);
 	//vec3 diffuse = clamp(terrainDiffuse + bladeDiffuse, vec3(0.0), lightColor);
 	vec3 diffuse = terrainDiffuse;
+
+	float bladeDiffStren = mix(max(0.0, dot(normal, variables.lightDirection)), 0.5, shadow);
+	//vec3 diffuse = bladeDiffuse;
 	//vec3 finalColor = FinalLighting(bladeColor, diffuse);
-	vec3 finalColor = bladeColor * diffuse;
+	vec3 finalColor = (bladeColor * diffuse * (0.75 + bladeDiffStren * 0.5));
 	//vec3 combinedColor = (diffuse * bladeColor);
 	//vec3 viewDirection = normalize(variables.viewPosition - worldPosition);
 
